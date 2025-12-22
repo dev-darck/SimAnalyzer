@@ -24,6 +24,11 @@ class KmpDependenciesScope(
             sourceSetName = "commonMain",
             notation = this
         ) { dep -> implementation(dep) }
+    val ProjectDependency.jvmImpl
+        get() = addTo(
+            sourceSetName = "jvmMain",
+            notation = this
+        ) { dep -> implementation(dep) }
     val Provider<MinimalExternalModuleDependency>.jvmImpl
         get() = addTo(
             sourceSetName = "jvmMain",

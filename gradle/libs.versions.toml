@@ -1,7 +1,7 @@
 [versions]
 androidx-lifecycle = "2.9.6"
 composeHotReload = "1.0.0"
-composeMultiplatform = "1.9.3"
+composeMultiplatform = "1.11.0-alpha01"
 junit = "4.13.2"
 kotlin = "2.3.0"
 kotlinx-coroutines = "1.10.2"
@@ -16,9 +16,20 @@ leakcanary = "2.14"
 
 
 [libraries]
+# --- Compose MPP (без deprecated "compose.*") ---
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeMultiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "composeMultiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeMultiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "composeMultiplatform" }
+
+# resources + previews
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "composeMultiplatform" }
+compose-components-ui-tooling-preview = { module = "org.jetbrains.compose.components:components-ui-tooling-preview", version.ref = "composeMultiplatform" }
+
+
 # metro (runtime + optional metrox helpers)
 metro-runtime = { module = "dev.zacsweers.metro:runtime", version.ref = "metro" }
-metro-metrox-viewmodel = { module = "dev.zacsweers.metro:metrox-viewmodel", version.ref = "metro" }
+metro-metrox-viewmodel-base = { module = "dev.zacsweers.metro:metrox-viewmodel", version.ref = "metro" }
 metro-metrox-viewmodel-compose = { module = "dev.zacsweers.metro:metrox-viewmodel-compose", version.ref = "metro" }
 gradle-metro-plugin = { module = "dev.zacsweers.metro:dev.zacsweers.metro.gradle.plugin", version.ref = "metro" }
 
@@ -43,7 +54,6 @@ gradle-compose-plugin = { module = "org.jetbrains.compose:org.jetbrains.compose.
 gradle-compose-compiler = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 gradle-sqldelight = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
 gradle-detekt-plugin = { module = "dev.detekt:detekt-gradle-plugin", version.ref = "detekt" }
-
 gradle-compose-hot-reload = { module = "org.jetbrains.compose.hot-reload:org.jetbrains.compose.hot-reload.gradle.plugin", version.ref = "composeHotReload" }
 
 # navigation3 (KMP)
@@ -60,7 +70,6 @@ jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 
 leakcanary-objectWatcher = { module = "com.squareup.leakcanary:leakcanary-object-watcher", version.ref = "leakcanary" }
 leakcanary-shark = { module = "com.squareup.leakcanary:shark", version.ref = "leakcanary" }
-
 leakcanary-sharkLog = { module = "com.squareup.leakcanary:shark-log", version.ref = "leakcanary" }
 
 [plugins]

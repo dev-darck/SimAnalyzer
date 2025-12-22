@@ -22,12 +22,12 @@ internal fun Project.configureKmpApp() {
         val compose = extensions.getByName("compose") as ComposePlugin.Dependencies
         sourceSets {
             commonMain.dependencies {
-                implementation(compose.runtime)
-                implementation(compose.foundation)
-                implementation(compose.material3)
-                implementation(compose.ui)
-                implementation(compose.components.resources)
-                implementation(compose.components.uiToolingPreview)
+                implementation(deps.compose.runtime)
+                implementation(deps.compose.foundation)
+                implementation(deps.compose.material3)
+                implementation(deps.compose.ui)
+                implementation(deps.compose.components.resources)
+                implementation(deps.compose.components.ui.tooling.preview)
                 implementation(deps.androidx.lifecycle.viewmodelCompose)
                 implementation(deps.androidx.lifecycle.runtimeCompose)
             }

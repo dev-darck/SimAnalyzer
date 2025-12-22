@@ -1,11 +1,9 @@
-app {
+moduleImpl {
     metro()
     dependencies {
         projects.core.di.api.jvmImpl
-        projects.core.di.impl.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
-        lib.metro.metrox.viewmodel.compose.jvmImpl
     }
 }
