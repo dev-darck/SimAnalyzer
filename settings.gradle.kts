@@ -1,4 +1,4 @@
-rootProject.name = "SimAnalayzer"
+rootProject.name = "SimAnalyzer"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
