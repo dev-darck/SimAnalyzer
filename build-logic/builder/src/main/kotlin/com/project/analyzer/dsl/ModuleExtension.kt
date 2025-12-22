@@ -2,6 +2,7 @@ package com.project.analyzer.dsl
 
 import com.project.analyzer.base.configureMetro
 import com.project.analyzer.kmp.configureKmpApp
+import dev.zacsweers.metro.gradle.MetroPluginExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -25,7 +26,7 @@ abstract class ModuleExtension @Inject constructor(
         configureKmpApp()
     }
 
-    fun metro() {
-        configureMetro()
+    fun metro(block: MetroPluginExtension.() -> Unit = {}) {
+        configureMetro(block)
     }
 }

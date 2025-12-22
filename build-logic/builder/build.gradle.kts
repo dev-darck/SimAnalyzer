@@ -17,4 +17,5 @@ dependencies {
     implementation(libs.gradle.compose.hot.reload)
     implementation(libs.gradle.detekt.plugin)
     implementation(libs.gradle.compose.compiler)
+    implementation(libs.gradle.metro.plugin)
 }
