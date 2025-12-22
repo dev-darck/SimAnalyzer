@@ -1,6 +1,5 @@
 plugins {
     `kotlin-dsl`
-    `kotlin-dsl-precompiled-script-plugins`
 }
 
 dependencies {
@@ -10,7 +9,12 @@ dependencies {
      */
     implementation(files(libs.javaClass.superclass.protectionDomain.codeSource.location))
 
-    implementation(projects.builder)
     implementation(gradleApi())
+    implementation(localGroovy())
     implementation(libs.gradle.kotlin)
+    implementation(libs.gradle.sqldelight)
+    implementation(libs.gradle.compose.plugin)
+    implementation(libs.gradle.compose.hot.reload)
+    implementation(libs.gradle.detekt.plugin)
+    implementation(libs.gradle.compose.compiler)
 }
