@@ -1,0 +1,9 @@
+package com.project.analyzer.navigation.api
+
+import dev.zacsweers.metro.Multibinds
+
+public interface NavigationMultiBindings {
+
+    @Multibinds(allowEmpty = true)
+    public val entryContributions: Set<RouteEntryBuilder>
+}

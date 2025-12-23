@@ -1,5 +1,5 @@
 moduleImpl {
     dependencies {
-        projects.core.acTelemetry.api.jvmImpl
+        projects.core.leak.api.jvmImpl
     }
 }

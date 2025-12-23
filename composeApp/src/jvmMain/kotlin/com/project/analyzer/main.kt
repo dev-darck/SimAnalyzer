@@ -16,7 +16,9 @@ fun main() = application {
         CompositionLocalProvider(
             LocalMetroViewModelFactory provides appGraph.metroViewModelFactory
         ) {
-            App()
+            App(
+                providerFactory = appGraph.entryProviderFactory
+            )
         }
     }
 }
