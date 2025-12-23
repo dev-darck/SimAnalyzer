@@ -13,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
 @BindingContainer
-interface AppBindings {
+object AppBindings {
 
     @Provides
     fun provideEnv(): AppEnvironment = JvmAppEnvironment()
