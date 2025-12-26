@@ -1,0 +1,122 @@
+{
+  "trackId": "laguna_seca_gp",
+  "trackName": "laguna_seca_gp",
+  "createdAtEpochMs": 1767567141564,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": -315.4758,
+      "y": -213.86848
+    },
+    "forward": {
+      "x": -0.55920434,
+      "y": 0.8290299
+    },
+    "normal": {
+      "x": -0.8290299,
+      "y": -0.55920434
+    },
+    "halfWidthMeters": 9.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": -315.4758,
+          "y": -213.86848
+        },
+        "forward": {
+          "x": -0.55920434,
+          "y": 0.8290299
+        },
+        "normal": {
+          "x": -0.8290299,
+          "y": -0.55920434
+        },
+        "halfWidthMeters": 9.0
+      },
+      "finish": {
+        "center": {
+          "x": 367.4355,
+          "y": 86.13866
+        },
+        "forward": {
+          "x": -0.021451013,
+          "y": -0.99977
+        },
+        "normal": {
+          "x": 0.99977,
+          "y": -0.021451013
+        },
+        "halfWidthMeters": 9.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": 367.4355,
+          "y": 86.13866
+        },
+        "forward": {
+          "x": -0.021451013,
+          "y": -0.99977
+        },
+        "normal": {
+          "x": 0.99977,
+          "y": -0.021451013
+        },
+        "halfWidthMeters": 9.0
+      },
+      "finish": {
+        "center": {
+          "x": 143.8657,
+          "y": -264.3928
+        },
+        "forward": {
+          "x": -0.95175135,
+          "y": 0.30687028
+        },
+        "normal": {
+          "x": -0.30687028,
+          "y": -0.95175135
+        },
+        "halfWidthMeters": 9.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": 143.8657,
+          "y": -264.3928
+        },
+        "forward": {
+          "x": -0.95175135,
+          "y": 0.30687028
+        },
+        "normal": {
+          "x": -0.30687028,
+          "y": -0.95175135
+        },
+        "halfWidthMeters": 9.0
+      },
+      "finish": {
+        "center": {
+          "x": -315.4758,
+          "y": -213.86848
+        },
+        "forward": {
+          "x": -0.55920434,
+          "y": 0.8290299
+        },
+        "normal": {
+          "x": -0.8290299,
+          "y": -0.55920434
+        },
+        "halfWidthMeters": 9.0
+      }
+    }
+  ]
+}

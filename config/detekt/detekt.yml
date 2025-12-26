@@ -1,124 +1,290 @@
+build:
+  excludeCorrectable: false
+  excludes:
+    - "**/build/**"
+    - "**/.gradle/**"
+    - "**/generated/**"
+    - "**/ksp/**"
+    - "**/resources/**"
+    - "**/src/**/resources/**"
+    - "**/src/**/generated/**"
+    - "**/src/**/ksp/**"
+
 config:
   validation: true
   warningsAsErrors: false
 
+processors:
+  active: true
+
+console-reports:
+  active: true
+  exclude:
+    - "ProjectStatisticsReport"
+
+output-reports:
+  active: true
+  exclude:
+    - "TxtOutputReport"
+
+comments:
+  active: true
+  severity: &warn warning
+  CommentOverPrivateFunction:
+    active: false
+  CommentOverPrivateProperty:
+    active: false
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false
+  UndocumentedPublicProperty:
+    active: false
+
 complexity:
+  active: true
+  severity: *warn
+
+  ComplexMethod:
+    active: true
+    threshold: 15
+
   LongMethod:
     active: true
-    allowedLines: 30
+    threshold: 80
     ignoreAnnotated:
-      - 'Composable'
-      - 'Preview'
-
-  LargeClass:
-    active: true
-    allowedLines: 400
-
-  TooManyFunctions:
-    active: true
-    allowedFunctionsPerFile: 25
-    allowedFunctionsPerClass: 20
-    allowedFunctionsPerInterface: 20
-    allowedFunctionsPerObject: 20
-    allowedFunctionsPerEnum: 20
-    ignoreDeprecated: true
-    ignorePrivate: false
-    ignoreInternal: false
-    ignoreOverridden: true
-    ignoreAnnotatedFunctions:
-      - 'Preview'
+      - "Composable"
+      - "Preview"
+    excludes:
+      - "**/src/test/**"
+      - "**/src/*Test/**"
+      - "**/src/androidTest/**"
+      - "**/src/commonTest/**"
+      - "**/src/jvmTest/**"
+      - "**/src/iosTest/**"
 
   LongParameterList:
     active: true
-    allowedFunctionParameters: 8
-    allowedConstructorParameters: 7
+    functionThreshold: 10
+    constructorThreshold: 12
     ignoreDefaultParameters: true
-    ignoreDataClasses: true
-    ignoreAnnotatedParameter:
-      - 'Composable'
-    ignoreFunction:
-      - 'Composable'
+    ignoreAnnotated:
+      - "Composable"
 
   NestedBlockDepth:
     active: true
-    allowedDepth: 4
+    threshold: 4
 
-  ComplexCondition:
+  TooManyFunctions:
     active: true
-    allowedConditions: 4
+    thresholdInFiles: 30
+    thresholdInClasses: 20
+    thresholdInInterfaces: 20
+    thresholdInObjects: 20
+    thresholdInEnums: 15
+    ignoreDeprecated: true
+    ignorePrivate: false
+    ignoreOverridden: true
+    ignoreAnnotatedFunctions:
+      - "Preview"
+
+coroutines:
+  active: true
+  severity: *warn
+  GlobalCoroutineUsage:
+    active: true
+  RedundantSuspendModifier:
+    active: true
+  SleepInsteadOfDelay:
+    active: true
+
+empty-blocks:
+  active: true
+  severity: *warn
+
+exceptions:
+  active: true
+  severity: *warn
+  TooGenericExceptionCaught:
+    active: true
+    exceptionNames:
+      - "Error"
+      - "Exception"
+      - "RuntimeException"
+      - "Throwable"
+  TooGenericExceptionThrown:
+    active: true
+    exceptionNames:
+      - "Error"
+      - "Exception"
+      - "RuntimeException"
+      - "Throwable"
+
+naming:
+  active: true
+  severity: *warn
+
+  FunctionNaming:
+    active: true
+    functionPattern: "[a-z][a-zA-Z0-9]*"
+    ignoreAnnotated:
+      - "Composable"
+      - "Preview"
+
+  TopLevelPropertyNaming:
+    active: true
+    constantPattern: "[A-Z][A-Za-z0-9]*"
+
+  PackageNaming:
+    active: true
+
+performance:
+  active: true
+  severity: *warn
+  SpreadOperator:
+    active: true
+  ForEachOnRange:
+    active: true
+
+potential-bugs:
+  active: true
+  severity: *warn
+  DontDowncastCollectionTypes:
+    active: true
+  EqualsAlwaysReturnsTrueOrFalse:
+    active: true
+  InvalidRange:
+    active: true
+  UnreachableCatchBlock:
+    active: true
+  WrongEqualsTypeParameter:
+    active: true
 
 style:
-  MagicNumber:
-    active: true
-    excludes:
-      - '**/test/**'
-      - '**/androidTest/**'
-      - '**/commonTest/**'
-      - '**/*.kts'
-    ignoreNumbers:
-      - '-1'
-      - '0'
-      - '1'
-      - '2'
-    ignoreHashCodeFunction: true
-    ignorePropertyDeclaration: false
-    ignoreLocalVariableDeclaration: false
-    ignoreConstantDeclaration: true
-    ignoreCompanionObjectPropertyDeclaration: true
-    ignoreAnnotation: false
-    ignoreNamedArgument: true
-    ignoreEnums: false
-    ignoreRanges: false
-    ignoreExtensionFunctions: true
+  active: true
+  severity: *warn
 
   MaxLineLength:
     active: true
-    maxLineLength: 120
+    maxLineLength: 140
     excludePackageStatements: true
     excludeImportStatements: true
-    excludeCommentStatements: false
     excludeRawStrings: true
+
+  MagicNumber:
+    active: true
+    ignoreNumbers: [ "-1", "0", "1", "2" ]
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreConstantDeclaration: true
+    ignoreNamedArgument: true
+    ignoreExtensionFunctions: true
+
+  ForbiddenComment:
+    active: false
 
   ReturnCount:
     active: true
     max: 3
     excludedFunctions:
-      - 'equals'
-    excludeLabeled: false
-    excludeReturnFromLambda: true
-    excludeGuardClauses: false
+      - "equals"
+    excludeGuardClauses: true
 
-  ForbiddenComment:
+  UnusedPrivateMember:
     active: true
-
-naming:
-  ClassNaming:
-    active: true
-    classPattern: '[A-Z][a-zA-Z0-9]*'
-
-  FunctionNaming:
-    active: true
-    excludes:
-      - '**/test/**'
-      - '**/androidTest/**'
-      - '**/commonTest/**'
-    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
-    excludeClassPattern: '$^'
     ignoreAnnotated:
-      - 'Composable'
+      - "Preview"
 
-  VariableNaming:
+  UnusedPrivateFunction:
     active: true
-    variablePattern: '[a-z][A-Za-z0-9]*'
-    privateVariablePattern: '(_)?[a-z][A-Za-z0-9]*'
-    excludeClassPattern: '$^'
+    ignoreAnnotated:
+      - "Preview"
 
-  TopLevelPropertyNaming:
+  NewLineAtEndOfFile:
     active: true
-    constantPattern: '_?[A-Z][_A-Za-z0-9]*'
-    propertyPattern: '_?[A-Za-z][_A-Za-z0-9]*'
-    privatePropertyPattern: '_?[A-Za-z][_A-Za-z0-9]*'
 
-  PackageNaming:
+  WildcardImport:
     active: true
-    packagePattern: '^[a-z]+(\.[a-z][A-Za-z0-9]*)*$'
+
+formatting:
+  active: false
+
+Compose:
+  active: true
+  severity: *warn
+
+  ComposableAnnotationNaming:
+    active: true
+  ComposableNaming:
+    active: true
+  ComposableParamOrder:
+    active: true
+
+  CompositionLocalAllowlist:
+    active: false
+  CompositionLocalNaming:
+    active: true
+
+  ContentEmitterReturningValues:
+    active: true
+  ContentTrailingLambda:
+    active: true
+  ContentSlotReused:
+    active: true
+
+  DefaultsVisibility:
+    active: true
+
+  LambdaParameterEventTrailing:
+    active: true
+  LambdaParameterInRestartableEffect:
+    active: true
+
+  ModifierClickableOrder:
+    active: true
+  ModifierComposed:
+    active: true
+  ModifierMissing:
+    active: true
+    checkModifiersForVisibility: only_public
+  ModifierNaming:
+    active: true
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierReused:
+    active: true
+  ModifierWithoutDefault:
+    active: true
+
+  MultipleEmitters:
+    active: true
+
+  MutableParams:
+    active: true
+  MutableStateAutoboxing:
+    active: true
+  MutableStateParam:
+    active: true
+
+  ParameterNaming:
+    active: true
+
+  PreviewAnnotationNaming:
+    active: true
+  PreviewNaming:
+    active: false
+  PreviewPublic:
+    active: false
+
+  RememberMissing:
+    active: true
+  RememberContentMissing:
+    active: true
+
+  UnstableCollections:
+    active: false
+
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    active: false

@@ -1,0 +1,122 @@
+{
+  "trackId": "mount_panorama_gp",
+  "trackName": "mount_panorama_gp",
+  "createdAtEpochMs": 1767568915172,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": 265.59946,
+      "y": -558.52814
+    },
+    "forward": {
+      "x": -0.98205584,
+      "y": -0.18859091
+    },
+    "normal": {
+      "x": 0.18859091,
+      "y": -0.98205584
+    },
+    "halfWidthMeters": 7.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": 265.59946,
+          "y": -558.52814
+        },
+        "forward": {
+          "x": -0.98205584,
+          "y": -0.18859091
+        },
+        "normal": {
+          "x": 0.18859091,
+          "y": -0.98205584
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": -787.3619,
+          "y": 690.2512
+        },
+        "forward": {
+          "x": -0.9184543,
+          "y": 0.39552712
+        },
+        "normal": {
+          "x": -0.39552712,
+          "y": -0.9184543
+        },
+        "halfWidthMeters": 6.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": -787.3619,
+          "y": 690.2512
+        },
+        "forward": {
+          "x": -0.9184543,
+          "y": 0.39552712
+        },
+        "normal": {
+          "x": -0.39552712,
+          "y": -0.9184543
+        },
+        "halfWidthMeters": 6.0
+      },
+      "finish": {
+        "center": {
+          "x": -10.254085,
+          "y": 1458.9797
+        },
+        "forward": {
+          "x": 0.53425646,
+          "y": -0.84532255
+        },
+        "normal": {
+          "x": 0.84532255,
+          "y": 0.53425646
+        },
+        "halfWidthMeters": 7.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": -10.254085,
+          "y": 1458.9797
+        },
+        "forward": {
+          "x": 0.53425646,
+          "y": -0.84532255
+        },
+        "normal": {
+          "x": 0.84532255,
+          "y": 0.53425646
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": 265.59946,
+          "y": -558.52814
+        },
+        "forward": {
+          "x": -0.98205584,
+          "y": -0.18859091
+        },
+        "normal": {
+          "x": 0.18859091,
+          "y": -0.98205584
+        },
+        "halfWidthMeters": 7.0
+      }
+    }
+  ]
+}

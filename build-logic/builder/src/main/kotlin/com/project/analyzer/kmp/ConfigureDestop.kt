@@ -13,13 +13,32 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
             mainClass = "com.project.analyzer.MainKt"
 
             nativeDistributions {
-                targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+                targetFormats(
+                    TargetFormat.Msi,
+                    TargetFormat.Exe,
+                    TargetFormat.AppImage
+                )
                 packageName = "com.project.analyzer"
                 packageVersion = "1.0.0"
 
 //                macOS { iconFile.set(rootProject.file("app-icons/app.icns")) }
 //                windows { iconFile.set(rootProject.file("app-icons/app.ico")) }
 //                linux { iconFile.set(rootProject.file("app-icons/app.png")) }
+
+                modules(
+                    "java.base",
+                    "java.desktop",
+                    "java.logging",
+                    "java.management",
+                    "jdk.unsupported"
+                )
+            }
+
+            // ProGuard unsupported kotlin 2.3.0
+            buildTypes.release {
+                proguard {
+                    isEnabled.set(false)
+                }
             }
 
             scope()

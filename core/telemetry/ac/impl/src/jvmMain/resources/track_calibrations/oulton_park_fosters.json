@@ -1,0 +1,122 @@
+{
+  "trackId": "oulton_park_fosters",
+  "trackName": "oulton_park_fosters",
+  "createdAtEpochMs": 1767572496331,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": 268.98178,
+      "y": -351.52008
+    },
+    "forward": {
+      "x": 0.12922803,
+      "y": 0.99161494
+    },
+    "normal": {
+      "x": -0.99161494,
+      "y": 0.12922803
+    },
+    "halfWidthMeters": 8.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": 268.98178,
+          "y": -351.52008
+        },
+        "forward": {
+          "x": 0.12922803,
+          "y": 0.99161494
+        },
+        "normal": {
+          "x": -0.99161494,
+          "y": 0.12922803
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": -311.22894,
+          "y": -23.227486
+        },
+        "forward": {
+          "x": 0.37445515,
+          "y": -0.927245
+        },
+        "normal": {
+          "x": 0.927245,
+          "y": 0.37445515
+        },
+        "halfWidthMeters": 6.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": -311.22894,
+          "y": -23.227486
+        },
+        "forward": {
+          "x": 0.37445515,
+          "y": -0.927245
+        },
+        "normal": {
+          "x": 0.927245,
+          "y": 0.37445515
+        },
+        "halfWidthMeters": 6.0
+      },
+      "finish": {
+        "center": {
+          "x": 0.54424405,
+          "y": -636.1713
+        },
+        "forward": {
+          "x": 0.9727601,
+          "y": -0.23181437
+        },
+        "normal": {
+          "x": 0.23181437,
+          "y": 0.9727601
+        },
+        "halfWidthMeters": 6.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": 0.54424405,
+          "y": -636.1713
+        },
+        "forward": {
+          "x": 0.9727601,
+          "y": -0.23181437
+        },
+        "normal": {
+          "x": 0.23181437,
+          "y": 0.9727601
+        },
+        "halfWidthMeters": 6.0
+      },
+      "finish": {
+        "center": {
+          "x": 268.98178,
+          "y": -351.52008
+        },
+        "forward": {
+          "x": 0.12922803,
+          "y": 0.99161494
+        },
+        "normal": {
+          "x": -0.99161494,
+          "y": 0.12922803
+        },
+        "halfWidthMeters": 8.0
+      }
+    }
+  ]
+}

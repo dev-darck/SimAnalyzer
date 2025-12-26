@@ -1,0 +1,122 @@
+{
+  "trackId": "road_atlanta_gp",
+  "trackName": "road_atlanta_gp",
+  "createdAtEpochMs": 1767569625938,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": 33.433887,
+      "y": -807.7042
+    },
+    "forward": {
+      "x": 0.8302263,
+      "y": 0.5574266
+    },
+    "normal": {
+      "x": -0.5574266,
+      "y": 0.8302263
+    },
+    "halfWidthMeters": 8.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": 33.433887,
+          "y": -807.7042
+        },
+        "forward": {
+          "x": 0.8302263,
+          "y": 0.5574266
+        },
+        "normal": {
+          "x": -0.5574266,
+          "y": 0.8302263
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": 65.09895,
+          "y": -54.87097
+        },
+        "forward": {
+          "x": -0.30195305,
+          "y": 0.95332277
+        },
+        "normal": {
+          "x": -0.95332277,
+          "y": -0.30195305
+        },
+        "halfWidthMeters": 7.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": 65.09895,
+          "y": -54.87097
+        },
+        "forward": {
+          "x": -0.30195305,
+          "y": 0.95332277
+        },
+        "normal": {
+          "x": -0.95332277,
+          "y": -0.30195305
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": -359.56842,
+          "y": 386.21643
+        },
+        "forward": {
+          "x": -0.09064833,
+          "y": -0.99588305
+        },
+        "normal": {
+          "x": 0.99588305,
+          "y": -0.09064833
+        },
+        "halfWidthMeters": 8.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": -359.56842,
+          "y": 386.21643
+        },
+        "forward": {
+          "x": -0.09064833,
+          "y": -0.99588305
+        },
+        "normal": {
+          "x": 0.99588305,
+          "y": -0.09064833
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": 33.433887,
+          "y": -807.7042
+        },
+        "forward": {
+          "x": 0.8302263,
+          "y": 0.5574266
+        },
+        "normal": {
+          "x": -0.5574266,
+          "y": 0.8302263
+        },
+        "halfWidthMeters": 8.0
+      }
+    }
+  ]
+}

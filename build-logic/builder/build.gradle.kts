@@ -3,6 +3,8 @@ plugins {
 }
 
 dependencies {
+    compileOnly(libs.gradle.compose.hot.reload)
+
     /**
      * workaround to make version catalog accessible in convention plugins
      * https://github.com/gradle/gradle/issues/15383
@@ -14,7 +16,6 @@ dependencies {
     implementation(libs.gradle.kotlin)
     implementation(libs.gradle.sqldelight)
     implementation(libs.gradle.compose.plugin)
-    implementation(libs.gradle.compose.hot.reload)
     implementation(libs.gradle.detekt.plugin)
     implementation(libs.gradle.compose.compiler)
     implementation(libs.gradle.metro.plugin)

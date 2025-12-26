@@ -1,0 +1,122 @@
+{
+  "trackId": "suzuka_west",
+  "trackName": "suzuka_west",
+  "createdAtEpochMs": 1767570087226,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": -732.66095,
+      "y": 133.27257
+    },
+    "forward": {
+      "x": 0.9999207,
+      "y": 0.012596206
+    },
+    "normal": {
+      "x": -0.012596206,
+      "y": 0.9999207
+    },
+    "halfWidthMeters": 7.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": -732.66095,
+          "y": 133.27257
+        },
+        "forward": {
+          "x": 0.9999207,
+          "y": 0.012596206
+        },
+        "normal": {
+          "x": -0.012596206,
+          "y": 0.9999207
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": -318.53778,
+          "y": 48.952724
+        },
+        "forward": {
+          "x": -0.51300985,
+          "y": -0.8583827
+        },
+        "normal": {
+          "x": 0.8583827,
+          "y": -0.51300985
+        },
+        "halfWidthMeters": 6.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": -318.53778,
+          "y": 48.952724
+        },
+        "forward": {
+          "x": -0.51300985,
+          "y": -0.8583827
+        },
+        "normal": {
+          "x": 0.8583827,
+          "y": -0.51300985
+        },
+        "halfWidthMeters": 6.0
+      },
+      "finish": {
+        "center": {
+          "x": -722.41925,
+          "y": 96.44688
+        },
+        "forward": {
+          "x": -0.9983556,
+          "y": -0.057325125
+        },
+        "normal": {
+          "x": 0.057325125,
+          "y": -0.9983556
+        },
+        "halfWidthMeters": 7.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": -722.41925,
+          "y": 96.44688
+        },
+        "forward": {
+          "x": -0.9983556,
+          "y": -0.057325125
+        },
+        "normal": {
+          "x": 0.057325125,
+          "y": -0.9983556
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": -732.66095,
+          "y": 133.27257
+        },
+        "forward": {
+          "x": 0.9999207,
+          "y": 0.012596206
+        },
+        "normal": {
+          "x": -0.012596206,
+          "y": 0.9999207
+        },
+        "halfWidthMeters": 7.0
+      }
+    }
+  ]
+}
