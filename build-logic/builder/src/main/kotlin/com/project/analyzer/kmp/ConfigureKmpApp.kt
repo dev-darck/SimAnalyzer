@@ -22,12 +22,7 @@ internal fun Project.configureKmpApp() {
         val compose = extensions.getByName("compose") as ComposePlugin.Dependencies
         sourceSets {
             commonMain.dependencies {
-                implementation(deps.compose.runtime)
-                implementation(deps.compose.foundation)
                 implementation(deps.compose.material3)
-                implementation(deps.compose.ui)
-                implementation(deps.compose.components.resources)
-                implementation(deps.compose.components.ui.tooling.preview)
                 implementation(deps.androidx.lifecycle.viewmodelCompose)
                 implementation(deps.androidx.lifecycle.runtimeCompose)
             }
@@ -37,6 +32,11 @@ internal fun Project.configureKmpApp() {
             jvmMain.dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(deps.kotlinx.coroutinesSwing)
+                implementation(deps.compose.components.ui.tooling.preview)
+                implementation(deps.compose.components.resources)
+                implementation(deps.compose.ui)
+                implementation(deps.compose.foundation)
+                implementation(deps.compose.runtime)
             }
         }
     }

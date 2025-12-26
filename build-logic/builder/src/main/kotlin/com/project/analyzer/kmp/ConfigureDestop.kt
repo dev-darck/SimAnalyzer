@@ -13,7 +13,7 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
             mainClass = "com.project.analyzer.MainKt"
 
             nativeDistributions {
-                targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+                targetFormats(TargetFormat.Msi)
                 packageName = "com.project.analyzer"
                 packageVersion = "1.0.0"
 

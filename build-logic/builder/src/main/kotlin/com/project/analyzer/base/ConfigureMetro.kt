@@ -6,6 +6,8 @@ import dev.zacsweers.metro.gradle.DelicateMetroGradleApi
 import dev.zacsweers.metro.gradle.MetroPluginExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.invoke
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 @OptIn(DelicateMetroGradleApi::class)
 internal fun Project.configureMetro(
@@ -17,5 +19,11 @@ internal fun Project.configureMetro(
         contributesAsInject.convention(true)
         block()
         enableFullBindingGraphValidation.convention(true)
+    }
+
+    extensions.configure<KotlinMultiplatformExtension> {
+        dependencies {
+            implementation(deps.metro.runtime)
+        }
     }
 }

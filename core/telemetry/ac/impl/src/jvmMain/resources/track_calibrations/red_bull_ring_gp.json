@@ -1,0 +1,129 @@
+{
+    "trackId": "red_bull_ring_gp",
+    "trackName": "red_bull_ring_gp",
+    "createdAtEpochMs": 1767047655863,
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": 141.99565,
+            "y": 664.9075
+        },
+        "forward": {
+            "x": 0.2689176,
+            "y": 0.96316326
+        },
+        "normal": {
+            "x": -0.96316326,
+            "y": 0.2689176
+        },
+        "triggerRadiusMeters": 25.0,
+        "debugHalfWidthMeters": 30.0
+    },
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": 141.99956,
+                    "y": 664.9075
+                },
+                "forward": {
+                    "x": 0.26892138,
+                    "y": 0.9631622
+                },
+                "normal": {
+                    "x": -0.9631622,
+                    "y": 0.26892138
+                },
+                "triggerRadiusMeters": 25.0,
+                "debugHalfWidthMeters": 30.0
+            },
+            "finish": {
+                "center": {
+                    "x": -120.62424,
+                    "y": 707.1309
+                },
+                "forward": {
+                    "x": -0.68946123,
+                    "y": 0.7243226
+                },
+                "normal": {
+                    "x": -0.7243226,
+                    "y": -0.68946123
+                },
+                "triggerRadiusMeters": 25.0,
+                "debugHalfWidthMeters": 30.0
+            }
+        },
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": -123.61329,
+                    "y": 708.14435
+                },
+                "forward": {
+                    "x": -0.6948476,
+                    "y": 0.71915704
+                },
+                "normal": {
+                    "x": -0.71915704,
+                    "y": -0.6948476
+                },
+                "triggerRadiusMeters": 25.0,
+                "debugHalfWidthMeters": 30.0
+            },
+            "finish": {
+                "center": {
+                    "x": 13.346901,
+                    "y": 680.79297
+                },
+                "forward": {
+                    "x": 0.84783393,
+                    "y": -0.53026193
+                },
+                "normal": {
+                    "x": 0.53026193,
+                    "y": 0.84783393
+                },
+                "triggerRadiusMeters": 25.0,
+                "debugHalfWidthMeters": 30.0
+            }
+        },
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": 15.478275,
+                    "y": 680.47754
+                },
+                "forward": {
+                    "x": 0.84758097,
+                    "y": -0.53066623
+                },
+                "normal": {
+                    "x": 0.53066623,
+                    "y": 0.84758097
+                },
+                "triggerRadiusMeters": 25.0,
+                "debugHalfWidthMeters": 30.0
+            },
+            "finish": {
+                "center": {
+                    "x": 141.99281,
+                    "y": 664.9043
+                },
+                "forward": {
+                    "x": 0.26210797,
+                    "y": 0.9650386
+                },
+                "normal": {
+                    "x": -0.9650386,
+                    "y": 0.26210797
+                },
+                "triggerRadiusMeters": 25.0,
+                "debugHalfWidthMeters": 30.0
+            }
+        }
+    ]
+}
