@@ -1,0 +1,122 @@
+{
+  "trackId": "nurburgring_24h",
+  "trackName": "nurburgring_24h",
+  "createdAtEpochMs": 1767574431720,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": 2678.069,
+      "y": 6059.586
+    },
+    "forward": {
+      "x": -0.69658035,
+      "y": 0.7174788
+    },
+    "normal": {
+      "x": -0.7174788,
+      "y": -0.69658035
+    },
+    "halfWidthMeters": 9.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": 2678.069,
+          "y": 6059.586
+        },
+        "forward": {
+          "x": -0.69658035,
+          "y": 0.7174788
+        },
+        "normal": {
+          "x": -0.7174788,
+          "y": -0.69658035
+        },
+        "halfWidthMeters": 9.0
+      },
+      "finish": {
+        "center": {
+          "x": 1162.9269,
+          "y": 4725.82
+        },
+        "forward": {
+          "x": 0.39419204,
+          "y": -0.91902816
+        },
+        "normal": {
+          "x": 0.91902816,
+          "y": 0.39419204
+        },
+        "halfWidthMeters": 7.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": 1162.9269,
+          "y": 4725.82
+        },
+        "forward": {
+          "x": 0.39419204,
+          "y": -0.91902816
+        },
+        "normal": {
+          "x": 0.91902816,
+          "y": 0.39419204
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": 6793.1777,
+          "y": 2258.1873
+        },
+        "forward": {
+          "x": 0.112586856,
+          "y": 0.993642
+        },
+        "normal": {
+          "x": -0.993642,
+          "y": 0.112586856
+        },
+        "halfWidthMeters": 8.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": 6793.1777,
+          "y": 2258.1873
+        },
+        "forward": {
+          "x": 0.112586856,
+          "y": 0.993642
+        },
+        "normal": {
+          "x": -0.993642,
+          "y": 0.112586856
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": 2678.069,
+          "y": 6059.586
+        },
+        "forward": {
+          "x": -0.69658035,
+          "y": 0.7174788
+        },
+        "normal": {
+          "x": -0.7174788,
+          "y": -0.69658035
+        },
+        "halfWidthMeters": 9.0
+      }
+    }
+  ]
+}

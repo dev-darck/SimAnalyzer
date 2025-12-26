@@ -1,0 +1,122 @@
+{
+  "trackId": "circuit_of_the_americas_national",
+  "trackName": "circuit_of_the_americas_national",
+  "createdAtEpochMs": 1767556472289,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": 641.0746,
+      "y": -69.61899
+    },
+    "forward": {
+      "x": 0.791412,
+      "y": 0.61128324
+    },
+    "normal": {
+      "x": -0.61128324,
+      "y": 0.791412
+    },
+    "halfWidthMeters": 10.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": 641.0746,
+          "y": -69.61899
+        },
+        "forward": {
+          "x": 0.791412,
+          "y": 0.61128324
+        },
+        "normal": {
+          "x": -0.61128324,
+          "y": 0.791412
+        },
+        "halfWidthMeters": 10.0
+      },
+      "finish": {
+        "center": {
+          "x": 1391.6708,
+          "y": -538.4281
+        },
+        "forward": {
+          "x": -0.99185276,
+          "y": 0.1273896
+        },
+        "normal": {
+          "x": -0.1273896,
+          "y": -0.99185276
+        },
+        "halfWidthMeters": 10.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": 1391.6708,
+          "y": -538.4281
+        },
+        "forward": {
+          "x": -0.99185276,
+          "y": 0.1273896
+        },
+        "normal": {
+          "x": -0.1273896,
+          "y": -0.99185276
+        },
+        "halfWidthMeters": 10.0
+      },
+      "finish": {
+        "center": {
+          "x": 1252.7961,
+          "y": -394.63736
+        },
+        "forward": {
+          "x": 0.56022936,
+          "y": 0.8283376
+        },
+        "normal": {
+          "x": -0.8283376,
+          "y": 0.56022936
+        },
+        "halfWidthMeters": 10.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": 1252.7961,
+          "y": -394.63736
+        },
+        "forward": {
+          "x": 0.56022936,
+          "y": 0.8283376
+        },
+        "normal": {
+          "x": -0.8283376,
+          "y": 0.56022936
+        },
+        "halfWidthMeters": 10.0
+      },
+      "finish": {
+        "center": {
+          "x": 641.0746,
+          "y": -69.61899
+        },
+        "forward": {
+          "x": 0.791412,
+          "y": 0.61128324
+        },
+        "normal": {
+          "x": -0.61128324,
+          "y": 0.791412
+        },
+        "halfWidthMeters": 10.0
+      }
+    }
+  ]
+}

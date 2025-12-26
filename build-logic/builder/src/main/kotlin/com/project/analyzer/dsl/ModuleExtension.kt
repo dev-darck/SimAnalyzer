@@ -1,7 +1,8 @@
 package com.project.analyzer.dsl
 
 import com.project.analyzer.base.configureMetro
-import com.project.analyzer.kmp.configureKmpApp
+import com.project.analyzer.kmp.configureComposeResources
+import com.project.analyzer.kmp.configureComposeKmp
 import dev.zacsweers.metro.gradle.MetroPluginExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -23,10 +24,14 @@ abstract class ModuleExtension @Inject constructor(
     }
 
     fun compose() {
-        configureKmpApp()
+        configureComposeKmp()
     }
 
     fun metro(block: MetroPluginExtension.() -> Unit = {}) {
         configureMetro(block)
+    }
+
+    fun configureResources() {
+        configureComposeResources()
     }
 }

@@ -1,0 +1,122 @@
+{
+  "trackId": "brands_hatch_gp",
+  "trackName": "brands_hatch_gp",
+  "createdAtEpochMs": 1767573708365,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": -133.50143,
+      "y": -388.016
+    },
+    "forward": {
+      "x": 0.92281955,
+      "y": -0.3852327
+    },
+    "normal": {
+      "x": 0.3852327,
+      "y": 0.92281955
+    },
+    "halfWidthMeters": 7.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": -133.50143,
+          "y": -388.016
+        },
+        "forward": {
+          "x": 0.92281955,
+          "y": -0.3852327
+        },
+        "normal": {
+          "x": 0.3852327,
+          "y": 0.92281955
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": -100.520195,
+          "y": -320.35352
+        },
+        "forward": {
+          "x": -0.9459457,
+          "y": 0.324325
+        },
+        "normal": {
+          "x": -0.324325,
+          "y": -0.9459457
+        },
+        "halfWidthMeters": 7.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": -100.520195,
+          "y": -320.35352
+        },
+        "forward": {
+          "x": -0.9459457,
+          "y": 0.324325
+        },
+        "normal": {
+          "x": -0.324325,
+          "y": -0.9459457
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": 362.799,
+          "y": 338.47083
+        },
+        "forward": {
+          "x": -0.37447086,
+          "y": 0.9272387
+        },
+        "normal": {
+          "x": -0.9272387,
+          "y": -0.37447086
+        },
+        "halfWidthMeters": 7.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": 362.799,
+          "y": 338.47083
+        },
+        "forward": {
+          "x": -0.37447086,
+          "y": 0.9272387
+        },
+        "normal": {
+          "x": -0.9272387,
+          "y": -0.37447086
+        },
+        "halfWidthMeters": 7.0
+      },
+      "finish": {
+        "center": {
+          "x": -133.50143,
+          "y": -388.016
+        },
+        "forward": {
+          "x": 0.92281955,
+          "y": -0.3852327
+        },
+        "normal": {
+          "x": 0.3852327,
+          "y": 0.92281955
+        },
+        "halfWidthMeters": 7.0
+      }
+    }
+  ]
+}

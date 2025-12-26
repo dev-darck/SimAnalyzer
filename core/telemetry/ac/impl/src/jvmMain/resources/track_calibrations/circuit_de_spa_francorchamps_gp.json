@@ -1,0 +1,122 @@
+{
+  "trackId": "circuit_de_spa_francorchamps_gp",
+  "trackName": "circuit_de_spa_francorchamps_gp",
+  "createdAtEpochMs": 1767558551645,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": -1059.6382,
+      "y": -1869.7137
+    },
+    "forward": {
+      "x": -0.53744996,
+      "y": -0.84329575
+    },
+    "normal": {
+      "x": 0.84329575,
+      "y": -0.53744996
+    },
+    "halfWidthMeters": 10.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": -1059.6382,
+          "y": -1869.7137
+        },
+        "forward": {
+          "x": -0.53744996,
+          "y": -0.84329575
+        },
+        "normal": {
+          "x": 0.84329575,
+          "y": -0.53744996
+        },
+        "halfWidthMeters": 10.0
+      },
+      "finish": {
+        "center": {
+          "x": -225.82027,
+          "y": -727.17865
+        },
+        "forward": {
+          "x": 0.31346804,
+          "y": 0.94959885
+        },
+        "normal": {
+          "x": -0.94959885,
+          "y": 0.31346804
+        },
+        "halfWidthMeters": 8.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": -225.82027,
+          "y": -727.17865
+        },
+        "forward": {
+          "x": 0.31346804,
+          "y": 0.94959885
+        },
+        "normal": {
+          "x": -0.94959885,
+          "y": 0.31346804
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": -1380.1294,
+          "y": -311.2476
+        },
+        "forward": {
+          "x": -0.8284756,
+          "y": -0.56002516
+        },
+        "normal": {
+          "x": 0.56002516,
+          "y": -0.8284756
+        },
+        "halfWidthMeters": 8.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": -1380.1294,
+          "y": -311.2476
+        },
+        "forward": {
+          "x": -0.8284756,
+          "y": -0.56002516
+        },
+        "normal": {
+          "x": 0.56002516,
+          "y": -0.8284756
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": -1059.6382,
+          "y": -1869.7137
+        },
+        "forward": {
+          "x": -0.53744996,
+          "y": -0.84329575
+        },
+        "normal": {
+          "x": 0.84329575,
+          "y": -0.53744996
+        },
+        "halfWidthMeters": 10.0
+      }
+    }
+  ]
+}

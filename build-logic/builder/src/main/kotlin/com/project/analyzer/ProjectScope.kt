@@ -3,7 +3,7 @@ package com.project.analyzer
 import com.project.analyzer.detekt.configureDetekt
 import com.project.analyzer.kmp.configureComposeResources
 import com.project.analyzer.kmp.configureDesktop
-import com.project.analyzer.kmp.configureKmpApp
+import com.project.analyzer.kmp.configureComposeKmp
 import com.project.analyzer.kmp.configureKmpLibrary
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Project
@@ -17,7 +17,7 @@ class ProjectScope(
 ) : Project by project {
 
     fun configureApp() {
-        configureKmpApp()
+        configureComposeKmp()
     }
 
     fun configureResources() {

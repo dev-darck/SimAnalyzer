@@ -34,7 +34,7 @@ plugins {
 }
 
 include(":composeApp")
-includeSubmodulesFrom("core")
+includeSubmodulesFrom("core", "feature")
 
 fun Settings.includeSubmodulesFrom(
     vararg roots: String,
