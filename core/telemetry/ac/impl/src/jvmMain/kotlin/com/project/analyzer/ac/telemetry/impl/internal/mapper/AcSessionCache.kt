@@ -25,6 +25,17 @@ class AcSessionCache {
     private var lastTrackId: String = ""
     private var lastCarModel: String = ""
 
+    private fun normalizeTrackId(track: String, layout: String?): String {
+        val withLayout = if (!layout.isNullOrBlank()) "${track}_${layout}" else track
+        return withLayout
+            .trim()
+            .lowercase()
+            .replace(Regex("""\s+"""), "_")
+            .replace(Regex("""[^a-z0-9_]+"""), "")
+            .replace(Regex("""_+"""), "_")
+            .trim('_')
+    }
+
     var tyreCompound: String = ""
         private set
 
@@ -53,14 +64,19 @@ class AcSessionCache {
     }
 
     private fun rebuildCache(statics: SPageFileStatic) {
-        lastTrackId = statics.track.toKString()
+        val rawTrack = statics.track.toKString()
+        val rawLayout = statics.trackConfiguration.toKString()
+        lastTrackId = normalizeTrackId(rawTrack, rawLayout)
         lastCarModel = statics.carModel.toKString()
         sectorCount = statics.sectorCount.coerceIn(1, 10)
 
         trackInfo = TrackInfo(
             trackId = lastTrackId,
-            trackName = lastTrackId,
-            layoutId = statics.trackConfiguration.toKString().takeIf { it.isNotBlank() },
+            trackName = listOf(rawTrack, rawLayout)
+                .filter { it.isNotBlank() }
+                .joinToString(" ")
+                .ifBlank { rawTrack },
+            layoutId = rawLayout.takeIf { it.isNotBlank() },
             sectorCount = sectorCount,
             lengthMeters = statics.trackSPlineLength,
         )

@@ -6,6 +6,7 @@ import com.project.analyzer.calibration.data.AcTelemetrySampleProvider
 import com.project.analyzer.calibration.data.model.Gate
 import com.project.analyzer.calibration.data.model.Pose2D
 import com.project.analyzer.calibration.data.model.TrackCalibration
+import com.project.analyzer.calibration.data.model.Vec2
 import com.project.analyzer.calibration.domain.usecase.LoadTrackCalibrationUseCase
 import com.project.analyzer.calibration.presentation.state.CalibrationVerifyState
 import dev.zacsweers.metro.AppScope
@@ -166,7 +167,7 @@ class CalibrationVerifyViewModel(
 
         if (!lapRunning) {
             val crossNs = crossedAtNs(p0, pose, cal.startFinish, t0, nowNs)
-            if (crossNs != null && shouldTrigger("SF", crossNs)) {
+            if (crossNs != null && shouldTrigger("SF", crossNs) && movingForward(p0, pose, cal.startFinish)) {
                 lapRunning = true
                 lapStartNs = crossNs
                 sectorStartNs = crossNs
@@ -290,21 +291,40 @@ class CalibrationVerifyViewModel(
 
     private fun movingForward(prev: Pose2D, cur: Pose2D, gate: Gate): Boolean {
         val v = cur.pos - prev.pos
-        if (v.length() < 0.05f) return true
-        return v.dot(gate.forward) > 0f
+        val len = v.length()
+        if (len < 0.02f) return false
+        val approach = v.normalized().dot(gate.forward)
+        // Require generally same direction as calibrated car heading
+        return approach > 0.2f
     }
 
     private fun signedDistance(pose: Pose2D, gate: Gate): Float =
+        // Distance across the gate line (normal points left from heading)
         (pose.pos - gate.center).dot(gate.normal)
+
+    private fun inGateZone(point: Vec2, gate: Gate): Boolean {
+        val rel = point - gate.center
+
+        val across = abs(rel.dot(gate.normal))
+        if (across > gate.debugHalfWidthMeters) return false
+
+        val along = abs(rel.dot(gate.forward))
+        // Slight tolerance to account for sampling jitter
+        if (along > gate.triggerRadiusMeters * 1.05f) return false
+
+        return true
+    }
 
     private fun crossedAtNs(prev: Pose2D, cur: Pose2D, gate: Gate, prevNs: Long, curNs: Long): Long? {
         val d0 = signedDistance(prev, gate)
         val d1 = signedDistance(cur, gate)
 
-        if (abs(d0) > gate.triggerRadiusMeters && abs(d1) > gate.triggerRadiusMeters) return null
+        // Quick reject if both points are far outside the gate width (across-track)
+        val n0 = abs((prev.pos - gate.center).dot(gate.normal))
+        val n1 = abs((cur.pos - gate.center).dot(gate.normal))
+        if (n0 > gate.debugHalfWidthMeters && n1 > gate.debugHalfWidthMeters) return null
 
-        val crossed = (d0 <= 0f && d1 > 0f)
-
+        val crossed = (d0 <= 0f && d1 >= 0f) || (d0 >= 0f && d1 <= 0f)
         if (!crossed) return null
 
         val denom = (d0 - d1)
@@ -315,17 +335,11 @@ class CalibrationVerifyViewModel(
         val seg = cur.pos - prev.pos
         val p = prev.pos + seg * alpha
 
-        val rel = p - gate.center
-
-        val along = abs(rel.dot(gate.normal))
-        if (along > gate.debugHalfWidthMeters) return null
-
-        val dist = abs(rel.dot(gate.forward))
-        if (dist > gate.triggerRadiusMeters) return null
+        if (!inGateZone(p, gate)) return null
 
         if (seg.length() >= 0.10f) {
             val approach = seg.normalized().dot(gate.forward)
-            if (approach < 0.5f) return null
+            if (approach < 0.2f) return null
         }
 
         return prevNs + ((curNs - prevNs) * alpha).toLong()

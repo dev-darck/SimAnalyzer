@@ -8,8 +8,9 @@ data class Gate(
     val center: Vec2,
     val forward: Vec2,
     val normal: Vec2,
-    val triggerRadiusMeters: Float = 25f,
-    val debugHalfWidthMeters: Float = 30f
+    // triggerRadius: half-length of stripe along forward; debugHalfWidth: half-width across track
+    val triggerRadiusMeters: Float = 2.5f,
+    val debugHalfWidthMeters: Float = 10f
 )
 
 @Serializable

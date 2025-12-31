@@ -11,8 +11,8 @@ data class GateDto(
     val center: Vec2Dto,
     val forward: Vec2Dto,
     val normal: Vec2Dto,
-    val triggerRadiusMeters: Float = 25f,
-    val debugHalfWidthMeters: Float = 30f,
+    val triggerRadiusMeters: Float = 2.5f,
+    val debugHalfWidthMeters: Float = 10f,
 )
 
 @Serializable

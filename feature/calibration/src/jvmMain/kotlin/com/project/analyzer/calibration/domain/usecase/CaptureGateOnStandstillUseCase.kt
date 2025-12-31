@@ -21,8 +21,9 @@ class CaptureGateOnStandstillUseCase(
 ) {
 
     suspend fun capture(
-        triggerRadiusMeters: Float = 25f,
-        debugHalfWidthMeters: Float = 30f,
+        // Thin stripe along car heading, limited to track width
+        triggerRadiusMeters: Float = 2.5f,
+        debugHalfWidthMeters: Float = 10f,
 
         waitStableMs: Long = 400L,
         captureMs: Long = 900L,

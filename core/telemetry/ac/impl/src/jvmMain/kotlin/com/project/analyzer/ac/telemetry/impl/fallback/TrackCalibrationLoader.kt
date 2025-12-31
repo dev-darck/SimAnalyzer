@@ -3,6 +3,10 @@ package com.project.analyzer.ac.telemetry.impl.fallback
 import dev.zacsweers.metro.Inject
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import java.nio.file.Files
+import kotlin.io.path.Path
+import kotlin.io.path.exists
+import kotlin.io.path.readText
 
 @Inject
 class TrackCalibrationLoader(
@@ -28,7 +32,17 @@ class TrackCalibrationLoader(
     }
 
     private fun loadById(id: String): TrackCalibrationDto? {
-        val resourcePath = "/track_calibrations/red_bull_ring_gp.json"
+        // 1) Try user-generated calibrations (same path as FileTrackCalibrationRepository default)
+        val userDir = Path(System.getProperty("user.home"), "Downloads", "track calibrations")
+        val file = userDir.resolve("$id.json")
+        if (file.exists()) {
+            return runCatching {
+                json.decodeFromString(TrackCalibrationDto.serializer(), file.readText())
+            }.getOrNull()
+        }
+
+        // 2) Try bundled resources under /track_calibrations/{id}.json
+        val resourcePath = "/track_calibrations/$id.json"
         val stream = javaClass.getResourceAsStream(resourcePath) ?: return null
         return runCatching { json.decodeFromStream(TrackCalibrationDto.serializer(), stream) }.getOrNull()
     }

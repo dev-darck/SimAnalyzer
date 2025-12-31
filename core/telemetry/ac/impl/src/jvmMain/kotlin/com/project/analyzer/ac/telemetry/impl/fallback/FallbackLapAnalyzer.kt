@@ -254,54 +254,62 @@ class FallbackLapAnalyzer(
     }
 
     internal fun signedDistanceToGateLine(pos: Vec2, gate: GateDto): Float {
+        // Distance across the gate line (normal points left from heading)
         val c = gate.centerV2()
-        val lineNormal = gate.forwardV2()
-        return (pos - c).dot(lineNormal)
+        val across = gate.normalV2()
+        return (pos - c).dot(across)
     }
 
     internal fun nearGate(pos: Vec2, gate: GateDto): Boolean {
         val c = gate.centerV2()
-        val lineDir = gate.normalV2()
+        val acrossDir = gate.normalV2()
 
         val dist = abs((pos - c).dot(gate.forwardV2()))
         if (dist > gate.triggerRadiusMeters) return false
 
-        val along = abs((pos - c).dot(lineDir))
+        val along = abs((pos - c).dot(acrossDir))
         if (along > gate.debugHalfWidthMeters) return false
 
         return true
     }
 
     private fun crossed(prevPos: Vec2, pos: Vec2, gate: GateDto): Boolean {
-        val nearPrev = nearGate(prevPos, gate)
-        val nearCur = nearGate(pos, gate)
-
-        if (!nearPrev && !nearCur) {
-            val d0 = signedDistanceToGateLine(prevPos, gate)
-            val d1 = signedDistanceToGateLine(pos, gate)
-            if ((d0 <= 0f && d1 > 0f) || (d0 >= 0f && d1 < 0f)) {
-                val denom = d0 - d1
-                if (abs(denom) < 1e-6f) return false
-                val alpha = (d0 / denom).coerceIn(0f, 1f)
-                val p = Vec2(
-                    prevPos.x + (pos.x - prevPos.x) * alpha,
-                    prevPos.y + (pos.y - prevPos.y) * alpha
-                )
-                val c = gate.centerV2()
-                val along = abs((p - c).dot(gate.normalV2()))
-                return along <= gate.debugHalfWidthMeters
-            }
-            return false
-        }
-
         val d0 = signedDistanceToGateLine(prevPos, gate)
         val d1 = signedDistanceToGateLine(pos, gate)
-        if (abs(d0) < 1e-6f && abs(d1) < 1e-6f) return false
-        return (d0 <= 0f && d1 > 0f) || (d0 >= 0f && d1 < 0f)
+        val n0 = abs((prevPos - gate.centerV2()).dot(gate.normalV2()))
+        val n1 = abs((pos - gate.centerV2()).dot(gate.normalV2()))
+
+        if (n0 > gate.debugHalfWidthMeters && n1 > gate.debugHalfWidthMeters) return false
+        if (!((d0 <= 0f && d1 >= 0f) || (d0 >= 0f && d1 <= 0f))) return false
+
+        val denom = d0 - d1
+        if (abs(denom) < 1e-6f) return false
+        val alpha = (d0 / denom).coerceIn(0f, 1f)
+        val p = Vec2(
+            prevPos.x + (pos.x - prevPos.x) * alpha,
+            prevPos.y + (pos.y - prevPos.y) * alpha
+        )
+
+        val rel = p - gate.centerV2()
+        val across = abs(rel.dot(gate.normalV2()))
+        if (across > gate.debugHalfWidthMeters) return false
+        val along = abs(rel.dot(gate.forwardV2()))
+        if (along > gate.triggerRadiusMeters) return false
+
+        val seg = pos - prevPos
+        if (seg.length() >= 0.10f) {
+            val approach = seg.normalized().dot(gate.forwardV2())
+            if (approach < 0.2f) return false
+        }
+
+        return true
     }
 
     private fun movingForward(prevPos: Vec2, pos: Vec2, gate: GateDto): Boolean {
         val v = Vec2(pos.x - prevPos.x, pos.y - prevPos.y)
-        return v.dot(gate.forwardV2()) > 0f
+        val len = v.length()
+        if (len < 0.02f) return false
+        val approach = v.normalized().dot(gate.forwardV2())
+        return approach > 0.2f
     }
 }

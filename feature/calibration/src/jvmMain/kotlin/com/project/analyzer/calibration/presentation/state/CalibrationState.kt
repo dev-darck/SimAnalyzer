@@ -8,8 +8,9 @@ data class CalibrationState(
     val trackId: String = "",
 
     val referencePoint: ReferencePoint = ReferencePoint.CAR_CENTER,
-    val triggerRadiusMeters: Float = 6f,
-    val debugHalfWidthMeters: Float = 8f,
+    // Thin stripe and track-width band to match capture defaults
+    val triggerRadiusMeters: Float = 2.5f,
+    val debugHalfWidthMeters: Float = 10f,
 
     val startFinish: Gate? = null,
     val sectorStarts: Map<Int, Gate> = emptyMap(),

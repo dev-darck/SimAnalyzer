@@ -23,7 +23,7 @@ class AcTelemetrySampleProvider(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
-    private var extractor = PoseExtractor(ReferencePoint.FRONT_AXLE)
+    private var extractor = PoseExtractor(ReferencePoint.CAR_CENTER)
 
     fun setReferencePoint(rp: ReferencePoint) {
         extractor = PoseExtractor(rp)
