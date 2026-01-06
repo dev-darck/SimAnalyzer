@@ -10,7 +10,5 @@ moduleImpl {
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
-        lib.jna.base.jvmImpl
-        lib.jna.platform.jvmImpl
     }
 }

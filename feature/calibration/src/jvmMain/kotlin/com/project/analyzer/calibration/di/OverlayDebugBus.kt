@@ -8,8 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
+@Inject
 @SingleIn(ScreenScope::class)
-class OverlayDebugBus @Inject constructor() {
+class OverlayDebugBus {
     private val _state = MutableStateFlow(OverlayDebugState())
     val state: StateFlow<OverlayDebugState> = _state
     fun update(reducer: (OverlayDebugState) -> OverlayDebugState) = _state.update(reducer)

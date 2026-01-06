@@ -1,0 +1,4 @@
+moduleApi {
+    compose()
+    metro()
+}

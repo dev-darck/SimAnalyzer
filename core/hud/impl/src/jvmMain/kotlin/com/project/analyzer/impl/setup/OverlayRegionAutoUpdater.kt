@@ -1,47 +1,15 @@
-package com.project.analyzer.calibration
+package com.project.analyzer.impl.setup
 
-import com.project.analyzer.calibration.presentation.overlay.HitRegions
-import java.awt.Window
-import java.util.concurrent.atomic.AtomicBoolean
-import javax.swing.SwingUtilities
+import com.project.analyzer.hud.setup.region.HitRegions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.awt.Window
+import javax.swing.SwingUtilities
 
-class OverlayRegionController(private val hitRegions: HitRegions) {
-    @Volatile
-    private var window: Window? = null
-    private val dragging = AtomicBoolean(false)
-
-    fun attach(w: Window) {
-        window = w
-    }
-
-    fun beginDrag() {
-        val w = window ?: return
-        if (dragging.compareAndSet(false, true)) {
-            SwingUtilities.invokeLater {
-                WindowsOverlayRegion.applyFullWindow(w)
-            }
-        }
-    }
-
-    fun endDrag() {
-        val w = window ?: return
-        if (dragging.compareAndSet(true, false)) {
-            val rects = hitRegions.snapshot()
-            SwingUtilities.invokeLater {
-                WindowsOverlayRegion.apply(w, rects)
-            }
-        }
-    }
-
-    fun isDragging(): Boolean = dragging.get()
-}
-
-class OverlayRegionAutoUpdater(
+internal class OverlayRegionAutoUpdater(
     private val window: Window,
     private val hitRegions: HitRegions,
     private val controller: OverlayRegionController

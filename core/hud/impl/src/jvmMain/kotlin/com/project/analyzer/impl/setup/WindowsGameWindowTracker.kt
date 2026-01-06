@@ -1,4 +1,4 @@
-package com.project.analyzer.calibration
+package com.project.analyzer.impl.setup
 
 import com.sun.jna.Native
 import com.sun.jna.platform.win32.User32
@@ -13,17 +13,17 @@ import java.awt.Window
 import javax.swing.SwingUtilities
 import kotlin.math.roundToInt
 
-class WindowsGameWindowTracker(
+private data class Rect(val left: Int, val top: Int, val right: Int, val bottom: Int) {
+
+    val width: Int get() = right - left
+    val height: Int get() = bottom - top
+}
+
+internal class WindowsGameWindowTracker(
     private val overlayWindow: Window,
     private val titleContainsAny: List<String>,
     private val pollMs: Long = 150L
 ) {
-
-    data class Rect(val left: Int, val top: Int, val right: Int, val bottom: Int) {
-
-        val width: Int get() = right - left
-        val height: Int get() = bottom - top
-    }
 
     suspend fun startTracking() {
         val user32 = User32.INSTANCE
@@ -95,8 +95,7 @@ class WindowsGameWindowTracker(
         var found: HWND? = null
 
         user32.EnumWindows(
-            /* lpEnumFunc = */
-            WinUser.WNDENUMPROC { hWnd, _ ->
+            /* lpEnumFunc = */ WinUser.WNDENUMPROC { hWnd, _ ->
                 if (!user32.IsWindowVisible(hWnd)) return@WNDENUMPROC true
 
                 val title = getWindowTitle(hWnd)
@@ -106,8 +105,7 @@ class WindowsGameWindowTracker(
                 }
                 true
             },
-            /* data = */
-            null
+            /* data = */ null
         )
 
         return found

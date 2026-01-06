@@ -7,6 +7,11 @@ moduleImpl {
         projects.core.telemetry.ac.impl.jvmImpl
         projects.core.telemetry.ac.api.jvmImpl
         projects.feature.calibration.jvmImpl
+        projects.core.hud.api.jvmImpl
+        projects.core.hud.impl.jvmImpl
+        projects.core.utils.jvmImpl
+        projects.core.preference.api.jvmImpl
+        projects.core.preference.impl.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
