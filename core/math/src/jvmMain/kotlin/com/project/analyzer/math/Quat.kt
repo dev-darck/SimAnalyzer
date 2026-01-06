@@ -1,4 +1,4 @@
-package com.project.analyzer.telemetry.ac.api.model.math
+package com.project.analyzer.math
 
 public data class Quat(
     val x: Float,

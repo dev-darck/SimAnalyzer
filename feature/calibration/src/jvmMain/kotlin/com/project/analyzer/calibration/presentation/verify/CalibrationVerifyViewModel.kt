@@ -17,8 +17,8 @@ import com.project.analyzer.calibration.domain.usecase.flipDirection
 import com.project.analyzer.calibration.presentation.components.fmt
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -40,7 +40,7 @@ class CalibrationVerifyViewModel(
     private val captureGate: CaptureGateOnStandstillUseCase,
     private val sampleProvider: AcTelemetrySampleProvider,
     private val lapAnalyzer: FallbackLapAnalyzer,
-    private val gateCrossingDetector: GateCrossingDetector,
+    gateCrossingDetector: GateCrossingDetector,
     overlayDebugBus: OverlayDebugBus
 ) : ViewModel() {
 
@@ -145,7 +145,12 @@ class CalibrationVerifyViewModel(
                     }
                     prevPoseForUiCrossing = carPose
 
-                    statePublisher.publish(nowNs, carPose, calNow, sample.speedKmh)
+                    statePublisher.publish(
+                        nowNs = nowNs,
+                        carPose = carPose,
+                        calibration = calNow,
+                        speedKmh = sample.speedKmh
+                    )
                 }
             }
         }

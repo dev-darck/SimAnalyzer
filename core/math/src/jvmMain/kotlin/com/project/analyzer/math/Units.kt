@@ -1,4 +1,4 @@
-package com.project.analyzer.telemetry.ac.api.model.math
+package com.project.analyzer.math
 
 public data class Units(
     val speed: SpeedUnit,
@@ -6,7 +6,9 @@ public data class Units(
     val temperature: TemperatureUnit,
     val distance: DistanceUnit,
 ) {
+
     public companion object {
+
         public val Default: Units = Units(
             speed = SpeedUnit.KMH,
             pressure = PressureUnit.KPA,
@@ -16,7 +18,22 @@ public data class Units(
     }
 }
 
-public enum class SpeedUnit { KMH, MPS }
-public enum class PressureUnit { KPA, PSI }
-public enum class TemperatureUnit { C, F }
-public enum class DistanceUnit { M, KM }
+public enum class SpeedUnit {
+    KMH,
+    MPS
+}
+
+public enum class PressureUnit {
+    KPA,
+    PSI
+}
+
+public enum class TemperatureUnit {
+    C,
+    F
+}
+
+public enum class DistanceUnit {
+    M,
+    KM
+}

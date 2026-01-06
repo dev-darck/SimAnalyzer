@@ -3,8 +3,8 @@ package com.project.analyzer.calibration.presentation.overlay
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 import kotlin.math.abs
 
 class OverlayPublisher(

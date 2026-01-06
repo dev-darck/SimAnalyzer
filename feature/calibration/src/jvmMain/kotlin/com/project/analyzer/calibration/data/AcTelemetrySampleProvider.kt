@@ -4,10 +4,10 @@ import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.model.CalibrationSample
 import com.project.analyzer.calibration.data.model.WheelDebug
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
+import com.project.analyzer.math.MinLen
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.TelemetryDataSource
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
-import com.project.analyzer.telemetry.ac.api.model.math.MinLen
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -78,18 +78,11 @@ class AcTelemetrySampleProvider(
     private fun computeAxleForward(wheels: WheelDebug?): Vec2? {
         if (wheels == null) return null
 
-        val front = avg(wheels.fl, wheels.fr)
-        val rear = avg(wheels.rl, wheels.rr)
+        val front = wheels.fl?.avg(wheels.fr)
+        val rear = wheels.rl?.avg(wheels.rr)
         if (front == null || rear == null) return null
 
         val d = front - rear
         return if (d.len() > MinLen) d.safeNormalized() else null
-    }
-
-    private fun avg(a: Vec2?, b: Vec2?): Vec2? = when {
-        a != null && b != null -> (a + b).half()
-        a != null -> a
-        b != null -> b
-        else -> null
     }
 }

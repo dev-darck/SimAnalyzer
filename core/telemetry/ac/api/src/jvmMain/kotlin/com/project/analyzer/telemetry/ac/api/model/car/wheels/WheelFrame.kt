@@ -1,6 +1,6 @@
 package com.project.analyzer.telemetry.ac.api.model.car.wheels
 
-import com.project.analyzer.telemetry.ac.api.model.math.Vec3
+import com.project.analyzer.math.Vec3
 
 public data class WheelFrame(
     // Tyre state

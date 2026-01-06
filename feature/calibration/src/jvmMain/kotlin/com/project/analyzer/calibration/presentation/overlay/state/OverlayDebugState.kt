@@ -1,8 +1,8 @@
 package com.project.analyzer.calibration.presentation.overlay.state
 
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 
 data class CapturePoint(
     val position: Vec2,

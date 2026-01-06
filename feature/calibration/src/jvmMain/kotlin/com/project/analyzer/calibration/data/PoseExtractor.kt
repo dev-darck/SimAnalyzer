@@ -1,20 +1,19 @@
 package com.project.analyzer.calibration.data
 
 import com.project.analyzer.calibration.data.model.Pose2D
+import com.project.analyzer.math.Heading2D
+import com.project.analyzer.math.Vec2
+import com.project.analyzer.math.Vec3
+import com.project.analyzer.math.toVec2XZIfValid
 import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.math.Vec3
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 class PoseExtractor(private val referencePoint: ReferencePoint) {
 
     private var hasPreviousFrame = false
-    private var previousPosition = Vec2(0f, 0f)
-    private var previousForward = Vec2(0f, 1f)
+    private var previousPosition = Vec2.Zero
+    private var previousForward = Vec2.Up
     private var previousTimestampNs = 0L
 
     fun extract(frame: TelemetryFrame, timestampNs: Long = System.nanoTime()): Pose2D? {
@@ -48,7 +47,7 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
             val f = frontAxleCenter
             val r = rearAxleCenter
             when {
-                f != null && r != null -> (f + r) * 0.5f
+                f != null && r != null -> f.midpoint(r)
                 f != null -> f
                 r != null -> r
                 else -> null
@@ -56,7 +55,7 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
         }
 
         private fun axleCenter(a: Vec2?, b: Vec2?): Vec2? = when {
-            a != null && b != null -> (a + b) * 0.5f
+            a != null && b != null -> a.midpoint(b)
             a != null -> a
             b != null -> b
             else -> null
@@ -73,14 +72,10 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
         return WheelPositions(fl, fr, rl, rr)
     }
 
-    private fun Vec3.toVec2IfValid(): Vec2? {
-        if (x == 0f && z == 0f) return null
-        if (abs(x) > MAX_VALID_COORDINATE || abs(z) > MAX_VALID_COORDINATE) return null
-        return Vec2(x, z)
-    }
+    private fun Vec3.toVec2IfValid(): Vec2? = toVec2XZIfValid(maxAbsCoordinate = MAX_VALID_COORDINATE)
 
     private fun computeReferencePosition(w: WheelPositions): Vec2 {
-        val fallback = w.carCenter ?: Vec2(0f, 0f)
+        val fallback = w.carCenter ?: Vec2.Zero
         return when (referencePoint) {
             ReferencePoint.FRONT_AXLE -> w.frontAxleCenter ?: fallback
             ReferencePoint.REAR_AXLE -> w.rearAxleCenter ?: fallback
@@ -109,17 +104,10 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
 
         val heading = frame.car?.heading
         val headingDir: Vec2? = if (heading != null) {
-            resolveHeadingDir(heading, prefer = velocityDir ?: axleDir)
+            Heading2D.resolveFromRadiansPoseExtractor(headingRad = heading, prefer = velocityDir ?: axleDir)
         } else null
 
         return velocityDir ?: axleDir ?: headingDir ?: previousForward
-    }
-
-    private fun resolveHeadingDir(headingRad: Float, prefer: Vec2?): Vec2 {
-        val a = Vec2(sin(headingRad), cos(headingRad)).safeNormalized(Vec2(0f, 1f))
-        val b = Vec2(-sin(headingRad), cos(headingRad)).safeNormalized(Vec2(0f, 1f))
-        val ref = prefer?.safeNormalized(Vec2(0f, 1f)) ?: return a
-        return if (a.dot(ref) >= b.dot(ref)) a else b
     }
 
     private fun isTeleport(currentPosition: Vec2, currentTimestampNs: Long): Boolean {
@@ -138,7 +126,6 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
     }
 
     private companion object {
-
         const val MAX_VALID_COORDINATE = 1_000_000f
         const val MIN_VELOCITY_FOR_DIRECTION = 0.5f
         const val TELEPORT_DISTANCE_THRESHOLD = 50f

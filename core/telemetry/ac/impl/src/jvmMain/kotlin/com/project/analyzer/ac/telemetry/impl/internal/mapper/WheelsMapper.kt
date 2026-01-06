@@ -4,10 +4,9 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.toBoolean
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.math.Vec3
 import com.project.analyzer.telemetry.ac.api.model.car.wheels.WheelFrame
 import com.project.analyzer.telemetry.ac.api.model.car.wheels.WheelsFrame
-import com.project.analyzer.telemetry.ac.api.model.math.Vec3
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 

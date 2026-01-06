@@ -3,15 +3,14 @@ package com.project.analyzer.calibration.domain.usecase
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.model.Pose2D
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
+import com.project.analyzer.math.Heading2D
+import com.project.analyzer.math.Statistics2D
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.delay
 import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.sqrt
 
 class GateCaptureException(message: String) : IllegalStateException(message)
 
@@ -39,72 +38,33 @@ class CaptureGateOnStandstillUseCase(
         maxPosStdMeters: Float = 0.05f,
     ): GateCaptureResult {
 
-        val first = provider.sample.value
-        val anchor = first.pose ?: throw GateCaptureException("No telemetry data. Make sure game is running.")
+        val moveDirRaw = awaitStableStandstill(
+            waitStableMs = waitStableMs,
+            speedThresholdKmh = speedThresholdKmh,
+            maxDriftMeters = maxDriftMeters,
+        )
 
-        val stableIntervalMs = 25L
-        var stableTime = 0L
+        val samples = collectPositionSamples(
+            captureMs = captureMs,
+            speedThresholdKmh = speedThresholdKmh,
+        )
 
-        var firstPos: Vec2? = null
-        var lastPos: Vec2? = null
+        if (samples.size < MIN_SAMPLES) throw GateCaptureException("Not enough samples: ${samples.size}")
 
-        while (stableTime < waitStableMs) {
-            val s = provider.sample.value
-            val pose = s.pose ?: throw GateCaptureException("Lost telemetry data.")
-
-            val drift = (pose.pos - anchor.pos).len()
-            if (drift > maxDriftMeters) {
-                throw GateCaptureException("Car drifted %.2fm from capture point.".format(drift))
-            }
-
-            if (firstPos == null) firstPos = pose.pos
-            lastPos = pose.pos
-
-            if (s.speedKmh <= speedThresholdKmh) {
-                stableTime += stableIntervalMs
-            } else {
-                stableTime = 0L
-            }
-
-            delay(stableIntervalMs)
-        }
-
-        val netDelta = (lastPos!! - firstPos!!)
-        val netLen = netDelta.len()
-
-        val moveDirRaw: Vec2? =
-            if (netLen >= MIN_NET_DISPLACEMENT_METERS) netDelta * (1f / netLen) else null
-
-        val captureIntervalMs = 10L
-        var captureTime = 0L
-        val samples = ArrayList<Vec2>(256)
-
-        while (captureTime < captureMs) {
-            val s = provider.sample.value
-            val pose = s.pose ?: throw GateCaptureException("Lost telemetry data during capture.")
-            if (s.speedKmh > speedThresholdKmh) throw GateCaptureException("Car moved during capture.")
-
-            samples.add(pose.pos)
-
-            captureTime += captureIntervalMs
-            delay(captureIntervalMs)
-        }
-
-        if (samples.size < 20) throw GateCaptureException("Not enough samples: ${samples.size}")
-
-        val avgPos = mean2(samples)
-        val posStd = std2(samples, avgPos)
+        // Average + position noise check.
+        val avgPos = Statistics2D.mean(samples)
+        val posStd = Statistics2D.std(samples, avgPos)
         if (posStd > maxPosStdMeters) {
             throw GateCaptureException(
                 "Position noise too high (std=%.3fm, max=%.3fm).".format(posStd, maxPosStdMeters)
             )
         }
 
+        // Determine the forward direction for the gate.
+        // Priority: validated moveDir (from net displacement) -> axleForward (if available) -> headingForward.
         val cur = provider.sample.value
-
-        val axleForward = cur.axleForward?.safeNormalized(Vec2(0f, 1f))
-
-        val headingForward = Vec2(sin(cur.headingRad), cos(cur.headingRad)).safeNormalized(Vec2(0f, 1f))
+        val axleForward = cur.axleForward?.safeNormalized(Vec2.Up)
+        val headingForward = Heading2D.forwardFromRad(cur.headingRad)
 
         val moveDir = validateAndFixMoveDir(
             moveDir = moveDirRaw,
@@ -112,8 +72,9 @@ class CaptureGateOnStandstillUseCase(
             headingForward = headingForward
         )
 
-        val forward = (moveDir ?: axleForward ?: headingForward).safeNormalized(Vec2(0f, 1f))
+        val forward = (moveDir ?: axleForward ?: headingForward).safeNormalized(Vec2.Up)
 
+        // Build the gate.
         val gate = buildGate.fromPose(Pose2D(avgPos, forward), halfWidthMeters)
 
         return GateCaptureResult(
@@ -123,6 +84,73 @@ class CaptureGateOnStandstillUseCase(
             sampleCount = samples.size,
             positionStdMeters = posStd,
         )
+    }
+
+    /**
+     * Waits until the car stays under [speedThresholdKmh] continuously for [waitStableMs],
+     * while also ensuring it doesn't drift from the first observed pose by more than [maxDriftMeters].
+     */
+    private suspend fun awaitStableStandstill(
+        waitStableMs: Long,
+        speedThresholdKmh: Float,
+        maxDriftMeters: Float,
+    ): Vec2? {
+
+        val first = provider.sample.value
+        val anchor = first.pose ?: throw GateCaptureException("No telemetry data. Make sure game is running.")
+
+        var stableTimeMs = 0L
+        var firstPos: Vec2? = null
+        var lastPos: Vec2? = null
+
+        while (stableTimeMs < waitStableMs) {
+            val s = provider.sample.value
+            val pose = s.pose ?: throw GateCaptureException("Lost telemetry data.")
+
+            val drift = (pose.pos - anchor.pos).len()
+            if (drift > maxDriftMeters)
+                throw GateCaptureException("Car drifted %.2fm from capture point.".format(drift))
+
+            if (firstPos == null) firstPos = pose.pos
+            lastPos = pose.pos
+
+            stableTimeMs = if (s.speedKmh <= speedThresholdKmh) {
+                stableTimeMs + STABLE_INTERVAL_MS
+            } else {
+                0L
+            }
+
+            delay(STABLE_INTERVAL_MS)
+        }
+
+        val netDelta = (lastPos!! - firstPos!!)
+        val netLen = netDelta.len()
+        val moveDirRaw = if (netLen >= MIN_NET_DISPLACEMENT_METERS) netDelta * (1f / netLen) else null
+
+        return moveDirRaw
+    }
+
+    /** Collects position samples for [captureMs] while ensuring the car remains below a speed threshold. */
+    private suspend fun collectPositionSamples(
+        captureMs: Long,
+        speedThresholdKmh: Float,
+    ): List<Vec2> {
+        var captureTimeMs = 0L
+        val expected = ((captureMs + CAPTURE_INTERVAL_MS - 1) / CAPTURE_INTERVAL_MS).toInt()
+        val samples = ArrayList<Vec2>(expected)
+
+        while (captureTimeMs < captureMs) {
+            val s = provider.sample.value
+            val pose = s.pose ?: throw GateCaptureException("Lost telemetry data during capture.")
+            if (s.speedKmh > speedThresholdKmh) throw GateCaptureException("Car moved during capture.")
+
+            samples.add(pose.pos)
+
+            captureTimeMs += CAPTURE_INTERVAL_MS
+            delay(CAPTURE_INTERVAL_MS)
+        }
+
+        return samples
     }
 
     private fun validateAndFixMoveDir(
@@ -140,29 +168,12 @@ class CaptureGateOnStandstillUseCase(
         return if (d < -0.7f) moveDir * -1f else moveDir
     }
 
-    private fun mean2(samples: List<Vec2>): Vec2 {
-        var sx = 0.0
-        var sy = 0.0
-        for (p in samples) {
-            sx += p.x
-            sy += p.y
-        }
-        val n = samples.size.toDouble()
-        return Vec2((sx / n).toFloat(), (sy / n).toFloat())
-    }
-
-    private fun std2(samples: List<Vec2>, mean: Vec2): Float {
-        var acc = 0.0
-        for (p in samples) {
-            val dx = (p.x - mean.x).toDouble()
-            val dy = (p.y - mean.y).toDouble()
-            acc += dx * dx + dy * dy
-        }
-        return sqrt(acc / samples.size).toFloat()
-    }
-
     private companion object {
 
         const val MIN_NET_DISPLACEMENT_METERS = 0.15f
+
+        const val STABLE_INTERVAL_MS = 25L
+        const val CAPTURE_INTERVAL_MS = 10L
+        const val MIN_SAMPLES = 20
     }
 }

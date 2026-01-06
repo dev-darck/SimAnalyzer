@@ -1,6 +1,6 @@
 package com.project.analyzer.telemetry.ac.api.model.calibration
 
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
+import com.project.analyzer.math.Vec2
 import kotlinx.serialization.Serializable
 
 @Serializable
