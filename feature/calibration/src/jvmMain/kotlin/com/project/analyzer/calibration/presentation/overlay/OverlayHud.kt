@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.OverlayRegionController
 import com.project.analyzer.calibration.presentation.overlay.state.OverlayDebugState
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
+import com.project.analyzer.math.Vec2
 
 @Composable
 fun OverlayHud(

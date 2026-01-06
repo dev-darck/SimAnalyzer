@@ -1,12 +1,15 @@
 package com.project.analyzer.ac.telemetry.impl.fallback
 
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.math.Geometry2D.intersectSegmentsParams
+import com.project.analyzer.math.Geometry2D.isForwardCrossing
+import com.project.analyzer.math.Geometry2D.outsideBandByNormal
+import com.project.analyzer.math.MathEps
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
+import com.project.analyzer.telemetry.ac.api.model.calibration.frame2D
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import kotlin.math.abs
-import kotlin.math.max
 
 @Inject
 @SingleIn(SessionScope::class)
@@ -25,49 +28,41 @@ class GateCrossingDetector {
         gate: Gate,
     ): GateCrossing? {
 
-        val c = gate.centerV2()
-
-        val gf = gate.forwardV2().safeNormalized(Vec2(0f, 1f))
-
-        var gn = gate.normalV2()
-        gn = (gn - gf * gn.dot(gf)).safeNormalized(gf.perpLeft())
-
-        val half = gate.halfWidthMeters
-
-        val a = c + gn * half
-        val b = c - gn * half
-
         val p0 = previousPose.position
         val p1 = currentPose.position
+        val dp = p1 - p0
 
-        val r = p1 - p0
-        val dpLen = r.len()
-        if (dpLen < MIN_MOVEMENT_METERS) return null
+        if (dp.len2() < MIN_MOVEMENT_METERS * MIN_MOVEMENT_METERS) return null
 
-        val d0 = gf.dot(p0 - c)
-        val d1 = gf.dot(p1 - c)
+        val frame = gate.frame2D(fallbackForward = Vec2.Up)
+        val (a, b) = frame.segment()
 
-        val s = b - a
-        val rxs = cross(r, s)
+        val hitParams = intersectSegmentsParams(
+            p0 = p0,
+            p1 = p1,
+            q0 = a,
+            q1 = b,
+            epsParallel = MathEps.PARALLEL,
+            epsParam = MathEps.PARAM,
+        ) ?: return null
 
-        if (abs(rxs) < EPS) return null
+        val t = hitParams.t.coerceIn(0f, 1f)
+        val hit = p0 + dp * t
 
-        val qmp = a - p0
-        val tRaw = cross(qmp, s) / rxs
-        val uRaw = cross(qmp, r) / rxs
+        val isForward = isForwardCrossing(
+            p0 = p0,
+            p1 = p1,
+            center = frame.center,
+            forward = frame.forward,
+            dirEps = MathEps.DIR,
+        )
 
-        val tIn = (tRaw >= -EPS_T && tRaw <= 1f + EPS_T)
-        val uIn = (uRaw >= -EPS_T && uRaw <= 1f + EPS_T)
-
-        if (!tIn || !uIn) return null
-
-        val t = tRaw.coerceIn(0f, 1f)
-        val hit = p0 + r * t
-
-        val isForward = (d0 < -DIR_EPS) && (d1 >= -DIR_EPS)
-
-        val along = (hit - c).dot(gn)
-        val outsideBy = max(0f, abs(along) - half)
+        val outsideBy = outsideBandByNormal(
+            p = hit,
+            center = frame.center,
+            normal = frame.normal,
+            halfWidth = frame.halfWidthMeters
+        )
 
         return GateCrossing(
             interpolationFactor = t,
@@ -77,13 +72,7 @@ class GateCrossingDetector {
         )
     }
 
-    private fun cross(a: Vec2, b: Vec2): Float = a.x * b.y - a.y * b.x
-
     private companion object {
-
-        const val EPS = 1e-6f
-        const val EPS_T = 1e-4f
-        const val DIR_EPS = 1e-4f
         const val MIN_MOVEMENT_METERS = 0.002f
     }
 }

@@ -1,8 +1,8 @@
 package com.project.analyzer.calibration.presentation.verify.state
 
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 
 data class GateDebugInfo(
     val name: String,

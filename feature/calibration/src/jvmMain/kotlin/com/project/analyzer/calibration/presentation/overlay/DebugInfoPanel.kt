@@ -14,12 +14,12 @@ import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.components.TimingInfo
 import com.project.analyzer.calibration.presentation.components.fmt
 import com.project.analyzer.calibration.presentation.overlay.state.OverlayDebugState
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
+import com.project.analyzer.math.Vec2
 
 @Composable
 fun DebugInfoPanel(state: OverlayDebugState) {
     val carPos = state.carPos ?: return
-    val carDir = state.carDir ?: Vec2(0f, 1f)
+    val carDir = state.carDir ?: Vec2.Up
 
     Column(
         Modifier

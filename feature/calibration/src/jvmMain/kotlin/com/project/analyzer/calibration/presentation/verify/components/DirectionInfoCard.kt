@@ -11,7 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
+import com.project.analyzer.math.Vec2
 
 @Composable
 fun DirectionInfoCard(forward: Vec2?, headingDegrees: Float) {

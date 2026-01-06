@@ -13,8 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
+import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
 
 @Composable
 fun MiniMap(

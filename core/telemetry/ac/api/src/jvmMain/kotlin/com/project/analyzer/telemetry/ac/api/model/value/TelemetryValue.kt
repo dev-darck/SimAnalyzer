@@ -1,7 +1,7 @@
 package com.project.analyzer.telemetry.ac.api.model.value
 
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.math.Vec3
+import com.project.analyzer.math.Vec2
+import com.project.analyzer.math.Vec3
 
 public sealed interface TelemetryValue {
     public data class BoolVal(val value: Boolean) : TelemetryValue

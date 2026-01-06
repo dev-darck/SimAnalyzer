@@ -1,6 +1,6 @@
 package com.project.analyzer.calibration.data.model
 
-import com.project.analyzer.telemetry.ac.api.model.math.Vec2
+import com.project.analyzer.math.Vec2
 
 data class Pose2D(
     val pos: Vec2,
