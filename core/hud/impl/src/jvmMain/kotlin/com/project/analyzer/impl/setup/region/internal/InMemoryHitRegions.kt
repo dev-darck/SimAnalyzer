@@ -1,20 +1,11 @@
-package com.project.analyzer.calibration.presentation.overlay
+package com.project.analyzer.hud.setup.region.internal
 
+import androidx.compose.ui.unit.IntRect
+import com.project.analyzer.hud.setup.region.HitRegions
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-data class IntRect(val left: Int, val top: Int, val right: Int, val bottom: Int) {
-    fun contains(x: Int, y: Int): Boolean = x in left..right && y in top..bottom
-}
-
-interface HitRegions {
-    fun put(key: String, rect: IntRect)
-    fun remove(key: String)
-    fun snapshot(): List<IntRect>
-    fun version(): Long
-}
-
-class InMemoryHitRegions : HitRegions {
+internal class InMemoryHitRegions : HitRegions {
     private val map = ConcurrentHashMap<String, IntRect>()
     private val ver = AtomicLong(0)
 
