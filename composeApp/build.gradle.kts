@@ -14,6 +14,7 @@ app {
         projects.core.hud.impl.jvmImpl
         projects.core.utils.jvmImpl
         projects.core.preference.api.jvmImpl
+        projects.core.theme.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

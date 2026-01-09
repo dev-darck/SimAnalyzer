@@ -1,8 +1,9 @@
 package com.project.analyzer.dsl
 
 import com.project.analyzer.base.configureMetro
-import com.project.analyzer.kmp.configureComposeResources
 import com.project.analyzer.kmp.configureComposeKmp
+import com.project.analyzer.kmp.configureComposeResources
+import com.project.analyzer.kmp.configureProtoSerializer
 import dev.zacsweers.metro.gradle.MetroPluginExtension
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -33,5 +34,9 @@ abstract class ModuleExtension @Inject constructor(
 
     fun configureResources() {
         configureComposeResources()
+    }
+
+    fun proto() {
+        configureProtoSerializer()
     }
 }

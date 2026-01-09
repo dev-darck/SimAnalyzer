@@ -1,0 +1,3 @@
+moduleApi {
+    compose()
+}
