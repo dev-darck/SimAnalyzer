@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.sqldelight) apply false
     alias(libs.plugins.convention.project.dsl) apply false
     alias(libs.plugins.metro) apply false
+    alias(libs.plugins.ksp) apply false
 }
 
 subprojects {

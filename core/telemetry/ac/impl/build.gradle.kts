@@ -1,5 +1,7 @@
 moduleImpl {
     metro()
+    proto()
+
     dependencies {
         projects.core.telemetry.ac.api.jvmImpl
         projects.core.di.api.jvmImpl
