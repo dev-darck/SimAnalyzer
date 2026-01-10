@@ -8,6 +8,6 @@ sealed interface HudIntent {
     data class Toggle(val id: String) : HudIntent
     data class Restart(val id: String) : HudIntent
     data object HideAll : HudIntent
-    data class UpdatePosition(val id: String, val offset: IntOffset) : HudIntent
-    data class SavePosition(val id: String) : HudIntent
+
+    data class SavePosition(val id: String, val offset: IntOffset) : HudIntent
 }

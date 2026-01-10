@@ -6,7 +6,7 @@ import com.project.analyzer.calibration.data.model.WheelDebug
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
 import com.project.analyzer.math.MinLen
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.TelemetryDataSource
+import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.stateIn
 @SingleIn(ScreenScope::class)
 @ContributesBinding(ScreenScope::class, binding = binding<TelemetrySampleProvider>())
 class AcTelemetrySampleProvider(
-    telemetry: TelemetryDataSource,
+    telemetry: TelemetryLifecycle,
 ) : TelemetrySampleProvider {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -37,7 +37,7 @@ class AcTelemetrySampleProvider(
         println("AcTelemetrySampleProvider: setReferencePoint($rp)")
     }
 
-    override val sample: StateFlow<CalibrationSample> = telemetry.frames()
+    override val sample: StateFlow<CalibrationSample> = telemetry.frames
         .map { frame ->
             val pose = extractor.extract(frame)
             val speed = frame.car?.speedKmh ?: 0f

@@ -10,19 +10,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.zIndex
 import com.project.analyzer.hud.api.HudPanel
+import com.project.analyzer.impl.setup.game.OverlayController
+import com.project.analyzer.impl.setup.region.HitRegions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Composable
-fun HudHost(
+internal fun HudHost(
     panels: Set<HudPanel>,
-    modifier: Modifier = Modifier
+    hitRegions: HitRegions,
+    overlayController: OverlayController,
+    modifier: Modifier = Modifier,
 ) {
     val viewModel: HudViewModel = metroViewModel()
     val state by viewModel.state.collectAsState()
     val dispatch = viewModel::dispatch
     val panelsById = remember(panels) { panels.associateBy { it.id } }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier.fillMaxSize()
+    ) {
         state.visiblePanels
             .mapNotNull { (id, version) ->
                 panelsById[id]?.let { panel -> Triple(id, version, panel) }
@@ -34,6 +40,8 @@ fun HudHost(
                         panelId = id,
                         offset = state.positions[id] ?: panel.defaultOffset,
                         onIntent = dispatch,
+                        hitRegions = hitRegions,
+                        overlayController = overlayController,
                         modifier = Modifier.zIndex(panel.zIndex.toFloat())
                     ) {
                         panel.Content(Modifier)

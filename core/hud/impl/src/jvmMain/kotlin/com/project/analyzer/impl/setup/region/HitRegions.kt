@@ -1,11 +1,13 @@
-package com.project.analyzer.hud.setup.region
+package com.project.analyzer.impl.setup.region
 
 import androidx.compose.ui.unit.IntRect
+import kotlinx.coroutines.flow.Flow
 
-public interface HitRegions {
+interface HitRegions {
 
-    public fun put(key: String, rect: IntRect)
-    public fun remove(key: String)
-    public fun snapshot(): List<IntRect>
-    public fun version(): Long
+    fun snapshot(): List<IntRect>
+    fun observeChanges(): Flow<List<IntRect>>
+    fun put(key: String, rect: IntRect)
+    fun remove(key: String)
+    fun clear()
 }
