@@ -16,6 +16,7 @@ class AcEvoFallbackShmPatcher(
     private var syntheticPacketId: Int = 1
     private var lastSessionEpoch: Long = -1L
     private val teleportResetDetector = TeleportResetDetector()
+    private var lastPenaltyTimestamp: String? = null
 
     fun clear() {
         fileInfoExtractor.clear()
@@ -23,6 +24,7 @@ class AcEvoFallbackShmPatcher(
         syntheticPacketId = 1
         lastSessionEpoch = -1L
         teleportResetDetector.reset()
+        lastPenaltyTimestamp = null
     }
 
     fun patchIfNeeded(shm: AcSharedMemory, loopStartNanos: Long) {
@@ -33,16 +35,24 @@ class AcEvoFallbackShmPatcher(
         if (info.sessionEpoch != lastSessionEpoch) {
             lastSessionEpoch = info.sessionEpoch
             lapAnalyzer.resetSession()
+            lastPenaltyTimestamp = null
         }
 
         if (teleportResetDetector.update(loopStartNanos, shm.physics)) {
             lapAnalyzer.resetSession()
         }
 
-        val calibration = lapAnalyzer.loadCalibration(info.trackId)
+        if (info.penaltyTimestamp != null && info.penaltyTimestamp != lastPenaltyTimestamp) {
+            lapAnalyzer.onPenaltyDetected()
+            lastPenaltyTimestamp = info.penaltyTimestamp
+            fileInfoExtractor.clearPenalty()
+        }
+
+        lapAnalyzer.loadCalibration(info.trackId)
         patchStatics(shm.statics, info)
 
         lapAnalyzer.processPhysicsFrame(loopStartNanos, shm.physics)
+
         val snapshot = lapAnalyzer.getSnapshot(loopStartNanos)
         patchGraphics(shm.graphics, snapshot)
     }
@@ -92,7 +102,7 @@ class AcEvoFallbackShmPatcher(
 
         graphics.iSplit = snapshot.currentSectorTimeMs
 
-        graphics.isValidLap = 1
+        graphics.isValidLap = if (snapshot.currentLapValid) 1 else 0
     }
 }
 

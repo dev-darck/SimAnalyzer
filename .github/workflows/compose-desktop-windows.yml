@@ -1,65 +1,187 @@
-name: Build Desktop App
+name: Compose Desktop (Windows)
 
 on:
   push:
-    branches: [ "**" ]
+    branches:
+      - "**"
+    tags:
+      - "v*"
+  pull_request:
   workflow_dispatch:
+    inputs:
+      build_flavor:
+        description: "What to build"
+        type: choice
+        required: true
+        default: release
+        options:
+          - release
+          - dev
+          - both
+      artifacts:
+        description: "Which artifacts to upload"
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - msi
+          - portable
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: windows-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+  windows:
     runs-on: windows-latest
-    
+
+    env:
+      BUILD_FLAVOR: ${{ github.event_name == 'workflow_dispatch' && inputs.build_flavor || 'release' }}
+      BUILD_ARTIFACTS: ${{ github.event_name == 'workflow_dispatch' && inputs.artifacts || 'both' }}
+
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          java-version: '21'
-          distribution: 'temurin'
+          fetch-depth: 0
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
-          gradle-home-cache-cleanup: true
-          build-scan-publish: false
+      - name: Show selected build options
+        shell: pwsh
+        run: |
+          Write-Host "BUILD_FLAVOR=$env:BUILD_FLAVOR"
+          Write-Host "BUILD_ARTIFACTS=$env:BUILD_ARTIFACTS"
 
-      - name: Cache Kotlin/Compose
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.konan
-            ~/.gradle/caches/transforms-*
-            ~/.gradle/caches/jars-*
-          key: ${{ runner.os }}-compose-${{ hashFiles('**/*.gradle.kts', '**/gradle.properties', 'gradle/libs.versions.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-compose-
+      - name: Install WiX Toolset
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          choco install wixtoolset --no-progress -y
+          candle.exe -? | Select-Object -First 1
+          light.exe -?  | Select-Object -First 1
 
-      - name: Build
-        run: ./gradlew build --no-daemon
+      - name: Install JetBrains Runtime (JBR) 21 SDK
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $jbrUrl = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.9-windows-x64-b1163.86.zip"
+          $zip = Join-Path $env:RUNNER_TEMP "jbrsdk.zip"
+          Invoke-WebRequest -Uri $jbrUrl -OutFile $zip
 
-      - name: Create App Image (Portable)
-        run: ./gradlew :composeApp:createDistributable --build-cache
+          $dest = Join-Path $env:RUNNER_TEMP "jbr"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Expand-Archive -Path $zip -DestinationPath $dest -Force
 
-      - name: Upload Portable App
+          $jbrHome = (Get-ChildItem $dest | Where-Object { $_.PSIsContainer } | Select-Object -First 1).FullName
+          "JAVA_HOME=$jbrHome" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "$jbrHome\bin"       | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+          java -version
+
+      - name: Setup Gradle (cache)
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build DEV
+        if: env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Building DEV (BUILD_ARTIFACTS=${BUILD_ARTIFACTS})"
+
+          if [[ "${BUILD_ARTIFACTS}" == "portable" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug :composeApp:createDistributable
+          elif [[ "${BUILD_ARTIFACTS}" == "msi" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug :composeApp:packageMsi
+          else
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug :composeApp:packageMsi :composeApp:createDistributable
+          fi
+
+      - name: Prepare DEV portable folder
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both')
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $src = "composeApp\build\compose\binaries\main\app"
+          if (-not (Test-Path $src)) { throw "DEV app image not found: $src" }
+
+          $dest = "dist\portable-dev"
+          if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+          Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force
+          Write-Host "DEV portable prepared: $dest"
+
+      - name: Upload DEV MSI
+        if: env.BUILD_ARTIFACTS != 'portable' && (env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both')
         uses: actions/upload-artifact@v4
         with:
-          name: SimAnalyzer-portable
-          path: composeApp/build/compose/binaries/main/app/
-          retention-days: 7
-          compression-level: 9
+          name: windows-msi-dev-${{ github.sha }}
+          path: composeApp/build/compose/binaries/main/msi/*.msi
+          if-no-files-found: error
+          retention-days: 4
 
-      - name: Build MSI Installer
-        run: ./gradlew :composeApp:packageMsi --build-cache
-
-      - name: Upload MSI
+      - name: Upload DEV portable
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both')
         uses: actions/upload-artifact@v4
         with:
-          name: SimAnalyzer-msi
-          path: composeApp/build/compose/binaries/main/msi/
-          retention-days: 7
+          name: windows-portable-dev-${{ github.sha }}
+          path: dist/portable-dev/**
+          if-no-files-found: error
+          retention-days: 4
+
+      - name: Build RELEASE
+        if: env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Building RELEASE (BUILD_ARTIFACTS=${BUILD_ARTIFACTS})"
+
+          # Fallback: в разных версиях compose-multiplatform таска для app image может называться по-разному
+          if ./gradlew -q :composeApp:tasks --all | grep -q "packageReleaseDistributable"; then
+            DIST_TASK=":composeApp:packageReleaseDistributable"
+          else
+            DIST_TASK=":composeApp:createReleaseDistributable"
+          fi
+          echo "Using distributable task: ${DIST_TASK}"
+
+          if [[ "${BUILD_ARTIFACTS}" == "portable" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=release ${DIST_TASK}
+          elif [[ "${BUILD_ARTIFACTS}" == "msi" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=release :composeApp:packageReleaseMsi
+          else
+            # ВОТ ЭТО БЫЛО СЛОМАНО: при both нужно собрать и MSI, и app image для portable
+            ./gradlew --no-daemon --stacktrace -PbuildType=release :composeApp:packageReleaseMsi ${DIST_TASK}
+          fi
+
+      - name: Prepare RELEASE portable folder
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both')
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $src = "composeApp\build\compose\binaries\main-release\app"
+          if (-not (Test-Path $src)) { throw "RELEASE app image not found: $src" }
+
+          $dest = "dist\portable-release"
+          if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+          Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force
+          Write-Host "RELEASE portable prepared: $dest"
+
+      - name: Upload RELEASE MSI
+        if: env.BUILD_ARTIFACTS != 'portable' && (env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msi-release-${{ github.sha }}
+          path: composeApp/build/compose/binaries/main-release/msi/*.msi
+          if-no-files-found: error
+          retention-days: 4
+
+      - name: Upload RELEASE portable
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-release-${{ github.sha }}
+          path: dist/portable-release/**
+          if-no-files-found: error
+          retention-days: 4

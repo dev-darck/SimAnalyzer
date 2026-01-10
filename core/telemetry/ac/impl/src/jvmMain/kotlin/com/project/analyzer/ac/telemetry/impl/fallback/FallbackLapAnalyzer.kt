@@ -63,6 +63,13 @@ class FallbackLapAnalyzer(
 
         state.ensureLapStarted(timestampNs)
 
+        state.updateValidity(
+            tyreDirtyLevel = physics.tyreDirtyLevel,
+            carDamage = physics.carDamage,
+            numberOfTyresOut = physics.numberOfTyresOut,
+            hasPenalty = false
+        )
+
         val previous = state.previousPose
         if (previous == null) {
             state.previousPose = pose
@@ -70,6 +77,10 @@ class FallbackLapAnalyzer(
         }
 
         processFrame(timestampNs, previous, pose, calibration)
+    }
+
+    fun onPenaltyDetected() {
+        state.invalidateCurrentLap()
     }
 
     fun resetSession() {

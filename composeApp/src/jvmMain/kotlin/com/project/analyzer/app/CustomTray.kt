@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalComposeUiApi::class)
 
-package com.project.analyzer
+package com.project.analyzer.app
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -18,15 +18,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -69,6 +69,7 @@ private const val ShowDelay = 50L
 
 @Composable
 fun ApplicationScope.CustomTray(
+    brandName: String,
     overlayVisible: Boolean,
     onMainAction: () -> Unit,
     onOverlayToggle: () -> Unit
@@ -115,6 +116,7 @@ fun ApplicationScope.CustomTray(
 
     if (showMenu) {
         TrayMenuWindow(
+            brandName = brandName,
             position = menuPosition,
             overlayVisible = overlayVisible,
             onDismiss = { showMenu = false },
@@ -133,6 +135,7 @@ fun ApplicationScope.CustomTray(
 
 @Composable
 private fun TrayMenuWindow(
+    brandName: String,
     position: Pair<Int, Int>,
     overlayVisible: Boolean,
     onDismiss: () -> Unit,
@@ -183,7 +186,7 @@ private fun TrayMenuWindow(
             window.isAlwaysOnTop = true
 
             val focusListener = object : WindowFocusListener {
-                override fun windowGainedFocus(e: WindowEvent?) {}
+                override fun windowGainedFocus(e: WindowEvent?) = Unit
 
                 override fun windowLostFocus(e: WindowEvent?) {
                     onDismiss()
@@ -210,6 +213,7 @@ private fun TrayMenuWindow(
                 }
         ) {
             TrayMenuContent(
+                brandName = brandName,
                 overlayVisible = overlayVisible,
                 onOverlayToggle = onOverlayToggle,
                 onOpenApp = onOpenApp,
@@ -221,6 +225,7 @@ private fun TrayMenuWindow(
 
 @Composable
 private fun TrayMenuContent(
+    brandName: String,
     overlayVisible: Boolean,
     onOverlayToggle: () -> Unit,
     onOpenApp: () -> Unit,
@@ -230,19 +235,18 @@ private fun TrayMenuContent(
         modifier = Modifier.fillMaxSize(),
         shape = RoundedCornerShape(12.dp),
         color = Color(0xFF1E1E2E),
-        elevation = 8.dp
     ) {
         Column(
             modifier = Modifier.padding(8.dp)
         ) {
             Text(
-                text = "SimAnalyzer",
+                text = brandName,
                 color = Color(0xFFCDD6F4),
                 fontSize = 14.sp,
                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
             )
 
-            Divider(
+            HorizontalDivider(
                 color = Color(0xFF45475A),
                 modifier = Modifier.padding(vertical = 4.dp)
             )
@@ -259,7 +263,7 @@ private fun TrayMenuContent(
                 onClick = onOverlayToggle
             )
 
-            Divider(
+            HorizontalDivider(
                 color = Color(0xFF45475A),
                 modifier = Modifier.padding(vertical = 4.dp)
             )

@@ -1,6 +1,7 @@
 moduleImpl {
     compose()
     metro()
+    logger()
 
     dependencies {
         projects.core.hud.api.jvmImpl

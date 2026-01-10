@@ -1,11 +1,12 @@
 package com.project.analyzer.impl.setup.game
 
-import com.project.analyzer.api.di.IO
+import com.project.analyzer.impl.setup.jna.user32Ex
 import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.Psapi
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
 import com.sun.jna.platform.win32.WinDef.HWND
+import com.sun.jna.platform.win32.WinDef.POINT
 import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.platform.win32.WinUser
 import com.sun.jna.ptr.IntByReference
@@ -16,20 +17,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
+import java.awt.GraphicsDevice
 import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 class GameDetector(
     private val configs: List<GameConfig>,
-    private val pollIntervalMs: Long = 150L,
-    @param:IO
-    private val ioDispatcher: CoroutineDispatcher
+    private val pollIntervalMs: Long = 200L,
+    private val coroutineDispatcher: CoroutineDispatcher
 ) {
 
     private val user32 = User32.INSTANCE
     private val kernel32 = Kernel32.INSTANCE
     private val psapi = Psapi.INSTANCE
+
+    private val titleBuffer = CharArray(512)
+    private val pathBuffer = CharArray(1024)
 
     @Volatile
     private var overlayHwnd: HWND? = null
@@ -43,24 +48,24 @@ class GameDetector(
         var lastEmittedInfo: GameWindowInfo? = null
         var lostFocusCounter = 0
         val maxLostFocusCount = 3
-        var isFirstEmit = true
 
         while (currentCoroutineContext().isActive) {
-            val gameInfo = findGameWindow(cachedGameHwnd)
+            var gameInfo = if (cachedGameHwnd != null) checkWindow(cachedGameHwnd) else null
+
+            if (gameInfo == null) {
+                gameInfo = scanAllVisibleWindows()
+            }
 
             if (gameInfo != null) {
                 cachedGameHwnd = gameInfo.hwnd
                 lostFocusCounter = 0
 
-                val shouldEmit = isFirstEmit ||
-                    lastEmittedInfo == null ||
-                    lastEmittedInfo.hwnd.pointer != gameInfo.hwnd.pointer ||
-                    lastEmittedInfo.bounds != gameInfo.bounds
+                val boundsChanged = lastEmittedInfo?.bounds != gameInfo.bounds
+                val hwndChanged = lastEmittedInfo?.hwnd?.pointer != gameInfo.hwnd.pointer
 
-                if (shouldEmit) {
+                if (lastEmittedInfo == null || boundsChanged || hwndChanged) {
                     lastEmittedInfo = gameInfo
                     emit(gameInfo)
-                    isFirstEmit = false
                 }
             } else {
                 if (lastEmittedInfo != null) {
@@ -70,58 +75,49 @@ class GameDetector(
                         lastEmittedInfo = null
                         emit(null)
                     }
-                } else if (isFirstEmit) {
-                    emit(null)
-                    isFirstEmit = false
                 }
             }
 
             delay(pollIntervalMs)
         }
-    }.flowOn(ioDispatcher)
+    }.flowOn(coroutineDispatcher)
 
-    private fun findGameWindow(cachedHwnd: HWND?): GameWindowInfo? {
-        if (cachedHwnd != null && user32.IsWindow(cachedHwnd) && user32.IsWindowVisible(cachedHwnd)) {
-            val info = getWindowInfo(cachedHwnd)
-            if (info != null && matchesGameConfig(info) && isGameActive(cachedHwnd)) {
-                return info
-            }
-        }
+    private fun checkWindow(hwnd: HWND): GameWindowInfo? {
+        if (!user32.IsWindow(hwnd) || !user32.IsWindowVisible(hwnd)) return null
 
-        var foundWindow: GameWindowInfo? = null
+        if (!isGameOrOverlayForeground(hwnd)) return null
 
-        user32.EnumWindows(
-            WinUser.WNDENUMPROC { hwnd, _ ->
-                if (!user32.IsWindowVisible(hwnd)) return@WNDENUMPROC true
-
-                val info = getWindowInfo(hwnd)
-                if (info != null && matchesGameConfig(info) && isGameActive(hwnd)) {
-                    foundWindow = info
-                    return@WNDENUMPROC false
-                }
-                true
-            },
-            null
-        )
-
-        return foundWindow
+        val info = getWindowInfo(hwnd) ?: return null
+        return if (matchesGameConfig(info)) info else null
     }
 
-    private fun isGameActive(gameHwnd: HWND): Boolean {
+    private fun scanAllVisibleWindows(): GameWindowInfo? {
+        var found: GameWindowInfo? = null
+
+        user32.EnumWindows({ hwnd, _ ->
+            if (user32.IsWindowVisible(hwnd)) {
+                if (isGameOrOverlayForeground(hwnd)) {
+                    val info = getWindowInfo(hwnd)
+                    if (info != null && matchesGameConfig(info)) {
+                        found = info
+                        return@EnumWindows false
+                    }
+                }
+            }
+            true
+        }, null)
+
+        return found
+    }
+
+    private fun isGameOrOverlayForeground(gameHwnd: HWND): Boolean {
+        if (user32Ex.IsIconic(gameHwnd)) return false
+
         val foreground = user32.GetForegroundWindow() ?: return false
+        val fgPtr = foreground.pointer
+        val gamePtr = gameHwnd.pointer
 
-        val foregroundPointer = foreground.pointer
-
-        if (foregroundPointer == gameHwnd.pointer) return true
-
-        val overlay = overlayHwnd
-        if (overlay != null && foregroundPointer == overlay.pointer) return true
-
-        if (overlay == null) {
-            return user32.IsWindow(gameHwnd) && user32.IsWindowVisible(gameHwnd)
-        }
-
-        return false
+        return fgPtr == gamePtr || (overlayHwnd != null && fgPtr == overlayHwnd!!.pointer)
     }
 
     private fun getWindowInfo(hwnd: HWND): GameWindowInfo? {
@@ -129,34 +125,27 @@ class GameDetector(
         if (title.isBlank()) return null
 
         val processName = getProcessName(hwnd) ?: return null
+
         val bounds = getWindowBounds(hwnd) ?: return null
         val monitor = findMonitorForWindow(bounds)
         val isFullscreen = isWindowFullscreen(bounds, monitor)
 
-        return GameWindowInfo(
-            hwnd = hwnd,
-            title = title,
-            processName = processName,
-            bounds = bounds,
-            isFullscreen = isFullscreen,
-            monitor = monitor
-        )
+        return GameWindowInfo(hwnd, title, processName, bounds, isFullscreen, monitor)
     }
 
     private fun matchesGameConfig(info: GameWindowInfo): Boolean = configs.any { config ->
-        val titleMatch = config.titlePatterns.isEmpty() ||
-            config.titlePatterns.any { info.title.contains(it, ignoreCase = true) }
-
-        val processMatch = config.processNames.isEmpty() ||
-            config.processNames.any { info.processName.equals(it, ignoreCase = true) }
-
-        titleMatch && processMatch
+        val titleOk = config.titlePatterns.isEmpty() || config.titlePatterns.any {
+            info.title.contains(it, ignoreCase = true)
+        }
+        val procOk = config.processNames.isEmpty() || config.processNames.any {
+            info.processName.equals(it, ignoreCase = true)
+        }
+        titleOk && procOk
     }
 
     private fun getWindowTitle(hwnd: HWND): String {
-        val buf = CharArray(512)
-        val len = user32.GetWindowText(hwnd, buf, buf.size)
-        return if (len > 0) String(buf, 0, len) else ""
+        val len = user32.GetWindowText(hwnd, titleBuffer, titleBuffer.size)
+        return if (len > 0) String(titleBuffer, 0, len) else ""
     }
 
     private fun getProcessName(hwnd: HWND): String? {
@@ -172,10 +161,9 @@ class GameDetector(
         ) ?: return null
 
         return try {
-            val path = CharArray(1024)
-            val len = psapi.GetModuleFileNameExW(hProcess, null, path, path.size)
+            val len = psapi.GetModuleFileNameExW(hProcess, null, pathBuffer, pathBuffer.size)
             if (len > 0) {
-                val fullPath = String(path, 0, len)
+                val fullPath = String(pathBuffer, 0, len)
                 fullPath.substringAfterLast("\\")
             } else null
         } finally {
@@ -184,30 +172,76 @@ class GameDetector(
     }
 
     private fun getWindowBounds(hwnd: HWND): Rectangle? {
-        val rect = WinDef.RECT()
-        if (!user32.GetWindowRect(hwnd, rect)) return null
-        return Rectangle(rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top)
+        val clientPx = getClientBoundsPhysical(hwnd) ?: return null
+        val hmon = user32.MonitorFromWindow(hwnd, WinUser.MONITOR_DEFAULTTONEAREST)
+        val mi = WinUser.MONITORINFO()
+        mi.cbSize = mi.size()
+        if (!user32.GetMonitorInfo(hmon, mi).booleanValue()) return null
+
+        val m = mi.rcMonitor
+        val monitorPx = Rectangle(m.left, m.top, m.right - m.left, m.bottom - m.top)
+
+        val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
+        val defaultDevice = ge.defaultScreenDevice
+
+        fun devicePhysicalBounds(device: GraphicsDevice): Rectangle {
+            val gc = device.defaultConfiguration
+            val ub = gc.bounds
+            val tx = gc.defaultTransform
+            return Rectangle(
+                (ub.x * tx.scaleX).roundToInt(),
+                (ub.y * tx.scaleY).roundToInt(),
+                (ub.width * tx.scaleX).roundToInt(),
+                (ub.height * tx.scaleY).roundToInt()
+            )
+        }
+
+        val bestDevice = ge.screenDevices.maxByOrNull { d ->
+            val pb = devicePhysicalBounds(d)
+            val inter = pb.intersection(monitorPx)
+            if (inter.isEmpty) 0 else inter.width * inter.height
+        } ?: defaultDevice
+
+        val gc = bestDevice.defaultConfiguration
+        val monitorUser = gc.bounds
+        val tx = gc.defaultTransform
+
+        val xUser = monitorUser.x + (clientPx.x - monitorPx.x) / tx.scaleX
+        val yUser = monitorUser.y + (clientPx.y - monitorPx.y) / tx.scaleY
+        val wUser = clientPx.width / tx.scaleX
+        val hUser = clientPx.height / tx.scaleY
+
+        return Rectangle(xUser.roundToInt(), yUser.roundToInt(), wUser.roundToInt(), hUser.roundToInt())
     }
 
     private fun findMonitorForWindow(windowBounds: Rectangle): GraphicsDeviceInfo {
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
-        val defaultDevice = ge.defaultScreenDevice
+        val devices = ge.screenDevices
 
-        val bestDevice = ge.screenDevices.maxByOrNull { device ->
-            val monitorBounds = device.defaultConfiguration.bounds
-            val intersection = monitorBounds.intersection(windowBounds)
+        val best = devices.maxByOrNull { d ->
+            val b = d.defaultConfiguration.bounds
+            val intersection = b.intersection(windowBounds)
             if (intersection.isEmpty) 0 else intersection.width * intersection.height
-        } ?: defaultDevice
+        } ?: ge.defaultScreenDevice
 
         return GraphicsDeviceInfo(
-            id = bestDevice.iDstring,
-            bounds = bestDevice.defaultConfiguration.bounds,
-            isDefault = bestDevice == defaultDevice
+            id = best.iDstring,
+            bounds = best.defaultConfiguration.bounds,
+            isDefault = best == ge.defaultScreenDevice
         )
     }
 
+    private fun getClientBoundsPhysical(hwnd: HWND): Rectangle? {
+        val rc = WinDef.RECT()
+        if (!user32.GetClientRect(hwnd, rc)) return null
+        val pt = POINT(0, 0)
+        if (!user32Ex.ClientToScreen(hwnd, pt)) return null
+        if (pt.x > 0 || pt.y > 0) return null
+        return Rectangle(pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top)
+    }
+
     private fun isWindowFullscreen(windowBounds: Rectangle, monitor: GraphicsDeviceInfo): Boolean {
-        val tolerance = 10
+        val tolerance = 15
         return abs(windowBounds.x - monitor.bounds.x) <= tolerance &&
             abs(windowBounds.y - monitor.bounds.y) <= tolerance &&
             abs(windowBounds.width - monitor.bounds.width) <= tolerance &&

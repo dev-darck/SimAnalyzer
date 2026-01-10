@@ -8,19 +8,33 @@ import com.sun.jna.platform.win32.WinDef
 import java.awt.Window
 import kotlin.math.roundToInt
 
+private const val RGN_OR = 2
+
 internal object WindowsOverlayRegion {
 
+    private val gdi32 = GDI32.INSTANCE
+    private val user32 = User32.INSTANCE
+
     fun apply(window: Window, rectsLogical: List<IntRect>) {
+        if (rectsLogical.isEmpty()) {
+//            setEmptyRegion(window)
+            return
+        }
+
         val hwnd = WinDef.HWND(Native.getComponentPointer(window))
 
-        val tx = window.graphicsConfiguration.defaultTransform
-        val sx = tx.scaleX.toFloat()
-        val sy = tx.scaleY.toFloat()
+        val rc = WinDef.RECT()
+        user32.GetWindowRect(hwnd, rc)
+        val physW = (rc.right - rc.left).coerceAtLeast(1)
+        val physH = (rc.bottom - rc.top).coerceAtLeast(1)
 
-        val gdi = GDI32.INSTANCE
-        val user32 = User32.INSTANCE
+        val logW = window.width.coerceAtLeast(1)
+        val logH = window.height.coerceAtLeast(1)
 
-        val mainRgn = gdi.CreateRectRgn(0, 0, 0, 0)
+        val sx = physW.toFloat() / logW.toFloat()
+        val sy = physH.toFloat() / logH.toFloat()
+
+        val mainRgn = gdi32.CreateRectRgn(0, 0, 0, 0)
 
         rectsLogical.forEach { r ->
             val l = (r.left * sx).roundToInt()
@@ -28,27 +42,24 @@ internal object WindowsOverlayRegion {
             val rr = (r.right * sx).roundToInt()
             val bb = (r.bottom * sy).roundToInt()
 
-            val tmp = gdi.CreateRectRgn(l, t, rr, bb)
-            gdi.CombineRgn(mainRgn, mainRgn, tmp, 2)
-            gdi.DeleteObject(tmp)
+            val tmp = gdi32.CreateRectRgn(l, t, rr, bb)
+            gdi32.CombineRgn(mainRgn, mainRgn, tmp, RGN_OR)
+            gdi32.DeleteObject(tmp)
         }
 
-        user32.SetWindowRgn(hwnd, mainRgn, true)
+        val ok = user32.SetWindowRgn(hwnd, mainRgn, true)
+        if (ok == 0) gdi32.DeleteObject(mainRgn)
     }
 
-    fun applyFullWindow(window: Window) {
+    private fun setEmptyRegion(window: Window) {
         val hwnd = WinDef.HWND(Native.getComponentPointer(window))
-        val tx = window.graphicsConfiguration.defaultTransform
-        val sx = tx.scaleX.toFloat()
-        val sy = tx.scaleY.toFloat()
+        val empty = gdi32.CreateRectRgn(0, 0, 0, 0)
+        val ok = user32.SetWindowRgn(hwnd, empty, true)
+        if (ok == 0) gdi32.DeleteObject(empty)
+    }
 
-        val wPhys = (window.width * sx).toInt().coerceAtLeast(1)
-        val hPhys = (window.height * sy).toInt().coerceAtLeast(1)
-
-        val gdi = GDI32.INSTANCE
-        val user32 = User32.INSTANCE
-
-        val rgn = gdi.CreateRectRgn(0, 0, wPhys, hPhys)
-        user32.SetWindowRgn(hwnd, rgn, true)
+    fun resetToFullWindow(window: Window) {
+        val hwnd = WinDef.HWND(Native.getComponentPointer(window))
+        user32.SetWindowRgn(hwnd, null, true)
     }
 }

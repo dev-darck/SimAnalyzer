@@ -16,6 +16,8 @@ class LapAnalyzerState {
     var isLapRunning = false
     var isSyncedToStartFinish = false
 
+    var unsyncedLapStartTimeNs = 0L
+
     var lapStartTimeNs = 0L
     var sectorStartTimeNs = 0L
     var currentSectorIndex = 1
@@ -35,12 +37,34 @@ class LapAnalyzerState {
     private val gateLastTriggerNs = mutableMapOf<String, Long>()
     private val gateCooldownNs = 900_000_000L
 
+    var currentLapValid: Boolean = true
+        private set
+    var lastLapValid: Boolean = true
+        private set
+    var bestValidLapTimeMs: Int? = null
+        private set
+
+    private var maxDirtyLevelThisLap: Float = 0f
+    private var currentDamage: Float = 0f
+    private var hadPenaltyThisLap: Boolean = false
+    private var hadOffTrackThisLap: Boolean = false
+    private var hasDamage: Boolean = false
+
     fun reset() {
         isActive = false
         currentTrackId = null
         calibration = null
         referencePoint = ReferencePoint.FRONT_AXLE
         resetSession()
+
+        currentLapValid = true
+        lastLapValid = true
+        bestValidLapTimeMs = null
+        maxDirtyLevelThisLap = 0f
+        currentDamage = 0f
+        hadPenaltyThisLap = false
+        hadOffTrackThisLap = false
+        hasDamage = false
     }
 
     fun resetSession() {
@@ -48,6 +72,7 @@ class LapAnalyzerState {
         previousTimestampNs = 0L
         isLapRunning = false
         isSyncedToStartFinish = false
+        unsyncedLapStartTimeNs = 0L
         lapStartTimeNs = 0L
         sectorStartTimeNs = 0L
         currentSectorIndex = 1
@@ -63,6 +88,61 @@ class LapAnalyzerState {
         bestSector3Ms = null
         gateLastTriggerNs.clear()
         isActive = true
+
+        currentLapValid = true
+        lastLapValid = true
+        maxDirtyLevelThisLap = 0f
+        currentDamage = 0f
+        hasDamage = false
+        hadPenaltyThisLap = false
+        hadOffTrackThisLap = false
+    }
+
+    fun updateValidity(
+        tyreDirtyLevel: FloatArray?,
+        carDamage: FloatArray?,
+        numberOfTyresOut: Int,
+        hasPenalty: Boolean
+    ) {
+        tyreDirtyLevel?.let { dirty ->
+            if (dirty.size >= 4) {
+                val maxDirty = dirty.take(4).maxOrNull() ?: 0f
+                if (maxDirty > maxDirtyLevelThisLap) {
+                    maxDirtyLevelThisLap = maxDirty
+                }
+
+                val allDirty = dirty.take(4).all { it > DIRTY_THRESHOLD }
+                if (allDirty) {
+                    hadOffTrackThisLap = true
+                }
+            }
+        }
+
+        carDamage?.let { damage ->
+            val maxDmg = damage.maxOrNull() ?: 0f
+            if (maxDmg > currentDamage) {
+                currentDamage = maxDmg
+                hasDamage = currentDamage > DAMAGE_THRESHOLD
+            }
+            if (maxDmg < currentDamage) currentDamage = maxDmg
+        }
+
+        if (numberOfTyresOut >= 4) {
+            hadOffTrackThisLap = true
+        }
+
+        if (hasPenalty) {
+            hadPenaltyThisLap = true
+        }
+
+        currentLapValid = !hadPenaltyThisLap &&
+            !hadOffTrackThisLap &&
+            !hasDamage
+    }
+
+    fun invalidateCurrentLap() {
+        hadPenaltyThisLap = true
+        currentLapValid = false
     }
 
     fun resetWithTrackId(trackId: String) {
@@ -87,6 +167,7 @@ class LapAnalyzerState {
         if (!isLapRunning) {
             isLapRunning = true
             isSyncedToStartFinish = false
+            unsyncedLapStartTimeNs = timestampNs
             lapStartTimeNs = timestampNs
             sectorStartTimeNs = timestampNs
             currentSectorIndex = 1
@@ -113,6 +194,8 @@ class LapAnalyzerState {
         lapStartTimeNs = crossingTimeNs
         sectorStartTimeNs = crossingTimeNs
         currentSectorIndex = 1
+
+        resetLapValidityTracking()
     }
 
     fun completeSector(timestampNs: Long, interpolationFactor: Float) {
@@ -135,12 +218,23 @@ class LapAnalyzerState {
 
         val lapTimeMs = ((crossingTimeNs - lapStartTimeNs) / NS_PER_MS).toInt()
         lastLapTimeMs = lapTimeMs
-        bestLapTimeMs = bestLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
+
+        lastLapValid = currentLapValid
+
+        if (currentLapValid) {
+            bestLapTimeMs = bestLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
+            bestValidLapTimeMs = bestValidLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
+        } else {
+            bestLapTimeMs = bestLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
+        }
+
         completedLapsCount += 1
 
         lapStartTimeNs = crossingTimeNs
         sectorStartTimeNs = crossingTimeNs
         currentSectorIndex = 1
+
+        resetLapValidityTracking()
     }
 
     fun canTriggerGate(timestampNs: Long, gateKey: String): Boolean {
@@ -153,16 +247,20 @@ class LapAnalyzerState {
     }
 
     fun createSnapshot(currentTimeNs: Long): LapTimingSnapshot {
-        val currentLapMs = if (isLapRunning && isSyncedToStartFinish) {
-            ((currentTimeNs - lapStartTimeNs) / NS_PER_MS).toInt()
+        val currentLapMs = if (isLapRunning) {
+            val startTime = if (isSyncedToStartFinish) lapStartTimeNs else unsyncedLapStartTimeNs
+            ((currentTimeNs - startTime) / NS_PER_MS).toInt()
         } else {
             0
         }
-        val currentSectorMs = if (isLapRunning && isSyncedToStartFinish) {
-            ((currentTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
+
+        val currentSectorMs = if (isLapRunning) {
+            val startTime = if (isSyncedToStartFinish) sectorStartTimeNs else unsyncedLapStartTimeNs
+            ((currentTimeNs - startTime) / NS_PER_MS).toInt()
         } else {
             0
         }
+
         val sectorIndex = if (isLapRunning && isSyncedToStartFinish) {
             (currentSectorIndex - 1).coerceIn(0, 2)
         } else {
@@ -186,7 +284,18 @@ class LapAnalyzerState {
             bestSector1Ms = bestSector1Ms,
             bestSector2Ms = bestSector2Ms,
             bestSector3Ms = bestSector3Ms,
+            currentLapValid = currentLapValid,
+            lastLapValid = lastLapValid,
+            bestValidLapTimeMs = bestValidLapTimeMs
         )
+    }
+
+    private fun resetLapValidityTracking() {
+        currentLapValid = true
+        maxDirtyLevelThisLap = 0f
+        hadPenaltyThisLap = false
+        hadOffTrackThisLap = false
+        hasDamage = false
     }
 
     private fun updateSectorBest(sectorNumber: Int, timeMs: Int) {
@@ -213,8 +322,10 @@ class LapAnalyzerState {
         return currentNs - ((1f - alpha) * dt).toLong()
     }
 
-    companion object {
+    private companion object {
 
-        private const val NS_PER_MS = 1_000_000L
+        const val NS_PER_MS = 1_000_000L
+        const val DIRTY_THRESHOLD = 0.2f
+        const val DAMAGE_THRESHOLD = 0.5f
     }
 }

@@ -1,6 +1,9 @@
 app {
     configureApp()
     metro()
+    buildConfig {
+        packageName = "app"
+    }
     dependencies {
         projects.core.di.api.jvmImpl
         projects.core.di.impl.jvmImpl
@@ -16,6 +19,7 @@ app {
         projects.core.preference.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.feature.huds.fuel.jvmImpl
+        projects.feature.crash.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

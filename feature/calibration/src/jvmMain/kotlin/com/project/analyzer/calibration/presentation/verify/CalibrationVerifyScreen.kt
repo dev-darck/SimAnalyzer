@@ -16,12 +16,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.onClick
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,15 +69,14 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
             )
         }
 
-        Divider()
+        HorizontalDivider()
 
-        // Live Timing
         TimingInfo("Lap", state.currentLapMs, state.lastLapMs, state.bestLapMs)
         TimingInfo("S1", state.currentSectorMs.takeIf { state.currentSectorIndex == 1 }, state.lastS1Ms, state.bestS1Ms)
         TimingInfo("S2", state.currentSectorMs.takeIf { state.currentSectorIndex == 2 }, state.lastS2Ms, state.bestS2Ms)
         TimingInfo("S3", state.currentSectorMs.takeIf { state.currentSectorIndex == 3 }, state.lastS3Ms, state.bestS3Ms)
 
-        Divider()
+        HorizontalDivider()
 
         DirectionInfoCard(
             forward = state.currentForward,
@@ -97,7 +96,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
             onRadius = viewModel::onRadiusChanged,
         )
 
-        Divider()
+        HorizontalDivider()
 
         state.debugTelemetry?.let { debugText ->
             Card(
@@ -106,7 +105,6 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                         copyToClipboard(debugText)
                     }
                     .fillMaxWidth(),
-                backgroundColor = MaterialTheme.colorScheme.surfaceVariant
             ) {
                 Text(
                     text = debugText,
@@ -124,7 +122,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
             }
         }
 
-        Divider()
+        HorizontalDivider()
     }
 }
 

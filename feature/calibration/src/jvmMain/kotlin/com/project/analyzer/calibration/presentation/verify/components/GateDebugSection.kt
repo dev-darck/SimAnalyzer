@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Card
-import androidx.compose.material.OutlinedButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,11 +81,13 @@ private fun GateInfoRow(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        backgroundColor = when {
-            isEditing -> MaterialTheme.colorScheme.primaryContainer
-            gate.distanceMeters < 10f -> MaterialTheme.colorScheme.tertiaryContainer
-            else -> MaterialTheme.colorScheme.surfaceVariant
-        }
+        colors = CardDefaults.cardColors(
+            containerColor = when {
+                isEditing -> MaterialTheme.colorScheme.primaryContainer
+                gate.distanceMeters < 10f -> MaterialTheme.colorScheme.tertiaryContainer
+                else -> MaterialTheme.colorScheme.surfaceVariant
+            }
+        ),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -162,7 +165,7 @@ private fun GateActions(
             Button(
                 onClick = onFlip,
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color.Red.copy(alpha = 0.8f)
+                    containerColor = Color.Red.copy(alpha = 0.8f)
                 )
             ) {
                 Text("Flip ↻", color = Color.White)
@@ -174,7 +177,7 @@ private fun GateActions(
                 onClick = onCapture,
                 enabled = !isCapturing,
                 colors = ButtonDefaults.buttonColors(
-                    backgroundColor = MaterialTheme.colorScheme.primary
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(if (isCapturing) "Capturing..." else "Capture")

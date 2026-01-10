@@ -2,12 +2,14 @@ package com.project.analyzer.impl.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.setup.game.OverlayController
@@ -44,7 +46,7 @@ internal fun HudHost(
                         overlayController = overlayController,
                         modifier = Modifier.zIndex(panel.zIndex.toFloat())
                     ) {
-                        panel.Content(Modifier)
+                        panel.Content(Modifier.padding(6.dp))
                     }
                 }
             }

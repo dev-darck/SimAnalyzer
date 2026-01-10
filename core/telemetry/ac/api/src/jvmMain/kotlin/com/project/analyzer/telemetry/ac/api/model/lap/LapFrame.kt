@@ -9,6 +9,7 @@ public data class LapFrame(
     val currentLapTimeMs: Int? = null,
     val lastLapTimeMs: Int? = null,
     val bestLapTimeMs: Int? = null,
+    val bestValidLapTimeMs: Int? = null,
 
     val sectorCount: Int? = null,
     val currentSectorIndex: Int? = null, // 0..sectorCount-1

@@ -30,7 +30,6 @@ public sealed interface TelemetryLifecycleEvent {
 
     public data class SessionStarted(val sessionType: SessionType) : TelemetryLifecycleEvent
     public data object SessionEnded : TelemetryLifecycleEvent
-
     public data class LapStarted(val lapNumber: Int) : TelemetryLifecycleEvent
     public data class LapFinished(val lapNumber: Int, val validity: LapValidity) : TelemetryLifecycleEvent
 }

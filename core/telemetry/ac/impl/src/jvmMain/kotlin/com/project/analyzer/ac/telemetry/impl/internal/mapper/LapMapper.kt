@@ -6,7 +6,6 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.toBoolean
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.ac.api.contract.LapValidity
 import com.project.analyzer.telemetry.ac.api.model.lap.LapFrame
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
@@ -17,6 +16,7 @@ class LapMapper(
     private val lapState: AcLapState
 ) {
     private var lastCompletedLaps: Int = -1
+    private var bestValidLapTimeMs: Int? = null
 
     init {
         cache.addSessionChangeListener { reset() }
@@ -24,15 +24,20 @@ class LapMapper(
 
     fun reset() {
         lastCompletedLaps = -1
+        bestValidLapTimeMs = null
         lapState.reset()
     }
 
     fun map(graphics: SPageFileGraphics): LapFrame {
         val completedLaps = graphics.completedLaps
         val isValidLap = graphics.isValidLap.toBoolean()
+        val lastLapTimeMs = graphics.iLastTime.takeIf { it > 0 }
 
         if (completedLaps != lastCompletedLaps) {
             if (lastCompletedLaps != -1) {
+                if (isValidLap && lastLapTimeMs != null) {
+                    bestValidLapTimeMs = bestValidLapTimeMs?.let { minOf(it, lastLapTimeMs) } ?: lastLapTimeMs
+                }
                 lapState.reset()
             }
             lastCompletedLaps = completedLaps
@@ -49,8 +54,9 @@ class LapMapper(
             completedLaps = completedLaps,
 
             currentLapTimeMs = graphics.iCurrentTime,
-            lastLapTimeMs = graphics.iLastTime.takeIf { it > 0 },
+            lastLapTimeMs = lastLapTimeMs,
             bestLapTimeMs = graphics.iBestTime.takeIf { it > 0 },
+            bestValidLapTimeMs = bestValidLapTimeMs,
 
             sectorCount = cache.sectorCount,
             currentSectorIndex = graphics.currentSectorIndex,
