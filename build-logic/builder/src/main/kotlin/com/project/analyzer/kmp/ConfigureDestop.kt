@@ -10,7 +10,7 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
     val compose = extensions.getByName("compose") as ComposeExtension
     compose.extensions.configure<DesktopExtension>("desktop") {
         application {
-            mainClass = "com.project.analyzer.MainKt"
+            mainClass = "com.project.analyzer.app.MainKt"
 
             nativeDistributions {
                 targetFormats(
@@ -18,26 +18,20 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
                     TargetFormat.Exe,
                     TargetFormat.AppImage
                 )
-                packageName = "com.project.analyzer"
-                packageVersion = "1.0.0"
+                packageName = "SimAnalyzer"
+                packageVersion = "0.0.1"
 
 //                macOS { iconFile.set(rootProject.file("app-icons/app.icns")) }
 //                windows { iconFile.set(rootProject.file("app-icons/app.ico")) }
 //                linux { iconFile.set(rootProject.file("app-icons/app.png")) }
 
-                modules(
-                    "java.base",
-                    "java.desktop",
-                    "java.logging",
-                    "java.management",
-                    "jdk.unsupported"
-                )
+                modules.add("java.naming")
             }
 
-            // ProGuard unsupported kotlin 2.3.0
             buildTypes.release {
                 proguard {
-                    isEnabled.set(false)
+                    version.set("7.8.2")
+                    configurationFiles.from("proguard-rules.pro")
                 }
             }
 

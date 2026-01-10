@@ -14,6 +14,9 @@ data class EvoFileInfo(
     val sessionEpoch: Long = 0L,
     val driverName: String? = null,
     val driverSteamId: String? = null,
+    val hasPenalty: Boolean = false,
+    val penaltyReason: String? = null,
+    val penaltyTimestamp: String? = null
 )
 
 @Inject
@@ -29,6 +32,10 @@ class AcEvoFileInfoExtractor(
 
     private var sessionEpoch: Long = 0L
     private var lastInfo: EvoFileInfo = EvoFileInfo(sessionEpoch = sessionEpoch)
+
+    private var currentPenalty: Boolean = false
+    private var penaltyReason: String? = null
+    private var penaltyTimestamp: String? = null
 
     fun poll(): EvoFileInfo {
         val file = locator.locateLogFile() ?: return lastInfo
@@ -51,7 +58,12 @@ class AcEvoFileInfoExtractor(
         var driverSteamId: String? = null
 
         for (line in lines) {
-            if (isSessionBoundaryLine(line)) bumpEpoch = true
+            if (isSessionBoundaryLine(line)) {
+                bumpEpoch = true
+                currentPenalty = false
+                penaltyReason = null
+                penaltyTimestamp = null
+            }
 
             parseTrackNameSlug(line)?.let { parsed ->
                 trackIdFromSlug = normalizeTrackId("${parsed.baseSlug}_${parsed.layout}")
@@ -84,6 +96,19 @@ class AcEvoFileInfoExtractor(
                 driverName = dn
                 driverSteamId = sid
             }
+
+            parsePenalty(line)?.let { (reason, timestamp) ->
+                currentPenalty = true
+                penaltyReason = reason
+                penaltyTimestamp = timestamp
+            }
+
+            if (isLapInvalidLine(line)) {
+                val timestamp = parseTimestamp(line)
+                currentPenalty = true
+                penaltyReason = "Lap invalidated"
+                penaltyTimestamp = timestamp
+            }
         }
 
         val newTrackId =
@@ -114,13 +139,16 @@ class AcEvoFileInfoExtractor(
                 (newDriverName != lastInfo.driverName) ||
                 (newDriverSteamId != lastInfo.driverSteamId)
 
-        if (changed) {
+        if (changed || penaltyTimestamp != lastInfo.penaltyTimestamp) {
             lastInfo = lastInfo.copy(
                 trackName = newTrackName,
                 trackId = newTrackId,
                 carModel = newCarModel,
                 driverName = newDriverName,
                 driverSteamId = newDriverSteamId,
+                hasPenalty = currentPenalty,
+                penaltyReason = penaltyReason,
+                penaltyTimestamp = penaltyTimestamp
             )
         }
 
@@ -134,6 +162,12 @@ class AcEvoFileInfoExtractor(
         return lastInfo
     }
 
+    fun clearPenalty() {
+        currentPenalty = false
+        penaltyReason = null
+        lastInfo = lastInfo.copy(hasPenalty = false, penaltyReason = null)
+    }
+
     fun clear() {
         runCatching { raf?.close() }
         raf = null
@@ -143,6 +177,9 @@ class AcEvoFileInfoExtractor(
         sessionEpoch = 0L
         lastInfo = EvoFileInfo(sessionEpoch = sessionEpoch)
         locator.clear()
+        currentPenalty = false
+        penaltyReason = null
+        penaltyTimestamp = null
     }
 
     private fun ensureOpen(file: File) {
@@ -277,7 +314,51 @@ class AcEvoFileInfoExtractor(
             s.contains("game started!")
     }
 
+    private fun parsePenalty(line: String): Pair<String, String>? {
+        val lower = line.lowercase()
+
+        val penaltyPatterns = listOf(
+            "penalty" to "Penalty",
+            "track limits" to "Track limits",
+            "cut detected" to "Corner cut",
+            "cutting" to "Corner cut",
+            "invalid lap" to "Invalid lap",
+            "lap invalidated" to "Lap invalidated",
+            "disqualified" to "Disqualified",
+            "drive through" to "Drive through penalty",
+            "stop and go" to "Stop and go penalty",
+            "time penalty" to "Time penalty"
+        )
+
+        for ((pattern, reason) in penaltyPatterns) {
+            if (lower.contains(pattern)) {
+                val timestamp = parseTimestamp(line)
+                return reason to timestamp
+            }
+        }
+
+        return null
+    }
+
+    private fun parseTimestamp(line: String): String {
+        // Извлекаем [2026-01-13 21:58:26.219] из начала строки
+        val match = RE_TIMESTAMP.find(line)
+        return match?.groupValues?.get(1) ?: System.currentTimeMillis().toString()
+    }
+
+    private fun isLapInvalidLine(line: String): Boolean {
+        val lower = line.lowercase()
+        return lower.contains("lap invalid") ||
+            lower.contains("invalidating lap") ||
+            lower.contains("lap cancelled") ||
+            lower.contains("lap deleted")
+    }
+
     private companion object {
+
+        private val RE_TIMESTAMP = Regex(
+            "^\\s*\\[([0-9]{4}-[0-9]{2}-[0-9]{2}\\s+[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]+)]"
+        )
 
         private val RE_TRACK_NAME_SLUG = Regex(
             "\\bTRACK NAME\\b\\s+(.+)$",

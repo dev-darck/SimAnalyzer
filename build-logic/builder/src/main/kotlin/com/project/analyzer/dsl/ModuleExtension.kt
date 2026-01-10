@@ -1,8 +1,11 @@
 package com.project.analyzer.dsl
 
 import com.project.analyzer.base.configureMetro
+import com.project.analyzer.kmp.DesktopBuildConfigSpec
 import com.project.analyzer.kmp.configureComposeKmp
 import com.project.analyzer.kmp.configureComposeResources
+import com.project.analyzer.kmp.configureDesktopBuildConfig
+import com.project.analyzer.kmp.configureLogger
 import com.project.analyzer.kmp.configureProtoSerializer
 import dev.zacsweers.metro.gradle.MetroPluginExtension
 import org.gradle.api.Project
@@ -38,5 +41,13 @@ abstract class ModuleExtension @Inject constructor(
 
     fun proto() {
         configureProtoSerializer()
+    }
+
+    fun logger() {
+        configureLogger()
+    }
+
+    fun buildConfig(block: DesktopBuildConfigSpec.() -> Unit) {
+        configureDesktopBuildConfig(block)
     }
 }

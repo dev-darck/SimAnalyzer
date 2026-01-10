@@ -29,6 +29,9 @@ class AcPollLoop(
     private var currentState: GameConnectionState = GameConnectionState.DISCONNECTED
     private var currentDataSource: DataSourceType = DataSourceType.NATIVE
 
+    private var lastDetectedPhysicsPacket: Int = -1
+    private var stalePacketCounter: Int = 0
+
     /**
      * Starts the poll loop. Emits PollResult for state changes and frames.
      * Runs until coroutine is cancelled.
@@ -42,7 +45,6 @@ class AcPollLoop(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                println("AC Shared Memory error: ${e.message}")
                 if (currentCoroutineContext().isActive) {
                     delay(cfg.reconnectDelayMs)
                 }
@@ -154,6 +156,7 @@ class AcPollLoop(
     private fun detectGameState(): StateDetection {
         val isAttached = shm.isAnyAttached()
         if (!isAttached) {
+            resetStaleCounter()
             return StateDetection(
                 state = GameConnectionState.DISCONNECTED,
                 dataSource = DataSourceType.NATIVE,
@@ -174,6 +177,7 @@ class AcPollLoop(
         return when {
             // Native AC/ACC mode - graphics has valid data
             hasNativeGraphics -> {
+                resetStaleCounter()
                 val state = when (graphics.status) {
                     STATUS_OFF -> GameConnectionState.IN_MENU
                     else -> GameConnectionState.IN_SESSION // LIVE, REPLAY, PAUSE
@@ -187,6 +191,24 @@ class AcPollLoop(
 
             // AC Evo mode - physics active but graphics empty
             hasActivePhysics -> {
+                // Check if packet stopped updating (frozen data = session ended)
+                val currentPacket = physics.packetId
+                if (currentPacket == lastDetectedPhysicsPacket) {
+                    stalePacketCounter++
+                } else {
+                    stalePacketCounter = 0
+                }
+                lastDetectedPhysicsPacket = currentPacket
+
+                // If packet hasn't changed for a while, session has ended
+                if (stalePacketCounter > STALE_PACKET_THRESHOLD) {
+                    return StateDetection(
+                        state = GameConnectionState.IN_MENU,
+                        dataSource = DataSourceType.FALLBACK,
+                        needsFallback = false
+                    )
+                }
+
                 StateDetection(
                     state = GameConnectionState.IN_SESSION,
                     dataSource = DataSourceType.FALLBACK,
@@ -196,6 +218,7 @@ class AcPollLoop(
 
             // SHM attached but no activity - likely in menu
             else -> {
+                resetStaleCounter()
                 // Check if physics has any sign of life (even if car is stationary)
                 val physicsAttached = physics.packetId > 0
 
@@ -238,10 +261,13 @@ class AcPollLoop(
     fun stop() {
         currentState = GameConnectionState.DISCONNECTED
         currentDataSource = DataSourceType.NATIVE
+        resetStaleCounter()
         fallback.clear()
-        reusableSnapshot.physics.clear()
-        reusableSnapshot.statics.clear()
-        reusableSnapshot.graphics.clear()
+    }
+
+    private fun resetStaleCounter() {
+        lastDetectedPhysicsPacket = -1
+        stalePacketCounter = 0
     }
 
     private data class StateDetection(
@@ -253,5 +279,6 @@ class AcPollLoop(
     companion object {
 
         private const val STATUS_OFF = 0
+        private const val STALE_PACKET_THRESHOLD = 30
     }
 }

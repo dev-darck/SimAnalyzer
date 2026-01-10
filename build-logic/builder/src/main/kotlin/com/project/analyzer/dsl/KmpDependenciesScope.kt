@@ -44,6 +44,11 @@ class KmpDependenciesScope(
             sourceSetName = "commonTest",
             notation = this.get()
         ) { dep -> implementation(dep) }
+    val Provider<MinimalExternalModuleDependency>.runtimeOnly
+        get() = addTo(
+            sourceSetName = "jvmMain",
+            notation = this
+        ) { dep -> runtimeOnly(dep) }
 
     fun jvmImpl(dep: Provider<MinimalExternalModuleDependency>) = dep.jvmImpl
     fun commonImpl(dep: Provider<MinimalExternalModuleDependency>) = dep.commonImpl

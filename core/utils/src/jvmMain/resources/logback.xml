@@ -1,0 +1,47 @@
+<configuration>
+
+    <property name="LOG_DIR" value="${LOG_DIR:-./logs}" />
+    <property name="CONSOLE_LEVEL" value="${CONSOLE_LEVEL:-OFF}" />
+    <property name="FILE_LEVEL" value="${FILE_LEVEL:-INFO}" />
+
+    <property name="CONSOLE_PATTERN" value="${CONSOLE_PATTERN:-%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n}" />
+    <property name="FILE_PATTERN" value="${FILE_PATTERN:-%date %-5level %logger{36} - %msg%n}" />
+
+    <property name="MAX_FILE_SIZE" value="${MAX_FILE_SIZE:-2MB}" />
+    <property name="MAX_HISTORY" value="${MAX_HISTORY:-3}" />
+    <property name="TOTAL_SIZE_CAP" value="${TOTAL_SIZE_CAP:-30MB}" />
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${CONSOLE_LEVEL}</level>
+        </filter>
+        <encoder>
+            <pattern>${CONSOLE_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/app.log</file>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${FILE_LEVEL}</level>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/app.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${FILE_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <root level="DEBUG">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="FILE" />
+    </root>
+
+</configuration>

@@ -4,3 +4,6 @@ import dev.zacsweers.metro.Qualifier
 
 @Qualifier
 public annotation class UserPref
+
+@Qualifier
+public annotation class SessionPref

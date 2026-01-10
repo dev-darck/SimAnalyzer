@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.withContext
 
@@ -64,30 +63,38 @@ class AcTelemetryLifecycle(
 
     private fun createFramesFlow(): SharedFlow<TelemetryFrame> {
         val rawFrames = callbackFlow {
+            var connectionState: GameConnectionState = GameConnectionState.DISCONNECTED
+
             pollLoop.start { result ->
                 when (result) {
                     is PollResult.StateChanged -> {
+                        connectionState = result.state
                         processStateChange(result.state)
                     }
 
                     is PollResult.Frame -> {
-                        trySend(mapper.map(result.snapshot))
+                        val frame = mapper.map(result.snapshot)
+
+                        processFrame(frame, connectionState)
+
+                        if (connectionState == GameConnectionState.IN_SESSION) {
+                            trySend(frame)
+                        }
                     }
                 }
             }
+
             awaitClose { pollLoop.stop() }
         }
             .buffer(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
             .catch { e -> println("Telemetry error: $e") }
             .flowOn(ioDispatcher)
 
-        return rawFrames
-            .onEach { frame -> processFrame(frame) }
-            .shareIn(
-                scope = appScope,
-                started = SharingStarted.Eagerly,
-                replay = 1
-            )
+        return rawFrames.shareIn(
+            scope = appScope,
+            started = SharingStarted.Eagerly,
+            replay = 1
+        )
     }
 
     override suspend fun finishTelemetry() {
@@ -114,12 +121,10 @@ class AcTelemetryLifecycle(
         lastConnectionState = newState
 
         when {
-            // Game just connected (was disconnected, now in menu or session)
             oldState == GameConnectionState.DISCONNECTED && newState != GameConnectionState.DISCONNECTED -> {
                 _events.tryEmit(TelemetryLifecycleEvent.SimConnected)
             }
 
-            // Game disconnected
             newState == GameConnectionState.DISCONNECTED && oldState != GameConnectionState.DISCONNECTED -> {
                 if (oldState == GameConnectionState.IN_SESSION) {
                     _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
@@ -128,7 +133,6 @@ class AcTelemetryLifecycle(
                 resetSessionState()
             }
 
-            // Went from session to menu
             oldState == GameConnectionState.IN_SESSION && newState == GameConnectionState.IN_MENU -> {
                 _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
                 resetSessionState()
@@ -142,9 +146,8 @@ class AcTelemetryLifecycle(
         lastLapValidity = LapValidity.UNKNOWN
     }
 
-    private fun processFrame(frame: TelemetryFrame) {
-        // Only process session/lap data when in session
-        if (lastConnectionState != GameConnectionState.IN_SESSION) return
+    private fun processFrame(frame: TelemetryFrame, state: GameConnectionState) {
+        if (state != GameConnectionState.IN_SESSION) return
 
         val newType = frame.session?.sessionType ?: SessionType.UNKNOWN
         val newValidity = frame.lap?.validity ?: LapValidity.UNKNOWN

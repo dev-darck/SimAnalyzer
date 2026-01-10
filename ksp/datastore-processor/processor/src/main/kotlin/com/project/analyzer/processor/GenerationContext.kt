@@ -3,6 +3,7 @@ package com.project.analyzer.processor
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.toClassName
 
 internal data class GenerationContext(
@@ -13,7 +14,7 @@ internal data class GenerationContext(
     val factoryFunName: String,
     val defaultFileName: String,
 
-    val serializerInterface: com.squareup.kotlinpoet.TypeName,
+    val serializerInterface: TypeName,
     val inputStream: ClassName,
     val outputStream: ClassName,
     val fileClass: ClassName,
@@ -21,7 +22,7 @@ internal data class GenerationContext(
     val serializationException: ClassName,
     val corruptionException: ClassName,
     val dataStoreFactory: ClassName,
-    val dataStoreType: com.squareup.kotlinpoet.TypeName,
+    val dataStoreType: TypeName,
 
     val sourceFqName: String,
 ) {
@@ -36,20 +37,18 @@ internal data class GenerationContext(
             val factoryFunName = "create${simpleName}DataStore"
             val defaultFileName = "$simpleName.pb"
 
-            val serializerInterface =
-                ClassName("androidx.datastore.core", "Serializer").parameterizedBy(modelClassName)
+            val serializerInterface = cn("androidx.datastore.core", "Serializer").parameterizedBy(modelClassName)
 
-            val inputStream = ClassName("java.io", "InputStream")
-            val outputStream = ClassName("java.io", "OutputStream")
-            val fileClass = ClassName("java.io", "File")
+            val inputStream = cn("java.io", "InputStream")
+            val outputStream = cn("java.io", "OutputStream")
+            val fileClass = cn("java.io", "File")
 
-            val protoBuf = ClassName("kotlinx.serialization.protobuf", "ProtoBuf")
-            val serializationException = ClassName("kotlinx.serialization", "SerializationException")
-            val corruptionException = ClassName("androidx.datastore.core", "CorruptionException")
+            val protoBuf = cn("kotlinx.serialization.protobuf", "ProtoBuf")
+            val serializationException = cn("kotlinx.serialization", "SerializationException")
+            val corruptionException = cn("androidx.datastore.core", "CorruptionException")
 
-            val dataStoreFactory = ClassName("androidx.datastore.core", "DataStoreFactory")
-            val dataStoreType =
-                ClassName("androidx.datastore.core", "DataStore").parameterizedBy(modelClassName)
+            val dataStoreFactory = cn("androidx.datastore.core", "DataStoreFactory")
+            val dataStoreType = cn("androidx.datastore.core", "DataStore").parameterizedBy(modelClassName)
 
             val sourceFqName = clazz.qualifiedName?.asString() ?: simpleName
 
@@ -72,5 +71,8 @@ internal data class GenerationContext(
                 sourceFqName = sourceFqName,
             )
         }
+
+        private fun cn(packageName: String, vararg simpleNames: String): ClassName =
+            ClassName(packageName, simpleNames.asList())
     }
 }

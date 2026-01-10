@@ -17,4 +17,8 @@ data class LapTimingSnapshot(
     val bestSector1Ms: Int? = null,
     val bestSector2Ms: Int? = null,
     val bestSector3Ms: Int? = null,
+
+    val currentLapValid: Boolean = true,
+    val lastLapValid: Boolean = true,
+    val bestValidLapTimeMs: Int? = null
 )

@@ -2,7 +2,6 @@ package com.project.analyzer.impl.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -16,7 +15,8 @@ import com.project.analyzer.impl.setup.game.GameDetector
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.impl.setup.region.internal.InMemoryHitRegions
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
+import java.util.concurrent.Executors
 
 @Composable
 fun OverlayWindow(
@@ -28,7 +28,7 @@ fun OverlayWindow(
     if (!visible) return
 
     Window(
-        visible = false,
+        visible = true,
         onCloseRequest = onCloseRequest,
         title = "HUD Overlay",
         transparent = true,
@@ -38,14 +38,14 @@ fun OverlayWindow(
         focusable = false,
         state = state
     ) {
-
-        SideEffect {
-            window.background = java.awt.Color(0, 0, 0, 0)
-        }
-
         val scope = rememberCoroutineScope()
-
         val hitRegions: HitRegions = remember { InMemoryHitRegions() }
+
+        val winApiDispatcher = remember {
+            Executors.newSingleThreadExecutor { r ->
+                Thread(r, "winapi-overlay").apply { isDaemon = true }
+            }.asCoroutineDispatcher()
+        }
 
         val gameDetector = remember {
             val configs = listOf(
@@ -54,14 +54,14 @@ fun OverlayWindow(
                     processNames = listOf("evo.exe", "AssettoCorsaEVO.exe", "acevo", "evo")
                 )
             )
-            GameDetector(configs = configs, ioDispatcher = Dispatchers.IO)
+            GameDetector(configs = configs, coroutineDispatcher = winApiDispatcher)
         }
 
         val overlayController = remember(gameDetector, hitRegions) {
             OverlayController(
                 gameDetector = gameDetector,
                 hitRegions = hitRegions,
-                coroutineDispatcher = Dispatchers.IO
+                coroutineDispatcher = winApiDispatcher
             )
         }
 
@@ -71,6 +71,7 @@ fun OverlayWindow(
             overlayController.attach(window = window, scope = scope)
             onDispose {
                 overlayController.detach()
+                winApiDispatcher.close()
             }
         }
 

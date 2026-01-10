@@ -1,6 +1,7 @@
 moduleImpl {
     metro()
     proto()
+    logger()
 
     dependencies {
         projects.core.telemetry.ac.api.jvmImpl

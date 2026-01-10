@@ -4,6 +4,7 @@ import com.project.analyzer.applyPlugin
 import com.project.analyzer.deps
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
+import org.gradle.kotlin.dsl.exclude
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.compose.ComposePlugin
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -31,7 +32,9 @@ internal fun Project.configureComposeKmp() {
                 implementation(deps.kotlin.test)
             }
             jvmMain.dependencies {
-                implementation(compose.desktop.currentOs)
+                implementation(compose.desktop.currentOs) {
+                    exclude("org.jetbrains.compose.material")
+                }
                 implementation(deps.kotlinx.coroutinesSwing)
                 implementation(deps.compose.components.ui.tooling.preview)
                 implementation(deps.compose.components.resources)

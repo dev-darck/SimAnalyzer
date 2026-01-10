@@ -17,6 +17,11 @@ public object MathEps {
     public const val DIR: Float = 1e-4f
 
     public const val EPS: Float = 1e-5f
+    public const val EPS_6_DOUBLE: Double = 1e-6
+    public const val EPS_5_DOUBLE: Double = 1e-5
+    public const val EPS_4_DOUBLE: Double = 1e-4
+    public const val EPS_9_DOUBLE: Double = 1e-9
+    public const val EPS_3_DOUBLE: Double = 1e-3
 }
 
 /** Legacy constant from earlier code. */

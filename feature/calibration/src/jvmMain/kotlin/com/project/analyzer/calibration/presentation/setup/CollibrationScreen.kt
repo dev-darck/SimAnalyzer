@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -88,7 +88,7 @@ private fun CalibrationContent(
             Text("Choose directory to save")
         }
 
-        Divider()
+        HorizontalDivider()
 
         TrackNameBlock(state) { dispatchEvent(CalibrationIntent.TrackNameChanged(it)) }
 
@@ -99,7 +99,7 @@ private fun CalibrationContent(
         )
 
         state.debugTelemetry?.let { debugText ->
-            Card(modifier = Modifier.fillMaxWidth(), backgroundColor = MaterialTheme.colorScheme.surfaceVariant) {
+            Card(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = debugText,
                     style = MaterialTheme.typography.bodySmall,
@@ -109,7 +109,7 @@ private fun CalibrationContent(
             Spacer(Modifier.height(8.dp))
         }
 
-        Divider()
+        HorizontalDivider()
 
         GateRow(
             title = "Start/Finish",
@@ -119,7 +119,7 @@ private fun CalibrationContent(
             onFlip = { dispatchEvent(CalibrationIntent.FlipStartFinishDirection) }
         )
 
-        Divider()
+        HorizontalDivider()
 
         SectorsBlock(
             state = state,
@@ -162,7 +162,7 @@ private fun ChooseToVerify(
     onVerify: (String) -> Unit = {}
 ) {
     val dispatch by rememberUpdatedState(dispatchEvent)
-    Divider()
+    HorizontalDivider()
 
     LaunchedEffect(Unit) {
         dispatch(CalibrationIntent.LoadAllFiles)
@@ -179,7 +179,7 @@ private fun ChooseToVerify(
         }
     }
 
-    Divider()
+    HorizontalDivider()
 }
 
 @Preview

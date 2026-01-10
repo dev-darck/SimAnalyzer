@@ -22,7 +22,7 @@ internal class HudPreferences(
         preference.observe(KEY_VISIBLE_PANELS).map { it ?: setOf("fuel") }
 
     suspend fun getVisiblePanelsPositions(): Map<String, IntOffset> {
-        val listPanels = preference.get(KEY_VISIBLE_PANELS, emptySet())
+        val listPanels = preference.get(KEY_VISIBLE_PANELS, setOf("fuel"))
 
         return listPanels.associateWith { getPosition(it, IntOffset.Zero) }
     }
