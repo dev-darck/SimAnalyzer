@@ -12,11 +12,7 @@ import dev.zacsweers.metro.Provides
 object AcTelemetryBindings {
 
     @Provides
-    fun providePollConfig(): AcPollConfig = AcPollConfig(
-        targetHz = 360,
-        reconnectDelayMs = 1000,
-        gameNotRunningPollMs = 500,
-    )
+    fun providePollConfig(): AcPollConfig = AcPollConfig()
 
     @Provides
     fun provideShmNames(): AcShmNames = AcShmNames()

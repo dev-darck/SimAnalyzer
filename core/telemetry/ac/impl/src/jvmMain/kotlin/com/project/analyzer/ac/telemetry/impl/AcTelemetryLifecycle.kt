@@ -1,163 +1,185 @@
 package com.project.analyzer.ac.telemetry.impl
 
+import com.project.analyzer.ac.telemetry.impl.internal.AcPollLoop
+import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
+import com.project.analyzer.ac.telemetry.impl.internal.PollResult
+import com.project.analyzer.ac.telemetry.impl.internal.mapper.AcMapper
+import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
 import com.project.analyzer.api.di.AppCoroutine
+import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
-import com.project.analyzer.telemetry.ac.api.TelemetryDataSource
 import com.project.analyzer.telemetry.ac.api.contract.LapValidity
-import com.project.analyzer.telemetry.ac.api.contract.SessionPhase
 import com.project.analyzer.telemetry.ac.api.contract.SessionType
-import com.project.analyzer.telemetry.ac.api.contract.SimStatus
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent.LapFinished
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent.LapStarted
 import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.withContext
 
 @Inject
 @SingleIn(SessionScope::class)
 @ContributesBinding(SessionScope::class)
 class AcTelemetryLifecycle(
-    private val dataSource: TelemetryDataSource,
+    private val pollLoop: AcPollLoop,
+    private val mapper: AcMapper,
+    private val shm: AcSharedMemory,
     @param:AppCoroutine
     private val appScope: CoroutineScope,
+    @param:IO
+    private val ioDispatcher: CoroutineDispatcher,
 ) : TelemetryLifecycle {
 
-    private val _simStatus = MutableStateFlow(SimStatus.OFF)
-    override val simStatus = _simStatus.asStateFlow()
-
-    private val _sessionType = MutableStateFlow(SessionType.UNKNOWN)
-    override val sessionType = _sessionType.asStateFlow()
-
-    private val _sessionPhase = MutableStateFlow(SessionPhase.NONE)
-    override val sessionPhase = _sessionPhase.asStateFlow()
-
-    private val _lapValidity = MutableStateFlow(LapValidity.UNKNOWN)
-    override val lapValidity = _lapValidity.asStateFlow()
-
-    private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
-        extraBufferCapacity = 64
-    )
-
-    private var lastLapIndex: Int? = null
-    private var lastSim: SimStatus = SimStatus.OFF
-    private var lastSessionType: SessionType = SessionType.UNKNOWN
-    private var lastPhase: SessionPhase = SessionPhase.NONE
-
+    private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(extraBufferCapacity = 64)
     override val events = _events.asSharedFlow()
 
-    private var job: Job? = null
+    private var lastLapIndex: Int? = null
+    private var lastSessionType: SessionType = SessionType.UNKNOWN
+    private var lastLapValidity: LapValidity = LapValidity.UNKNOWN
+    private var lastConnectionState: GameConnectionState = GameConnectionState.DISCONNECTED
 
-    override fun start() {
-        if (job != null) return
+    private var collectionJob: Job? = null
 
-        job = appScope.launch {
-            dataSource.frames().collectLatest { frame ->
-                handleFrame(frame)
+    override val frames: SharedFlow<TelemetryFrame> by lazy {
+        createFramesFlow()
+    }
+
+    private fun createFramesFlow(): SharedFlow<TelemetryFrame> {
+        val rawFrames = callbackFlow {
+            pollLoop.start { result ->
+                when (result) {
+                    is PollResult.StateChanged -> {
+                        processStateChange(result.state)
+                    }
+
+                    is PollResult.Frame -> {
+                        trySend(mapper.map(result.snapshot))
+                    }
+                }
+            }
+            awaitClose { pollLoop.stop() }
+        }
+            .buffer(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+            .catch { e -> println("Telemetry error: $e") }
+            .flowOn(ioDispatcher)
+
+        return rawFrames
+            .onEach { frame -> processFrame(frame) }
+            .shareIn(
+                scope = appScope,
+                started = SharingStarted.Eagerly,
+                replay = 1
+            )
+    }
+
+    override suspend fun finishTelemetry() {
+        collectionJob?.cancel()
+        collectionJob = null
+
+        withContext(ioDispatcher) {
+            shm.close()
+            pollLoop.stop()
+        }
+
+        resetState()
+    }
+
+    private fun resetState() {
+        lastLapIndex = null
+        lastSessionType = SessionType.UNKNOWN
+        lastLapValidity = LapValidity.UNKNOWN
+        lastConnectionState = GameConnectionState.DISCONNECTED
+    }
+
+    private fun processStateChange(newState: GameConnectionState) {
+        val oldState = lastConnectionState
+        lastConnectionState = newState
+
+        when {
+            // Game just connected (was disconnected, now in menu or session)
+            oldState == GameConnectionState.DISCONNECTED && newState != GameConnectionState.DISCONNECTED -> {
+                _events.tryEmit(TelemetryLifecycleEvent.SimConnected)
+            }
+
+            // Game disconnected
+            newState == GameConnectionState.DISCONNECTED && oldState != GameConnectionState.DISCONNECTED -> {
+                if (oldState == GameConnectionState.IN_SESSION) {
+                    _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
+                }
+                _events.tryEmit(TelemetryLifecycleEvent.SimDisconnected)
+                resetSessionState()
+            }
+
+            // Went from session to menu
+            oldState == GameConnectionState.IN_SESSION && newState == GameConnectionState.IN_MENU -> {
+                _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
+                resetSessionState()
             }
         }
     }
 
-    override fun stop() {
-        job?.cancel()
-        job = null
+    private fun resetSessionState() {
+        lastLapIndex = null
+        lastSessionType = SessionType.UNKNOWN
+        lastLapValidity = LapValidity.UNKNOWN
     }
 
-    private fun handleFrame(frame: TelemetryFrame) {
-        val newSim = mapSimStatus(frame)
-        val newType = mapSessionType(frame)
-        val newPhase = mapSessionPhase(frame)
-        val newValidity = mapLapValidity(frame)
-        val newLapIndex = mapLapIndex(frame)
+    private fun processFrame(frame: TelemetryFrame) {
+        // Only process session/lap data when in session
+        if (lastConnectionState != GameConnectionState.IN_SESSION) return
 
-        handleSimStatus(newSim)
+        val newType = frame.session?.sessionType ?: SessionType.UNKNOWN
+        val newValidity = frame.lap?.validity ?: LapValidity.UNKNOWN
+        val newLapIndex = frame.lap?.currentLapIndex
 
-        handleNewSessionType(newSim, newType)
+        processSessionType(newType)
+        processLapIndex(newLapIndex)
 
-        handleNewPhase(newPhase)
+        lastLapValidity = newValidity
+    }
 
-        if (newValidity != _lapValidity.value) {
-            _lapValidity.value = newValidity
+    private fun processSessionType(newType: SessionType) {
+        if (newType == lastSessionType) return
+
+        if (newType != SessionType.UNKNOWN) {
+            _events.tryEmit(TelemetryLifecycleEvent.SessionStarted(newType))
+        } else if (lastSessionType != SessionType.UNKNOWN) {
+            _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
         }
-
-        handleNewLapIndex(newLapIndex)
+        lastSessionType = newType
     }
 
-    private fun handleNewLapIndex(newLapIndex: Int?) {
+    private fun processLapIndex(newLapIndex: Int?) {
         val prevLap = lastLapIndex
-        if (newLapIndex != null) {
-            if (prevLap == null) {
+
+        when {
+            newLapIndex != null && prevLap == null -> {
                 _events.tryEmit(LapStarted(newLapIndex))
-            } else if (newLapIndex != prevLap) {
-                _events.tryEmit(LapFinished(prevLap, _lapValidity.value))
+            }
+
+            newLapIndex != null && prevLap != null && newLapIndex != prevLap -> {
+                _events.tryEmit(LapFinished(prevLap, lastLapValidity))
                 _events.tryEmit(LapStarted(newLapIndex))
             }
         }
         lastLapIndex = newLapIndex
-    }
-
-    private fun handleNewPhase(newPhase: SessionPhase) {
-        if (newPhase != lastPhase) {
-            _sessionPhase.value = newPhase
-            if (newPhase == SessionPhase.NONE && lastPhase != SessionPhase.NONE) {
-                _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
-            }
-            lastPhase = newPhase
-        }
-    }
-
-    private fun handleNewSessionType(newSim: SimStatus, newType: SessionType) {
-        if (newType != lastSessionType) {
-            _sessionType.value = newType
-            if (newSim == SimStatus.LIVE && newType != SessionType.UNKNOWN) {
-                _events.tryEmit(TelemetryLifecycleEvent.SessionStarted(newType))
-            }
-            lastSessionType = newType
-        }
-    }
-
-    private fun handleSimStatus(newSim: SimStatus) {
-        if (newSim != lastSim) {
-            _simStatus.value = newSim
-            if (lastSim != SimStatus.LIVE && newSim == SimStatus.LIVE) {
-                _events.tryEmit(TelemetryLifecycleEvent.SimConnected)
-            }
-            if (lastSim == SimStatus.LIVE && newSim != SimStatus.LIVE) {
-                _events.tryEmit(TelemetryLifecycleEvent.SimDisconnected)
-                _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
-            }
-            lastSim = newSim
-        }
-    }
-
-    private fun mapSimStatus(frame: TelemetryFrame): SimStatus {
-        return frame.session?.status ?: SimStatus.OFF
-    }
-
-    private fun mapSessionType(frame: TelemetryFrame): SessionType {
-        return frame.session?.sessionType ?: SessionType.UNKNOWN
-    }
-
-    private fun mapSessionPhase(frame: TelemetryFrame): SessionPhase {
-        return frame.session?.phase ?: SessionPhase.NONE
-    }
-
-    private fun mapLapValidity(frame: TelemetryFrame): LapValidity {
-        return frame.lap?.validity ?: LapValidity.UNKNOWN
-    }
-
-    private fun mapLapIndex(frame: TelemetryFrame): Int? {
-        return frame.lap?.currentLapIndex
     }
 }

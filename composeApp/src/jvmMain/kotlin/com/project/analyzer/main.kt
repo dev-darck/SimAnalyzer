@@ -23,7 +23,7 @@ suspend fun main() {
         CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
             SimAnalyzerTheme {
                 var showAppWindow by remember { mutableStateOf(true) }
-                var showOverlay by remember { mutableStateOf(false) }
+                var showOverlay by remember { mutableStateOf(appGraph.hudPanels.isNotEmpty()) }
                 val isSystemTraySupported = remember { SystemTray.isSupported() }
 
                 val appState = rememberWindowState(
@@ -32,7 +32,9 @@ suspend fun main() {
 
                 CustomTray(
                     overlayVisible = showOverlay,
-                    onMainAction = { showAppWindow = true },
+                    onMainAction = {
+                        showAppWindow = true
+                    },
                     onOverlayToggle = { showOverlay = !showOverlay }
                 )
 
@@ -47,18 +49,16 @@ suspend fun main() {
 
                 }
 
-                val overlayState = rememberWindowState(
-                    position = WindowPosition(Alignment.Center),
-                    placement = WindowPlacement.Fullscreen,
-                )
                 OverlayWindow(
                     visible = showOverlay,
                     onCloseRequest = { showOverlay = false },
                     panels = appGraph.hudPanels,
-                    gameTitles = listOf("Assetto Corsa", "Evo"),
-                    state = overlayState
+                    state = rememberWindowState(
+                        placement = WindowPlacement.Maximized
+                    )
                 )
             }
         }
     }
+    appGraph.telemetryLifecycle.finishTelemetry()
 }

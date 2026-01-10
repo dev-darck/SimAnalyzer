@@ -18,81 +18,85 @@ internal class HudViewModel(
 
     init {
         viewModelScope.launch {
-            preferences.observeVisiblePanels().collect { visible ->
+            preferences.observeVisiblePanels().collect { visibleIds ->
                 _state.update { current ->
-                    val newMap = visible.associateWith { id ->
+                    val newVisiblePanels = visibleIds.associateWith { id ->
                         current.visiblePanels[id] ?: 0
                     }
-                    current.copy(visiblePanels = newMap)
+                    current.copy(visiblePanels = newVisiblePanels)
                 }
             }
         }
-        viewModelScope.launch { loadPositions() }
+        viewModelScope.launch {
+            loadPositions()
+        }
     }
 
     fun dispatch(intent: HudIntent) {
         when (intent) {
-            is HudIntent.Show -> onShow(intent.id)
-            is HudIntent.Hide -> onHide(intent.id)
-            is HudIntent.Toggle -> onToggle(intent.id)
-            is HudIntent.Restart -> onRestart(intent.id)
-            HudIntent.HideAll -> onHideAll()
-            is HudIntent.UpdatePosition -> onUpdatePosition(intent.id, intent.offset)
-            is HudIntent.SavePosition -> onSavePosition(intent.id)
+            is HudIntent.Show -> showPanel(intent.id)
+            is HudIntent.Hide -> hidePanel(intent.id)
+            is HudIntent.Toggle -> togglePanel(intent.id)
+            is HudIntent.Restart -> restartPanel(intent.id)
+            is HudIntent.HideAll -> hideAllPanels()
+            is HudIntent.SavePosition -> savePosition(intent.id, intent.offset)
         }
     }
 
-    private fun onShow(id: String) {
+    private fun showPanel(id: String) {
         viewModelScope.launch {
-            preferences.saveVisiblePanels(_state.value.visiblePanels.keys + id)
+            val currentIds = _state.value.visiblePanels.keys
+            preferences.saveVisiblePanels(currentIds + id)
         }
     }
 
-    private fun onHide(id: String) {
+    private fun hidePanel(id: String) {
         viewModelScope.launch {
-            preferences.saveVisiblePanels(_state.value.visiblePanels.keys - id)
+            val currentIds = _state.value.visiblePanels.keys
+            preferences.saveVisiblePanels(currentIds - id)
         }
     }
 
-    private fun onToggle(id: String) {
-        if (id in _state.value.visiblePanels) onHide(id) else onShow(id)
+    private fun togglePanel(id: String) {
+        if (id in _state.value.visiblePanels) {
+            hidePanel(id)
+        } else {
+            showPanel(id)
+        }
     }
 
-    private fun onRestart(id: String) {
+    private fun restartPanel(id: String) {
         _state.update { current ->
             if (id in current.visiblePanels) {
+                val newVersion = (current.visiblePanels[id] ?: 0) + 1
                 current.copy(
-                    visiblePanels = current.visiblePanels + (id to (current.visiblePanels[id] ?: 0) + 1)
+                    visiblePanels = current.visiblePanels + (id to newVersion)
                 )
-            } else current
+            } else {
+                current
+            }
         }
     }
 
-    private fun onHideAll() {
+    private fun hideAllPanels() {
         viewModelScope.launch {
             preferences.saveVisiblePanels(emptySet())
         }
     }
 
-    private fun onUpdatePosition(id: String, offset: IntOffset) {
+    private fun savePosition(id: String, offset: IntOffset) {
         _state.update { current ->
             current.copy(positions = current.positions + (id to offset))
         }
-    }
-
-    private fun loadPositions() {
         viewModelScope.launch {
-            val positions = preferences.getVisiblePanelsPositions()
-            _state.update { current ->
-                current.copy(positions = positions)
-            }
+            preferences.savePosition(id, offset)
         }
     }
 
-    private fun onSavePosition(id: String) {
-        val offset = _state.value.positions[id] ?: return
-        viewModelScope.launch {
-            preferences.savePosition(id, offset)
+    private suspend fun loadPositions() {
+        val positions = preferences.getVisiblePanelsPositions()
+        _state.update { current ->
+            current.copy(positions = positions)
         }
     }
 }

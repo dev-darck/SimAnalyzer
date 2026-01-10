@@ -175,20 +175,18 @@ private fun TrayMenuWindow(
         state = state,
         undecorated = true,
         transparent = true,
-        resizable = false
+        resizable = false,
+        focusable = true
     ) {
         DisposableEffect(window) {
             window.background = java.awt.Color(0, 0, 0, 0)
             window.isAlwaysOnTop = true
 
-            var armed = false
             val focusListener = object : WindowFocusListener {
-                override fun windowGainedFocus(e: WindowEvent?) {
-                    armed = true
-                }
+                override fun windowGainedFocus(e: WindowEvent?) {}
 
                 override fun windowLostFocus(e: WindowEvent?) {
-                    if (armed) onDismiss()
+                    onDismiss()
                 }
             }
             window.addWindowFocusListener(focusListener)

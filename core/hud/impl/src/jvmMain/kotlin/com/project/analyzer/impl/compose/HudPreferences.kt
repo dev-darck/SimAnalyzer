@@ -19,7 +19,7 @@ internal class HudPreferences(
 ) {
 
     fun observeVisiblePanels(): Flow<Set<String>> =
-        preference.observe(KEY_VISIBLE_PANELS).map { it ?: emptySet() }
+        preference.observe(KEY_VISIBLE_PANELS).map { it ?: setOf("fuel") }
 
     suspend fun getVisiblePanelsPositions(): Map<String, IntOffset> {
         val listPanels = preference.get(KEY_VISIBLE_PANELS, emptySet())

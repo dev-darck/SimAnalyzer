@@ -12,6 +12,7 @@ moduleImpl {
         projects.core.utils.jvmImpl
         projects.core.preference.api.jvmImpl
         projects.core.preference.impl.jvmImpl
+        projects.feature.huds.fuel.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
