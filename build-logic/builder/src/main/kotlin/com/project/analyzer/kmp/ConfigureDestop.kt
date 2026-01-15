@@ -11,7 +11,6 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
     compose.extensions.configure<DesktopExtension>("desktop") {
         application {
             mainClass = "com.project.analyzer.app.MainKt"
-
             nativeDistributions {
                 targetFormats(
                     TargetFormat.Msi,

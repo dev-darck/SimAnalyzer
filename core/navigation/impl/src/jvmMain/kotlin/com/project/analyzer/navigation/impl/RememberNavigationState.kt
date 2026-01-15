@@ -6,28 +6,26 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.savedstate.serialization.SavedStateConfiguration
-import com.project.analyzer.navigation.api.NavigationState
+import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.api.Route
-import com.project.analyzer.navigation.api.Route.HomeRoot.Home
-import com.project.analyzer.navigation.api.Route.SettingsRoot.Settings
-import com.project.analyzer.navigation.api.Route.TelemetryRoot.TelemetryDetails
 
 @Composable
 fun rememberNavigationState(
-    startRoute: Route = Home,
-): NavigationState<Route> {
+    startTopLevel: Root = Root.Live,
+): NavigationStateInternal<Route> {
     return rememberSerializable(
         configuration = SavedStateConfiguration.DEFAULT,
         serializer = NavigationStateInternal.serializer(Route.serializer())
     ) {
         NavigationStateInternal(
-            startRoute = startRoute,
+            startTopLevel = startTopLevel,
             stacks = mutableStateMapOf(
-                Home to BackStack(mutableStateListOf(Home)),
-                TelemetryDetails to BackStack(mutableStateListOf(TelemetryDetails)),
-                Settings to BackStack(mutableStateListOf(Settings)),
+                Root.Live to BackStack(mutableStateListOf(Route.LiveRoot.Live)),
+                Root.Session to BackStack(mutableStateListOf(Route.SessionRoot.Session)),
+                Root.Setup to BackStack(mutableStateListOf(Route.SetupRoot.Setup)),
+                Root.Settings to BackStack(mutableStateListOf(Route.SettingsRoot.Settings)),
             ),
-            currentTopLevelState = mutableStateOf(startRoute)
+            currentTopLevelState = mutableStateOf(startTopLevel)
         )
     }
 }

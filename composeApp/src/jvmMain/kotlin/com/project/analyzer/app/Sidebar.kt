@@ -31,19 +31,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.navigation.api.Root
 
 data class NavItem(
-    val key: String,
+    val key: Root,
     val title: String,
     val icon: ImageVector
 )
 
 @Composable
-fun AceLikeSidebar(
+fun Sidebar(
     topIcon: @Composable (() -> Unit)? = null,
     items: List<NavItem>,
-    bottomItem: NavItem? = null,
-    selectedKey: String,
+    bottomItemsCount: Int = 0,
+    selectedKey: Root,
     onSelect: (NavItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -78,7 +79,11 @@ fun AceLikeSidebar(
                 Spacer(Modifier.height(18.dp))
             }
 
-            items.forEach { item ->
+            items.forEachIndexed { index, item ->
+                if (index == items.size - bottomItemsCount) {
+                    Spacer(Modifier.weight(1f))
+                }
+
                 SidebarItem(
                     item = item,
                     selected = item.key == selectedKey,
@@ -89,22 +94,7 @@ fun AceLikeSidebar(
                     normalIcon = normalIcon,
                     onClick = { onSelect(item) }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
 
-            Spacer(Modifier.weight(1f))
-
-            if (bottomItem != null) {
-                SidebarItem(
-                    item = bottomItem,
-                    selected = bottomItem.key == selectedKey,
-                    selectedPill = selectedPill,
-                    hoverPill = hoverPill,
-                    selectedText = selectedText,
-                    normalText = normalText,
-                    normalIcon = normalIcon,
-                    onClick = { onSelect(bottomItem) }
-                )
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
