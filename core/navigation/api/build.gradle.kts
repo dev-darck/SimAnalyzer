@@ -1,9 +1,9 @@
 moduleApi {
+    compose()
     dependencies {
         lib.metro.runtime.jvmImpl
         lib.navigation3.ui.jvmImpl
         lib.navigation3.runtime.jvmImpl
         lib.kotlinx.serialization.json.jvmImpl
-        lib.compose.runtime.jvmImpl
     }
 }

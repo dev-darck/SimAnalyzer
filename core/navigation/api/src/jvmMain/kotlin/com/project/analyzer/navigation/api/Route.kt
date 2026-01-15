@@ -5,31 +5,39 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 public sealed class Route(
-    public val isRoot: Boolean
+    public val isRoot: Boolean,
+    public val topLevel: Root,
 ) : NavKey {
 
     @Serializable
-    public sealed class HomeRoot(
-        public val root: Boolean = false
-    ) : Route(root) {
+    public sealed class LiveRoot(public val root: Boolean = false) : Route(root, Root.Live) {
 
         @Serializable
-        public data object Home : HomeRoot(true)
+        public object Live : LiveRoot(true)
+
+        @Serializable
+        public object LiveDetails : LiveRoot(false)
     }
 
     @Serializable
-    public sealed class TelemetryRoot(
-        public val root: Boolean = false
-    ) : Route(root) {
+    public sealed class SessionRoot(public val root: Boolean = false) : Route(root, Root.Session) {
 
         @Serializable
-        public data object TelemetryDetails : TelemetryRoot(true)
+        public data object Session : SessionRoot(true)
+
+        @Serializable
+        public data object SessionDetails : SessionRoot(false)
     }
 
     @Serializable
-    public sealed class SettingsRoot(
-        public val root: Boolean = false
-    ) : Route(root) {
+    public sealed class SetupRoot(public val root: Boolean = false) : Route(root, Root.Setup) {
+
+        @Serializable
+        public data object Setup : SetupRoot(true)
+    }
+
+    @Serializable
+    public sealed class SettingsRoot(public val root: Boolean = false) : Route(root, Root.Settings) {
 
         @Serializable
         public data object Settings : SettingsRoot(true)

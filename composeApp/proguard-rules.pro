@@ -76,6 +76,10 @@
 -keep class androidx.compose.material.** { *; }
 -keepnames class androidx.compose.material.** { *; }
 
+-keep class androidx.navigation3.ui.NavDisplayKt__NavDisplayKt { *; }
+-keep class androidx.navigation3.scene.** { *; }
+-keep class androidx.navigationevent.** { *; }
+
 -keep class com.project.analyzer.** { *; }
 -keepnames class com.project.analyzer.** { *; }
 
