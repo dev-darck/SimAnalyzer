@@ -2,9 +2,9 @@ package com.project.analyzer.calibration.presentation.verify
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.ac.telemetry.impl.fallback.CarPose
-import com.project.analyzer.ac.telemetry.impl.fallback.FallbackLapAnalyzer
-import com.project.analyzer.ac.telemetry.impl.fallback.GateCrossingDetector
+import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
+import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
+import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.AcTelemetrySampleProvider
 import com.project.analyzer.calibration.data.model.CalibrationSample

@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 private val Background = Color(0xFFF5F5F7)
 private val OnBackground = Color(0xFF111418)
 
-private val Surface = Color(0xFFFCFCFD)
+private val Surface = Color(0xFF182430)
 private val OnSurface = Color(0xFF111418)
 
 private val SurfaceVariant = Color(0xFFF3F4F6)
@@ -15,10 +15,10 @@ private val OnSurfaceVariant = Color(0xFF6B7280)
 
 private val Primary = Color(0xFF2B8CEE)
 public val OnPrimary: Color = Color(0xFFFFFFFF)
-private val PrimaryContainer = Color(0xFFD6E8FF)
+private val PrimaryContainer = Color(0xFF2B8CEE)
 private val OnPrimaryContainer = Color(0xFF00213A)
 
-private val Secondary = Color(0xFF3B4A5C)
+private val Secondary = Color.White
 private val OnSecondary = Color(0xFFFFFFFF)
 private val SecondaryContainer = Color(0xFFE8EEF6)
 private val OnSecondaryContainer = Color(0xFF111418)
@@ -58,9 +58,12 @@ internal val LowPriorityOutline = Color(0xFF10B981)
 internal val LowPriorityContainer = Color(0xFFD1FAE5)
 internal val OnLowPriorityContainer = Color(0xFF064E3B)
 
-internal val GradientStart = Primary
-internal val GradientEnd = Tertiary
-internal val OnGradient = Color(0xFFFFFFFF)
+private val Gradient0 = Color(0xFF11B980)
+private val Gradient20 = Color(0xFF87C249)
+private val Gradient40 = Color(0xFF87C249)
+private val Gradient60 = Color(0xFFF59727)
+private val Gradient80 = Color(0xFFF15C3C)
+private val Gradient100 = Color(0xFFF43F5E)
 
 public val LightColorScheme: ColorScheme = lightColorScheme(
     primary = Primary,
@@ -116,9 +119,12 @@ internal val LightExtendedColors = ExtendedColors(
     lowPriorityContainer = LowPriorityContainer,
     onLowPriorityContainer = OnLowPriorityContainer,
 
-    gradientStart = GradientStart,
-    gradientEnd = GradientEnd,
-    onGradient = OnGradient,
+    gradient0 = Gradient0,
+    gradient20 = Gradient20,
+    gradient40 = Gradient40,
+    gradient60 = Gradient60,
+    gradient80 = Gradient80,
+    gradient100 = Gradient100,
 
     material = LightColorScheme
 )

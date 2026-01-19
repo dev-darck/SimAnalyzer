@@ -1,23 +1,12 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.logfile
 
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
 import com.project.analyzer.api.di.SessionScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import java.io.File
 import java.io.RandomAccessFile
 import kotlin.math.min
-
-data class EvoFileInfo(
-    val trackName: String? = null,
-    val trackId: String? = null,
-    val carModel: String? = null,
-    val sessionEpoch: Long = 0L,
-    val driverName: String? = null,
-    val driverSteamId: String? = null,
-    val hasPenalty: Boolean = false,
-    val penaltyReason: String? = null,
-    val penaltyTimestamp: String? = null
-)
 
 @Inject
 @SingleIn(SessionScope::class)

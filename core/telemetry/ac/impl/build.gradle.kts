@@ -2,6 +2,9 @@ moduleImpl {
     metro()
     proto()
     logger()
+    buildConfig {
+        packageName = "ac.telemetry.impl"
+    }
 
     dependencies {
         projects.core.telemetry.ac.api.jvmImpl

@@ -1,4 +1,4 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.logfile
 
 import dev.zacsweers.metro.Inject
 import java.io.File

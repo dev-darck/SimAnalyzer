@@ -53,7 +53,7 @@ class WheelsMapper(
             outerTempC = physics.tyreTempO[index],
             avgTempC = physics.tyreTemp[index],
 
-//            brakeTempC = physics.brakeTemp[index],
+            brakeTempC = physics.brakeTemp[index],
             brakePressure = physics.brakePressure[index],
             padLife = physics.padLife[index],
             discLife = physics.discLife[index],

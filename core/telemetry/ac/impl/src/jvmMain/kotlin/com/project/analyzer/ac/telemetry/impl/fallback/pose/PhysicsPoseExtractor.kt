@@ -1,5 +1,6 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.pose
 
+import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.math.Heading2D
 import com.project.analyzer.math.Vec2

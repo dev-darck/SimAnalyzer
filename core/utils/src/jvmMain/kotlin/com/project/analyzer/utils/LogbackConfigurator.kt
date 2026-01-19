@@ -2,7 +2,6 @@ package com.project.analyzer.utils
 
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.joran.JoranConfigurator
-import com.projects.analyzer.utils.BuildConfig
 import org.slf4j.LoggerFactory
 
 public object LogbackConfigurator {
@@ -16,10 +15,8 @@ public object LogbackConfigurator {
         val logsDir = AppPaths.logsDir
         System.setProperty("LOG_DIR", logsDir.absolutePath)
 
-        val isDebug = BuildConfig.IS_DEBUG
-
-        System.setProperty("CONSOLE_LEVEL", if (isDebug) "DEBUG" else "OFF")
-        System.setProperty("FILE_LEVEL", if (isDebug) "DEBUG" else "INFO")
+        System.setProperty("CONSOLE_LEVEL", if (BuildConfig.IS_DEBUG) "DEBUG" else "OFF")
+        System.setProperty("FILE_LEVEL", if (BuildConfig.IS_DEBUG) "DEBUG" else "INFO")
 
         val context = LoggerFactory.getILoggerFactory() as? LoggerContext ?: return
         context.reset()

@@ -35,7 +35,7 @@ abstract class ModuleExtension @Inject constructor(
         configureMetro(block)
     }
 
-    fun configureResources() {
+    fun resources() {
         configureComposeResources()
     }
 

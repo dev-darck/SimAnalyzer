@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountBox
 import androidx.compose.material.icons.outlined.Build
@@ -14,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.project.analyzer.navigation.api.EntryFactory
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.impl.AppNavGraph
@@ -46,9 +44,8 @@ fun App(providerFactory: EntryFactory) {
 
         Box(
             modifier = Modifier
-                .background(SimAnalyzerTheme.material.surface)
-                .fillMaxSize()
-                .padding(22.dp),
+                .background(SimAnalyzerTheme.material.background)
+                .fillMaxSize(),
             contentAlignment = Alignment.TopStart
         ) {
             AppNavGraph(

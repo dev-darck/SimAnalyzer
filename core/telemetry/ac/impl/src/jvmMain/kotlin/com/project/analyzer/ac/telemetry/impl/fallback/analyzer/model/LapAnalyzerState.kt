@@ -1,5 +1,6 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model
 
+import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 
@@ -42,6 +43,8 @@ class LapAnalyzerState {
     var lastLapValid: Boolean = true
         private set
     var bestValidLapTimeMs: Int? = null
+        private set
+    var startFinishSyncId: Int = 0
         private set
 
     private var maxDirtyLevelThisLap: Float = 0f
@@ -88,6 +91,7 @@ class LapAnalyzerState {
         bestSector3Ms = null
         gateLastTriggerNs.clear()
         isActive = true
+        startFinishSyncId = 0
 
         currentLapValid = true
         lastLapValid = true
@@ -181,6 +185,7 @@ class LapAnalyzerState {
     }
 
     fun syncToStartFinish(timestampNs: Long, interpolationFactor: Float) {
+        startFinishSyncId += 1
         isSyncedToStartFinish = true
         completedLapsCount = 0
         lastLapTimeMs = null
@@ -267,6 +272,8 @@ class LapAnalyzerState {
             0
         }
 
+        val (deltaMs, isPositive) = calculateDelta(currentLapMs)
+
         return LapTimingSnapshot(
             isActive = isActive,
             trackId = currentTrackId,
@@ -286,8 +293,19 @@ class LapAnalyzerState {
             bestSector3Ms = bestSector3Ms,
             currentLapValid = currentLapValid,
             lastLapValid = lastLapValid,
-            bestValidLapTimeMs = bestValidLapTimeMs
+            bestValidLapTimeMs = bestValidLapTimeMs,
+            deltaLapTimeMs = deltaMs,
+            isDeltaPositive = isPositive,
+            startFinishSyncId = startFinishSyncId
         )
+    }
+
+    private fun calculateDelta(currentLapMs: Int): Pair<Int?, Boolean> {
+        val best = bestLapTimeMs ?: return null to true
+        if (currentLapMs <= 0 || best <= 0) return null to true
+
+        val delta = currentLapMs - best
+        return delta to (delta >= 0)
     }
 
     private fun resetLapValidityTracking() {

@@ -6,6 +6,7 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.toBoolean
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.ac.api.contract.LapValidity
 import com.project.analyzer.telemetry.ac.api.model.lap.LapFrame
+import com.project.analyzer.telemetry.ac.api.model.lap.SectorFrame
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
@@ -17,6 +18,7 @@ class LapMapper(
 ) {
     private var lastCompletedLaps: Int = -1
     private var bestValidLapTimeMs: Int? = null
+    private var lastLapSectors: List<SectorFrame> = emptyList()
 
     init {
         cache.addSessionChangeListener { reset() }
@@ -25,7 +27,8 @@ class LapMapper(
     fun reset() {
         lastCompletedLaps = -1
         bestValidLapTimeMs = null
-        lapState.reset()
+        lastLapSectors = emptyList()
+        lapState.fullReset()
     }
 
     fun map(graphics: SPageFileGraphics): LapFrame {
@@ -33,8 +36,16 @@ class LapMapper(
         val isValidLap = graphics.isValidLap.toBoolean()
         val lastLapTimeMs = graphics.iLastTime.takeIf { it > 0 }
 
+        val currentSectors = lapState.onFrame(
+            currentSectorIndex = graphics.currentSectorIndex,
+            lastSectorTimeMs = graphics.lastSectorTime,
+            isValidLap = isValidLap,
+        )
+
         if (completedLaps != lastCompletedLaps) {
             if (lastCompletedLaps != -1) {
+                lastLapSectors = lapState.getLastCompletedLapSectors()
+                
                 if (isValidLap && lastLapTimeMs != null) {
                     bestValidLapTimeMs = bestValidLapTimeMs?.let { minOf(it, lastLapTimeMs) } ?: lastLapTimeMs
                 }
@@ -43,11 +54,11 @@ class LapMapper(
             lastCompletedLaps = completedLaps
         }
 
-        val sectors = lapState.onFrame(
-            currentSectorIndex = graphics.currentSectorIndex,
-            lastSectorTimeMs = graphics.lastSectorTime,
-            isValidLap = isValidLap,
-        )
+        val sectorsToShow = if (currentSectors.all { it.timeMs == null } && lastLapSectors.isNotEmpty()) {
+            lastLapSectors
+        } else {
+            currentSectors
+        }
 
         return LapFrame(
             currentLapIndex = completedLaps + 1,
@@ -70,7 +81,7 @@ class LapMapper(
 
             validity = LapValidity.fromBoolean(isValidLap),
 
-            sectors = sectors,
+            sectors = sectorsToShow,
         )
     }
 }

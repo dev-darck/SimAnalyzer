@@ -1,4 +1,4 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.pose.model
 
 import com.project.analyzer.math.Vec2
 

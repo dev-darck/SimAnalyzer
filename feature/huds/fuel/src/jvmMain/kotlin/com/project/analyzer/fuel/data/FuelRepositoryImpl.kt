@@ -3,11 +3,15 @@ package com.project.analyzer.fuel.data
 import com.project.analyzer.fuel.data.model.SavedFuelData
 import com.project.analyzer.fuel.domain.repository.FuelRepository
 import com.project.analyzer.preference.api.Preference
+import com.project.analyzer.preference.api.SessionPref
 import com.project.analyzer.preference.api.StringPrefKey
+import dev.zacsweers.metro.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+@Inject
 internal class FuelRepositoryImpl(
+    @param:SessionPref
     private val preference: Preference,
     private val json: Json
 ) : FuelRepository {

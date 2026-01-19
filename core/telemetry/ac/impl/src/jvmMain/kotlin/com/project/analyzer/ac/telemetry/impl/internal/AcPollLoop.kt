@@ -67,17 +67,14 @@ class AcPollLoop(
 
             val detection = detectGameState()
 
-            // Emit state change if needed
             if (detection.state != currentState || detection.dataSource != currentDataSource) {
                 currentState = detection.state
                 currentDataSource = detection.dataSource
                 onResult(PollResult.StateChanged(detection.state, detection.dataSource))
             }
 
-            // Handle based on current state
             when (detection.state) {
                 GameConnectionState.DISCONNECTED -> {
-                    // Game not running - slow poll
                     delay(cfg.gameNotRunningPollMs)
                     fallback.clear()
                     lastPhysicsPacket = -1
@@ -86,15 +83,12 @@ class AcPollLoop(
                 }
 
                 GameConnectionState.IN_MENU -> {
-                    // Game running but in menu - medium poll
-                    // Apply fallback if needed (for AC Evo in menu state)
                     if (detection.needsFallback) {
                         fallback.patchIfNeeded(shm, loopStartNanos)
                     } else {
                         fallback.clear()
                     }
 
-                    // Emit frame so UI knows current state
                     frameId++
                     reusableSnapshot.frameId = frameId
                     reusableSnapshot.timestampNs = loopStartNanos
@@ -105,7 +99,6 @@ class AcPollLoop(
                 }
 
                 GameConnectionState.IN_SESSION -> {
-                    // Active session - apply fallback if needed, then fast poll
                     if (detection.needsFallback) {
                         fallback.patchIfNeeded(shm, loopStartNanos)
                     }
@@ -135,6 +128,7 @@ class AcPollLoop(
                 sleepNanos > 1_000_000 -> {
                     delay(sleepNanos / 1_000_000)
                 }
+
                 sleepNanos > 100_000 -> {
                     yield()
                 }
@@ -167,20 +161,17 @@ class AcPollLoop(
         val physics = shm.physics
         val graphics = shm.graphics
 
-        // Check if we have native graphics data
         val hasNativeGraphics = graphics.packetId > 0 &&
             (graphics.status > 0 || graphics.completedLaps > 0 || graphics.iCurrentTime > 0)
 
-        // Check if physics indicates game is active
         val hasActivePhysics = isPhysicsActive(physics)
 
         return when {
-            // Native AC/ACC mode - graphics has valid data
             hasNativeGraphics -> {
                 resetStaleCounter()
                 val state = when (graphics.status) {
                     STATUS_OFF -> GameConnectionState.IN_MENU
-                    else -> GameConnectionState.IN_SESSION // LIVE, REPLAY, PAUSE
+                    else -> GameConnectionState.IN_SESSION
                 }
                 StateDetection(
                     state = state,
@@ -189,9 +180,7 @@ class AcPollLoop(
                 )
             }
 
-            // AC Evo mode - physics active but graphics empty
             hasActivePhysics -> {
-                // Check if packet stopped updating (frozen data = session ended)
                 val currentPacket = physics.packetId
                 if (currentPacket == lastDetectedPhysicsPacket) {
                     stalePacketCounter++
@@ -200,7 +189,6 @@ class AcPollLoop(
                 }
                 lastDetectedPhysicsPacket = currentPacket
 
-                // If packet hasn't changed for a while, session has ended
                 if (stalePacketCounter > STALE_PACKET_THRESHOLD) {
                     return StateDetection(
                         state = GameConnectionState.IN_MENU,
@@ -216,10 +204,8 @@ class AcPollLoop(
                 )
             }
 
-            // SHM attached but no activity - likely in menu
             else -> {
                 resetStaleCounter()
-                // Check if physics has any sign of life (even if car is stationary)
                 val physicsAttached = physics.packetId > 0
 
                 StateDetection(
@@ -236,23 +222,18 @@ class AcPollLoop(
      * Uses multiple signals to be robust across AC/ACC/Evo.
      */
     private fun isPhysicsActive(physics: SPageFilePhysics): Boolean {
-        // Engine running or has RPM
         if (physics.rpm > 0) return true
 
-        // Car is moving
         if (physics.speedKmh > 0.1f) return true
 
-        // Tyres have contact with ground (valid contact points)
         val contacts = physics.tyreContactPoint
         if (contacts.size >= 3) {
             val hasValidContact = contacts[0] != 0f || contacts[1] != 0f || contacts[2] != 0f
             if (hasValidContact) return true
         }
 
-        // Fuel present (car is loaded)
         if (physics.fuel > 0f) return true
 
-        // Gear is set (not neutral and not invalid)
         if (physics.gear != 0) return true
 
         return false

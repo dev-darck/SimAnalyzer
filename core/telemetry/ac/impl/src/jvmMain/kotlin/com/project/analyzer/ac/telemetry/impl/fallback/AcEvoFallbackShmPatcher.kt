@@ -1,5 +1,11 @@
 package com.project.analyzer.ac.telemetry.impl.fallback
 
+import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackFuelAnalyzer
+import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
+import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.FuelSnapshot
+import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.LapTimingSnapshot
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.AcEvoFileInfoExtractor
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
@@ -11,6 +17,7 @@ import dev.zacsweers.metro.Inject
 class AcEvoFallbackShmPatcher(
     private val fileInfoExtractor: AcEvoFileInfoExtractor,
     private val lapAnalyzer: FallbackLapAnalyzer,
+    private val fuelAnalyzer: FallbackFuelAnalyzer,
 ) {
 
     private var syntheticPacketId: Int = 1
@@ -21,6 +28,7 @@ class AcEvoFallbackShmPatcher(
     fun clear() {
         fileInfoExtractor.clear()
         lapAnalyzer.reset()
+        fuelAnalyzer.reset()
         syntheticPacketId = 1
         lastSessionEpoch = -1L
         teleportResetDetector.reset()
@@ -35,11 +43,13 @@ class AcEvoFallbackShmPatcher(
         if (info.sessionEpoch != lastSessionEpoch) {
             lastSessionEpoch = info.sessionEpoch
             lapAnalyzer.resetSession()
+            fuelAnalyzer.reset()
             lastPenaltyTimestamp = null
         }
 
         if (teleportResetDetector.update(loopStartNanos, shm.physics)) {
             lapAnalyzer.resetSession()
+            fuelAnalyzer.reset()
         }
 
         if (info.penaltyTimestamp != null && info.penaltyTimestamp != lastPenaltyTimestamp) {
@@ -53,8 +63,17 @@ class AcEvoFallbackShmPatcher(
 
         lapAnalyzer.processPhysicsFrame(loopStartNanos, shm.physics)
 
-        val snapshot = lapAnalyzer.getSnapshot(loopStartNanos)
-        patchGraphics(shm.graphics, snapshot)
+        val lapSnapshot = lapAnalyzer.getSnapshot(loopStartNanos)
+
+        fuelAnalyzer.processFrame(
+            fuelLiters = shm.physics.fuel,
+            completedLaps = lapSnapshot.completedLapsCount,
+            lastLapTimeMs = lapSnapshot.lastLapTimeMs ?: 0,
+            startFinishSyncId = lapSnapshot.startFinishSyncId
+        )
+        val fuelSnapshot = fuelAnalyzer.getSnapshot(currentFuelLiters = shm.physics.fuel)
+
+        patchGraphics(shm.graphics, lapSnapshot, fuelSnapshot)
     }
 
     private fun needsFallback(shm: AcSharedMemory): Boolean {
@@ -69,7 +88,11 @@ class AcEvoFallbackShmPatcher(
         return graphicsEmpty || staticsEmpty
     }
 
-    private fun patchStatics(statics: SPageFileStatic, info: EvoFileInfo, calibration: TrackCalibration? = null) {
+    private fun patchStatics(
+        statics: SPageFileStatic,
+        info: EvoFileInfo,
+        calibration: TrackCalibration? = null
+    ) {
         statics.numCars = 1
         statics.numberOfSessions = 1
         statics.sectorCount = calibration?.sectors?.size ?: 3
@@ -85,7 +108,11 @@ class AcEvoFallbackShmPatcher(
         }
     }
 
-    private fun patchGraphics(graphics: SPageFileGraphics, snapshot: LapTimingSnapshot) {
+    private fun patchGraphics(
+        graphics: SPageFileGraphics,
+        snapshot: LapTimingSnapshot,
+        fuelSnapshot: FuelSnapshot,
+    ) {
         graphics.packetId = syntheticPacketId++
 
         graphics.status = 2
@@ -103,6 +130,12 @@ class AcEvoFallbackShmPatcher(
         graphics.iSplit = snapshot.currentSectorTimeMs
 
         graphics.isValidLap = if (snapshot.currentLapValid) 1 else 0
+
+        graphics.iDeltaLapTime = snapshot.deltaLapTimeMs ?: 0
+        graphics.isDeltaPositive = if (snapshot.isDeltaPositive) 1 else 0
+
+        fuelSnapshot.fuelPerLapLiters?.let { graphics.fuelXLap = it }
+        fuelSnapshot.fuelEstimatedLaps?.let { graphics.fuelEstimatedLaps = it }
     }
 }
 

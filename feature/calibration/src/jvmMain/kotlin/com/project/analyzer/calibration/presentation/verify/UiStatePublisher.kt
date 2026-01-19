@@ -1,8 +1,8 @@
 package com.project.analyzer.calibration.presentation.verify
 
-import com.project.analyzer.ac.telemetry.impl.fallback.CarPose
-import com.project.analyzer.ac.telemetry.impl.fallback.FallbackLapAnalyzer
-import com.project.analyzer.ac.telemetry.impl.fallback.GateCrossingDetector
+import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
+import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
+import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
