@@ -16,7 +16,7 @@ public data class WheelFrame(
     val avgTempC: Float? = null, // Average tyre temp
 
     // Brake
-//    val brakeTempC: Float? = null, // Disc temperature
+    val brakeTempC: Float? = null, // Disc temperature
     val brakePressure: Float? = null,
     val padLife: Float? = null, // 0..1 or mm
     val discLife: Float? = null, // 0..1 or mm

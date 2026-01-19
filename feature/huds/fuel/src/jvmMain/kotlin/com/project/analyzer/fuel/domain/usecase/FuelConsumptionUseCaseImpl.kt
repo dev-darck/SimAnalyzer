@@ -1,5 +1,6 @@
 package com.project.analyzer.fuel.domain.usecase
 
+import com.project.analyzer.api.di.IO
 import com.project.analyzer.fuel.data.model.SavedFuelData
 import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.fuel.domain.model.FuelResult
@@ -10,6 +11,7 @@ import com.project.analyzer.fuel.domain.repository.FuelRepository
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
 import com.project.analyzer.utils.logger
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -23,11 +25,13 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 
+@Inject
 internal class FuelConsumptionUseCaseImpl(
     telemetry: TelemetryLifecycle,
+    @IO
+    dispatcher: CoroutineDispatcher,
     private val engine: FuelConsumptionEngine,
     private val repository: FuelRepository,
-    dispatcher: CoroutineDispatcher
 ) : FuelConsumptionUseCase {
 
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
@@ -83,7 +87,7 @@ internal class FuelConsumptionUseCaseImpl(
             currentTrack = track
             sessionPeakLitersPerLap = 0.0
             sessionBestValidLapTimeMs = null
-            savedFuelData = repository.load(car, track)
+            savedFuelData = repository.load(currentCar, currentTrack)
             engine.reset()
             return FuelResult.Reset
         }

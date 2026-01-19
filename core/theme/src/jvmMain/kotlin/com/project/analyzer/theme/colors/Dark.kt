@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 private val Background = Color(0xFF101922)
 private val OnBackground = Color(0xFFFFFFFF)
 
-private val Surface = Color(0xFF1A222C)
+private val Surface = Color(0xFF182430)
 private val OnSurface = Color(0xFFFFFFFF)
 
 private val SurfaceVariant = Color(0xFF252E3A)
@@ -15,11 +15,11 @@ private val OnSurfaceVariant = Color(0xFF9BA6B6)
 
 private val Primary = Color(0xFF2B8CEE)
 private val OnPrimaryDark = Color(0xFFFFFFFF)
-private val PrimaryContainer = Color(0xFF16314E)
+private val PrimaryContainer = Color(0xFF2B8CEE)
 private val OnPrimaryContainer = Color(0xFFD6E8FF)
 
 private val Secondary = Color(0xFF9BA6B6)
-private val OnSecondary = Color(0xFF101922)
+private val OnSecondary = Color.White
 private val SecondaryContainer = Color(0xFF2F3845)
 private val OnSecondaryContainer = Color(0xFFDDE6F1)
 
@@ -58,9 +58,12 @@ private val DarkLowPriorityOutline = Color(0xFF6EE7B7)
 private val DarkLowPriorityContainer = Color(0xFF064E3B)
 private val DarkOnLowPriorityContainer = Color(0xFFD1FAE5)
 
-private val DarkGradientStart = Primary
-private val DarkGradientEnd = Tertiary
-private val DarkOnGradient = Color(0xFFFFFFFF)
+private val Gradient0 = Color(0xFF11B980)
+private val Gradient20 = Color(0xFF87C249)
+private val Gradient40 = Color(0xFF87C249)
+private val Gradient60 = Color(0xFFF59727)
+private val Gradient80 = Color(0xFFF15C3C)
+private val Gradient100 = Color(0xFFF43F5E)
 
 public val DarkColorScheme: ColorScheme = darkColorScheme(
     primary = Primary,
@@ -116,9 +119,12 @@ internal val DarkExtendedColors = ExtendedColors(
     lowPriorityContainer = DarkLowPriorityContainer,
     onLowPriorityContainer = DarkOnLowPriorityContainer,
 
-    gradientStart = DarkGradientStart,
-    gradientEnd = DarkGradientEnd,
-    onGradient = DarkOnGradient,
+    gradient0 = Gradient0,
+    gradient20 = Gradient20,
+    gradient40 = Gradient40,
+    gradient60 = Gradient60,
+    gradient80 = Gradient80,
+    gradient100 = Gradient100,
 
     material = DarkColorScheme
 )

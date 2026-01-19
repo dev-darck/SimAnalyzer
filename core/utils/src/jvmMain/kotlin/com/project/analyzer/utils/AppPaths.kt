@@ -1,6 +1,5 @@
 package com.project.analyzer.utils
 
-import com.projects.analyzer.utils.BuildConfig
 import java.io.File
 
 internal object AppPaths {

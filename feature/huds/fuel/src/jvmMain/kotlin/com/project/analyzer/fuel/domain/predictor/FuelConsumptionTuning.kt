@@ -61,9 +61,8 @@ data class FuelConsumptionTuning(
     /** Minimum valid laps required for high confidence per-lap mode */
     val minValidLapsForPerLap: Int = 1,
 
-    // Confidence
+    // Confidence thresholds
     val predictiveConfMin: Double = 0.3,
     val predictiveConfMax: Double = 0.7,
-    val perLapConf1Lap: Double = 0.75,
     val perLapConf2Plus: Double = 0.95,
 )

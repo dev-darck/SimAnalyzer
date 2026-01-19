@@ -23,7 +23,6 @@ import com.project.analyzer.impl.di.createAppGraph
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.utils.LogbackConfigurator
 import com.project.analyzer.utils.SingleInstanceGuard
-import com.projects.analyzer.utils.BuildConfig
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import java.awt.Dimension
 import java.awt.SystemTray

@@ -1,4 +1,4 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model
 
 data class LapTimingSnapshot(
     val isActive: Boolean,
@@ -20,5 +20,10 @@ data class LapTimingSnapshot(
 
     val currentLapValid: Boolean = true,
     val lastLapValid: Boolean = true,
-    val bestValidLapTimeMs: Int? = null
+    val bestValidLapTimeMs: Int? = null,
+
+    val deltaLapTimeMs: Int? = null,
+    val isDeltaPositive: Boolean = true,
+
+    val startFinishSyncId: Int
 )

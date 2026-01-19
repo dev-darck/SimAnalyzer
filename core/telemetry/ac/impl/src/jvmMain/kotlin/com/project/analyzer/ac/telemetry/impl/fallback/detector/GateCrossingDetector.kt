@@ -1,9 +1,9 @@
-package com.project.analyzer.ac.telemetry.impl.fallback
+package com.project.analyzer.ac.telemetry.impl.fallback.detector
 
+import com.project.analyzer.ac.telemetry.impl.fallback.detector.model.GateCrossing
+import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.api.di.SessionScope
-import com.project.analyzer.math.Geometry2D.intersectSegmentsParams
-import com.project.analyzer.math.Geometry2D.isForwardCrossing
-import com.project.analyzer.math.Geometry2D.outsideBandByNormal
+import com.project.analyzer.math.Geometry2D
 import com.project.analyzer.math.MathEps
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
@@ -14,13 +14,6 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @SingleIn(SessionScope::class)
 class GateCrossingDetector {
-
-    data class GateCrossing(
-        val interpolationFactor: Float,
-        val isForwardDirection: Boolean,
-        val hitPoint: Vec2,
-        val outsideByMeters: Float,
-    )
 
     fun detectCrossing(
         previousPose: CarPose,
@@ -34,10 +27,10 @@ class GateCrossingDetector {
 
         if (dp.len2() < MIN_MOVEMENT_METERS * MIN_MOVEMENT_METERS) return null
 
-        val frame = gate.frame2D(fallbackForward = Vec2.Up)
+        val frame = gate.frame2D(fallbackForward = Vec2.Companion.Up)
         val (a, b) = frame.segment()
 
-        val hitParams = intersectSegmentsParams(
+        val hitParams = Geometry2D.intersectSegmentsParams(
             p0 = p0,
             p1 = p1,
             q0 = a,
@@ -49,7 +42,7 @@ class GateCrossingDetector {
         val t = hitParams.t.coerceIn(0f, 1f)
         val hit = p0 + dp * t
 
-        val isForward = isForwardCrossing(
+        val isForward = Geometry2D.isForwardCrossing(
             p0 = p0,
             p1 = p1,
             center = frame.center,
@@ -57,7 +50,7 @@ class GateCrossingDetector {
             dirEps = MathEps.DIR,
         )
 
-        val outsideBy = outsideBandByNormal(
+        val outsideBy = Geometry2D.outsideBandByNormal(
             p = hit,
             center = frame.center,
             normal = frame.normal,

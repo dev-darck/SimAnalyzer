@@ -16,8 +16,11 @@ public data class ExtendedColors(
     val lowPriorityOutline: Color,
     val lowPriorityContainer: Color,
     val onLowPriorityContainer: Color,
-    val gradientStart: Color,
-    val gradientEnd: Color,
-    val onGradient: Color,
+    val gradient0: Color,
+    val gradient20: Color,
+    val gradient40: Color,
+    val gradient60: Color,
+    val gradient80: Color,
+    val gradient100: Color,
     val material: ColorScheme
 )

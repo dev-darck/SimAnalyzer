@@ -2,7 +2,6 @@
 
 package com.project.analyzer.utils
 
-import com.projects.analyzer.utils.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.nio.channels.FileChannel
