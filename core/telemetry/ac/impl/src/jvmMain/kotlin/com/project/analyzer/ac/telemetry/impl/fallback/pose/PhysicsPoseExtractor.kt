@@ -39,7 +39,7 @@ class PhysicsPoseExtractor {
             if (l in 1.0f..6.0f) d * (1f / l) else null
         }
 
-        val v = physics.velocity
+        val v = physics.localVelocity
         val localVx = v.getOrNull(0) ?: 0f
         val localVz = v.getOrNull(2) ?: 0f
 

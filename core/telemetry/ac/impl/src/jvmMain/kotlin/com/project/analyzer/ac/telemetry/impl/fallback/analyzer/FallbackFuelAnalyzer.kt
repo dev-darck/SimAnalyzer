@@ -81,17 +81,31 @@ class FallbackFuelAnalyzer {
             val fuelUsedPerLap = fuelUsedTotal / deltaLaps
 
             if (fuelUsedPerLap in MIN_FUEL_PER_LAP..MAX_FUEL_PER_LAP) {
-                repeat(deltaLaps) {
-                    val cur = fuelPerLapEwma
-                    fuelPerLapEwma = if (cur == null) fuelUsedPerLap else cur + EWMA_ALPHA * (fuelUsedPerLap - cur)
-                    validLapCount++
+                val effectiveAlpha = calculateEffectiveAlpha(deltaLaps)
+                val cur = fuelPerLapEwma
+                fuelPerLapEwma = if (cur == null) {
+                    fuelUsedPerLap
+                } else {
+                    cur + effectiveAlpha * (fuelUsedPerLap - cur)
                 }
+                validLapCount += deltaLaps
+
                 updateSnapshot(fuelLiters, lastLapRawPerLap = fuelUsedPerLap)
             }
         }
 
         lapStartFuelLiters = fuelLiters
         lastCompletedLaps = completedLaps
+    }
+
+    private fun calculateEffectiveAlpha(lapCount: Int): Float {
+        if (lapCount <= 1) return EWMA_ALPHA
+
+        var complement = 1f - EWMA_ALPHA
+        repeat(lapCount - 1) {
+            complement *= (1f - EWMA_ALPHA)
+        }
+        return (1f - complement).coerceIn(EWMA_ALPHA, MAX_EFFECTIVE_ALPHA)
     }
 
     private fun updateSnapshot(currentFuel: Float, lastLapRawPerLap: Float) {
@@ -122,5 +136,6 @@ class FallbackFuelAnalyzer {
         const val MIN_FUEL_PER_LAP = 0.001f
         const val MAX_FUEL_PER_LAP = 50f
         const val EWMA_ALPHA = 0.35f
+        const val MAX_EFFECTIVE_ALPHA = 0.85f
     }
 }

@@ -5,7 +5,6 @@ import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
 import com.project.analyzer.ac.telemetry.impl.internal.PollResult
 import com.project.analyzer.ac.telemetry.impl.internal.mapper.AcMapper
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
-import com.project.analyzer.api.di.AppCoroutine
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.ac.api.contract.LapValidity
@@ -15,23 +14,20 @@ import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent.LapFinished
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent.LapStarted
 import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
+import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.buffer
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Inject
@@ -41,13 +37,13 @@ class AcTelemetryLifecycle(
     private val pollLoop: AcPollLoop,
     private val mapper: AcMapper,
     private val shm: AcSharedMemory,
-    @param:AppCoroutine
-    private val appScope: CoroutineScope,
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
 ) : TelemetryLifecycle {
 
-    private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(extraBufferCapacity = 64)
+    private val appScope = CoroutineScope(SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, _ -> })
+
+    private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(replay = 1)
     override val events = _events.asSharedFlow()
 
     private var lastLapIndex: Int? = null
@@ -55,14 +51,29 @@ class AcTelemetryLifecycle(
     private var lastLapValidity: LapValidity = LapValidity.UNKNOWN
     private var lastConnectionState: GameConnectionState = GameConnectionState.DISCONNECTED
 
-    private var collectionJob: Job? = null
+    private val _frames: MutableSharedFlow<TelemetryFrame> = MutableSharedFlow(
+        replay = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
 
-    override val frames: SharedFlow<TelemetryFrame> by lazy {
-        createFramesFlow()
+    override suspend fun launchTelemetry() {
+        launchLoop()
     }
 
-    private fun createFramesFlow(): SharedFlow<TelemetryFrame> {
-        val rawFrames = callbackFlow {
+    override suspend fun finishTelemetry() {
+        appScope.cancel()
+
+        withContext(ioDispatcher) {
+            shm.close()
+            pollLoop.stop()
+        }
+
+        resetState()
+    }
+
+    private fun launchLoop() {
+        appScope.launch {
             var connectionState: GameConnectionState = GameConnectionState.DISCONNECTED
 
             pollLoop.start { result ->
@@ -78,35 +89,12 @@ class AcTelemetryLifecycle(
                         processFrame(frame, connectionState)
 
                         if (connectionState == GameConnectionState.IN_SESSION) {
-                            trySend(frame)
+                            _frames.emit(frame)
                         }
                     }
                 }
             }
-
-            awaitClose { pollLoop.stop() }
         }
-            .buffer(capacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-            .catch { e -> println("Telemetry error: $e") }
-            .flowOn(ioDispatcher)
-
-        return rawFrames.shareIn(
-            scope = appScope,
-            started = SharingStarted.Eagerly,
-            replay = 1
-        )
-    }
-
-    override suspend fun finishTelemetry() {
-        collectionJob?.cancel()
-        collectionJob = null
-
-        withContext(ioDispatcher) {
-            shm.close()
-            pollLoop.stop()
-        }
-
-        resetState()
     }
 
     private fun resetState() {
@@ -118,23 +106,30 @@ class AcTelemetryLifecycle(
 
     private fun processStateChange(newState: GameConnectionState) {
         val oldState = lastConnectionState
-        lastConnectionState = newState
+        if (oldState == newState) return
 
-        when {
-            oldState == GameConnectionState.DISCONNECTED && newState != GameConnectionState.DISCONNECTED -> {
+        lastConnectionState = newState
+        logger.info { "ConnectionState: $oldState -> $newState" }
+
+        when (oldState to newState) {
+            GameConnectionState.DISCONNECTED to GameConnectionState.IN_MENU,
+            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION -> {
                 _events.tryEmit(TelemetryLifecycleEvent.SimConnected)
             }
 
-            newState == GameConnectionState.DISCONNECTED && oldState != GameConnectionState.DISCONNECTED -> {
-                if (oldState == GameConnectionState.IN_SESSION) {
-                    _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
-                }
+            GameConnectionState.IN_SESSION to GameConnectionState.IN_MENU -> {
+                _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
+                resetSessionState()
+            }
+
+            GameConnectionState.IN_MENU to GameConnectionState.DISCONNECTED -> {
                 _events.tryEmit(TelemetryLifecycleEvent.SimDisconnected)
                 resetSessionState()
             }
 
-            oldState == GameConnectionState.IN_SESSION && newState == GameConnectionState.IN_MENU -> {
+            GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED -> {
                 _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
+                _events.tryEmit(TelemetryLifecycleEvent.SimDisconnected)
                 resetSessionState()
             }
         }
@@ -164,9 +159,8 @@ class AcTelemetryLifecycle(
 
         if (newType != SessionType.UNKNOWN) {
             _events.tryEmit(TelemetryLifecycleEvent.SessionStarted(newType))
-        } else if (lastSessionType != SessionType.UNKNOWN) {
-            _events.tryEmit(TelemetryLifecycleEvent.SessionEnded)
         }
+
         lastSessionType = newType
     }
 

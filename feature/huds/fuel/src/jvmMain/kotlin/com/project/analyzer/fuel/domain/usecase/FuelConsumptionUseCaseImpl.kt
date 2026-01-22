@@ -42,7 +42,7 @@ internal class FuelConsumptionUseCaseImpl(
     private var sessionBestValidLapTimeMs: Int? = null
     private var savedFuelData: SavedFuelData? = null
 
-    private val manualResetFlow = MutableSharedFlow<FuelResult>(extraBufferCapacity = 1)
+    private val manualResetFlow = MutableSharedFlow<FuelResult>(extraBufferCapacity = 1, replay = 1)
 
     override val fuelEstimates: Flow<FuelResult> = merge(
         combine(
@@ -104,7 +104,7 @@ internal class FuelConsumptionUseCaseImpl(
             }
         }
 
-        frame.lap?.bestValidLapTimeMs?.let { bestValidMs ->
+        frame.lap?.bestLapTimeMs?.let { bestValidMs ->
             if (bestValidMs > 0) {
                 val current = sessionBestValidLapTimeMs
                 if (current == null || bestValidMs < current) {

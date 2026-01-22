@@ -59,7 +59,7 @@ class FallbackLapAnalyzer(
             state.setCalibration(trackId, calibration)
             calibration
         } else {
-            null
+            state.calibration
         }
     }
 
@@ -155,7 +155,7 @@ class FallbackLapAnalyzer(
                 return
             }
 
-            println("LAP: ✓ SYNCED to Start/Finish line")
+            println("LAP: ✔ SYNCED to Start/Finish line")
             state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
             state.markGateTriggered(timestampNs, GATE_START_FINISH)
         }
@@ -168,7 +168,7 @@ class FallbackLapAnalyzer(
         calibration: TrackCalibration
     ) {
         val currentSector = state.currentSectorIndex
-        val nextSectorGate = findNextSectorFinishGate(calibration) ?: return
+        val nextSectorGate = findNextSectorFinishGate(calibration, currentSector) ?: return
         val gateKey = "S${currentSector}_F"
 
         val crossing = gateDetector.detectCrossing(
@@ -196,11 +196,13 @@ class FallbackLapAnalyzer(
 
         if (crossing != null && crossing.isForwardDirection && state.canTriggerGate(timestampNs, GATE_START_FINISH)) {
             if (state.isLapRunning && state.isSyncedToStartFinish) {
-                val isValidSequence = state.currentSectorIndex == 3
+                val expectedFinalSector = getSectorCount(calibration)
+                val isValidSequence = state.currentSectorIndex == expectedFinalSector
 
                 if (isValidSequence) {
                     state.completeLap(timestampNs, crossing.interpolationFactor)
                 } else {
+                    println("LAP: ⚠ Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - re-syncing")
                     state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
                 }
             } else {
@@ -210,12 +212,16 @@ class FallbackLapAnalyzer(
         }
     }
 
-    private fun findNextSectorFinishGate(calibration: TrackCalibration): Gate? {
-        return when (state.currentSectorIndex) {
-            1 -> calibration.sectors.firstOrNull { it.index == 1 }?.finish
-            2 -> calibration.sectors.firstOrNull { it.index == 2 }?.finish
-            else -> null
-        }
+    private fun findNextSectorFinishGate(calibration: TrackCalibration, sectorNumber: Int): Gate? {
+        val totalSectors = getSectorCount(calibration)
+
+        if (sectorNumber >= totalSectors) return null
+
+        return calibration.sectors.firstOrNull { it.index == sectorNumber }?.finish
+    }
+
+    private fun getSectorCount(calibration: TrackCalibration): Int {
+        return calibration.sectors.size.coerceAtLeast(1)
     }
 
     private companion object {

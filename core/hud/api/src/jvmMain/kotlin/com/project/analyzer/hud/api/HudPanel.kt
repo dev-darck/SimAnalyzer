@@ -11,5 +11,10 @@ public interface HudPanel {
     public val defaultOffset: IntOffset get() = IntOffset.Zero
 
     @Composable
-    public fun Content(modifier: Modifier)
+    public fun DemoContent(modifier: Modifier) {
+    }
+
+    @Composable
+    public fun Content(modifier: Modifier) {
+    }
 }

@@ -43,7 +43,6 @@ internal fun ElectronicsBlock(
     modifier: Modifier = Modifier,
     gap: Dp = 12.dp,
 ) {
-    val cardShape = RoundedCornerShape(26.dp)
     val tileShape = RoundedCornerShape(16.dp)
 
     val cardBg = SimAnalyzerTheme.material.surface
@@ -51,15 +50,15 @@ internal fun ElectronicsBlock(
     val highlightBg = SimAnalyzerTheme.material.primary
 
     val titleColor = SimAnalyzerTheme.material.onSurface
-    val muted = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f)
+    val muted = SimAnalyzerTheme.material.onSurfaceVariant
     val valueColor = SimAnalyzerTheme.material.onSurface
 
     val isWarning = data.title.contains("⚠")
-    val headerColor = if (isWarning) Color(0xFFFF9800) else titleColor
+    val headerColor = if (isWarning) SimAnalyzerTheme.extended.amber else titleColor
 
     Column(
         modifier = modifier
-            .clip(cardShape)
+            .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
             .padding(22.dp)
     ) {
@@ -139,7 +138,7 @@ private fun ElectronicsTile(
 ) {
     val bg = if (item.highlighted) highlightBg else tileBg
     val value = if (item.highlighted) SimAnalyzerTheme.material.onPrimary else valueColor
-    val title = if (item.highlighted) SimAnalyzerTheme.material.onPrimary.copy(alpha = 0.55f) else titleColor
+    val title = if (item.highlighted) SimAnalyzerTheme.extended.onPrimaryContainer50 else titleColor
 
     Column(
         modifier = modifier

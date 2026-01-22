@@ -38,6 +38,8 @@ class AcEvoFileInfoExtractor(
         var trackIdFromSlug: String? = null
         var layoutFromSlug: String? = null
         var trackIdFromContainer: String? = null
+        var layoutFromContainer: String? = null
+        var trackIdFromGameStarted: String? = null
 
         var trackNameFromPhysics: String? = null
         var trackNameFromGameStarted: String? = null
@@ -62,6 +64,7 @@ class AcEvoFileInfoExtractor(
             parseTrackFromContainer(line)?.let { (folder, layout) ->
                 if (trackIdFromContainer == null) {
                     trackIdFromContainer = normalizeTrackId("${folder}_${layout}")
+                    layoutFromContainer = layout
                 }
             }
 
@@ -71,7 +74,9 @@ class AcEvoFileInfoExtractor(
 
             parseGameStarted(line)?.let { parsed ->
                 parsed.trackName?.let { tn ->
-                    trackNameFromGameStarted = cleanupGameStartedTrackName(tn)
+                    val cleanName = cleanupGameStartedTrackName(tn)
+                    trackNameFromGameStarted = cleanName
+                    trackIdFromGameStarted = normalizeTrackId(cleanName)
                 }
                 parsed.carModel?.let { cm -> carModel = cm }
                 bumpEpoch = true
@@ -100,36 +105,43 @@ class AcEvoFileInfoExtractor(
             }
         }
 
+        val baseInfo = if (bumpEpoch) {
+            EvoFileInfo(sessionEpoch = sessionEpoch + 1L)
+        } else {
+            lastInfo
+        }
+
         val newTrackId =
             trackIdFromSlug
                 ?: trackIdFromContainer
-                ?: lastInfo.trackId
+                ?: trackIdFromGameStarted
+                ?: baseInfo.trackId
 
         val newTrackName =
             buildTrackNameDisplay(
                 physicsName = trackNameFromPhysics,
-                layout = layoutFromSlug
+                layout = layoutFromSlug ?: layoutFromContainer
             )
                 ?: trackNameFromGameStarted
-                ?: lastInfo.trackName
+                ?: baseInfo.trackName
                 ?: newTrackId
 
-        val newCarModel = carModel ?: lastInfo.carModel
-        val newDriverName = driverName ?: lastInfo.driverName
-        val newDriverSteamId = driverSteamId ?: lastInfo.driverSteamId
+        val newCarModel = carModel ?: baseInfo.carModel
+        val newDriverName = driverName ?: baseInfo.driverName
+        val newDriverSteamId = driverSteamId ?: baseInfo.driverSteamId
 
-        val trackChanged = (newTrackId != null && newTrackId != lastInfo.trackId)
+        val trackChanged = (newTrackId != null && newTrackId != baseInfo.trackId)
         if (trackChanged) bumpEpoch = true
 
         val changed =
-            (newTrackId != lastInfo.trackId) ||
-                (newTrackName != lastInfo.trackName) ||
-                (newCarModel != lastInfo.carModel) ||
-                (newDriverName != lastInfo.driverName) ||
-                (newDriverSteamId != lastInfo.driverSteamId)
+            (newTrackId != baseInfo.trackId) ||
+                (newTrackName != baseInfo.trackName) ||
+                (newCarModel != baseInfo.carModel) ||
+                (newDriverName != baseInfo.driverName) ||
+                (newDriverSteamId != baseInfo.driverSteamId)
 
-        if (changed || penaltyTimestamp != lastInfo.penaltyTimestamp) {
-            lastInfo = lastInfo.copy(
+        if (changed || penaltyTimestamp != baseInfo.penaltyTimestamp) {
+            lastInfo = baseInfo.copy(
                 trackName = newTrackName,
                 trackId = newTrackId,
                 carModel = newCarModel,

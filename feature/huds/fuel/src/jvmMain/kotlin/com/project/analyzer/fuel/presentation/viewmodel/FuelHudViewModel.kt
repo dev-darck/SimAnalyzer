@@ -8,7 +8,6 @@ import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
 import com.project.analyzer.fuel.domain.usecase.FuelConsumptionUseCase
 import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.map.toUiState
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,8 +25,6 @@ internal class FuelHudViewModel(
 ) : ViewModel() {
 
     private val safetyFactor: Double get() = 1.0 + (FuelConsumptionConfig.safetyMarginPercent / 100.0)
-
-    private var estimateJob: Job? = null
 
     private var currentKey: SessionKey = SessionKey(null, null)
     private val peaksByKey: MutableMap<SessionKey, PeakState> = mutableMapOf()
@@ -49,8 +46,7 @@ internal class FuelHudViewModel(
     }
 
     private fun subscribeToEstimates() {
-        estimateJob?.cancel()
-        estimateJob = useCase.fuelEstimates
+        useCase.fuelEstimates
             .sample(200.milliseconds)
             .onEach(::handleFuelResult)
             .launchIn(viewModelScope)
@@ -106,10 +102,5 @@ internal class FuelHudViewModel(
 
     private inline fun updateState(transform: FuelHudUiState.() -> FuelHudUiState) {
         _state.update { it.transform() }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        estimateJob?.cancel()
     }
 }

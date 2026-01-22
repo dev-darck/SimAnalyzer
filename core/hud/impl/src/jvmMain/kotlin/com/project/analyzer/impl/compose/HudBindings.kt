@@ -6,7 +6,6 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
-import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(HudScope::class)
@@ -15,7 +14,6 @@ object HudBindings {
 
     @Provides
     @IntoMap
-    @SingleIn(HudScope::class)
     @ViewModelKey(HudViewModel::class)
     private fun provideHudViewModel(
         preferences: HudPreferences

@@ -7,21 +7,21 @@ data class LapTimingSnapshot(
     val completedLapsCount: Int,
     val currentLapTimeMs: Int,
     val currentSectorTimeMs: Int,
+    /** 0..(sectorCount-1) */
     val currentSectorIndex: Int,
     val lastSectorTimeMs: Int?,
     val lastLapTimeMs: Int?,
+    /** Best VALID lap time (ms). */
     val bestLapTimeMs: Int?,
-    val lastSector1Ms: Int? = null,
-    val lastSector2Ms: Int? = null,
-    val lastSector3Ms: Int? = null,
-    val bestSector1Ms: Int? = null,
-    val bestSector2Ms: Int? = null,
-    val bestSector3Ms: Int? = null,
+
+    /** Per-sector times for the last completed lap (ms). Size == sectorCount, values may be null. */
+    val lastSectorsMs: List<Int?> = emptyList(),
+    /** Best VALID per-sector times (ms). Size == sectorCount, values may be null. */
+    val bestSectorsMs: List<Int?> = emptyList(),
 
     val currentLapValid: Boolean = true,
-    val lastLapValid: Boolean = true,
-    val bestValidLapTimeMs: Int? = null,
 
+    /** Current lap delta vs bestLapTimeMs (ms). */
     val deltaLapTimeMs: Int? = null,
     val isDeltaPositive: Boolean = true,
 

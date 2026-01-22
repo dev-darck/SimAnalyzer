@@ -26,7 +26,8 @@ internal fun Project.configureComposeKmp() {
                 implementation(deps.compose.material3)
                 implementation(deps.androidx.lifecycle.viewmodelCompose)
                 implementation(deps.androidx.lifecycle.runtimeCompose)
-                implementation(deps.compose.icons)
+                implementation(deps.compose.icons.core)
+                implementation(deps.compose.icons.extended)
             }
             commonTest.dependencies {
                 implementation(deps.kotlin.test)

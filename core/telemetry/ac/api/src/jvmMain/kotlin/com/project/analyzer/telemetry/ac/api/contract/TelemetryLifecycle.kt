@@ -6,10 +6,6 @@ import kotlinx.coroutines.flow.SharedFlow
 
 public interface TelemetryLifecycle {
 
-    /**
-     * Shared flow of telemetry frames. Runs once, shared among all subscribers.
-     * Automatically starts when first subscriber appears.
-     */
     public val frames: SharedFlow<TelemetryFrame>
 
     /**
@@ -21,6 +17,7 @@ public interface TelemetryLifecycle {
      * Stops telemetry collection and releases resources.
      */
     public suspend fun finishTelemetry()
+    public suspend fun launchTelemetry()
 }
 
 public sealed interface TelemetryLifecycleEvent {

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -20,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -76,7 +79,6 @@ fun WheelsBlock(
     tileHeight: Dp = 108.dp,
     gap: Dp = 22.dp,
 ) {
-    val cardShape = RoundedCornerShape(26.dp)
     val tileShape = RoundedCornerShape(26.dp)
     val badgeShape = RoundedCornerShape(18.dp)
 
@@ -94,13 +96,13 @@ fun WheelsBlock(
 
     Column(
         modifier = modifier
-            .clip(cardShape)
+            .clip(SimAnalyzerTheme.shapes.large)
             .background(surface)
             .padding(22.dp)
     ) {
         Text(
             text = "Wheels",
-            fontSize = 26.sp,
+            fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = titleColor
         )
@@ -175,18 +177,18 @@ private fun WheelWideTile(
     subLineColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val psiColor = if (wheel.psiOk) SimAnalyzerTheme.material.tertiary else SimAnalyzerTheme.material.onSurface
+    val psiColor = if (wheel.psiOk) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.material.onSurface
     val valueColor = SimAnalyzerTheme.material.onSurface
 
     val slipColor = when {
-        wheel.slip > 0.15f -> SimAnalyzerTheme.material.error
-        wheel.slip > 0.05f -> Color(0xFFFF9800)
+        wheel.slip > 0.15f -> SimAnalyzerTheme.extended.red
+        wheel.slip > 0.05f -> SimAnalyzerTheme.extended.amber
         else -> subLineColor
     }
 
     val brakeColor = when {
-        wheel.brakeTempC > 600f -> SimAnalyzerTheme.material.error
-        wheel.brakeTempC > 400f -> Color(0xFFFF9800)
+        wheel.brakeTempC > 600f -> SimAnalyzerTheme.extended.red
+        wheel.brakeTempC > 400f -> SimAnalyzerTheme.extended.amber
         else -> subLineColor
     }
 
@@ -218,7 +220,7 @@ private fun WheelWideTile(
             )
         }
 
-        Tooltip(
+        InfoBlock(
             label = "PSI",
             value = psiText,
             labelColor = labelColor,
@@ -226,7 +228,7 @@ private fun WheelWideTile(
             tooltip = WheelTooltips.PSI
         )
 
-        Tooltip(
+        InfoBlock(
             label = "SLIP",
             value = slipText,
             labelColor = labelColor,
@@ -234,7 +236,7 @@ private fun WheelWideTile(
             tooltip = WheelTooltips.SLIP
         )
 
-        Tooltip(
+        InfoBlock(
             label = "SUS",
             value = "${wheel.susMm}mm",
             labelColor = labelColor,
@@ -242,7 +244,7 @@ private fun WheelWideTile(
             tooltip = WheelTooltips.SUS
         )
 
-        Tooltip(
+        InfoBlock(
             label = "BRK",
             value = "${brakeText}°",
             labelColor = labelColor,
@@ -250,13 +252,42 @@ private fun WheelWideTile(
             tooltip = WheelTooltips.BRK
         )
 
-        Tooltip(
+        InfoBlock(
             label = "TY",
             value = "${tyText}°",
             labelColor = labelColor,
             valueColor = valueColor,
             tooltip = WheelTooltips.TY
         )
+    }
+}
+
+@Composable
+private fun InfoBlock(
+    label: String,
+    value: String,
+    labelColor: Color,
+    valueColor: Color,
+    tooltip: String,
+) {
+    Tooltip(
+        tooltip = tooltip
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = label,
+                color = labelColor,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = value,
+                color = valueColor,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = FontFamily.Monospace
+            )
+        }
     }
 }
 

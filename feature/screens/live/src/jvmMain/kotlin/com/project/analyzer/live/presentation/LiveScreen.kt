@@ -36,12 +36,8 @@ internal fun LiveScreen() {
 private fun Screen(
     state: LiveScreenState = LiveScreenState()
 ) {
-    val gap = 16.dp
-
     ResponsiveScreen(
-        contentPadding = PaddingValues(horizontal = gap),
-        verticalSpacing = gap,
-        horizontalSpacing = gap,
+        contentPadding = PaddingValues(horizontal = 16.dp),
         backgroundColor = SimAnalyzerTheme.material.background
     ) {
         item(key = "TelemetryBlock", isContentFull = true) {
@@ -63,6 +59,8 @@ private fun Screen(
                 lastLapTime = state.lastLapTime,
                 deltaCurrentTime = state.deltaCurrentTime,
                 deltaLastTime = state.deltaLastTime,
+                deltaCurrentIsPositive = state.deltaCurrentIsPositive,
+                deltaLastIsPositive = state.deltaLastIsPositive,
                 lapCount = state.lapCount
             )
         }

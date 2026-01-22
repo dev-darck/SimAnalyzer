@@ -12,8 +12,8 @@ internal enum class ValueStatus {
 
 @Composable
 internal fun ValueStatus.statusColor() = when (this) {
-    ValueStatus.BEST -> SimAnalyzerTheme.material.secondary
-    ValueStatus.COMPLETED -> SimAnalyzerTheme.material.tertiary
-    ValueStatus.INVALID -> SimAnalyzerTheme.material.error
+    ValueStatus.BEST -> SimAnalyzerTheme.extended.purple
+    ValueStatus.COMPLETED -> SimAnalyzerTheme.extended.teal
+    ValueStatus.INVALID -> SimAnalyzerTheme.extended.red
     ValueStatus.NORMAL -> SimAnalyzerTheme.material.onSurface
 }

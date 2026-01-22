@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.navigation.api.Root
+import com.project.analyzer.theme.SimAnalyzerTheme
 
 data class NavItem(
     val key: Root,
@@ -48,12 +49,12 @@ fun Sidebar(
     onSelect: (NavItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val sidebarBg = Color(0xFF141C24)
-    val selectedPill = Color(0xFF24384D)
-    val hoverPill = Color(0xFF1B2A3A)
-    val selectedText = Color(0xFF4D86FF)
-    val normalText = Color(0xFF94A3B8)
-    val normalIcon = Color(0xFF9AA7B5)
+    val sidebarBg = SimAnalyzerTheme.material.surface
+    val selectedPill = SimAnalyzerTheme.material.secondaryContainer
+    val hoverPill = SimAnalyzerTheme.material.surfaceVariant
+    val selectedColor = SimAnalyzerTheme.material.primary
+    val normalText = SimAnalyzerTheme.material.onSurfaceVariant
+    val normalIcon = SimAnalyzerTheme.material.onSurfaceVariant
 
     Surface(
         modifier = modifier
@@ -72,7 +73,7 @@ fun Sidebar(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFF1A2633)),
+                        .background(SimAnalyzerTheme.material.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) { topIcon() }
 
@@ -89,7 +90,7 @@ fun Sidebar(
                     selected = item.key == selectedKey,
                     selectedPill = selectedPill,
                     hoverPill = hoverPill,
-                    selectedText = selectedText,
+                    selectedColor = selectedColor,
                     normalText = normalText,
                     normalIcon = normalIcon,
                     onClick = { onSelect(item) }
@@ -107,7 +108,7 @@ private fun SidebarItem(
     selected: Boolean,
     selectedPill: Color,
     hoverPill: Color,
-    selectedText: Color,
+    selectedColor: Color,
     normalText: Color,
     normalIcon: Color,
     onClick: () -> Unit
@@ -125,12 +126,12 @@ private fun SidebarItem(
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (selected) selectedText else normalText,
+        targetValue = if (selected) selectedColor else normalText,
         animationSpec = tween(120)
     )
 
     val iconColor by animateColorAsState(
-        targetValue = if (selected) selectedText else normalIcon,
+        targetValue = if (selected) selectedColor else normalIcon,
         animationSpec = tween(120)
     )
 

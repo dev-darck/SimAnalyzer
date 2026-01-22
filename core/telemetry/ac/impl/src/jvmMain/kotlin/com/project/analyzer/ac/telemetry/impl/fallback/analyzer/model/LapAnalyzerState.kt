@@ -3,6 +3,7 @@ package com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
+import kotlin.math.min
 
 class LapAnalyzerState {
 
@@ -21,37 +22,34 @@ class LapAnalyzerState {
 
     var lapStartTimeNs = 0L
     var sectorStartTimeNs = 0L
+
     var currentSectorIndex = 1
+
     var completedLapsCount = 0
 
     var lastLapTimeMs: Int? = null
     var bestLapTimeMs: Int? = null
     var lastSectorTimeMs: Int? = null
 
-    var lastSector1Ms: Int? = null
-    var lastSector2Ms: Int? = null
-    var lastSector3Ms: Int? = null
-    var bestSector1Ms: Int? = null
-    var bestSector2Ms: Int? = null
-    var bestSector3Ms: Int? = null
-
+    private var lastSectorsMs: IntArray = IntArray(0)
+    private var bestSectorsMs: IntArray = IntArray(0)
     private val gateLastTriggerNs = mutableMapOf<String, Long>()
     private val gateCooldownNs = 900_000_000L
 
     var currentLapValid: Boolean = true
         private set
-    var lastLapValid: Boolean = true
-        private set
-    var bestValidLapTimeMs: Int? = null
-        private set
     var startFinishSyncId: Int = 0
         private set
 
     private var maxDirtyLevelThisLap: Float = 0f
+    private var baselineDamage: Float = 0f
     private var currentDamage: Float = 0f
     private var hadPenaltyThisLap: Boolean = false
     private var hadOffTrackThisLap: Boolean = false
-    private var hasDamage: Boolean = false
+    private var hadNewDamageThisLap: Boolean = false
+
+    val sectorCount: Int
+        get() = (calibration?.sectors?.size ?: 3).coerceAtLeast(1)
 
     fun reset() {
         isActive = false
@@ -61,13 +59,12 @@ class LapAnalyzerState {
         resetSession()
 
         currentLapValid = true
-        lastLapValid = true
-        bestValidLapTimeMs = null
         maxDirtyLevelThisLap = 0f
+        baselineDamage = 0f
         currentDamage = 0f
         hadPenaltyThisLap = false
         hadOffTrackThisLap = false
-        hasDamage = false
+        hadNewDamageThisLap = false
     }
 
     fun resetSession() {
@@ -83,23 +80,22 @@ class LapAnalyzerState {
         lastLapTimeMs = null
         bestLapTimeMs = null
         lastSectorTimeMs = null
-        lastSector1Ms = null
-        lastSector2Ms = null
-        lastSector3Ms = null
-        bestSector1Ms = null
-        bestSector2Ms = null
-        bestSector3Ms = null
+
+        resizeSectorArrays(sectorCount)
+        clearLastAndBestSectors()
+
         gateLastTriggerNs.clear()
         isActive = true
         startFinishSyncId = 0
 
         currentLapValid = true
-        lastLapValid = true
+
         maxDirtyLevelThisLap = 0f
+        baselineDamage = 0f
         currentDamage = 0f
-        hasDamage = false
         hadPenaltyThisLap = false
         hadOffTrackThisLap = false
+        hadNewDamageThisLap = false
     }
 
     fun updateValidity(
@@ -124,11 +120,12 @@ class LapAnalyzerState {
 
         carDamage?.let { damage ->
             val maxDmg = damage.maxOrNull() ?: 0f
-            if (maxDmg > currentDamage) {
-                currentDamage = maxDmg
-                hasDamage = currentDamage > DAMAGE_THRESHOLD
+            currentDamage = maxDmg
+
+            val newDamageThisLap = maxDmg - baselineDamage
+            if (newDamageThisLap > DAMAGE_DELTA_THRESHOLD) {
+                hadNewDamageThisLap = true
             }
-            if (maxDmg < currentDamage) currentDamage = maxDmg
         }
 
         if (numberOfTyresOut >= 4) {
@@ -141,7 +138,7 @@ class LapAnalyzerState {
 
         currentLapValid = !hadPenaltyThisLap &&
             !hadOffTrackThisLap &&
-            !hasDamage
+            !hadNewDamageThisLap
     }
 
     fun invalidateCurrentLap() {
@@ -188,12 +185,12 @@ class LapAnalyzerState {
         startFinishSyncId += 1
         isSyncedToStartFinish = true
         completedLapsCount = 0
+
         lastLapTimeMs = null
         bestLapTimeMs = null
+
         lastSectorTimeMs = null
-        lastSector1Ms = null
-        lastSector2Ms = null
-        lastSector3Ms = null
+        clearLastAndBestSectors()
 
         val crossingTimeNs = interpolateTimestamp(timestampNs, interpolationFactor)
         lapStartTimeNs = crossingTimeNs
@@ -217,20 +214,15 @@ class LapAnalyzerState {
     fun completeLap(timestampNs: Long, interpolationFactor: Float) {
         val crossingTimeNs = interpolateTimestamp(timestampNs, interpolationFactor)
 
-        val sector3TimeMs = ((crossingTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
-        lastSectorTimeMs = sector3TimeMs
-        updateSectorBest(3, sector3TimeMs)
+        val finalSectorTimeMs = ((crossingTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
+        lastSectorTimeMs = finalSectorTimeMs
+        updateSectorBest(sectorCount, finalSectorTimeMs)
 
         val lapTimeMs = ((crossingTimeNs - lapStartTimeNs) / NS_PER_MS).toInt()
         lastLapTimeMs = lapTimeMs
 
-        lastLapValid = currentLapValid
-
         if (currentLapValid) {
-            bestLapTimeMs = bestLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
-            bestValidLapTimeMs = bestValidLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
-        } else {
-            bestLapTimeMs = bestLapTimeMs?.let { minOf(it, lapTimeMs) } ?: lapTimeMs
+            bestLapTimeMs = bestLapTimeMs?.let { min(it, lapTimeMs) } ?: lapTimeMs
         }
 
         completedLapsCount += 1
@@ -267,7 +259,7 @@ class LapAnalyzerState {
         }
 
         val sectorIndex = if (isLapRunning && isSyncedToStartFinish) {
-            (currentSectorIndex - 1).coerceIn(0, 2)
+            (currentSectorIndex - 1).coerceIn(0, sectorCount - 1)
         } else {
             0
         }
@@ -285,15 +277,9 @@ class LapAnalyzerState {
             lastSectorTimeMs = lastSectorTimeMs,
             lastLapTimeMs = lastLapTimeMs,
             bestLapTimeMs = bestLapTimeMs,
-            lastSector1Ms = lastSector1Ms,
-            lastSector2Ms = lastSector2Ms,
-            lastSector3Ms = lastSector3Ms,
-            bestSector1Ms = bestSector1Ms,
-            bestSector2Ms = bestSector2Ms,
-            bestSector3Ms = bestSector3Ms,
+            lastSectorsMs = lastSectorsMs.toNullableList(),
+            bestSectorsMs = bestSectorsMs.toNullableList(),
             currentLapValid = currentLapValid,
-            lastLapValid = lastLapValid,
-            bestValidLapTimeMs = bestValidLapTimeMs,
             deltaLapTimeMs = deltaMs,
             isDeltaPositive = isPositive,
             startFinishSyncId = startFinishSyncId
@@ -311,39 +297,84 @@ class LapAnalyzerState {
     private fun resetLapValidityTracking() {
         currentLapValid = true
         maxDirtyLevelThisLap = 0f
+
+        baselineDamage = currentDamage
+
         hadPenaltyThisLap = false
         hadOffTrackThisLap = false
-        hasDamage = false
+        hadNewDamageThisLap = false
+    }
+
+    private fun clearLastAndBestSectors() {
+        lastSectorsMs.fill(0)
+        bestSectorsMs.fill(0)
     }
 
     private fun updateSectorBest(sectorNumber: Int, timeMs: Int) {
-        when (sectorNumber) {
-            1 -> {
-                lastSector1Ms = timeMs
-                bestSector1Ms = bestSector1Ms?.let { minOf(it, timeMs) } ?: timeMs
-            }
+        if (sectorNumber <= 0 || timeMs <= 0) return
 
-            2 -> {
-                lastSector2Ms = timeMs
-                bestSector2Ms = bestSector2Ms?.let { minOf(it, timeMs) } ?: timeMs
-            }
+        ensureSectorArrays(sectorCount)
 
-            3 -> {
-                lastSector3Ms = timeMs
-                bestSector3Ms = bestSector3Ms?.let { minOf(it, timeMs) } ?: timeMs
+        val idx = sectorNumber - 1
+        if (idx !in lastSectorsMs.indices) return
+
+        lastSectorsMs[idx] = timeMs
+
+        if (currentLapValid) {
+            val prevBest = bestSectorsMs[idx]
+            bestSectorsMs[idx] = when {
+                prevBest <= 0 -> timeMs
+                else -> min(prevBest, timeMs)
             }
         }
     }
 
+    private fun ensureSectorArrays(requiredSize: Int) {
+        if (requiredSize <= 0) return
+        if (lastSectorsMs.size != requiredSize || bestSectorsMs.size != requiredSize) {
+            resizeSectorArrays(requiredSize)
+        }
+    }
+
+    private fun resizeSectorArrays(newSize: Int) {
+        val size = newSize.coerceAtLeast(1)
+
+        val newLast = IntArray(size)
+        val newBest = IntArray(size)
+
+        if (lastSectorsMs.isNotEmpty()) {
+            lastSectorsMs.copyInto(newLast, endIndex = min(lastSectorsMs.size, newLast.size))
+        }
+        if (bestSectorsMs.isNotEmpty()) {
+            bestSectorsMs.copyInto(newBest, endIndex = min(bestSectorsMs.size, newBest.size))
+        }
+
+        lastSectorsMs = newLast
+        bestSectorsMs = newBest
+    }
+
+    private fun IntArray.toNullableList(): List<Int?> = this.map { it.takeIf { v -> v > 0 } }
+
     private fun interpolateTimestamp(currentNs: Long, alpha: Float): Long {
-        val dt = if (previousTimestampNs > 0) (currentNs - previousTimestampNs) else 16_000_000L
-        return currentNs - ((1f - alpha) * dt).toLong()
+        if (previousTimestampNs <= 0L) {
+            return currentNs
+        }
+
+        val dt = currentNs - previousTimestampNs
+
+        if (dt !in 1..MAX_REASONABLE_FRAME_NS) {
+            return currentNs
+        }
+
+        val offset = (1.0 - alpha.toDouble()) * dt.toDouble()
+        return currentNs - offset.toLong()
     }
 
     private companion object {
 
         const val NS_PER_MS = 1_000_000L
+        const val MAX_REASONABLE_FRAME_NS = 1_000_000_000L
         const val DIRTY_THRESHOLD = 0.2f
-        const val DAMAGE_THRESHOLD = 0.5f
+        const val DAMAGE_DELTA_THRESHOLD = 0.1f
     }
 }

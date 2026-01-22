@@ -3,6 +3,7 @@ package com.project.analyzer.app
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,10 +31,20 @@ import java.awt.SystemTray
 suspend fun main() {
     SingleInstanceGuard.acquireOrExit()
     val appGraph = createAppGraph()
+    val initTheme = appGraph.themeRepository.loadTheme()
     LogbackConfigurator.configure()
+    appGraph.telemetryLifecycle.launchTelemetry()
     awaitApplication {
         CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
-            SimAnalyzerTheme {
+            var themeMode by remember { mutableStateOf(initTheme) }
+
+            LaunchedEffect(Unit) {
+                appGraph.themeRepository.observeThemeMode().collect { mode ->
+                    themeMode = mode
+                }
+            }
+
+            SimAnalyzerTheme(themeMode = themeMode) {
                 CrashBoundary {
                     App(appGraph)
                 }
@@ -47,6 +58,7 @@ suspend fun main() {
 @Composable
 private fun ApplicationScope.App(appGraph: AppGraph) {
     var showAppWindow by remember { mutableStateOf(true) }
+    val showHud by appGraph.hudPreferences.observeHudEnabled().collectAsState(true)
     var showOverlay by remember { mutableStateOf(appGraph.hudPanels.isNotEmpty()) }
     val isSystemTraySupported = remember { SystemTray.isSupported() }
 
@@ -82,7 +94,7 @@ private fun ApplicationScope.App(appGraph: AppGraph) {
     }
 
     OverlayWindow(
-        visible = showOverlay,
+        visible = showHud && showOverlay,
         onCloseRequest = { showOverlay = false },
         panels = appGraph.hudPanels,
         state = rememberWindowState(

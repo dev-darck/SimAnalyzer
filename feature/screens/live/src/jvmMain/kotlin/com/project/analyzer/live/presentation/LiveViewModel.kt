@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,8 +18,6 @@ internal class LiveViewModel(
     private val _state = MutableStateFlow(LiveScreenState())
     val state: StateFlow<LiveScreenState> = _state.asStateFlow()
 
-    private var telemetryJob: Job? = null
-
     fun dispatch(intent: LiveIntent) {
         when (intent) {
             is LiveIntent.Start -> startListening()
@@ -28,8 +25,7 @@ internal class LiveViewModel(
     }
 
     private fun startListening() {
-        telemetryJob?.cancel()
-        telemetryJob = useCase.telemetryFlow
+        useCase.telemetryFlow
             .onEach { result -> handleResult(result) }
             .launchIn(viewModelScope)
     }
@@ -50,10 +46,5 @@ internal class LiveViewModel(
                 _state.update { result.state }
             }
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        telemetryJob?.cancel()
     }
 }

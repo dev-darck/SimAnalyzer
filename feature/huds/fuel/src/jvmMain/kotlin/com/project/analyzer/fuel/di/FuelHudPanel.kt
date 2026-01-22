@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.project.analyzer.fuel.presentation.FuelDemoContent
 import com.project.analyzer.fuel.presentation.FuelHudContent
 import com.project.analyzer.fuel.presentation.viewmodel.FuelHudViewModel
 import com.project.analyzer.fuel.presentation.viewmodel.FuelIntent
@@ -21,6 +22,11 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 class FuelHudPanel : HudPanel {
 
     override val id: String = "fuel"
+
+    @Composable
+    override fun DemoContent(modifier: Modifier) {
+        FuelDemoContent(modifier = modifier)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {

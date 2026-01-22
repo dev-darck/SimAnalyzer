@@ -41,5 +41,8 @@ public sealed class Route(
 
         @Serializable
         public data object Settings : SettingsRoot(true)
+
+        @Serializable
+        public data object HudSettings : SettingsRoot(false)
     }
 }
