@@ -17,7 +17,6 @@ class LapMapper(
     private val lapState: AcLapState
 ) {
     private var lastCompletedLaps: Int = -1
-    private var bestValidLapTimeMs: Int? = null
     private var lastLapSectors: List<SectorFrame> = emptyList()
 
     init {
@@ -26,7 +25,6 @@ class LapMapper(
 
     fun reset() {
         lastCompletedLaps = -1
-        bestValidLapTimeMs = null
         lastLapSectors = emptyList()
         lapState.fullReset()
     }
@@ -35,6 +33,7 @@ class LapMapper(
         val completedLaps = graphics.completedLaps
         val isValidLap = graphics.isValidLap.toBoolean()
         val lastLapTimeMs = graphics.iLastTime.takeIf { it > 0 }
+        val bestLapMs = graphics.iBestTime.takeIf { it > 0 }
 
         val currentSectors = lapState.onFrame(
             currentSectorIndex = graphics.currentSectorIndex,
@@ -45,10 +44,7 @@ class LapMapper(
         if (completedLaps != lastCompletedLaps) {
             if (lastCompletedLaps != -1) {
                 lastLapSectors = lapState.getLastCompletedLapSectors()
-                
-                if (isValidLap && lastLapTimeMs != null) {
-                    bestValidLapTimeMs = bestValidLapTimeMs?.let { minOf(it, lastLapTimeMs) } ?: lastLapTimeMs
-                }
+
                 lapState.reset()
             }
             lastCompletedLaps = completedLaps
@@ -66,8 +62,7 @@ class LapMapper(
 
             currentLapTimeMs = graphics.iCurrentTime,
             lastLapTimeMs = lastLapTimeMs,
-            bestLapTimeMs = graphics.iBestTime.takeIf { it > 0 },
-            bestValidLapTimeMs = bestValidLapTimeMs,
+            bestLapTimeMs = bestLapMs,
 
             sectorCount = cache.sectorCount,
             currentSectorIndex = graphics.currentSectorIndex,

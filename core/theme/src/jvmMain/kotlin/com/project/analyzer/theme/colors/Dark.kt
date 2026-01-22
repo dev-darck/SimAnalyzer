@@ -9,21 +9,36 @@ private val OnBackground = Color(0xFFFFFFFF)
 
 private val Surface = Color(0xFF182430)
 private val OnSurface = Color(0xFFFFFFFF)
+private val Surface50 = Color(0xFFFFFFFF)
 
 private val SurfaceVariant = Color(0xFF252E3A)
 private val OnSurfaceVariant = Color(0xFF9BA6B6)
 
 private val Primary = Color(0xFF2B8CEE)
-private val OnPrimaryDark = Color(0xFFFFFFFF)
+private val OnPrimary = Color(0xFFFFFFFF)
 private val PrimaryContainer = Color(0xFF2B8CEE)
-private val OnPrimaryContainer = Color(0xFFD6E8FF)
+private val OnPrimaryContainer = Color(0xFFFFFFFF)
+private val OnPrimaryContainer50 = Color(0xFFFFFFFF).copy(alpha = 0.5f)
 
-private val Secondary = Color(0xFF9BA6B6)
-private val OnSecondary = Color.White
-private val SecondaryContainer = Color(0xFF2F3845)
-private val OnSecondaryContainer = Color(0xFFDDE6F1)
+private val Secondary = Color(0xFF2B8CEE).copy(alpha = 0.3f)
+private val OnSecondary = Color(0xFFFFFFFF)
+private val SecondaryContainer = Color(0xFF2B8CEE).copy(alpha = 0.1f)
+private val OnSecondaryContainer = Color(0xFFFFFFFF)
+private val OnSecondaryContainer50 = Color(0xFFFFFFFF).copy(alpha = 0.5f)
 
-private val Tertiary = Color(0xFF10B981)
+private val Purple = Color(0xFF9333EA)
+private val Pink = Color(0xFFC51162)
+private val LightPink = Color(0xFFDD349F)
+private val Red = Color(0xFFF43F5E)
+
+private val Amber = Color(0xFFF59727)
+private val Yellow = Color(0xFFEFCB1B)
+private val LightGreen = Color(0xFF87C249)
+private val Teal = Color(0xFF10B981)
+private val Cyan = Color(0xFF00B8D4)
+private val Orange = Color(0xFFF15C3C)
+
+private val Tertiary = Teal
 private val OnTertiary = Color(0xFF062017)
 private val TertiaryContainer = Color(0xFF0B3D31)
 private val OnTertiaryContainer = Color(0xFFB7F7DE)
@@ -31,43 +46,42 @@ private val OnTertiaryContainer = Color(0xFFB7F7DE)
 private val Outline = Color(0xFF283039)
 private val OutlineVariant = Color(0xFF3A4555)
 
-private val Error = Color(0xFFFFB4AB)
-private val OnError = Color(0xFF690005)
+private val Error = Red
+private val OnError = Color(0xFFFFFFFF)
 private val ErrorContainer = Color(0xFF93000A)
 private val OnErrorContainer = Color(0xFFFFDAD6)
 
 private val InverseSurface = Color(0xFFE9EEF7)
 private val InverseOnSurface = Color(0xFF101922)
-private val InversePrimary = Color(0xFF2B8CEE)
+private val InversePrimary = Primary
 
-/** Extended (non-M3) colors used by the app (prefixed to avoid collisions with Light.kt symbols) */
 private val DarkShadow = Color(0xFF000000)
 private val DarkShadowSecondary = Color(0xFF000000)
 
-private val DarkErrorOutline = Error
+private val DarkErrorOutline = Red
 
-private val DarkHighPriorityOutline = Color(0xFFFCA5A5)
+private val DarkHighPriorityOutline = Red
 private val DarkHighPriorityContainer = Color(0xFF7F1D1D)
 private val DarkOnHighPriorityContainer = Color(0xFFFEE2E2)
 
-private val DarkMiddlePriorityOutline = Color(0xFFFCD34D)
+private val DarkMiddlePriorityOutline = Amber
 private val DarkMiddlePriorityContainer = Color(0xFF78350F)
 private val DarkOnMiddlePriorityContainer = Color(0xFFFEF3C7)
 
-private val DarkLowPriorityOutline = Color(0xFF6EE7B7)
+private val DarkLowPriorityOutline = Teal
 private val DarkLowPriorityContainer = Color(0xFF064E3B)
 private val DarkOnLowPriorityContainer = Color(0xFFD1FAE5)
 
-private val Gradient0 = Color(0xFF11B980)
-private val Gradient20 = Color(0xFF87C249)
-private val Gradient40 = Color(0xFF87C249)
-private val Gradient60 = Color(0xFFF59727)
-private val Gradient80 = Color(0xFFF15C3C)
-private val Gradient100 = Color(0xFFF43F5E)
+private val Gradient0 = Teal
+private val Gradient20 = LightGreen
+private val Gradient40 = LightGreen
+private val Gradient60 = Amber
+private val Gradient80 = Orange
+private val Gradient100 = Red
 
 public val DarkColorScheme: ColorScheme = darkColorScheme(
     primary = Primary,
-    onPrimary = OnPrimaryDark,
+    onPrimary = OnPrimary,
     primaryContainer = PrimaryContainer,
     onPrimaryContainer = OnPrimaryContainer,
 
@@ -103,6 +117,8 @@ public val DarkColorScheme: ColorScheme = darkColorScheme(
 )
 
 internal val DarkExtendedColors = ExtendedColors(
+    material = DarkColorScheme,
+    
     shadow = DarkShadow,
     shadowSecondary = DarkShadowSecondary,
     errorOutline = DarkErrorOutline,
@@ -126,5 +142,18 @@ internal val DarkExtendedColors = ExtendedColors(
     gradient80 = Gradient80,
     gradient100 = Gradient100,
 
-    material = DarkColorScheme
+    purple = Purple,
+    pink = Pink,
+    lightPink = LightPink,
+    red = Red,
+    amber = Amber,
+    yellow = Yellow,
+    lightGreen = LightGreen,
+    teal = Teal,
+    cyan = Cyan,
+    orange = Orange,
+
+    surface50 = Surface50,
+    onPrimaryContainer50 = OnPrimaryContainer50,
+    onSecondaryContainer50 = OnSecondaryContainer50,
 )

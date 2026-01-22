@@ -43,14 +43,13 @@ internal fun FuelSectorsBlock(
     sectors: List<Sector>,
     modifier: Modifier = Modifier,
 ) {
-    val cardShape = RoundedCornerShape(26.dp)
     val cardBg = SimAnalyzerTheme.material.surface
     val titleColor = SimAnalyzerTheme.material.onSurface
-    val mutedColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f)
+    val mutedColor = SimAnalyzerTheme.material.onSurfaceVariant
 
     Column(
         modifier = modifier
-            .clip(cardShape)
+            .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
             .padding(22.dp)
     ) {
@@ -132,7 +131,7 @@ internal fun FuelSectorsBlock(
         Spacer(Modifier.height(12.dp))
 
         HorizontalDivider(
-            color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.3f)
+            color = SimAnalyzerTheme.material.outlineVariant
         )
 
         Spacer(Modifier.height(12.dp))
@@ -158,7 +157,7 @@ private fun SectorItem(
 ) {
     val tileShape = RoundedCornerShape(16.dp)
     val tileBg = SimAnalyzerTheme.material.surfaceVariant
-    val mutedColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f)
+    val mutedColor = SimAnalyzerTheme.material.onSurfaceVariant
 
     Column(
         modifier = modifier

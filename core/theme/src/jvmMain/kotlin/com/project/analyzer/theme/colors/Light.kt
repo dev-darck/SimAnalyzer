@@ -4,66 +4,80 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
-private val Background = Color(0xFFF5F5F7)
-private val OnBackground = Color(0xFF111418)
+private val Background = Color(0xFFF5F7FA)
+private val OnBackground = Color(0xFF101922)
 
-private val Surface = Color(0xFF182430)
-private val OnSurface = Color(0xFF111418)
+private val Surface = Color(0xFFFFFFFF)
+private val OnSurface = Color(0xFF101922)
+private val Surface50 = Color(0xFF101922).copy(alpha = 0.5f)
 
-private val SurfaceVariant = Color(0xFFF3F4F6)
-private val OnSurfaceVariant = Color(0xFF6B7280)
+private val SurfaceVariant = Color(0xFFE8EEF6)
+private val OnSurfaceVariant = Color(0xFF5A6A7A)
 
 private val Primary = Color(0xFF2B8CEE)
-public val OnPrimary: Color = Color(0xFFFFFFFF)
+private val OnPrimary = Color(0xFFFFFFFF)
 private val PrimaryContainer = Color(0xFF2B8CEE)
-private val OnPrimaryContainer = Color(0xFF00213A)
+private val OnPrimaryContainer = Color(0xFFFFFFFF)
+private val OnPrimaryContainer50 = Color(0xFFFFFFFF).copy(alpha = 0.5f)
 
-private val Secondary = Color.White
-private val OnSecondary = Color(0xFFFFFFFF)
-private val SecondaryContainer = Color(0xFFE8EEF6)
-private val OnSecondaryContainer = Color(0xFF111418)
+private val Secondary = Color(0xFF2B8CEE).copy(alpha = 0.15f)
+private val OnSecondary = Color(0xFF2B8CEE)
+private val SecondaryContainer = Color(0xFF2B8CEE).copy(alpha = 0.08f)
+private val OnSecondaryContainer = Color(0xFF0A5CAD)
+private val OnSecondaryContainer50 = Color(0xFF0A5CAD).copy(alpha = 0.5f)
 
-private val Tertiary = Color(0xFF10B981)
+private val Purple = Color(0xFF7C3AED)
+private val Pink = Color(0xFFDB2777)
+private val LightPink = Color(0xFFEC4899)
+private val Red = Color(0xFFE11D48)
+
+private val Amber = Color(0xFFD97706)
+private val Yellow = Color(0xFFCA8A04)
+private val LightGreen = Color(0xFF65A30D)
+private val Teal = Color(0xFF0D9488)
+private val Cyan = Color(0xFF0891B2)
+private val Orange = Color(0xFFEA580C)
+
+private val Tertiary = Teal
 private val OnTertiary = Color(0xFFFFFFFF)
-private val TertiaryContainer = Color(0xFFD1FAE5)
-private val OnTertiaryContainer = Color(0xFF064E3B)
+private val TertiaryContainer = Color(0xFFCCFBF1)
+private val OnTertiaryContainer = Color(0xFF134E4A)
 
-private val Outline = Color(0xFFE5E7EB)
-private val OutlineVariant = Color(0xFFCBD5E1)
+private val Outline = Color(0xFFD1D9E6)
+private val OutlineVariant = Color(0xFFE2E8F0)
 
-private val Error = Color(0xFFBA1A1A)
+private val Error = Color(0xFFDC2626)
 private val OnError = Color(0xFFFFFFFF)
-private val ErrorContainer = Color(0xFFFFDAD6)
-private val OnErrorContainer = Color(0xFF410002)
+private val ErrorContainer = Color(0xFFFEE2E2)
+private val OnErrorContainer = Color(0xFF991B1B)
 
 private val InverseSurface = Color(0xFF101922)
-private val InverseOnSurface = Color(0xFFE9EEF7)
-private val InversePrimary = Color(0xFF2B8CEE)
+private val InverseOnSurface = Color(0xFFFFFFFF)
+private val InversePrimary = Color(0xFF60A5FA)
 
-/** Extended (non-M3) colors used by the app */
-internal val Shadow = Color(0xFF000000)
-internal val ShadowSecondary = Color(0xFF111418)
+private val Shadow = Color(0xFF000000).copy(alpha = 0.1f)
+private val ShadowSecondary = Color(0xFF101922).copy(alpha = 0.05f)
 
-internal val ErrorOutline = Color(0xFFBA1A1A)
+private val ErrorOutline = Color(0xFFDC2626)
 
-internal val HighPriorityOutline = Color(0xFFEF4444)
-internal val HighPriorityContainer = Color(0xFFFEE2E2)
-internal val OnHighPriorityContainer = Color(0xFF7F1D1D)
+private val HighPriorityOutline = Color(0xFFDC2626)
+private val HighPriorityContainer = Color(0xFFFEE2E2)
+private val OnHighPriorityContainer = Color(0xFF991B1B)
 
-internal val MiddlePriorityOutline = Color(0xFFF59E0B)
-internal val MiddlePriorityContainer = Color(0xFFFEF3C7)
-internal val OnMiddlePriorityContainer = Color(0xFF78350F)
+private val MiddlePriorityOutline = Color(0xFFD97706)
+private val MiddlePriorityContainer = Color(0xFFFEF3C7)
+private val OnMiddlePriorityContainer = Color(0xFF92400E)
 
-internal val LowPriorityOutline = Color(0xFF10B981)
-internal val LowPriorityContainer = Color(0xFFD1FAE5)
-internal val OnLowPriorityContainer = Color(0xFF064E3B)
+private val LowPriorityOutline = Color(0xFF0D9488)
+private val LowPriorityContainer = Color(0xFFCCFBF1)
+private val OnLowPriorityContainer = Color(0xFF134E4A)
 
-private val Gradient0 = Color(0xFF11B980)
-private val Gradient20 = Color(0xFF87C249)
-private val Gradient40 = Color(0xFF87C249)
-private val Gradient60 = Color(0xFFF59727)
-private val Gradient80 = Color(0xFFF15C3C)
-private val Gradient100 = Color(0xFFF43F5E)
+private val Gradient0 = Teal
+private val Gradient20 = LightGreen
+private val Gradient40 = LightGreen
+private val Gradient60 = Amber
+private val Gradient80 = Orange
+private val Gradient100 = Red
 
 public val LightColorScheme: ColorScheme = lightColorScheme(
     primary = Primary,
@@ -103,6 +117,8 @@ public val LightColorScheme: ColorScheme = lightColorScheme(
 )
 
 internal val LightExtendedColors = ExtendedColors(
+    material = LightColorScheme,
+    
     shadow = Shadow,
     shadowSecondary = ShadowSecondary,
     errorOutline = ErrorOutline,
@@ -126,5 +142,18 @@ internal val LightExtendedColors = ExtendedColors(
     gradient80 = Gradient80,
     gradient100 = Gradient100,
 
-    material = LightColorScheme
+    purple = Purple,
+    pink = Pink,
+    lightPink = LightPink,
+    red = Red,
+    amber = Amber,
+    yellow = Yellow,
+    lightGreen = LightGreen,
+    teal = Teal,
+    cyan = Cyan,
+    orange = Orange,
+
+    surface50 = Surface50,
+    onPrimaryContainer50 = OnPrimaryContainer50,
+    onSecondaryContainer50 = OnSecondaryContainer50,
 )

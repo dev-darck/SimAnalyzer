@@ -36,7 +36,7 @@ class AcPollLoop(
      * Starts the poll loop. Emits PollResult for state changes and frames.
      * Runs until coroutine is cancelled.
      */
-    suspend fun start(onResult: (PollResult) -> Unit) {
+    suspend fun start(onResult: suspend (PollResult) -> Unit) {
         var frameId = 0L
 
         while (currentCoroutineContext().isActive) {
@@ -54,7 +54,7 @@ class AcPollLoop(
 
     private suspend fun pollLoop(
         startFrameId: Long,
-        onResult: (PollResult) -> Unit
+        onResult: suspend (PollResult) -> Unit
     ): Long {
         var frameId = startFrameId
         var lastPhysicsPacket = -1
@@ -85,8 +85,6 @@ class AcPollLoop(
                 GameConnectionState.IN_MENU -> {
                     if (detection.needsFallback) {
                         fallback.patchIfNeeded(shm, loopStartNanos)
-                    } else {
-                        fallback.clear()
                     }
 
                     frameId++

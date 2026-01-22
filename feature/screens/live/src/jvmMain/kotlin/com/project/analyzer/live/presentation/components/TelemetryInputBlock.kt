@@ -38,20 +38,19 @@ fun TelemetryInputsBlock(
     steerDeg: Float,
     modifier: Modifier = Modifier
 ) {
-    val cardShape = RoundedCornerShape(26.dp)
-
     val cardBg = SimAnalyzerTheme.material.surface
     val barBg = SimAnalyzerTheme.material.surfaceVariant
     val textPrimary = SimAnalyzerTheme.material.onSurface
-    val textMuted = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.55f)
+    val textMuted = SimAnalyzerTheme.material.onSurfaceVariant
 
-    val brakeColor = SimAnalyzerTheme.material.error
-    val throttleColor = SimAnalyzerTheme.material.tertiary
+    val brakeColor = SimAnalyzerTheme.extended.red
+    val throttleColor = SimAnalyzerTheme.extended.teal
+    val clutchColor = SimAnalyzerTheme.extended.cyan
     val knobColor = SimAnalyzerTheme.material.primary
 
     Column(
         modifier = modifier
-            .clip(cardShape)
+            .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
             .padding(22.dp)
     ) {
@@ -89,7 +88,7 @@ fun TelemetryInputsBlock(
         HorizontalInputBar(
             label = "CLT",
             progress = clutch,
-            fillColor = null,
+            fillColor = clutchColor,
             barBg = barBg,
             textPrimary = textPrimary,
             textMuted = textMuted,
@@ -111,7 +110,7 @@ fun TelemetryInputsBlock(
 private fun HorizontalInputBar(
     label: String,
     progress: Float,
-    fillColor: Color?,
+    fillColor: Color,
     barBg: Color,
     textPrimary: Color,
     textMuted: Color,
@@ -140,7 +139,7 @@ private fun HorizontalInputBar(
                 .clip(shape)
                 .background(barBg)
         ) {
-            if (fillColor != null && p > 0f) {
+            if (p > 0f) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
@@ -245,7 +244,7 @@ private fun TelemetryInputsBlockPreview() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFF0F1720))
+                .background(SimAnalyzerTheme.material.background)
                 .padding(24.dp),
             contentAlignment = Alignment.Center
         ) {

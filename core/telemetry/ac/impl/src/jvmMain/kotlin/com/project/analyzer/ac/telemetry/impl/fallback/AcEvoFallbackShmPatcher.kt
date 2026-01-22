@@ -58,8 +58,8 @@ class AcEvoFallbackShmPatcher(
             fileInfoExtractor.clearPenalty()
         }
 
-        lapAnalyzer.loadCalibration(info.trackId)
-        patchStatics(shm.statics, info)
+        val calibration = lapAnalyzer.loadCalibration(info.trackId)
+        patchStatics(shm.statics, info, calibration)
 
         lapAnalyzer.processPhysicsFrame(loopStartNanos, shm.physics)
 
@@ -95,17 +95,16 @@ class AcEvoFallbackShmPatcher(
     ) {
         statics.numCars = 1
         statics.numberOfSessions = 1
-        statics.sectorCount = calibration?.sectors?.size ?: 3
+        val totalSectors = (calibration?.sectors?.size?.plus(1) ?: 3).coerceAtLeast(1)
+        statics.sectorCount = totalSectors
 
         statics.track.writeWString(info.trackName ?: info.trackId.orEmpty())
         statics.carModel.writeWString(info.carModel.orEmpty())
-        val driverInfo = info.driverName?.split(" ")
+        val driverInfo = info.driverName?.trim()?.split(" ")?.filter { it.isNotBlank() }
         val name = driverInfo?.getOrNull(0).orEmpty()
         statics.playerName.writeWString(name)
-        if ((driverInfo?.lastIndex ?: 0) >= 1) {
-            val surname = driverInfo?.subList(1, driverInfo.lastIndex)?.joinToString(" ")
-            statics.playerSurname.writeWString(surname.orEmpty())
-        }
+        val surname = driverInfo?.drop(1)?.joinToString(" ").orEmpty()
+        statics.playerSurname.writeWString(surname)
     }
 
     private fun patchGraphics(

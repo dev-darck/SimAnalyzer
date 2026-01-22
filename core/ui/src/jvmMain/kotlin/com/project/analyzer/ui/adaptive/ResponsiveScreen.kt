@@ -11,7 +11,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -37,6 +39,8 @@ public fun ResponsiveScreen(
     content: ResponsiveScope.() -> Unit
 ) {
     val layoutDirection = LocalLayoutDirection.current
+
+    val currentContent by rememberUpdatedState(content)
 
     val effectivePadding = remember(contentPadding, verticalSpacing, layoutDirection) {
         PaddingValues(
@@ -67,7 +71,7 @@ public fun ResponsiveScreen(
                     verticalArrangement = Arrangement.spacedBy(verticalSpacing),
                     contentPadding = effectivePadding
                 ) {
-                    ListScopeAdapter(this).content()
+                    ListScopeAdapter(this).currentContent()
                 }
             }
 
@@ -79,7 +83,7 @@ public fun ResponsiveScreen(
                     verticalItemSpacing = verticalSpacing,
                     contentPadding = effectivePadding
                 ) {
-                    GridScopeAdapter(this).content()
+                    GridScopeAdapter(this).currentContent()
                 }
             }
 
@@ -91,7 +95,7 @@ public fun ResponsiveScreen(
                     verticalItemSpacing = verticalSpacing,
                     contentPadding = effectivePadding
                 ) {
-                    GridScopeAdapter(this).content()
+                    GridScopeAdapter(this).currentContent()
                 }
             }
         }

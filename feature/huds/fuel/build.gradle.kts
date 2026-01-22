@@ -10,6 +10,7 @@ moduleImpl {
         projects.core.telemetry.ac.api.jvmImpl
         projects.core.math.jvmImpl
         projects.core.preference.api.jvmImpl
+        projects.core.ui.jvmImpl
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

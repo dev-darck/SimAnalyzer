@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -31,11 +30,16 @@ internal fun TimingBoardBlock(
     lastLapTime: String = "0:00.000",
     deltaCurrentTime: String = "+0.000",
     deltaLastTime: String = "-0.000",
+    deltaCurrentIsPositive: Boolean = false,
+    deltaLastIsPositive: Boolean = false,
     lapCount: Int = 0,
 ) {
+    val positiveColor = SimAnalyzerTheme.extended.teal
+    val negativeColor = SimAnalyzerTheme.extended.red
+
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
     ) {
         BlockHeader(lapCount)
@@ -51,7 +55,7 @@ internal fun TimingBoardBlock(
                 type = "Current lap",
                 time = currentLapTime,
                 delta = deltaCurrentTime,
-                deltaColor = Color(0xFF43D18A)
+                deltaColor = if (!deltaCurrentIsPositive) positiveColor else negativeColor
             )
 
             TimingDivider()
@@ -60,7 +64,7 @@ internal fun TimingBoardBlock(
                 type = "Last lap",
                 time = lastLapTime,
                 delta = deltaLastTime,
-                deltaColor = Color(0xFFFF4D6D)
+                deltaColor = if (!deltaLastIsPositive) positiveColor else negativeColor
             )
 
             TimingDivider()
@@ -69,7 +73,7 @@ internal fun TimingBoardBlock(
                 type = "Best lap",
                 time = bestLapTime,
                 delta = "-",
-                deltaColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.7f)
+                deltaColor = SimAnalyzerTheme.extended.surface50
             )
         }
     }
@@ -94,7 +98,7 @@ private fun TimingRow(
             fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.55f),
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
         )
 
@@ -136,7 +140,7 @@ private fun TimingHeaderRow() {
             fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f),
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
             style = MaterialTheme.typography.labelSmall
         )
 
@@ -167,7 +171,7 @@ private fun TimingHeaderRow() {
 @Composable
 private fun TimingDivider() {
     HorizontalDivider(
-        color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f),
+        color = SimAnalyzerTheme.material.outlineVariant,
     )
 }
 
@@ -176,7 +180,7 @@ private fun BlockHeader(lapCount: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(SimAnalyzerTheme.material.primary.copy(alpha = 0.1f))
+            .background(SimAnalyzerTheme.material.secondaryContainer)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -194,7 +198,7 @@ private fun BlockHeader(lapCount: Int) {
             fontSize = 12.sp,
             maxLines = 1,
             style = MaterialTheme.typography.bodyMedium,
-            color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.5f)
+            color = SimAnalyzerTheme.extended.surface50
         )
     }
 }

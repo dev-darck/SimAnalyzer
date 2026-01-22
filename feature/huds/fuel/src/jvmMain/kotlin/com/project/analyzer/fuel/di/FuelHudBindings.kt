@@ -55,7 +55,6 @@ object FuelHudBindings {
 
     @Provides
     @IntoMap
-    @SingleIn(HudScope::class)
     @ViewModelKey(FuelHudViewModel::class)
     private fun provideFuelHudViewModel(
         useCase: FuelConsumptionUseCase

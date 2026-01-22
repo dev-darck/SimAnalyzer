@@ -19,7 +19,9 @@ class AcLapState(
     private var sectors: MutableList<SectorFrame> = mutableListOf()
 
     private var lastCompletedLapSectors: List<SectorFrame> = emptyList()
-    private var pendingSector3Time: Int? = null
+
+    private var pendingLastSectorIndex: Int? = null
+    private var pendingLastSectorValidity: Boolean = true
 
     fun onFrame(
         currentSectorIndex: Int,
@@ -46,8 +48,11 @@ class AcLapState(
                     isValidLap = isValidLap
                 )
                 lastRecordedSectorTimeMs = lastSectorTimeMs
+                pendingLastSectorIndex = null
             } else {
-                pendingSector3Time = null
+                pendingLastSectorIndex = lastSectorIndex
+                pendingLastSectorValidity = isValidLap
+
                 val completed = sectors[lastSectorIndex]
                 sectors[lastSectorIndex] = completed.copy(
                     status = SectorStatus.COMPLETED,
@@ -68,6 +73,32 @@ class AcLapState(
             }
         }
 
+        if (pendingLastSectorIndex != null &&
+            lastSectorTimeMs > 0 &&
+            lastSectorTimeMs != lastRecordedSectorTimeMs
+        ) {
+            val pendingIdx = pendingLastSectorIndex!!
+
+            if (pendingIdx in sectors.indices) {
+                sectors[pendingIdx] = sectors[pendingIdx].copy(
+                    timeMs = lastSectorTimeMs,
+                    status = SectorStatus.COMPLETED,
+                    validity = if (pendingLastSectorValidity) SectorValidity.VALID else SectorValidity.INVALID
+                )
+            }
+
+            lastCompletedLapSectors = lastCompletedLapSectors.mapIndexed { idx, sector ->
+                if (idx == pendingIdx) {
+                    sector.copy(timeMs = lastSectorTimeMs)
+                } else {
+                    sector
+                }
+            }
+
+            lastRecordedSectorTimeMs = lastSectorTimeMs
+            pendingLastSectorIndex = null
+        }
+
         if (cur == 0 && lastSectorIndex == 0) {
             val lastSectorIdx = count - 1
             val lastSector = lastCompletedLapSectors.getOrNull(lastSectorIdx)
@@ -81,6 +112,11 @@ class AcLapState(
                         sector
                     }
                 }
+
+                if (lastSectorIdx in sectors.indices && sectors[lastSectorIdx].timeMs == null) {
+                    sectors[lastSectorIdx] = sectors[lastSectorIdx].copy(timeMs = lastSectorTimeMs)
+                }
+
                 lastRecordedSectorTimeMs = lastSectorTimeMs
             }
         }
@@ -97,7 +133,6 @@ class AcLapState(
         lastSectorIndex = -1
         lastRecordedSectorTimeMs = -1
         sectors.clear()
-        pendingSector3Time = null
     }
 
     fun fullReset() {

@@ -1,5 +1,7 @@
 package com.project.analyzer.live.domain.mapper
 
+import com.project.analyzer.live.domain.usecase.GearFilter
+import com.project.analyzer.live.domain.usecase.SectorsFilter
 import com.project.analyzer.live.presentation.LiveScreenState
 import com.project.analyzer.live.presentation.components.ElectronicItemUi
 import com.project.analyzer.live.presentation.components.ElectronicsBlockUi
@@ -22,9 +24,13 @@ import com.project.analyzer.utils.ext.toSteerDegrees
 import dev.zacsweers.metro.Inject
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
 internal class LiveScreenStateMapper {
+
+    private val gearFilter = GearFilter(100.milliseconds)
+    private val sectorFilter = SectorsFilter(100.milliseconds)
 
     fun map(frame: TelemetryFrame): LiveScreenState? {
         val car = frame.car ?: return null
@@ -34,20 +40,23 @@ internal class LiveScreenStateMapper {
         val maxRpm = maxOf(engineMaxRpm, sessionMaxRpm).takeIf { it > 0 } ?: 8000
 
         val fuel = car.fuel
+        val (deltaLastLap, isDeltaLastLapPositive) = calculateLastLapDelta(frame)
 
         return LiveScreenState(
             speedKmh = car.speedKmh?.roundToInt() ?: 0,
             rpmInt = rpm,
             rpmScale = rpm.toRpmScale(),
             maxRpmScale = maxRpm.toMaxRpmScale(),
-            gear = (car.engine?.gear ?: 1).toDisplayGear(),
+            gear = gearFilter.filter((car.engine?.gear ?: 1).toDisplayGear()),
 
             lapCount = frame.lap?.completedLaps ?: frame.session?.completedLaps ?: 0,
-            bestLapTime = frame.lap?.bestLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
+            bestLapTime = (frame.lap?.bestLapTimeMs)?.fromMsToLapTime() ?: "0:00.000",
             currentLapTime = frame.lap?.currentLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
             lastLapTime = frame.lap?.lastLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
             deltaCurrentTime = formatDeltaTime(frame.lap?.deltaLapTimeMs, frame.lap?.isDeltaPositive),
-            deltaLastTime = "-0.000",
+            deltaCurrentIsPositive = frame.lap?.isDeltaPositive ?: false,
+            deltaLastTime = deltaLastLap,
+            deltaLastIsPositive = isDeltaLastLapPositive,
 
             clutch = car.controls?.clutch ?: 0f,
             brake = car.controls?.brake ?: 0f,
@@ -59,26 +68,30 @@ internal class LiveScreenStateMapper {
             estLaps = fuel?.fuelEstimatedLaps ?: 0f,
             fuelPerLap = fuel?.fuelPerLapLiters ?: 0f,
 
-            sectors = mapSectors(frame.lap?.sectors),
+            sectors = sectorFilter.filter(mapSectors(frame.lap?.sectors), frame.lap?.currentLapIndex ?: 0),
             electronics = mapElectronics(frame),
             wheels = mapWheels(frame),
         )
     }
 
-    private fun mapSectors(sectors: List<SectorFrame>?): List<Sector> {
-        if (sectors.isNullOrEmpty()) {
-            return listOf(
-                Sector(1, "--.--", ValueStatus.NORMAL),
-                Sector(2, "--.--", ValueStatus.NORMAL),
-                Sector(3, "--.--", ValueStatus.NORMAL)
-            )
-        }
+    private fun calculateLastLapDelta(frame: TelemetryFrame): Pair<String, Boolean> {
+        val last = frame.lap?.lastLapTimeMs ?: return "+0.000" to true
+        val best = frame.lap?.bestLapTimeMs ?: return "+0.000" to true
+        if (last <= 0 || best <= 0) return "+0.000" to true
 
-        return sectors.map { sector ->
+        val delta = last - best
+        return formatDeltaTime(delta, delta >= 0) to (delta >= 0)
+    }
+
+    private fun mapSectors(sectors: List<SectorFrame>?): List<Sector> {
+        val byIndex = sectors.orEmpty().associateBy { it.index }
+
+        return (0 until 3).map { idx ->
+            val sector = byIndex[idx]
             Sector(
-                index = sector.index + 1,
-                value = sector.timeMs?.formatSectorTime() ?: "--.--",
-                status = mapSectorStatus(sector)
+                index = idx + 1,
+                value = sector?.timeMs?.formatSectorTime() ?: "--.--",
+                status = sector?.let(::mapSectorStatus) ?: ValueStatus.NORMAL
             )
         }
     }

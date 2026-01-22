@@ -5,7 +5,7 @@ import com.project.analyzer.live.presentation.components.ValueStatus
 import kotlin.time.Duration
 import kotlin.time.TimeSource
 
-internal class SectorsHoldFilter(
+internal class SectorsFilter(
     private val holdAfterLap: Duration
 ) {
 
@@ -42,13 +42,6 @@ internal class SectorsHoldFilter(
         }
 
         return current
-    }
-
-    fun reset() {
-        prevLapCount = null
-        lastNonEmpty = null
-        latchedAfterFinish = null
-        holdUntil = null
     }
 
     private fun isPlaceholder(list: List<Sector>): Boolean {

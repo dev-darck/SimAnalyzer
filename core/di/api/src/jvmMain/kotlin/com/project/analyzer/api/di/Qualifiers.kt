@@ -10,6 +10,3 @@ public annotation class Default
 
 @Qualifier
 public annotation class Main
-
-@Qualifier
-public annotation class AppCoroutine

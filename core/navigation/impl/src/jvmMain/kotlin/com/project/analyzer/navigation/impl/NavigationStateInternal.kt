@@ -9,6 +9,8 @@ import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.api.Route
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlin.reflect.KClass
 
 @Serializable
 class NavigationStateInternal<T : Route>(
@@ -21,21 +23,66 @@ class NavigationStateInternal<T : Route>(
     private val currentTopLevelState: MutableState<Root> = mutableStateOf(startTopLevel),
 ) : NavigationState<T> {
 
+    private sealed interface ForwardAction {
+        data class PushRoute(val topLevel: Root, val route: Route) : ForwardAction
+        data class SwitchTopLevel(val topLevel: Root) : ForwardAction
+    }
+
+    @Transient
+    private val forwardValidators: MutableMap<KClass<out T>, () -> Boolean> = mutableMapOf()
+
+    @Transient
+    private val forwardActions: ArrayDeque<ForwardAction> = ArrayDeque()
+
+    override val canGoForward: Boolean
+        get() {
+            val nextAction = forwardActions.lastOrNull() ?: return false
+            return when (nextAction) {
+                is ForwardAction.SwitchTopLevel -> true
+
+                is ForwardAction.PushRoute -> {
+                    val validator = forwardValidators[nextAction.route::class]
+                    validator?.invoke() ?: true
+                }
+            }
+        }
+
     override val currentTopLevel: Root
         get() = currentTopLevelState.value
 
-    override val backStack: BackStack<T>
-        get() = stacks.getValue(currentTopLevelState.value)
+    override val backStack: List<T>
+        get() {
+            val current = currentTopLevelState.value
+            return buildList {
+                Root.entries.forEach { tab ->
+                    if (tab != current) {
+                        stacks[tab]?.firstOrNull()?.let { add(it) }
+                    }
+                }
+                addAll(stacks.getValue(current))
+            }
+        }
 
     override fun switchTopLevel(topLevel: Root) {
         val current = currentTopLevel
         if (current == topLevel) return
+        clearForward()
+
+        stacks[current]?.let { stack ->
+            if (stack.size > 1) {
+                val root = stack.first()
+                stack.clear()
+                stack.add(root)
+            }
+        }
+
         currentTopLevelState.value = topLevel
     }
 
     override fun navigate(route: T) {
-        val tl = route.topLevel
+        clearForward()
 
+        val tl = route.topLevel
         if (currentTopLevelState.value != tl) {
             currentTopLevelState.value = tl
         }
@@ -43,10 +90,11 @@ class NavigationStateInternal<T : Route>(
         val stack = stacks.getValue(tl)
 
         if (route.isRoot) {
-            val existingRoot = stack.firstOrNull()
-            if (existingRoot != route) {
-                stack.clear()
+            if (stack.isEmpty()) {
                 stack.add(route)
+            } else {
+                stack[0] = route
+                while (stack.size > 1) stack.removeLast()
             }
             return
         }
@@ -55,11 +103,27 @@ class NavigationStateInternal<T : Route>(
     }
 
     override fun navigateToTopLevel(route: T) {
-        if (!route.isRoot) {
-            navigate(route)
+        clearForward()
+
+        val tl = route.topLevel
+        if (currentTopLevelState.value != tl) {
+            currentTopLevelState.value = tl
+        }
+
+        if (route.isRoot) {
+            setRoot(root = route)
             return
         }
-        setRoot(root = route, resetStack = false, switchToTopLevel = true)
+
+        stacks.getValue(tl).add(route)
+    }
+
+    override fun registerForwardValidator(route: KClass<out T>, validator: () -> Boolean) {
+        forwardValidators[route] = validator
+    }
+
+    override fun unregisterForwardValidator(route: KClass<out T>) {
+        forwardValidators.remove(route)
     }
 
     override fun handleBack(): Boolean {
@@ -67,16 +131,51 @@ class NavigationStateInternal<T : Route>(
         val stack = stacks.getValue(tl)
 
         if (stack.size > 1) {
-            stack.removeLast()
+            val popped = stack.removeLast()
+            forwardActions.addLast(ForwardAction.PushRoute(topLevel = tl, route = popped))
             return true
         }
 
         if (tl != startTopLevel) {
+            forwardActions.addLast(ForwardAction.SwitchTopLevel(topLevel = tl))
             currentTopLevelState.value = startTopLevel
             return true
         }
 
         return false
+    }
+
+    override fun handleForward(): Boolean {
+        val action = forwardActions.lastOrNull() ?: return false
+
+        if (action is ForwardAction.PushRoute) {
+            val validator = forwardValidators[action.route::class]
+            if (validator?.invoke() == false) {
+                forwardActions.removeLast()
+                return handleForward()
+            }
+        }
+
+        forwardActions.removeLast()
+        return when (action) {
+            is ForwardAction.SwitchTopLevel -> {
+                currentTopLevelState.value = action.topLevel
+                true
+            }
+
+            is ForwardAction.PushRoute -> {
+                val tl = action.topLevel
+                currentTopLevelState.value = tl
+                val stack = stacks.getValue(tl)
+                @Suppress("UNCHECKED_CAST")
+                stack.add(action.route as T)
+                true
+            }
+        }
+    }
+
+    private fun clearForward() {
+        if (forwardActions.isNotEmpty()) forwardActions.clear()
     }
 
     private fun setRoot(

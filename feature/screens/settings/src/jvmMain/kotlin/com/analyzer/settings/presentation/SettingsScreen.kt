@@ -1,9 +1,94 @@
 package com.analyzer.settings.presentation
 
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.analyzer.settings.presentation.components.AppearanceBlock
+import com.analyzer.settings.presentation.components.HudSetupBlock
+import com.analyzer.settings.presentation.components.TelemetryAcquisitionBlock
+import com.project.analyzer.navigation.api.LocalNavigator
+import com.project.analyzer.navigation.api.Route
+import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.adaptive.ResponsiveScreen
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Composable
-fun SettingsScreen() {
-    Text("Settings Screen")
+internal fun SettingsScreen() {
+    val viewModel = metroViewModel<SettingsViewModel>()
+    val navigationState = LocalNavigator.current
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    DisposableEffect(state.hudEnabled) {
+        navigationState.registerForwardValidator(Route.SettingsRoot.HudSettings::class) {
+            state.hudEnabled
+        }
+        onDispose {
+            navigationState.unregisterForwardValidator(Route.SettingsRoot.HudSettings::class)
+        }
+    }
+
+    Screen(state, viewModel::dispatch) { route ->
+        navigationState.navigate(route)
+    }
+}
+
+@Composable
+private fun Screen(
+    state: SettingsState = SettingsState(),
+    dispatch: (SettingsIntent) -> Unit = {},
+    navigateTo: (Route) -> Unit = {},
+) {
+    ResponsiveScreen(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        backgroundColor = SimAnalyzerTheme.material.background
+    ) {
+        item("AppearanceBlock") {
+            AppearanceBlock(
+                modifier = Modifier.fillMaxHeight(),
+                selectedTheme = state.themeMode,
+                onThemeSelected = { mode ->
+                    dispatch(SettingsIntent.ChangeTheme(mode))
+                }
+            )
+        }
+        item("HudSetupBlock") {
+            HudSetupBlock(
+                modifier = Modifier.fillMaxHeight(),
+                isHudEnabled = state.hudEnabled,
+                onHudEnabledChange = {
+                    dispatch(SettingsIntent.ChangeHudEnabled(it))
+                },
+                onEditClick = {
+                    navigateTo(Route.SettingsRoot.HudSettings)
+                }
+            )
+        }
+        item("TelemetryAcquisitionBlock") {
+            TelemetryAcquisitionBlock(
+                modifier = Modifier.fillMaxHeight(),
+                samplingRateHz = state.samplingRateHz,
+                storageLocation = state.storageLocation,
+                storageLocationError = state.storageLocationError,
+                onSamplingRateChange = {
+                    dispatch(SettingsIntent.ChangeSamplingRate(it))
+                },
+                onBrowseClick = {
+                }
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun SettingsScreenPreview() {
+    SimAnalyzerTheme {
+        Screen()
+    }
 }

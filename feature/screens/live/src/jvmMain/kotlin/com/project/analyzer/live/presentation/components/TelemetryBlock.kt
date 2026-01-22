@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,7 +59,7 @@ internal fun TelemetryBlock(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
+            .clip(SimAnalyzerTheme.shapes.large)
             .background(color = SimAnalyzerTheme.material.surface)
     ) {
         TopIntegratedProgressBar(
@@ -131,7 +130,7 @@ private fun TopIntegratedProgressBar(
     max: Int,
     modifier: Modifier = Modifier
 ) {
-    val emptyColor = Color(0xFF1A2E43)
+    val emptyColor = SimAnalyzerTheme.material.surfaceVariant
     val brush = SimAnalyzerTheme.horizontalGradient
 
     val safeMax = max.coerceAtLeast(1).toFloat()
@@ -204,7 +203,7 @@ private fun ScaleLabels(
         labels.forEach { v ->
             Text(
                 text = v.roundToInt().toString(),
-                color = SimAnalyzerTheme.material.onSecondary.copy(alpha = 0.5F),
+                color = SimAnalyzerTheme.extended.surface50,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -218,12 +217,12 @@ private fun AxisValueWithUnit(
     unit: String,
     modifier: Modifier = Modifier,
     valueStyle: TextStyle = TextStyle(
-        color = Color(0xFFF2F5F8),
+        color = SimAnalyzerTheme.material.onSurface,
         fontSize = 58.sp,
         fontWeight = FontWeight.Bold
     ),
     unitStyle: TextStyle = TextStyle(
-        color = Color(0xFF9FB0C1),
+        color = SimAnalyzerTheme.material.onSurfaceVariant,
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium
     ),
@@ -288,9 +287,10 @@ fun GearBadge(
     modifier: Modifier = Modifier,
 ) {
     val textMeasurer = rememberTextMeasurer()
-    val style = remember {
+    val textColor = SimAnalyzerTheme.material.onPrimary
+    val style = remember(textColor) {
         TextStyle(
-            color = Color.White,
+            color = textColor,
             fontSize = 64.sp,
             fontWeight = FontWeight.Bold
         )
@@ -323,7 +323,7 @@ private fun TelemetryBlockPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(260.dp)
-                .background(Color(0xFF0F1720)),
+                .background(SimAnalyzerTheme.material.background),
             contentAlignment = Alignment.Center
         ) {
             TelemetryBlock(

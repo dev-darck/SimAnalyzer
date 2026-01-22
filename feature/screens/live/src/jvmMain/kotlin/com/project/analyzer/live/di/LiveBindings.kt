@@ -28,7 +28,6 @@ object LiveBindings {
 
     @Provides
     @IntoMap
-    @SingleIn(ScreenScope::class)
     @ViewModelKey(LiveViewModel::class)
     private fun provideLiveViewModel(
         liveTelemetryUseCase: LiveTelemetryUseCase

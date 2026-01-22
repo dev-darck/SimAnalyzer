@@ -1,8 +1,11 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.project.analyzer.fuel.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -32,10 +35,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.tooltip.Tooltip
 
 @Composable
-fun FuelHudContent(
+fun FuelDemoContent(modifier: Modifier = Modifier) {
+    FuelHudContent(
+        state = FuelHudUiState(
+            isShow = true,
+            isSessionActive = true,
+            phase = FuelPhase.PREDICTIVE,
+            title = "Fuel / lap",
+            subtitle = "Predictive • 55%",
+            mainValue = "1.45 L",
+            peakValue = "1.52 L",
+            fuelLeftText = "20.34 L",
+            lapsRemainingText = "≈14 laps",
+            lapBasisText = "≈1:28.500",
+            planRows = listOf(
+                PlanRowUi("5 laps", "≈7:22", "7 L", "8 L"),
+                PlanRowUi("10 laps", "≈14:45", "15 L", "16 L"),
+                PlanRowUi("15 laps", "≈22:07", "22 L", "23 L"),
+            ),
+            confidence = 0.55
+        ),
+        isToolTipEnabled = true,
+        modifier = modifier.padding(16.dp)
+    )
+}
+
+@Composable
+internal fun FuelHudContent(
     state: FuelHudUiState,
+    isToolTipEnabled: Boolean = false,
     onResetAll: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -65,7 +96,8 @@ fun FuelHudContent(
                     subtitle = state.subtitle,
                     isSessionActive = state.isSessionActive,
                     phase = state.phase,
-                    onResetAll = onResetAll
+                    onResetAll = onResetAll,
+                    isToolTipEnabled = isToolTipEnabled
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -110,7 +142,8 @@ private fun HeaderBlock(
     subtitle: String,
     isSessionActive: Boolean,
     phase: FuelPhase,
-    onResetAll: () -> Unit
+    onResetAll: () -> Unit,
+    isToolTipEnabled: Boolean = false,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -136,7 +169,7 @@ private fun HeaderBlock(
 
             Box(
                 modifier = Modifier
-                    .size(8.dp)
+                    .size(size = 8.dp)
                     .background(
                         color = indicatorColor,
                         shape = androidx.compose.foundation.shape.CircleShape
@@ -145,18 +178,23 @@ private fun HeaderBlock(
 
             Spacer(Modifier.width(8.dp))
 
-            Icon(
-                imageVector = Icons.Default.Refresh,
-                contentDescription = "Reset",
-                tint = SimAnalyzerTheme.material.onSurfaceVariant,
-                modifier = Modifier
-                    .size(18.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .clickable {
-                        onResetAll()
-                    }
-                    .padding(2.dp)
-            )
+            Tooltip(
+                tooltip = "Reset fuel info. Delete all saved fuel \ncalculations and reset UI state to default.",
+                isShowTooltip = isToolTipEnabled,
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = "Reset",
+                    tint = SimAnalyzerTheme.material.onSurfaceVariant,
+                    modifier = Modifier
+                        .size(size = 18.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable {
+                            onResetAll()
+                        }
+                        .padding(2.dp)
+                )
+            }
         }
 
         Spacer(Modifier.height(4.dp))

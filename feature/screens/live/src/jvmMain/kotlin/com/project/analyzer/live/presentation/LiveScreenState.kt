@@ -18,8 +18,10 @@ internal data class LiveScreenState(
     val bestLapTime: String = "0:00.000",
     val currentLapTime: String = "0:00.000",
     val lastLapTime: String = "0:00.000",
-    val deltaCurrentTime: String = "+0.000",
+    val deltaCurrentTime: String = "-0.000",
     val deltaLastTime: String = "-0.000",
+    val deltaCurrentIsPositive: Boolean = false,
+    val deltaLastIsPositive: Boolean = false,
 
     val clutch: Float = 0f,
     val brake: Float = 0f,
