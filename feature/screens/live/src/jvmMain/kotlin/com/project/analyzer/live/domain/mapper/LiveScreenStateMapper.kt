@@ -30,7 +30,7 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class LiveScreenStateMapper {
 
     private val gearFilter = GearFilter(100.milliseconds)
-    private val sectorFilter = SectorsFilter(100.milliseconds)
+    private val sectorFilter = SectorsFilter(500.milliseconds)
 
     fun map(frame: TelemetryFrame): LiveScreenState? {
         val car = frame.car ?: return null

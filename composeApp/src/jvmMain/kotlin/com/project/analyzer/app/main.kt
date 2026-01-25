@@ -17,6 +17,8 @@ import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.awaitApplication
 import androidx.compose.ui.window.rememberWindowState
+import com.project.analyzer.composeApp.Res.Res
+import com.project.analyzer.composeApp.Res.app_icon
 import com.project.analyzer.crash.presentation.CrashBoundary
 import com.project.analyzer.impl.compose.OverlayWindow
 import com.project.analyzer.impl.di.AppGraph
@@ -25,6 +27,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.utils.LogbackConfigurator
 import com.project.analyzer.utils.SingleInstanceGuard
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
 import java.awt.SystemTray
 
@@ -69,18 +72,15 @@ private fun ApplicationScope.App(appGraph: AppGraph) {
     CustomTray(
         brandName = BuildConfig.APP_NAME,
         overlayVisible = showOverlay,
-        onMainAction = {
-            showAppWindow = true
-        },
+        onMainAction = { showAppWindow = true },
         onOverlayToggle = { showOverlay = !showOverlay }
     )
 
     Window(
         visible = showAppWindow,
-        onCloseRequest = {
-            if (isSystemTraySupported) showAppWindow = false else exitApplication()
-        },
+        onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
         title = BuildConfig.APP_NAME,
+        icon = painterResource(Res.drawable.app_icon),
         state = appState,
     ) {
         val density = LocalDensity.current
@@ -90,7 +90,13 @@ private fun ApplicationScope.App(appGraph: AppGraph) {
             window.minimumSize = Dimension(minW, minH)
         }
 
-        App(appGraph.entryProviderFactory)
+        FrameDecorator { decorator ->
+            App(
+                providerFactory = appGraph.entryProviderFactory,
+                decorator = decorator,
+                onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() }
+            )
+        }
     }
 
     OverlayWindow(

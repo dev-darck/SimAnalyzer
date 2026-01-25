@@ -145,7 +145,7 @@ class GameDetector(
 
     private fun getWindowTitle(hwnd: HWND): String {
         val len = user32.GetWindowText(hwnd, titleBuffer, titleBuffer.size)
-        return if (len > 0) String(titleBuffer, 0, len) else ""
+        return if (len > 0) String(titleBuffer, 0, minOf(len, titleBuffer.size)) else ""
     }
 
     private fun getProcessName(hwnd: HWND): String? {
@@ -236,7 +236,6 @@ class GameDetector(
         if (!user32.GetClientRect(hwnd, rc)) return null
         val pt = POINT(0, 0)
         if (!user32Ex.ClientToScreen(hwnd, pt)) return null
-        if (pt.x > 0 || pt.y > 0) return null
         return Rectangle(pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top)
     }
 

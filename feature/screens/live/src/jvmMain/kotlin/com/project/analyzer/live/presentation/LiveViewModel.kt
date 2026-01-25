@@ -39,9 +39,6 @@ internal class LiveViewModel(
                 _state.update { LiveScreenState() }
             }
 
-            is LiveTelemetryResult.NoData -> {
-            }
-
             is LiveTelemetryResult.Data -> {
                 _state.update { result.state }
             }

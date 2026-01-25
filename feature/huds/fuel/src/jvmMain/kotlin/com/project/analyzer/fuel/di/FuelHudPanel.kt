@@ -22,6 +22,8 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 class FuelHudPanel : HudPanel {
 
     override val id: String = "fuel"
+    override val description: String = "Fuel tracking that uses prediction when game data is missing, " +
+        "otherwise calculates per-lap consumption, saves the best lap stats, and restores them on next launch."
 
     @Composable
     override fun DemoContent(modifier: Modifier) {

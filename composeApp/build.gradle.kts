@@ -4,9 +4,10 @@ app {
     buildConfig {
         packageName = "app"
     }
+    logger()
+
     dependencies {
         projects.core.di.api.jvmImpl
-        projects.core.di.impl.jvmImpl
         projects.core.di.impl.jvmImpl
         projects.core.navigation.api.jvmImpl
         projects.core.navigation.impl.jvmImpl
@@ -15,7 +16,6 @@ app {
         projects.feature.calibration.jvmImpl
         projects.core.hud.api.jvmImpl
         projects.core.hud.impl.jvmImpl
-        projects.core.utils.jvmImpl
         projects.core.preference.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.feature.huds.fuel.jvmImpl
@@ -25,10 +25,13 @@ app {
         projects.feature.screens.settings.jvmImpl
         projects.feature.screens.live.jvmImpl
         projects.feature.screens.hudSettings.jvmImpl
-
+        projects.feature.huds.inputs.jvmImpl
+        projects.core.ui.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
         lib.metro.metrox.viewmodel.compose.jvmImpl
+        lib.jna.platform.jvmImpl
+        lib.jna.base.jvmImpl
     }
 }

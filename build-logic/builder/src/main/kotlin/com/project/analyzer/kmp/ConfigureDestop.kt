@@ -20,9 +20,7 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
                 packageName = "SimAnalyzer"
                 packageVersion = "0.0.1"
 
-//                macOS { iconFile.set(rootProject.file("app-icons/app.icns")) }
-//                windows { iconFile.set(rootProject.file("app-icons/app.ico")) }
-//                linux { iconFile.set(rootProject.file("app-icons/app.png")) }
+                windows { iconFile.set(rootProject.file("app-icons/app.ico")) }
 
                 modules(
                     "java.instrument",

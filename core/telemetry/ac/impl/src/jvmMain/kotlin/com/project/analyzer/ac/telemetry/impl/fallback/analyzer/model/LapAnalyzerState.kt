@@ -49,7 +49,7 @@ class LapAnalyzerState {
     private var hadNewDamageThisLap: Boolean = false
 
     val sectorCount: Int
-        get() = (calibration?.sectors?.size ?: 3).coerceAtLeast(1)
+        get() = ((calibration?.sectors?.size ?: DEFAULT_INTERMEDIATE_GATES)).coerceAtLeast(1)
 
     fun reset() {
         isActive = false
@@ -65,6 +65,29 @@ class LapAnalyzerState {
         hadPenaltyThisLap = false
         hadOffTrackThisLap = false
         hadNewDamageThisLap = false
+    }
+
+    fun rebasePose(resumeTimeNs: Long) {
+        previousPose = null
+        previousTimestampNs = resumeTimeNs
+    }
+
+    fun softResetAfterRespawn(nowNs: Long) {
+        previousPose = null
+        previousTimestampNs = nowNs
+
+        isLapRunning = false
+        isSyncedToStartFinish = false
+
+        unsyncedLapStartTimeNs = 0L
+        lapStartTimeNs = 0L
+        sectorStartTimeNs = 0L
+
+        currentSectorIndex = 1
+        lastSectorTimeMs = null
+
+        gateLastTriggerNs.clear()
+        resetLapValidityTracking()
     }
 
     fun resetSession() {
@@ -247,22 +270,16 @@ class LapAnalyzerState {
         val currentLapMs = if (isLapRunning) {
             val startTime = if (isSyncedToStartFinish) lapStartTimeNs else unsyncedLapStartTimeNs
             ((currentTimeNs - startTime) / NS_PER_MS).toInt()
-        } else {
-            0
-        }
+        } else 0
 
         val currentSectorMs = if (isLapRunning) {
             val startTime = if (isSyncedToStartFinish) sectorStartTimeNs else unsyncedLapStartTimeNs
             ((currentTimeNs - startTime) / NS_PER_MS).toInt()
-        } else {
-            0
-        }
+        } else 0
 
-        val sectorIndex = if (isLapRunning && isSyncedToStartFinish) {
+        val sectorIndex0Based = if (isLapRunning && isSyncedToStartFinish) {
             (currentSectorIndex - 1).coerceIn(0, sectorCount - 1)
-        } else {
-            0
-        }
+        } else 0
 
         val (deltaMs, isPositive) = calculateDelta(currentLapMs)
 
@@ -273,7 +290,7 @@ class LapAnalyzerState {
             completedLapsCount = completedLapsCount,
             currentLapTimeMs = currentLapMs,
             currentSectorTimeMs = currentSectorMs,
-            currentSectorIndex = sectorIndex,
+            currentSectorIndex = sectorIndex0Based,
             lastSectorTimeMs = lastSectorTimeMs,
             lastLapTimeMs = lastLapTimeMs,
             bestLapTimeMs = bestLapTimeMs,
@@ -289,7 +306,6 @@ class LapAnalyzerState {
     private fun calculateDelta(currentLapMs: Int): Pair<Int?, Boolean> {
         val best = bestLapTimeMs ?: return null to true
         if (currentLapMs <= 0 || best <= 0) return null to true
-
         val delta = currentLapMs - best
         return delta to (delta >= 0)
     }
@@ -297,9 +313,7 @@ class LapAnalyzerState {
     private fun resetLapValidityTracking() {
         currentLapValid = true
         maxDirtyLevelThisLap = 0f
-
         baselineDamage = currentDamage
-
         hadPenaltyThisLap = false
         hadOffTrackThisLap = false
         hadNewDamageThisLap = false
@@ -312,9 +326,7 @@ class LapAnalyzerState {
 
     private fun updateSectorBest(sectorNumber: Int, timeMs: Int) {
         if (sectorNumber <= 0 || timeMs <= 0) return
-
         ensureSectorArrays(sectorCount)
-
         val idx = sectorNumber - 1
         if (idx !in lastSectorsMs.indices) return
 
@@ -338,7 +350,6 @@ class LapAnalyzerState {
 
     private fun resizeSectorArrays(newSize: Int) {
         val size = newSize.coerceAtLeast(1)
-
         val newLast = IntArray(size)
         val newBest = IntArray(size)
 
@@ -356,16 +367,9 @@ class LapAnalyzerState {
     private fun IntArray.toNullableList(): List<Int?> = this.map { it.takeIf { v -> v > 0 } }
 
     private fun interpolateTimestamp(currentNs: Long, alpha: Float): Long {
-        if (previousTimestampNs <= 0L) {
-            return currentNs
-        }
-
+        if (previousTimestampNs <= 0L) return currentNs
         val dt = currentNs - previousTimestampNs
-
-        if (dt !in 1..MAX_REASONABLE_FRAME_NS) {
-            return currentNs
-        }
-
+        if (dt !in 1..MAX_REASONABLE_FRAME_NS) return currentNs
         val offset = (1.0 - alpha.toDouble()) * dt.toDouble()
         return currentNs - offset.toLong()
     }
@@ -376,5 +380,7 @@ class LapAnalyzerState {
         const val MAX_REASONABLE_FRAME_NS = 1_000_000_000L
         const val DIRTY_THRESHOLD = 0.2f
         const val DAMAGE_DELTA_THRESHOLD = 0.1f
+
+        const val DEFAULT_INTERMEDIATE_GATES = 2
     }
 }

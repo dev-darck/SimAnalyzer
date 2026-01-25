@@ -34,6 +34,9 @@ class NavigationStateInternal<T : Route>(
     @Transient
     private val forwardActions: ArrayDeque<ForwardAction> = ArrayDeque()
 
+    override val isCurrentRouteRoot: Boolean
+        get() = backStack.last().isRoot
+
     override val canGoForward: Boolean
         get() {
             val nextAction = forwardActions.lastOrNull() ?: return false
@@ -53,30 +56,28 @@ class NavigationStateInternal<T : Route>(
     override val backStack: List<T>
         get() {
             val current = currentTopLevelState.value
-            return buildList {
-                Root.entries.forEach { tab ->
-                    if (tab != current) {
-                        stacks[tab]?.firstOrNull()?.let { add(it) }
-                    }
-                }
-                addAll(stacks.getValue(current))
-            }
+            val currentStack = stack(current)
+
+            require(currentStack.isNotEmpty()) { "Current stack cannot be empty: $current" }
+
+            if (current == startTopLevel) return currentStack
+
+            val startStack = stack(startTopLevel)
+            require(startStack.isNotEmpty()) { "Start stack cannot be empty: $startTopLevel" }
+
+            val startRoot = startStack.first()
+            return StartPlusStack(startRoot, currentStack)
         }
 
     override fun switchTopLevel(topLevel: Root) {
         val current = currentTopLevel
         if (current == topLevel) return
+
         clearForward()
 
-        stacks[current]?.let { stack ->
-            if (stack.size > 1) {
-                val root = stack.first()
-                stack.clear()
-                stack.add(root)
-            }
-        }
-
         currentTopLevelState.value = topLevel
+
+        require(stack(topLevel).isNotEmpty()) { "TopLevel=$topLevel has empty stack" }
     }
 
     override fun navigate(route: T) {
@@ -174,6 +175,8 @@ class NavigationStateInternal<T : Route>(
         }
     }
 
+    private fun stack(topLevel: Root): BackStack<T> = stacks.getValue(topLevel)
+
     private fun clearForward() {
         if (forwardActions.isNotEmpty()) forwardActions.clear()
     }
@@ -200,4 +203,13 @@ class NavigationStateInternal<T : Route>(
         }
     }
 
+}
+
+private class StartPlusStack<T>(
+    private val startRoot: T,
+    private val tail: List<T>,
+) : AbstractList<T>(), RandomAccess {
+
+    override val size: Int get() = 1 + tail.size
+    override fun get(index: Int): T = if (index == 0) startRoot else tail[index - 1]
 }

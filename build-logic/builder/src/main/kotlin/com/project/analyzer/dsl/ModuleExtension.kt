@@ -1,6 +1,8 @@
 package com.project.analyzer.dsl
 
+import com.project.analyzer.base.TestScope
 import com.project.analyzer.base.configureMetro
+import com.project.analyzer.base.configureTest
 import com.project.analyzer.kmp.DesktopBuildConfigSpec
 import com.project.analyzer.kmp.configureComposeKmp
 import com.project.analyzer.kmp.configureComposeResources
@@ -45,6 +47,10 @@ abstract class ModuleExtension @Inject constructor(
 
     fun logger() {
         configureLogger()
+    }
+
+    fun test(config: TestScope.() -> Unit = { both() }) {
+        configureTest(config)
     }
 
     fun buildConfig(block: DesktopBuildConfigSpec.() -> Unit) {

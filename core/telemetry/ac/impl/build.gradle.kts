@@ -5,6 +5,9 @@ moduleImpl {
     buildConfig {
         packageName = "ac.telemetry.impl"
     }
+    test {
+        unit()
+    }
 
     dependencies {
         projects.core.telemetry.ac.api.jvmImpl

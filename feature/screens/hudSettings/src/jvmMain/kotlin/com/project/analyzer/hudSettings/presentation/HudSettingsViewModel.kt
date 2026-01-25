@@ -22,6 +22,9 @@ internal class HudSettingsViewModel(
     init {
         viewModelScope.launch {
             _state.update { it.copy(panels = panels.invoke().toList()) }
+        }
+
+        viewModelScope.launch {
             preferences.observeVisiblePanels().collect { visibleIds ->
                 _state.update { current ->
                     val newVisible = visibleIds.associateWith { id ->

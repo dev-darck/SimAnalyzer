@@ -14,3 +14,12 @@ plugins {
 subprojects {
     pluginManager.apply("convention-project-dsl")
 }
+
+tasks.register("ciJvmTest") {
+    group = "verification"
+    description = "Runs all jvmTest tasks across all subprojects."
+
+    subprojects.forEach { p ->
+        dependsOn(p.tasks.matching { it.name == "jvmTest" })
+    }
+}
