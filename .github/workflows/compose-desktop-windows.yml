@@ -81,6 +81,16 @@ jobs:
       - name: Setup Gradle (cache)
         uses: gradle/actions/setup-gradle@v5
 
+      - name: Suggest runtime modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ./gradlew -q :composeApp:tasks --all | grep -q "suggestRuntimeModules"; then
+            ./gradlew --no-daemon :composeApp:suggestRuntimeModules
+          else
+            ./gradlew --no-daemon :composeApp:suggestModules
+          fi
+
       - name: Build DEV
         if: env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both'
         shell: bash

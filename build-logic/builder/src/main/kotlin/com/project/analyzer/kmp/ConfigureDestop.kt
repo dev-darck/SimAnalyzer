@@ -24,7 +24,11 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
 //                windows { iconFile.set(rootProject.file("app-icons/app.ico")) }
 //                linux { iconFile.set(rootProject.file("app-icons/app.png")) }
 
-                modules.add("java.naming")
+                modules(
+                    "java.instrument",
+                    "java.naming",
+                    "jdk.unsupported"
+                )
             }
 
             buildTypes.release {
