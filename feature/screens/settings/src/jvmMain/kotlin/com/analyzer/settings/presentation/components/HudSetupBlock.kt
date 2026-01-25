@@ -95,7 +95,7 @@ internal fun HudSetupBlock(
 
         HudPreviewBox()
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -132,7 +132,7 @@ private fun HudPreviewBox() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(height = 280.dp)
+            .height(height = 300.dp)
             .clip(shape = shape)
             .background(color = bg)
             .border(width = 1.dp, color = borderColor, shape = shape)
