@@ -35,7 +35,7 @@ internal data class GenerationContext(
             val simpleName = clazz.simpleName.asString()
             val serializerName = "${simpleName}DataStoreSerializer"
             val factoryFunName = "create${simpleName}DataStore"
-            val defaultFileName = "$simpleName.pb"
+            val defaultFileName = "${simpleName.toSnakeCase()}.pb"
 
             val serializerInterface = cn("androidx.datastore.core", "Serializer").parameterizedBy(modelClassName)
 
@@ -74,5 +74,15 @@ internal data class GenerationContext(
 
         private fun cn(packageName: String, vararg simpleNames: String): ClassName =
             ClassName(packageName, simpleNames.asList())
+
+        private val WORD_BOUNDARY = Regex("(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
+
+        private fun String.toSnakeCase(): String =
+            trim()
+                .replace('-', '_')
+                .replace(' ', '_')
+                .split(WORD_BOUNDARY)
+                .filter { it.isNotBlank() }
+                .joinToString("_") { it.lowercase() }
     }
 }

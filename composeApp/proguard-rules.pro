@@ -30,6 +30,8 @@
 -keep interface * extends com.sun.jna.Library { *; }
 -keep class * extends com.sun.jna.Structure { *; }
 -keep class * implements com.sun.jna.Callback { *; }
+-keepclasseswithmembers interface * extends com.sun.jna.Library { *; }
+-keep class com.project.analyzer.app.win.nativeWin.** { *; }
 
 -dontwarn com.sun.jna.**
 

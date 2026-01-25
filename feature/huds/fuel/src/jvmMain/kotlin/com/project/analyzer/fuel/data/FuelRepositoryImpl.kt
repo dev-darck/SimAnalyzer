@@ -5,6 +5,7 @@ import com.project.analyzer.fuel.domain.repository.FuelRepository
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.SessionPref
 import com.project.analyzer.preference.api.StringPrefKey
+import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.Inject
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -25,7 +26,6 @@ internal class FuelRepositoryImpl(
         if (peakLitersPerLap == null && bestValidLapTimeMs == null) return
         if (peakLitersPerLap?.isFinite() == false) return
 
-        val key = buildKey(carModel, trackId)
         val existing = load(carModel, trackId)
 
         val newPeak = when {
@@ -35,7 +35,6 @@ internal class FuelRepositoryImpl(
             else -> existing.peakLitersPerLap
         }
 
-        // Lap time: keep lower (better time)
         val newBestLapTime = when {
             bestValidLapTimeMs == null || bestValidLapTimeMs <= 0 -> existing?.bestValidLapTimeMs
             existing?.bestValidLapTimeMs == null -> bestValidLapTimeMs
@@ -45,12 +44,18 @@ internal class FuelRepositoryImpl(
 
         if (newPeak == null && newBestLapTime == null) return
 
+        val improvedPeak = newPeak != existing?.peakLitersPerLap
+        val improvedBest = newBestLapTime != existing?.bestValidLapTimeMs
+        if (!improvedPeak && !improvedBest) return
+
         val dto = FuelDataDto(
             peakLitersPerLap = newPeak,
             bestValidLapTimeMs = newBestLapTime,
             savedAtEpochMs = System.currentTimeMillis()
         )
 
+        val key = buildKey(carModel, trackId)
+        logger.info { "FuelRepositoryImpl save fuel consumption data: $dto by key: ${key.name}" }
         preference.put(key to json.encodeToString(FuelDataDto.serializer(), dto))
     }
 

@@ -84,7 +84,7 @@ class AcPollLoop(
 
                 GameConnectionState.IN_MENU -> {
                     if (detection.needsFallback) {
-                        fallback.patchIfNeeded(shm, loopStartNanos)
+                        fallback.patchIfNeeded(shm, loopStartNanos, detection.state)
                     }
 
                     frameId++
@@ -98,7 +98,7 @@ class AcPollLoop(
 
                 GameConnectionState.IN_SESSION -> {
                     if (detection.needsFallback) {
-                        fallback.patchIfNeeded(shm, loopStartNanos)
+                        fallback.patchIfNeeded(shm, loopStartNanos, detection.state)
                     }
 
                     val physicsPacket = shm.physics.packetId

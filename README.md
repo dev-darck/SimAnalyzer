@@ -1,7 +1,7 @@
 <div align="center">
 
   <!-- TODO: Add logo here -->
-  <img src="github-info/AppIcon.svg" alt="App Logo" width="100"/>
+  <img src="app-icons/app-readme.png" alt="App Logo" width="128"/>
 
 # Sim Analyzer (Desktop)
 

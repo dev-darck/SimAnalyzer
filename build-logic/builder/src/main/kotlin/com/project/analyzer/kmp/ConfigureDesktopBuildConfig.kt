@@ -13,12 +13,14 @@ internal fun Project.configureDesktopBuildConfig(
     val spec = DesktopBuildConfigSpec().apply(block)
     val buildType = detectDesktopBuildType()
     val isDebug = buildType == DesktopBuildType.Debug
+    val isPortable = detectPortableFlag()
 
     val pkg = "com.project.analyzer.${spec.packageName ?: error("desktopBuildConfig: packageName is required")}"
 
     val fields = buildList {
         add(Field("String", "BUILD_TYPE", buildType.name.lowercase(Locale.US).asKotlinString()))
         add(Field("Boolean", "IS_DEBUG", isDebug.toString()))
+        add(Field("Boolean", "IS_PORTABLE", isPortable.toString()))
         add(Field("String", "APP_NAME", (if (isDebug) "SimAnalyzer-debug" else "SimAnalyzer").asKotlinString()))
         add(Field("String", "VERSION_NAME", version.toString().asKotlinString()))
 
@@ -123,6 +125,16 @@ private fun Project.detectDesktopBuildType(): DesktopBuildType {
 
     val looksLikeRelease = tasks.contains("release") || tasks.contains("package")
     return if (looksLikeRelease) DesktopBuildType.Release else DesktopBuildType.Debug
+}
+
+private fun Project.detectPortableFlag(): Boolean {
+    providers.gradleProperty("isPortable").orNull?.toBoolean()?.let { return it }
+    providers.gradleProperty("portable").orNull?.toBoolean()?.let { return it }
+
+    System.getenv("IS_PORTABLE")?.toBoolean()?.let { return it }
+    System.getenv("PORTABLE")?.toBoolean()?.let { return it }
+
+    return false
 }
 
 private fun String.asKotlinString(): String =

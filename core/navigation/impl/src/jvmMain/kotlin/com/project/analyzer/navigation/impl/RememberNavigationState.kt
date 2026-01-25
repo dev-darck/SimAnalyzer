@@ -6,13 +6,14 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.savedstate.serialization.SavedStateConfiguration
+import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.api.Route
 
 @Composable
 fun rememberNavigationState(
     startTopLevel: Root = Root.Live,
-): NavigationStateInternal<Route> {
+): NavigationState<Route> {
     return rememberSerializable(
         configuration = SavedStateConfiguration.DEFAULT,
         serializer = NavigationStateInternal.serializer(Route.serializer())

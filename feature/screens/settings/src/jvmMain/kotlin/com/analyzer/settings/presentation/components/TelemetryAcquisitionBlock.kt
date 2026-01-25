@@ -3,9 +3,6 @@ package com.analyzer.settings.presentation.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,31 +30,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.slider.CustomSlider
+import com.project.analyzer.ui.slider.THUMB_RADIUS
 import kotlin.math.roundToInt
 
 private const val MIN_RATE = 10
 private const val MID_RATE = 55
 private const val MAX_RATE = 100
-
-private val TRACK_HEIGHT: Dp = 8.dp
-private val THUMB_RADIUS: Dp = 18.dp
-private val THUMB_RING: Dp = 6.dp
 
 private val STORAGE_FIELD_HEIGHT = 36.dp
 private val STORAGE_FIELD_RADIUS = 8.dp
@@ -178,93 +166,6 @@ private fun SamplingRateSection(
             )
         }
     }
-}
-
-@Composable
-private fun CustomSlider(
-    value: Float,
-    onValueChange: (Float) -> Unit,
-    onValueChangeFinished: () -> Unit,
-    valueRange: ClosedFloatingPointRange<Float>,
-    modifier: Modifier = Modifier,
-    snapStep: Float = 1f,
-) {
-    val density = LocalDensity.current
-
-    val thumbRadiusPx = with(density) { THUMB_RADIUS.toPx() }
-    val ringPx = with(density) { THUMB_RING.toPx() }
-    val trackHeightPx = with(density) { TRACK_HEIGHT.toPx() }
-    val trackColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f)
-    val thumbColor = SimAnalyzerTheme.material.primary
-    val thumbRingColor = SimAnalyzerTheme.material.primary.copy(alpha = 0.35f)
-
-    fun valueFromX(xPx: Float, widthPx: Float): Float {
-        val right = widthPx - thumbRadiusPx
-        val trackWidth = (right - thumbRadiusPx).coerceAtLeast(1f)
-
-        val xClamped = xPx.coerceIn(thumbRadiusPx, right)
-        val fraction = (xClamped - thumbRadiusPx) / trackWidth
-
-        val start = valueRange.start
-        val end = valueRange.endInclusive
-        val raw = start + fraction * (end - start)
-
-        val snapped = if (snapStep > 0f) {
-            (raw / snapStep).roundToInt() * snapStep
-        } else raw
-
-        return snapped.coerceIn(start, end)
-    }
-
-    Box(
-        modifier = modifier
-            .height(THUMB_RADIUS * 2)
-            .pointerInput(valueRange.start, valueRange.endInclusive, thumbRadiusPx, snapStep) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-
-                    onValueChange(valueFromX(down.position.x, size.width.toFloat()))
-
-                    drag(down.id) { change ->
-                        change.consume()
-                        onValueChange(valueFromX(change.position.x, size.width.toFloat()))
-                    }
-
-                    onValueChangeFinished()
-                }
-            }
-            .drawWithCache {
-                val start = valueRange.start
-                val end = valueRange.endInclusive
-                val span = (end - start).takeIf { it != 0f } ?: 1f
-
-                val trackWidth = size.width - thumbRadiusPx * 2f
-                val fraction = ((value - start) / span).coerceIn(0f, 1f)
-                val thumbCx = thumbRadiusPx + fraction * trackWidth
-                val cy = size.height / 2f
-
-                onDrawBehind {
-                    drawRoundRect(
-                        color = trackColor,
-                        topLeft = Offset(thumbRadiusPx, cy - trackHeightPx / 2f),
-                        size = Size(trackWidth, trackHeightPx),
-                        cornerRadius = CornerRadius(trackHeightPx / 2f, trackHeightPx / 2f)
-                    )
-
-                    drawCircle(
-                        color = thumbRingColor,
-                        radius = thumbRadiusPx,
-                        center = Offset(thumbCx, cy)
-                    )
-
-                    drawCircle(
-                        color = thumbColor,
-                        radius = (thumbRadiusPx - ringPx).coerceAtLeast(1f),
-                        center = Offset(thumbCx, cy)
-                    )
-                }
-            }
-    )
 }
 
 @Composable

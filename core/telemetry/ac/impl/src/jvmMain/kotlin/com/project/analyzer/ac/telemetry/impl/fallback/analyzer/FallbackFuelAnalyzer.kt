@@ -25,6 +25,17 @@ class FallbackFuelAnalyzer {
         snapshot = FuelSnapshot()
     }
 
+    fun resetLapTracking(
+        fuelLiters: Float,
+        completedLaps: Int,
+        startFinishSyncId: Int,
+    ) {
+        lastFuelLiters = fuelLiters
+        lapStartFuelLiters = fuelLiters
+        lastCompletedLaps = completedLaps
+        lastStartFinishSyncId = startFinishSyncId
+    }
+
     fun processFrame(
         fuelLiters: Float,
         completedLaps: Int,

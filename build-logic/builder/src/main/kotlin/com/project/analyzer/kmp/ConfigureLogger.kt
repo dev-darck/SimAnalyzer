@@ -14,6 +14,7 @@ internal fun Project.configureLogger() {
         dependencies {
             implementation(deps.kotlin.logging)
             implementation(deps.sfl4j.api)
+            implementation(deps.kotlinx.coroutines.slf4j)
             runtimeOnly(deps.logback.classic)
             implementation(project(":core:utils"))
         }

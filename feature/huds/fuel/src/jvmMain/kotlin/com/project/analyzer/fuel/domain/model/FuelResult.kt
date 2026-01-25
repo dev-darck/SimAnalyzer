@@ -8,5 +8,6 @@ sealed interface FuelResult {
     data object SessionEnded : FuelResult
     data object NoData : FuelResult
     data object Reset : FuelResult
+    object SessionPaused : FuelResult
     data class Data(val estimate: FuelEstimate) : FuelResult
 }

@@ -9,6 +9,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
+import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -22,6 +23,9 @@ class FallbackLapAnalyzer(
 
     private val state = LapAnalyzerState()
     private val poseExtractor = PhysicsPoseExtractor()
+
+    private var lastMissingCalibrationTrackId: String? = null
+    private var lastMissingCalibrationLogMs: Long = 0L
 
     fun loadCalibration(trackId: String, calibration: TrackCalibration) {
         state.setCalibration(trackId, calibration)
@@ -44,6 +48,16 @@ class FallbackLapAnalyzer(
 
     fun getSnapshot(currentTimeNs: Long): LapTimingSnapshot = state.createSnapshot(currentTimeNs)
 
+    fun isSyncedToStartFinish(): Boolean = state.isSyncedToStartFinish
+
+    fun getStartFinishSyncId(): Int = state.startFinishSyncId
+
+    fun getCompletedLapsCount(): Int = state.completedLapsCount
+
+    fun rebasePose(resumeTimeNs: Long) = state.rebasePose(resumeTimeNs)
+
+    fun softResetAfterRespawn(nowNs: Long) = state.softResetAfterRespawn(nowNs)
+
     fun loadCalibration(trackId: String?): TrackCalibration? {
         val id = trackId?.takeIf { it.isNotBlank() } ?: return run {
             state.markActive()
@@ -51,12 +65,31 @@ class FallbackLapAnalyzer(
         }
 
         return if (id != state.currentTrackId) {
-            val calibration = calibrationLoader.load(trackId)
+            val calibration = calibrationLoader.load(id)
             if (calibration == null) {
-                state.resetWithTrackId(trackId)
+                val now = System.currentTimeMillis()
+                val shouldLog =
+                    lastMissingCalibrationTrackId != id ||
+                        (now - lastMissingCalibrationLogMs) >= MISSING_CALIBRATION_LOG_COOLDOWN_MS
+
+                if (shouldLog) {
+                    logger.info {
+                        "TrackCalibration NOT found for trackId=$id. " +
+                            "Expected resource: /track_calibrations/$id.json"
+                    }
+                    lastMissingCalibrationTrackId = id
+                    lastMissingCalibrationLogMs = now
+                }
+
+                state.resetWithTrackId(id)
                 return null
             }
-            state.setCalibration(trackId, calibration)
+
+            if (lastMissingCalibrationTrackId == id) {
+                lastMissingCalibrationTrackId = null
+            }
+
+            state.setCalibration(id, calibration)
             calibration
         } else {
             state.calibration
@@ -155,7 +188,7 @@ class FallbackLapAnalyzer(
                 return
             }
 
-            println("LAP: ✔ SYNCED to Start/Finish line")
+            logger.info { "LAP: SYNCED to Start/Finish line" }
             state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
             state.markGateTriggered(timestampNs, GATE_START_FINISH)
         }
@@ -188,11 +221,7 @@ class FallbackLapAnalyzer(
         currentPose: CarPose,
         calibration: TrackCalibration
     ) {
-        val crossing = gateDetector.detectCrossing(
-            previousPose,
-            currentPose,
-            calibration.startFinish,
-        )
+        val crossing = gateDetector.detectCrossing(previousPose, currentPose, calibration.startFinish)
 
         if (crossing != null && crossing.isForwardDirection && state.canTriggerGate(timestampNs, GATE_START_FINISH)) {
             if (state.isLapRunning && state.isSyncedToStartFinish) {
@@ -202,7 +231,7 @@ class FallbackLapAnalyzer(
                 if (isValidSequence) {
                     state.completeLap(timestampNs, crossing.interpolationFactor)
                 } else {
-                    println("LAP: ⚠ Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - re-syncing")
+                    logger.info { "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - re-syncing" }
                     state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
                 }
             } else {
@@ -214,9 +243,7 @@ class FallbackLapAnalyzer(
 
     private fun findNextSectorFinishGate(calibration: TrackCalibration, sectorNumber: Int): Gate? {
         val totalSectors = getSectorCount(calibration)
-
         if (sectorNumber >= totalSectors) return null
-
         return calibration.sectors.firstOrNull { it.index == sectorNumber }?.finish
     }
 
@@ -227,5 +254,6 @@ class FallbackLapAnalyzer(
     private companion object {
 
         const val GATE_START_FINISH = "SF"
+        const val MISSING_CALIBRATION_LOG_COOLDOWN_MS = 30_000L
     }
 }

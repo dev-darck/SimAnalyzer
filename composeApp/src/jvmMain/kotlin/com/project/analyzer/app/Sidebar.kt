@@ -73,7 +73,7 @@ fun Sidebar(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(SimAnalyzerTheme.material.surfaceVariant),
+                        .background(SimAnalyzerTheme.material.secondaryContainer),
                     contentAlignment = Alignment.Center
                 ) { topIcon() }
 

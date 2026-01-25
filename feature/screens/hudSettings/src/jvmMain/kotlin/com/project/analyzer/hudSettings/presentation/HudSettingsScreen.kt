@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -60,6 +62,13 @@ private fun Screen(
             .padding(all = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        HudSettingsPanel(
+            panel = state.panel,
+            modifier = Modifier
+                .widthIn(min = 280.dp, max = 360.dp)
+                .fillMaxHeight()
+        )
+
         HudMonitorPanel(
             panel = state.panel,
             modifier = Modifier
@@ -80,6 +89,55 @@ private fun Screen(
                 .widthIn(min = 280.dp, max = 360.dp)
                 .fillMaxHeight()
         )
+    }
+}
+
+@Composable
+private fun HudSettingsPanel(
+    panel: HudPanel?,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .clip(SimAnalyzerTheme.shapes.large)
+            .background(SimAnalyzerTheme.material.surface)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Settings",
+            color = SimAnalyzerTheme.material.onSurface,
+            fontSize = 16.sp,
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        if (panel == null) {
+            Text(
+                text = "Select a HUD from the list to edit its settings.",
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
+                fontSize = 12.sp
+            )
+            return
+        }
+
+        Text(text = panel.id, color = SimAnalyzerTheme.material.onSurface, fontSize = 14.sp)
+        Spacer(Modifier.height(4.dp))
+        Text(text = panel.description, color = SimAnalyzerTheme.material.onSurfaceVariant, fontSize = 12.sp)
+
+        Spacer(Modifier.height(12.dp))
+
+        if (!panel.hasSettings) {
+            Text(
+                text = "This HUD has no configurable settings.",
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
+                fontSize = 12.sp
+            )
+            return
+        }
+
+        panel.SettingsContent(Modifier.fillMaxWidth())
     }
 }
 
@@ -111,7 +169,7 @@ private fun HudListPanel(
                 val enabled = panel.id in visibleIds
                 HudListItem(
                     id = panel.id,
-                    description = hudDescription(panel.id),
+                    description = panel.description,
                     enabled = enabled,
                     onClick = onClick,
                     onToggle = { onToggle(panel.id, !enabled) }
@@ -262,11 +320,4 @@ private fun HudSettingsScreenPreview() {
             )
         )
     }
-}
-
-private fun hudDescription(id: String): String = when (id) {
-    "fuel" -> "Fuel tracking that uses prediction when game data is missing, " +
-        "otherwise calculates per-lap consumption, saves the best lap stats, and restores them on next launch."
-
-    else -> "Custom HUD panel."
 }

@@ -2,7 +2,9 @@
 
 package com.project.analyzer.app
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
@@ -14,17 +16,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.PowerSettingsNew
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +43,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -46,19 +51,23 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.DialogWindow
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.rememberDialogState
+import com.project.analyzer.composeApp.Res.Res
+import com.project.analyzer.composeApp.Res.tray_icon
+import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.imageResource
 import java.awt.GraphicsEnvironment
+import java.awt.Image
 import java.awt.Point
 import java.awt.SystemTray
-import java.awt.Toolkit
 import java.awt.TrayIcon
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -78,19 +87,18 @@ fun ApplicationScope.CustomTray(
     var menuPosition by remember { mutableStateOf(Pair(0, 0)) }
     val scope = rememberCoroutineScope()
 
+    val trayBitmap = imageResource(Res.drawable.tray_icon)
+
     DisposableEffect(Unit) {
         if (!SystemTray.isSupported()) return@DisposableEffect onDispose { }
 
         val tray = SystemTray.getSystemTray()
-        val url = javaClass.getResource("/icons/tray_icon.png")
-        val image = if (url != null) {
-            Toolkit.getDefaultToolkit().createImage(url)
-        } else {
-            Toolkit.getDefaultToolkit().createImage(ByteArray(0))
-        }
 
-        val trayIcon = TrayIcon(image, "SimAnalyzer").apply {
-            isImageAutoSize = true
+        val awt: Image = trayBitmap.toAwtImage()
+
+        val trayIcon = TrayIcon(awt, BuildConfig.APP_NAME).apply {
+            isImageAutoSize = false
+
             addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
                     when (e.button) {
@@ -144,7 +152,7 @@ private fun TrayMenuWindow(
     onExit: () -> Unit
 ) {
     val menuWidthDp = 220.dp
-    val menuHeightDp = 200.dp
+    val menuHeightDp = 240.dp
     val density = LocalDensity.current
 
     val (xDp, yDp) = remember(position.first, position.second, density.density) {
@@ -231,48 +239,106 @@ private fun TrayMenuContent(
     onOpenApp: () -> Unit,
     onExit: () -> Unit
 ) {
+    val surface = SimAnalyzerTheme.material.surface
+    val outline = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.75f)
+
+    val textPrimary = SimAnalyzerTheme.material.onSurface
+    val textSecondary = SimAnalyzerTheme.material.onSurfaceVariant
+
+    val hoverPill = SimAnalyzerTheme.material.surfaceVariant
+    val accent = SimAnalyzerTheme.material.primary
+
+    val destructive = SimAnalyzerTheme.material.error
+    val destructiveHover = SimAnalyzerTheme.material.error.copy(alpha = 0.12f)
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFF1E1E2E),
+        shape = RoundedCornerShape(14.dp),
+        color = surface,
+        shadowElevation = 10.dp,
+        border = BorderStroke(1.dp, outline),
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(10.dp)
         ) {
-            Text(
-                text = brandName,
-                color = Color(0xFFCDD6F4),
-                fontSize = 14.sp,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        text = brandName,
+                        color = textPrimary,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = "Quick actions",
+                        color = textSecondary,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
 
-            HorizontalDivider(
-                color = Color(0xFF45475A),
-                modifier = Modifier.padding(vertical = 4.dp)
+                StatusPill(
+                    text = if (overlayVisible) "HUD ON" else "HUD OFF",
+                    background = if (overlayVisible)
+                        SimAnalyzerTheme.material.secondaryContainer
+                    else
+                        SimAnalyzerTheme.material.surfaceVariant,
+                    foreground = if (overlayVisible)
+                        SimAnalyzerTheme.material.onSecondaryContainer
+                    else
+                        textSecondary
+                )
+            }
+
+            HorizontalDivider(color = outline)
+            Spacer(Modifier.height(6.dp))
+
+            TrayMenuItem(
+                icon = Icons.AutoMirrored.Outlined.OpenInNew,
+                text = "Open app",
+                onClick = onOpenApp,
+                hoverColor = hoverPill,
+                textColor = textPrimary,
+                iconTint = accent
             )
 
             TrayMenuItem(
-                icon = Icons.Default.Home,
-                text = "Open App",
-                onClick = onOpenApp
+                icon = if (overlayVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                text = if (overlayVisible) "Hide HUD overlay" else "Show HUD overlay",
+                onClick = onOverlayToggle,
+                hoverColor = hoverPill,
+                textColor = textPrimary,
+                iconTint = textSecondary,
+                trailing = {
+                    StatusPill(
+                        text = if (overlayVisible) "ON" else "OFF",
+                        background = if (overlayVisible)
+                            SimAnalyzerTheme.material.primaryContainer
+                        else
+                            SimAnalyzerTheme.material.surfaceVariant,
+                        foreground = if (overlayVisible)
+                            SimAnalyzerTheme.material.onPrimaryContainer
+                        else
+                            textSecondary
+                    )
+                }
             )
+
+            Spacer(Modifier.height(6.dp))
+            HorizontalDivider(color = outline)
+            Spacer(Modifier.height(6.dp))
 
             TrayMenuItem(
-                icon = if (overlayVisible) Icons.Default.Delete else Icons.Default.Create,
-                text = if (overlayVisible) "Hide HUD" else "Show HUD",
-                onClick = onOverlayToggle
-            )
-
-            HorizontalDivider(
-                color = Color(0xFF45475A),
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
-
-            TrayMenuItem(
-                icon = Icons.Default.Close,
+                icon = Icons.Outlined.PowerSettingsNew,
                 text = "Exit",
                 onClick = onExit,
-                isDestructive = true
+                hoverColor = destructiveHover,
+                textColor = destructive,
+                iconTint = destructive
             )
         }
     }
@@ -283,42 +349,73 @@ private fun TrayMenuItem(
     icon: ImageVector,
     text: String,
     onClick: () -> Unit,
-    isDestructive: Boolean = false
+    hoverColor: Color,
+    textColor: Color,
+    iconTint: Color,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isHovered by interactionSource.collectIsHoveredAsState()
-    val alpha by animateFloatAsState(if (isHovered) 1f else 0f)
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
 
-    val textColor = when {
-        isDestructive -> Color(0xFFF38BA8)
-        else -> Color(0xFFCDD6F4)
-    }
-    val hoverColor = when {
-        isDestructive -> Color(0xFFF38BA8).copy(alpha = 0.15f)
-        else -> Color(0xFF89B4FA).copy(alpha = 0.15f)
-    }
+    val bg by animateColorAsState(
+        targetValue = if (hovered) hoverColor.copy(alpha = 0.35f) else Color.Transparent,
+        animationSpec = tween(120)
+    )
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(hoverColor.copy(alpha = hoverColor.alpha * alpha))
-            .hoverable(interactionSource)
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(10.dp))
+            .background(bg)
+            .hoverable(interaction)
+            .clickable(
+                interactionSource = interaction,
+                indication = null
+            ) { onClick() }
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = textColor,
+            tint = iconTint,
             modifier = Modifier.size(18.dp)
         )
-        Spacer(Modifier.width(12.dp))
+
+        Spacer(Modifier.width(10.dp))
+
         Text(
             text = text,
             color = textColor,
-            fontSize = 13.sp
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
+        )
+
+        if (trailing != null) {
+            Spacer(Modifier.width(10.dp))
+            trailing()
+        }
+    }
+}
+
+@Composable
+private fun StatusPill(
+    text: String,
+    background: Color,
+    foreground: Color
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(background)
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = foreground,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.SemiBold
         )
     }
 }

@@ -43,9 +43,26 @@ class AcSessionCache {
 
     fun updateIfNeeded(graphics: SPageFileGraphics, statics: SPageFileStatic): Boolean {
         val sessionIndex = graphics.sessionIndex
-
         val sessionChanged = sessionIndex != lastSessionIndex
-        if (sessionChanged) {
+
+        val rawTrack = statics.track.toKString()
+        val rawLayout = statics.trackConfiguration.toKString().takeIf { it.isNotBlank() }
+        val normalizedTrackIdNow = normalizeTrackId(rawTrack, rawLayout)
+        val carModelNow = statics.carModel.toKString()
+
+        val sectorCountNow = statics.sectorCount.coerceIn(1, 10)
+
+        val trackIdChanged =
+            normalizedTrackIdNow.isNotBlank() && normalizedTrackIdNow != lastTrackId
+
+        val carModelChanged =
+            carModelNow.isNotBlank() && carModelNow != lastCarModel
+
+        val sectorChanged = sectorCountNow != sectorCount
+
+        val staticsIdentityChanged = trackIdChanged || carModelChanged || sectorChanged
+
+        if (sessionChanged || staticsIdentityChanged) {
             lastSessionIndex = sessionIndex
             rebuildCache(statics)
             notifySessionChange()
@@ -56,7 +73,7 @@ class AcSessionCache {
             tyreCompound = compound
         }
 
-        return sessionChanged
+        return sessionChanged || staticsIdentityChanged
     }
 
     private fun rebuildCache(statics: SPageFileStatic) {

@@ -87,8 +87,8 @@ fun AppNavGraph(
                 sceneState = sceneState,
                 modifier = modifier.bindMouseBackForward(mouseInput),
                 navigationEventState = gestureState,
-                transitionSpec = { sharedAxisZForward()(this) },
-                popTransitionSpec = { sharedAxisZBackward()(this) },
+                transitionSpec = { fadeForward()(this) },
+                popTransitionSpec = { fadeBackward()(this) },
             )
         }
 

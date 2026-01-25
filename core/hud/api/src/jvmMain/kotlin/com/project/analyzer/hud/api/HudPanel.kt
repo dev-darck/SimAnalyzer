@@ -7,8 +7,11 @@ import androidx.compose.ui.unit.IntOffset
 public interface HudPanel {
 
     public val id: String
+    public val description: String get() = ""
     public val zIndex: Int get() = 0
-    public val defaultOffset: IntOffset get() = IntOffset.Zero
+    public val defaultAnchor: HudAnchor get() = HudAnchor.TopLeft
+    public val defaultMarginPx: IntOffset get() = IntOffset(16, 16)
+    public val hasSettings: Boolean get() = false
 
     @Composable
     public fun DemoContent(modifier: Modifier) {
@@ -16,5 +19,9 @@ public interface HudPanel {
 
     @Composable
     public fun Content(modifier: Modifier) {
+    }
+
+    @Composable
+    public fun SettingsContent(modifier: Modifier) {
     }
 }

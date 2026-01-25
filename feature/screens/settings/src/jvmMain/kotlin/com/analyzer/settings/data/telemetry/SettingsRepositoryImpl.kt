@@ -1,6 +1,7 @@
 package com.analyzer.settings.data.telemetry
 
 import com.analyzer.settings.domain.model.TelemetrySettings
+import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.UserPref
 import com.project.analyzer.preference.api.bool
@@ -8,12 +9,14 @@ import com.project.analyzer.preference.api.int
 import com.project.analyzer.preference.api.str
 import com.project.analyzer.utils.AppDirectories
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
 @Inject
+@SingleIn(ScreenScope::class)
 class SettingsRepositoryImpl(
     @param:UserPref
     private val userPreferences: Preference,

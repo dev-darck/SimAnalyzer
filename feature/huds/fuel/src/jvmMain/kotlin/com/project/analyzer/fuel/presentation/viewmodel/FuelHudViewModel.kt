@@ -8,17 +8,17 @@ import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
 import com.project.analyzer.fuel.domain.usecase.FuelConsumptionUseCase
 import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.map.toUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
-import kotlin.time.Duration.Companion.milliseconds
 
 internal class FuelHudViewModel(
     private val useCase: FuelConsumptionUseCase,
@@ -28,6 +28,7 @@ internal class FuelHudViewModel(
 
     private var currentKey: SessionKey = SessionKey(null, null)
     private val peaksByKey: MutableMap<SessionKey, PeakState> = mutableMapOf()
+    private var fuelEstimateJob: Job? = null
 
     private val _state = MutableStateFlow(FuelHudUiState())
     val state: StateFlow<FuelHudUiState> = _state.asStateFlow()
@@ -46,8 +47,9 @@ internal class FuelHudViewModel(
     }
 
     private fun subscribeToEstimates() {
-        useCase.fuelEstimates
-            .sample(200.milliseconds)
+        fuelEstimateJob?.cancel()
+        fuelEstimateJob = useCase.fuelEstimates
+            .conflate()
             .onEach(::handleFuelResult)
             .launchIn(viewModelScope)
     }
@@ -55,6 +57,8 @@ internal class FuelHudViewModel(
     private fun handleFuelResult(result: FuelResult) {
         when (result) {
             FuelResult.SessionEnded -> updateState { copy(isShow = false, isSessionActive = false) }
+
+            FuelResult.SessionPaused -> updateState { copy(isShow = false, isSessionActive = false) }
 
             FuelResult.Reset -> {
                 peaksByKey[currentKey]?.reset()

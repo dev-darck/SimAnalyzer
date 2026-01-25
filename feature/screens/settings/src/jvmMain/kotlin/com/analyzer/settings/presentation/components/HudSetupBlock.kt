@@ -61,7 +61,7 @@ internal fun HudSetupBlock(
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "Huds location",
+                    text = "Huds setup",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                     fontSize = 14.sp,
                     style = MaterialTheme.typography.labelMedium

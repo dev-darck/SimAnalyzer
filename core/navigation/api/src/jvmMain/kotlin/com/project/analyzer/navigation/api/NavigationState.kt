@@ -7,6 +7,7 @@ public interface NavigationState<T : Route> {
     public val currentTopLevel: Root
     public val backStack: List<T>
     public val canGoForward: Boolean
+    public val isCurrentRouteRoot: Boolean
 
     public fun switchTopLevel(topLevel: Root)
     public fun navigateToTopLevel(route: T)

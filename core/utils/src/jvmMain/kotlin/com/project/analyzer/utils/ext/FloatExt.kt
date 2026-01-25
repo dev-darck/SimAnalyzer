@@ -13,6 +13,8 @@ public fun Float.toDegrees(): Float = (this * (180f / PI.toFloat()))
 public fun Float.fmt(decimals: Int = 3): String =
     String.format(Locale.US, "%.${decimals}f", this)
 
+public fun Float?.orZero(): Float = this ?: 0f
+
 public fun Float.toSteerDegrees(
     invert: Boolean = false,
     deadZoneDeg: Float = 0.5f,

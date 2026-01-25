@@ -18,6 +18,7 @@ moduleImpl {
         projects.feature.screens.settings.jvmImpl
         projects.feature.screens.live.jvmImpl
         projects.feature.screens.hudSettings.jvmImpl
+        projects.feature.huds.inputs.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

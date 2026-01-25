@@ -4,57 +4,83 @@ import com.project.analyzer.live.domain.mapper.LiveScreenStateMapper
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent
-import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.scan
 
 @Inject
 internal class LiveTelemetryUseCaseImpl(
-    telemetry: TelemetryLifecycle,
+    private val telemetry: TelemetryLifecycle,
     private val mapper: LiveScreenStateMapper,
 ) : LiveTelemetryUseCase {
 
     private var currentCarModel: String? = null
     private var currentTrackId: String? = null
 
-    override val telemetryFlow: Flow<LiveTelemetryResult> = combine(
-        telemetry.frames,
-        telemetry.events.map { it.toSimplifiedEvent() }.distinctUntilChanged()
-    ) { frame, event ->
-        processFrame(frame, event)
-    }
+    private val isSessionActive: Flow<Boolean>
+        get() = telemetry.events
+            .scan(false) { active, ev ->
+                when (ev) {
+                    is TelemetryLifecycleEvent.SessionStarted -> true
+                    is TelemetryLifecycleEvent.SessionResumed -> true
+                    is TelemetryLifecycleEvent.SessionPaused -> false
+                    is TelemetryLifecycleEvent.SessionEnded,
+                    is TelemetryLifecycleEvent.SimDisconnected -> false
 
-    private fun processFrame(frame: TelemetryFrame, event: SimplifiedEvent): LiveTelemetryResult {
-        if (event == SimplifiedEvent.SESSION_ENDED) {
-            return LiveTelemetryResult.SessionEnded
+                    else -> active
+                }
+            }
+            .distinctUntilChanged()
+
+    private val lifecycleResults: Flow<LiveTelemetryResult>
+        get() = telemetry.events
+            .mapNotNull { ev -> ev.toLiveLifecycleResultOrNull() }
+            .distinctUntilChanged()
+
+    private val frameResults: Flow<LiveTelemetryResult>
+        get() = combine(telemetry.frames, isSessionActive) { frame, active ->
+            if (!active) return@combine null
+
+            val carModel = frame.session?.car?.carModel?.takeIf { it.isNotBlank() }
+            val trackId = frame.session?.track?.trackId?.takeIf { it.isNotBlank() }
+
+            if (currentCarModel == null && carModel != null) currentCarModel = carModel
+            if (currentTrackId == null && trackId != null) currentTrackId = trackId
+
+            val identityChanged =
+                (carModel != null && currentCarModel != null && carModel != currentCarModel) ||
+                    (trackId != null && currentTrackId != null && trackId != currentTrackId)
+
+            if (identityChanged) {
+                currentCarModel = carModel ?: currentCarModel
+                currentTrackId = trackId ?: currentTrackId
+                return@combine LiveTelemetryResult.SessionReset
+            }
+
+            mapper.map(frame)?.let { LiveTelemetryResult.Data(it) }
+        }.filterNotNull()
+
+    override val telemetryFlow: Flow<LiveTelemetryResult> =
+        merge(lifecycleResults, frameResults)
+
+    private fun TelemetryLifecycleEvent.toLiveLifecycleResultOrNull(): LiveTelemetryResult? = when (this) {
+        is TelemetryLifecycleEvent.SessionEnded -> {
+            currentCarModel = null
+            currentTrackId = null
+            LiveTelemetryResult.SessionEnded(sessionId)
         }
 
-        val carModel = frame.session?.car?.carModel
-        val trackId = frame.session?.track?.trackId
-
-        if (carModel != currentCarModel || trackId != currentTrackId) {
-            currentCarModel = carModel
-            currentTrackId = trackId
-            return LiveTelemetryResult.SessionReset
+        is TelemetryLifecycleEvent.SimDisconnected -> {
+            currentCarModel = null
+            currentTrackId = null
+            LiveTelemetryResult.SessionEnded(sessionId = -1L)
         }
 
-        val state = mapper.map(frame) ?: return LiveTelemetryResult.NoData
-        return LiveTelemetryResult.Data(state)
-    }
-
-    private fun TelemetryLifecycleEvent.toSimplifiedEvent(): SimplifiedEvent = when (this) {
-        is TelemetryLifecycleEvent.SessionStarted -> SimplifiedEvent.SESSION_ACTIVE
-        is TelemetryLifecycleEvent.SessionEnded,
-        is TelemetryLifecycleEvent.SimDisconnected -> SimplifiedEvent.SESSION_ENDED
-
-        else -> SimplifiedEvent.SESSION_ACTIVE
-    }
-
-    private enum class SimplifiedEvent {
-        SESSION_ACTIVE,
-        SESSION_ENDED
+        else -> null
     }
 }
