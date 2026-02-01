@@ -1,11 +1,34 @@
 package com.project.analyzer.ac.telemetry.impl.fallback.logfile
 
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.CarSource
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.Parsed
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.Penalty
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_AI_DRIVER_EVO
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CAR_DISPLAY
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONNECTED_ON_CAR_WITH_UUID
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONNECTING_GAMECAR
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONTAINER
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DRIVER
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DRIVER_ON_CAR
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_MY_CAR
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PENALTY_KEY
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PHYSICS_TRACK
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PLAYER_COMMAND
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_SESSION_TYPE
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_TIMESTAMP
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_TRACK_SLUG
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.ResolvedTrack
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.TrackIdSource
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import java.io.File
 import java.io.RandomAccessFile
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -18,69 +41,82 @@ import kotlin.math.min
 @SingleIn(SessionScope::class)
 class AcEvoFileInfoExtractor(
     private val locator: AcEvoLogLocator,
-) {
+) : EvoFileInfoSource {
 
     private var raf: RandomAccessFile? = null
     private var openedFile: File? = null
+    private var openedFileKey: Any? = null
+    private var openedLastModified: Long = 0L
     private var lastPos: Long = 0L
     private var pending: String = ""
-
     private var sessionEpoch: Long = 0L
     private var lastInfo: EvoFileInfo = EvoFileInfo()
     private var trackIdSource: TrackIdSource = TrackIdSource.NONE
-
+    private var carSource: CarSource = CarSource.NONE
     private var penaltyGroupId: String? = null
     private var penaltyGroupMs: Long = 0L
+    private var lastGameStartedBumpMs: Long = 0L
+    private var lastHardBoundaryBumpMs: Long = 0L
+    private var playerCarUuid: String? = null
+    private val uuidToCarMap = mutableMapOf<String, String>()
 
-    private enum class TrackIdSource { NONE,
-        GAME_STARTED,
-        CONTAINER,
-        SLUG
-    }
-
-    fun poll(): EvoFileInfo {
+    override fun poll(): EvoFileInfo {
         val file = locator.locateLogFile() ?: return lastInfo
-        ensureOpen(file)
+
+        ensureOpenOrReopenIfRotated(file)
 
         val lines = readNewLines(file)
         if (lines.isEmpty()) return lastInfo
 
         val p = parseLines(lines)
 
-        if (p.hardBoundary || p.gameStarted) {
-            bumpEpoch()
+        val nowMs = System.currentTimeMillis()
+
+        if (p.hardBoundary) {
+            if (nowMs - lastHardBoundaryBumpMs > 1500L) {
+                lastHardBoundaryBumpMs = nowMs
+                bumpEpoch("hardBoundary")
+            }
+        }
+
+        if (p.gameStarted) {
+            if (nowMs - lastGameStartedBumpMs > 3000L) {
+                lastGameStartedBumpMs = nowMs
+                bumpEpoch("gameStarted")
+            }
         }
 
         val resolved = resolveTrackId(p)
-
-        val oldTrackId = lastInfo.trackId
-        if (oldTrackId != null && resolved.trackId != null && resolved.trackId != oldTrackId) {
-            bumpEpoch()
-        }
 
         val trackName = buildDisplayName(p.physicsTrackName, resolved.layout)
             ?: p.gameStartedTrackName
             ?: lastInfo.trackName
             ?: resolved.trackId
 
+        val newCar = chooseCarModel(p)
+
+        val effectiveSessionType = p.sessionType ?: lastInfo.sessionType
+
         lastInfo = lastInfo.copy(
             trackName = trackName,
             trackId = resolved.trackId ?: lastInfo.trackId,
             layoutId = resolved.layout ?: lastInfo.layoutId,
-            carModel = p.carModel ?: lastInfo.carModel,
+            carModel = newCar ?: lastInfo.carModel,
             driverName = p.driverName ?: lastInfo.driverName,
             driverSteamId = p.driverSteamId ?: lastInfo.driverSteamId,
             hasPenalty = p.penalty != null || lastInfo.hasPenalty,
             penaltyId = p.penalty?.id ?: lastInfo.penaltyId,
             penaltyReason = p.penalty?.reason ?: lastInfo.penaltyReason,
             penaltyTimestamp = p.penalty?.timestamp ?: lastInfo.penaltyTimestamp,
-            sessionEpoch = sessionEpoch
+            sessionEpoch = sessionEpoch,
+            sessionType = effectiveSessionType,
+            playerCarUuid = playerCarUuid ?: lastInfo.playerCarUuid
         )
 
         return lastInfo
     }
 
-    fun clearPenalty() {
+    override fun clearPenalty() {
         penaltyGroupId = null
         penaltyGroupMs = 0L
         lastInfo = lastInfo.copy(
@@ -91,32 +127,66 @@ class AcEvoFileInfoExtractor(
         )
     }
 
-    fun clear() {
+    override fun clear() {
         runCatching { raf?.close() }
         raf = null
         openedFile = null
+        openedFileKey = null
+        openedLastModified = 0L
         lastPos = 0L
         pending = ""
         sessionEpoch = 0L
         lastInfo = EvoFileInfo()
         trackIdSource = TrackIdSource.NONE
+        carSource = CarSource.NONE
         penaltyGroupId = null
         penaltyGroupMs = 0L
+        lastGameStartedBumpMs = 0L
+        lastHardBoundaryBumpMs = 0L
+        playerCarUuid = null
+        uuidToCarMap.clear()
         locator.clear()
     }
 
-    private fun ensureOpen(file: File) {
-        if (openedFile?.absolutePath == file.absolutePath && raf != null) return
+    private fun ensureOpenOrReopenIfRotated(file: File) {
+        val currentKey = fileKey(file)
+        val currentLm = file.lastModified()
 
+        val samePath = openedFile?.absolutePath == file.absolutePath
+        val keyChanged = (openedFileKey != null && currentKey != null && openedFileKey != currentKey)
+        val lmWentBack = (openedLastModified != 0L && currentLm != 0L && currentLm < openedLastModified)
+
+        if (raf == null || openedFile == null || !samePath || keyChanged || lmWentBack) {
+            reopen(
+                file, reason = when {
+                    !samePath -> "pathChanged"
+                    keyChanged -> "fileKeyChanged"
+                    lmWentBack -> "lastModifiedWentBack"
+                    else -> "init"
+                }
+            )
+        }
+    }
+
+    private fun reopen(file: File, reason: String) {
         runCatching { raf?.close() }
+
         openedFile = file
+        openedFileKey = fileKey(file)
+        openedLastModified = file.lastModified()
+
         raf = RandomAccessFile(file, "r")
         pending = ""
         lastPos = file.length()
 
-        bumpEpoch()
+        bumpEpoch("reopen:$reason")
         primeFromTail(file)
     }
+
+    private fun fileKey(file: File): Any? = runCatching {
+        val attrs = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+        attrs.fileKey()
+    }.getOrNull()
 
     private fun primeFromTail(file: File) {
         val r = raf ?: return
@@ -125,6 +195,7 @@ class AcEvoFileInfoExtractor(
 
         val start = (len - PRIME_TAIL_BYTES).coerceAtLeast(0L)
         r.seek(start)
+
         val buf = ByteArray((len - start).toInt().coerceAtMost(PRIME_TAIL_BYTES))
         val read = r.read(buf)
         if (read <= 0) return
@@ -133,15 +204,19 @@ class AcEvoFileInfoExtractor(
         val p = parseLines(lines, includePenalties = false)
         val resolved = resolveTrackId(p)
 
+        val newCar = chooseCarModel(p)
+
         lastInfo = lastInfo.copy(
             trackId = resolved.trackId,
             layoutId = resolved.layout,
             trackName = buildDisplayName(p.physicsTrackName, resolved.layout)
                 ?: p.gameStartedTrackName
                 ?: resolved.trackId,
-            carModel = p.carModel,
+            carModel = newCar,
             driverName = p.driverName,
-            driverSteamId = p.driverSteamId
+            driverSteamId = p.driverSteamId,
+            sessionType = p.sessionType ?: EvoSessionType.UNKNOWN,
+            playerCarUuid = playerCarUuid
         )
 
         trackIdSource = resolved.source
@@ -152,10 +227,7 @@ class AcEvoFileInfoExtractor(
         val len = file.length()
 
         if (len < lastPos) {
-            pending = ""
-            lastPos = len
-            bumpEpoch()
-            primeFromTail(file)
+            reopen(file, reason = "truncated")
             return emptyList()
         }
 
@@ -168,6 +240,7 @@ class AcEvoFileInfoExtractor(
         if (read <= 0) return emptyList()
 
         lastPos += read
+        openedLastModified = file.lastModified()
 
         val text = pending + buf.decodeToString(endIndex = read)
         val parts = text.split('\n').map { it.trimEnd('\r') }
@@ -177,30 +250,18 @@ class AcEvoFileInfoExtractor(
             .filter { it.isNotBlank() }
     }
 
-    private fun bumpEpoch() {
+    private fun bumpEpoch(reason: String) {
         sessionEpoch++
-        lastInfo = EvoFileInfo(sessionEpoch = sessionEpoch)
+        lastInfo = lastInfo.copy(
+            sessionEpoch = sessionEpoch,
+            sessionType = EvoSessionType.UNKNOWN
+        )
         trackIdSource = TrackIdSource.NONE
+        carSource = CarSource.NONE
         penaltyGroupId = null
         penaltyGroupMs = 0L
+        logger.info { "EvoFileInfo epoch++ -> $sessionEpoch ($reason)" }
     }
-
-    private data class Parsed(
-        val hardBoundary: Boolean = false,
-        val gameStarted: Boolean = false,
-        val physicsTrackName: String? = null,
-        val gameStartedTrackName: String? = null,
-        val slugBase: String? = null,
-        val slugLayout: String? = null,
-        val containerFolder: String? = null,
-        val containerLayout: String? = null,
-        val carModel: String? = null,
-        val driverName: String? = null,
-        val driverSteamId: String? = null,
-        val penalty: Penalty? = null
-    )
-
-    private data class Penalty(val id: String, val reason: String, val timestamp: String)
 
     private fun parseLines(lines: List<String>, includePenalties: Boolean = true): Parsed {
         var hardBoundary = false
@@ -211,14 +272,56 @@ class AcEvoFileInfoExtractor(
         var slugLayout: String? = null
         var containerFolder: String? = null
         var containerLayout: String? = null
-        var carModel: String? = null
+
+        var bestCar: String? = null
+        var bestCarSource: CarSource = CarSource.NONE
+
         var driverName: String? = null
         var driverSteamId: String? = null
         var penalty: Penalty? = null
+        var sessionType: EvoSessionType? = null
 
         for (line in lines) {
             if (isHardBoundary(line)) {
                 hardBoundary = true
+            }
+
+            RE_CONNECTING_GAMECAR.find(line)?.let { m ->
+                val uuid = normalizeUuid(m.groupValues[1])
+                if (uuid.isNotBlank()) {
+                    playerCarUuid = uuid
+                }
+                driverName = m.groupValues[2].trim()
+                m.groupValues.getOrNull(3)?.takeIf { it.isNotBlank() }?.let {
+                    driverSteamId = it
+                }
+            }
+
+            RE_CONNECTED_ON_CAR_WITH_UUID.find(line)?.let { m ->
+                val carModel = cleanCarId(m.groupValues[1])
+                val uuid = normalizeUuid(m.groupValues[2])
+                if (uuid.isNotBlank() && carModel.isNotBlank()) {
+                    uuidToCarMap[uuid] = carModel
+                    if (uuid == playerCarUuid) {
+                        if (CarSource.STRONG_CONNECTED.ordinal > bestCarSource.ordinal) {
+                            bestCar = carModel
+                            bestCarSource = CarSource.STRONG_CONNECTED
+                        }
+                    }
+                }
+            }
+
+            RE_AI_DRIVER_EVO.find(line)?.let { m ->
+                val carModel = cleanCarId(m.groupValues[1])
+                val uuid = normalizeUuid(m.groupValues[2])
+                if (uuid.isNotBlank() && carModel.isNotBlank()) {
+                    uuidToCarMap[uuid] = carModel
+                }
+            }
+
+            RE_SESSION_TYPE.find(line)?.let { m ->
+                val typeStr = m.groupValues[2]
+                sessionType = EvoSessionType.fromLogString(typeStr)
             }
 
             if (line.contains("Game Started!", ignoreCase = true)) {
@@ -227,7 +330,13 @@ class AcEvoFileInfoExtractor(
                 parts.getOrNull(1)?.takeIf { it.isNotBlank() }?.let {
                     gameStartedTrackName = cleanGameStartedTrack(it)
                 }
-                parts.getOrNull(2)?.takeIf { it.isNotBlank() }?.let { carModel = it }
+                parts.getOrNull(2)?.takeIf { it.isNotBlank() }?.let {
+                    val id = cleanCarId(it)
+                    if (CarSource.STRONG_GAME_STARTED.ordinal > bestCarSource.ordinal) {
+                        bestCar = id
+                        bestCarSource = CarSource.STRONG_GAME_STARTED
+                    }
+                }
             }
 
             RE_PHYSICS_TRACK.find(line)?.let {
@@ -249,11 +358,18 @@ class AcEvoFileInfoExtractor(
                 }
             }
 
-            RE_CAR.find(line)?.let { carModel = it.groupValues[1] }
+            parsePlayerCar(line)?.let { (id, src) ->
+                if (src.ordinal > bestCarSource.ordinal) {
+                    bestCar = id
+                    bestCarSource = src
+                }
+            }
 
-            RE_DRIVER.find(line)?.let {
-                driverName = it.groupValues[1].trim()
-                driverSteamId = it.groupValues[2].takeIf { s -> s.isNotBlank() }
+            if (driverName == null) {
+                RE_DRIVER.find(line)?.let {
+                    driverName = it.groupValues[1].trim()
+                    driverSteamId = it.groupValues[2].takeIf { s -> s.isNotBlank() }
+                }
             }
 
             if (includePenalties && penalty == null) {
@@ -270,18 +386,71 @@ class AcEvoFileInfoExtractor(
             slugLayout = slugLayout,
             containerFolder = containerFolder,
             containerLayout = containerLayout,
-            carModel = carModel,
+            carModel = bestCar,
+            carSource = bestCarSource,
             driverName = driverName,
             driverSteamId = driverSteamId,
-            penalty = penalty
+            penalty = penalty,
+            sessionType = sessionType
         )
     }
 
-    private data class ResolvedTrack(
-        val trackId: String?,
-        val layout: String?,
-        val source: TrackIdSource
-    )
+    private fun chooseCarModel(p: Parsed): String? {
+        val candidate = p.carModel?.takeIf { it.isNotBlank() } ?: return null
+
+        val alreadySet = !lastInfo.carModel.isNullOrBlank()
+
+        if (p.carSource.ordinal > carSource.ordinal) {
+            carSource = p.carSource
+            return candidate
+        }
+
+        if (!alreadySet) {
+            carSource = maxOf(carSource, p.carSource)
+            return candidate
+        }
+
+        return null
+    }
+
+    private fun parsePlayerCar(line: String): Pair<String, CarSource>? {
+        RE_PLAYER_COMMAND.find(line)?.let { m ->
+            val carId = cleanCarId(m.groupValues[1])
+            return carId to CarSource.STRONGEST_PLAYER_COMMAND
+        }
+
+        RE_DRIVER_ON_CAR.find(line)?.let { m ->
+            val carId = cleanCarId(m.groupValues[1])
+            return carId to CarSource.STRONGEST_DRIVER_ON_CAR
+        }
+
+        RE_MY_CAR.find(line)?.let { m ->
+            val carId = cleanCarId(m.groupValues[1])
+            return carId to CarSource.STRONGEST_MY_CAR
+        }
+
+        RE_CAR_DISPLAY.find(line)?.let { m ->
+            val carId = cleanCarId(m.groupValues[1])
+            return carId to CarSource.MEDIUM_CAR_DISPLAY
+        }
+
+        return null
+    }
+
+    private fun normalizeUuid(raw: String): String {
+        return raw.replace("-", "").lowercase().trim()
+    }
+
+    private fun cleanCarId(raw: String): String {
+        val s = raw.trim()
+            .substringBefore(',')
+            .substringBefore(')')
+            .substringBefore(']')
+            .substringBefore('}')
+            .substringBefore(' ')
+            .trim()
+        return s
+    }
 
     private fun resolveTrackId(p: Parsed): ResolvedTrack {
         val baseFromPhysics = p.physicsTrackName?.let(::normalize)
@@ -305,6 +474,15 @@ class AcEvoFileInfoExtractor(
 
         val stableId = lastInfo.trackId?.takeIf { it.isNotBlank() }
         val stableSource = trackIdSource
+        val stableLayout = lastInfo.layoutId?.takeIf { it.isNotBlank() }
+
+        if (stableId != null && stableLayout != null && layout.isNullOrBlank()) {
+            return ResolvedTrack(
+                trackId = stableId,
+                layout = stableLayout,
+                source = trackIdSource
+            )
+        }
 
         val effectiveId = when {
             candidateId.isNullOrBlank() -> stableId
@@ -359,21 +537,28 @@ class AcEvoFileInfoExtractor(
     private fun cleanGameStartedTrack(raw: String): String {
         val noDate = raw.substringBefore("@").trim()
         val lower = noDate.lowercase()
-        val cuts = listOf(" time attack", " practice", " qualifying", " race", " hotlap")
+        val cuts = listOf(" time attack", " practice", " qualifying", " race", " hotlap", " warmup")
         val cutIdx = cuts.mapNotNull { lower.indexOf(it).takeIf { i -> i >= 0 } }.minOrNull()
         return (if (cutIdx != null) noDate.substring(0, cutIdx) else noDate)
             .replace(Regex("\\s+"), " ").trim()
     }
 
-    private fun isHardBoundary(line: String): Boolean {
-        val s = line.lowercase()
-        return s.contains("reset session") ||
-            s.contains("session reset") ||
-            s.contains("restart session") ||
-            s.contains("resetting session") ||
-            s.contains("session ended") ||
-            s.contains("end_session") ||
-            s.contains("terminatesession")
+    private fun isHardBoundary(s: String): Boolean {
+        val lower = s.lowercase()
+
+        if (lower.contains("reset session")) return true
+        if (lower.contains("restart session")) return true
+        if (lower.contains("session restart")) return true
+
+        if (lower.contains("end_session")) {
+            return lower.contains("all cars pitted")
+        }
+
+        if (lower.contains("session ended")) {
+            return lower.contains("all cars pitted") || lower.contains("all cars")
+        }
+
+        return false
     }
 
     private fun parsePenalty(line: String): Penalty? {
@@ -451,23 +636,5 @@ class AcEvoFileInfoExtractor(
             .appendFraction(ChronoField.MILLI_OF_SECOND, 1, 9, false)
             .optionalEnd()
             .toFormatter(Locale.US)
-
-        val RE_TIMESTAMP = Regex("""^\s*\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+)]""")
-        val RE_PHYSICS_TRACK = Regex("""Creating physics track:\s*(.+)$""", RegexOption.IGNORE_CASE)
-        val RE_TRACK_SLUG = Regex("""\bTRACK NAME\b\s+(.+)$""", RegexOption.IGNORE_CASE)
-        val RE_CONTAINER = Regex(
-            """content[\\/]+tracks[\\/]+([^\\/]+)[\\/]+containers[\\/]+layout_([^\\/.]+)\.scene""",
-            RegexOption.IGNORE_CASE
-        )
-
-        val RE_CAR = Regex(
-            """(?:Creating car:|CarDisplay\.init:|connected on car\s+)\s*(\S+)""",
-            RegexOption.IGNORE_CASE
-        )
-        val RE_DRIVER = Regex(
-            """connecting gamecar.*\((.+?)\s*\|\s*(\d*)\)""",
-            RegexOption.IGNORE_CASE
-        )
-        val RE_PENALTY_KEY = Regex("""\{PENALTY_ADDED_KEY}\s*#(\d+)""", RegexOption.IGNORE_CASE)
     }
 }

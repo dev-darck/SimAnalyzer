@@ -147,7 +147,7 @@ class AcEvoFallbackShmPatcherTest {
     }
 
     @Test
-    fun `graphics packetId increments each patch in session when physics packet changes`() {
+    fun `processPhysicsFrame is called only when physics packetId changes`() {
         val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
         val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
         val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
@@ -177,18 +177,11 @@ class AcEvoFallbackShmPatcherTest {
         every { fuelAnalyzer.getSnapshot(any()) } returns FuelSnapshot()
 
         val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
-
         patcher.patchIfNeeded(shm, 3_000_000_000L, GameConnectionState.IN_SESSION)
-        val first = graphics.packetId
-
-        forceNativeEmpty(graphics, statics)
-
+        patcher.patchIfNeeded(shm, 3_050_000_000L, GameConnectionState.IN_SESSION)
         physics.packetId = 2
-
         patcher.patchIfNeeded(shm, 3_100_000_000L, GameConnectionState.IN_SESSION)
-        val second = graphics.packetId
 
-        assertEquals(1, first)
-        assertEquals(2, second)
+        verify(exactly = 2) { lapAnalyzer.processPhysicsFrame(any(), physics) }
     }
 }

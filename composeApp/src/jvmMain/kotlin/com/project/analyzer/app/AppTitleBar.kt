@@ -3,7 +3,6 @@ package com.project.analyzer.app
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -45,6 +44,7 @@ import com.project.analyzer.app.win.hittest.winExcludeFromCaption
 import com.project.analyzer.app.win.hittest.winMaximizeButtonRect
 import com.project.analyzer.app.win.hittest.winMinimizeButtonRect
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.utils.logger
 import java.awt.Frame
 import java.awt.event.WindowStateListener
@@ -249,7 +249,7 @@ private fun TitleBarPillButton(
             .clip(RoundedCornerShape(10.dp))
             .background(bg)
             .hoverable(interaction)
-            .clickable(enabled = enabled, interactionSource = interaction, indication = null) { onClick() },
+            .onClick(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         icon(tint)
@@ -286,7 +286,7 @@ private fun TitleBarWinButton(
             .clip(RoundedCornerShape(10.dp))
             .background(bg)
             .hoverable(interaction)
-            .clickable(enabled = enabled, interactionSource = interaction, indication = null) { onClick() },
+            .onClick(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         icon(tint)

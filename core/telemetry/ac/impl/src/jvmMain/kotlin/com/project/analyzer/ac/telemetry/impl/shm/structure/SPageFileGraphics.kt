@@ -129,7 +129,7 @@ class SPageFileGraphics(p: Pointer? = null) : Structure(p) {
 
     /** Session type (practice/qualify/race/etc). */
     @JvmField
-    var session: Int = 0
+    var session: Int = -1
 
     /** Current lap time as string (wchar_t[15], e.g. "1:23.456"). */
     @JvmField

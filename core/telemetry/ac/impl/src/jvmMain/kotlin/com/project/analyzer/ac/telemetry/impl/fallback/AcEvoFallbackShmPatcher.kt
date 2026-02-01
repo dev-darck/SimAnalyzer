@@ -1,11 +1,13 @@
 package com.project.analyzer.ac.telemetry.impl.fallback
 
+import com.project.analyzer.ac.telemetry.impl.di.Stabilizer
 import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackFuelAnalyzer
 import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
 import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.FuelSnapshot
 import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.LapTimingSnapshot
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.AcEvoFileInfoExtractor
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.EvoFileInfoSource
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.PhysicsPoseExtractor
 import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
@@ -19,12 +21,11 @@ import kotlin.math.abs
 
 @Inject
 class AcEvoFallbackShmPatcher(
-    private val fileInfoExtractor: AcEvoFileInfoExtractor,
+    @param:Stabilizer
+    private val fileInfoExtractor: EvoFileInfoSource,
     private val lapAnalyzer: FallbackLapAnalyzer,
     private val fuelAnalyzer: FallbackFuelAnalyzer,
 ) {
-
-    private var syntheticPacketId: Int = 1
     private var lastSessionEpoch: Long = -1L
     private val identityResetDetector = IdentityResetDetector()
     private val seenPenaltyIds = ArrayDeque<String>(PENALTY_DEDUP_CAPACITY)
@@ -33,6 +34,7 @@ class AcEvoFallbackShmPatcher(
     private var lastPatchedCarModel: String = ""
     private var lastPatchedIdentityLog: String = ""
     private var lastPatchedIdentityLogMs: Long = 0L
+    private var lastPatchedSessionType: EvoSessionType = EvoSessionType.UNKNOWN
 
     private var lastGameState: GameConnectionState = GameConnectionState.DISCONNECTED
     private var lastProcessedPhysicsPacketId: Int = -1
@@ -43,8 +45,6 @@ class AcEvoFallbackShmPatcher(
         fileInfoExtractor.clear()
         lapAnalyzer.reset()
         fuelAnalyzer.reset()
-
-        syntheticPacketId = 1
         lastSessionEpoch = -1L
 
         identityResetDetector.reset()
@@ -55,6 +55,7 @@ class AcEvoFallbackShmPatcher(
         lastPatchedCarModel = ""
         lastPatchedIdentityLog = ""
         lastPatchedIdentityLogMs = 0L
+        lastPatchedSessionType = EvoSessionType.UNKNOWN
 
         lastGameState = GameConnectionState.DISCONNECTED
         lastProcessedPhysicsPacketId = -1
@@ -62,13 +63,13 @@ class AcEvoFallbackShmPatcher(
     }
 
     fun patchIfNeeded(shm: AcSharedMemory, loopStartNanos: Long, gameState: GameConnectionState) {
-        if (!needsFallback(shm)) return
-
         val info = fileInfoExtractor.poll()
 
         if (info.sessionEpoch != lastSessionEpoch) {
             lastSessionEpoch = info.sessionEpoch
-            resetAll(reason = "sessionEpoch changed", clearTrack = true, clearCar = true)
+
+            resetAll(reason = "sessionEpoch changed", clearTrack = false, clearCar = false)
+
             identityResetDetector.observe(info, loopStartNanos)
         }
 
@@ -100,6 +101,8 @@ class AcEvoFallbackShmPatcher(
 
         val calibration = lapAnalyzer.loadCalibration(info.trackId)
         patchStatics(shm.statics, info, calibration)
+
+        patchGraphicsBase(shm.graphics, info, gameState)
 
         if (gameState != GameConnectionState.IN_SESSION) return
 
@@ -144,7 +147,7 @@ class AcEvoFallbackShmPatcher(
         )
         val fuelSnapshot = fuelAnalyzer.getSnapshot(currentFuelLiters = shm.physics.fuel)
 
-        patchGraphics(shm.graphics, lapSnapshot, fuelSnapshot)
+        patchGraphics(shm.graphics, info, lapSnapshot, fuelSnapshot)
     }
 
     private fun resetAll(reason: String, clearTrack: Boolean, clearCar: Boolean) {
@@ -174,18 +177,6 @@ class AcEvoFallbackShmPatcher(
     private fun clearPenaltyDedup() {
         seenPenaltyIds.clear()
         seenPenaltySet.clear()
-    }
-
-    private fun needsFallback(shm: AcSharedMemory): Boolean {
-        val g = shm.graphics
-        val s = shm.statics
-
-        val graphicsEmpty = (g.packetId == 0)
-
-        val trackBlank = s.track.all { it == ' ' || it == '\u0000' }
-        val staticsEmpty = (s.sectorCount == 0 || s.numCars == 0 || trackBlank)
-
-        return graphicsEmpty || staticsEmpty
     }
 
     private fun patchStatics(
@@ -231,15 +222,31 @@ class AcEvoFallbackShmPatcher(
         statics.playerSurname.writeWString(surname)
     }
 
+    private fun patchGraphicsBase(
+        graphics: SPageFileGraphics,
+        info: EvoFileInfo,
+        gameState: GameConnectionState
+    ) {
+        graphics.session = when {
+            gameState != GameConnectionState.IN_SESSION -> -1
+            info.sessionType == EvoSessionType.UNKNOWN -> -1
+            else -> info.sessionType.shmValue
+        }
+    }
+
     private fun patchGraphics(
         graphics: SPageFileGraphics,
+        info: EvoFileInfo,
         snapshot: LapTimingSnapshot,
         fuelSnapshot: FuelSnapshot,
     ) {
-        graphics.packetId = syntheticPacketId++
+        val sessionType = info.sessionType
+        graphics.session = if (sessionType == EvoSessionType.UNKNOWN) -1 else sessionType.shmValue
 
-        graphics.status = 2
-        graphics.session = 1
+        if (sessionType != lastPatchedSessionType) {
+            logger.info { "FallbackSHM sessionType: ${lastPatchedSessionType.name} -> ${sessionType.name} (shmValue=${sessionType.shmValue})" }
+            lastPatchedSessionType = sessionType
+        }
 
         graphics.completedLaps = snapshot.completedLapsCount
 

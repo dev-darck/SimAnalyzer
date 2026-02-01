@@ -39,6 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.slider.CustomSlider
 import com.project.analyzer.ui.slider.THUMB_RADIUS
 import kotlin.math.roundToInt
@@ -299,7 +300,7 @@ private fun BrowseButton(
         modifier = modifier
             .height(STORAGE_FIELD_HEIGHT)
             .widthIn(min = 64.dp)
-            .clickable(onClick = onClick)
+            .onClick(onClick = onClick)
             .background(
                 color = SimAnalyzerTheme.material.primary.copy(alpha = 0.7f),
                 shape = RoundedCornerShape(STORAGE_FIELD_RADIUS)
