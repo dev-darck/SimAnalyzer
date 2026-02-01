@@ -3,7 +3,6 @@ package com.analyzer.settings.presentation.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.onClick
 import kotlin.math.sin
 
 @Composable
@@ -76,9 +76,9 @@ internal fun HudSetupBlock(
                         color = SimAnalyzerTheme.material.primary.copy(alpha = 0.22f),
                         shape = RoundedCornerShape(8.dp)
                     )
-                    .clickable(
+                    .onClick(
                         enabled = isHudEnabled,
-                        onClick = onEditClick
+                        onClick = onEditClick,
                     ),
                 contentAlignment = Alignment.Center
             ) {

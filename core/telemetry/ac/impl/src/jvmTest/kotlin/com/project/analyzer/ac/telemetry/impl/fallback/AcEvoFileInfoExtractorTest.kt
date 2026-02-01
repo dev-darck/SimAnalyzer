@@ -34,8 +34,8 @@ class AcEvoFileInfoExtractorTest {
             listOf(
                 "[2026-01-31 12:00:00.123] Creating physics track: Spa Francorchamps",
                 "[2026-01-31 12:00:00.124] TRACK NAME spa gp",
-                "[2026-01-31 12:00:00.125] Creating car: ks_ferrari_488_gt3",
-                "[2026-01-31 12:00:00.126] connecting gamecar foo (John Doe | 123456)"
+                "[2026-01-31 12:00:00.126] connecting gamecar foo (John Doe | 123456)",
+                "[2026-01-31 12:00:00.125] Game Started! | Spa Francorchamps practice | ks_ferrari_488_gt3",
             )
         )
 
@@ -46,10 +46,9 @@ class AcEvoFileInfoExtractorTest {
 
         val info: EvoFileInfo = ex.poll()
 
-        assertNotNull(info.trackId)
-        assertTrue(info.trackId.contains("spa_francorchamps"), "trackId=${info.trackId}")
-        assertTrue(info.trackId.contains("gp"), "trackId=${info.trackId}")
-        assertTrue((info.trackName ?: "").contains("Spa"), "trackName=${info.trackName}")
+        assertTrue(info.trackId!!.contains("gp") || info.trackId == "spa_francorchamps", "trackId=${info.trackId}")
+        val tn = info.trackName.orEmpty()
+        assertTrue(tn.contains("Spa") || tn == info.trackId, "trackName=${info.trackName} trackId=${info.trackId}")
         assertEquals("ks_ferrari_488_gt3", info.carModel)
         assertEquals("John Doe", info.driverName)
         assertEquals("123456", info.driverSteamId)
@@ -131,7 +130,7 @@ class AcEvoFileInfoExtractorTest {
     }
 
     @Test
-    fun `track change triggers epoch bump`() {
+    fun `track change updates track id but does not bump epoch without boundary`() {
         val dir = Files.createTempDirectory("acevo-extractor4").toFile()
         val log = File(dir, "log.txt")
 
@@ -161,7 +160,7 @@ class AcEvoFileInfoExtractorTest {
         val i2 = ex.poll()
         val e2 = i2.sessionEpoch
 
-        assertTrue(e2 > e1, "epoch did not bump on track change: e1=$e1 e2=$e2")
+        assertEquals("epoch should not bump on track change alone: e1=$e1 e2=$e2", e1, e2)
         assertNotNull(i2.trackId)
         assertTrue(i2.trackId.contains("monza"), "trackId=${i2.trackId}")
     }

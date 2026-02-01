@@ -21,28 +21,25 @@ public enum class SimStatus {
 public enum class SessionType {
     UNKNOWN,
     PRACTICE,
-    QUALIFY,
+    QUALIFYING,
     RACE,
     HOTLAP,
     TIME_ATTACK,
     DRIFT,
     DRAG,
-    HOTSTINT,
-    HOTLAP_SUPERPOLE;
+    WARMUP;
 
     public companion object {
 
         public fun fromAcValue(value: Int): SessionType = when (value) {
-            -1 -> UNKNOWN
             0 -> PRACTICE
-            1 -> QUALIFY
+            1 -> QUALIFYING
             2 -> RACE
             3 -> HOTLAP
             4 -> TIME_ATTACK
             5 -> DRIFT
             6 -> DRAG
-            7 -> HOTSTINT
-            8 -> HOTLAP_SUPERPOLE
+            7 -> WARMUP
             else -> UNKNOWN
         }
     }
