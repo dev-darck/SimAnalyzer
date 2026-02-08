@@ -11,8 +11,7 @@ import com.project.analyzer.utils.AppDirectories
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import java.io.File
 
 @Inject
@@ -23,17 +22,19 @@ class SettingsRepositoryImpl(
     private val appDirectories: AppDirectories,
 ) : SettingsRepository {
 
-    private val _settings = MutableStateFlow(TelemetrySettings())
+    override fun observeSettings(): Flow<TelemetrySettings> =
+        userPreferences.observe(TELEMETRY_SETTINGS_RATE.int, 50).combine(
+            userPreferences.observe(TELEMETRY_SETTINGS_LOCATION.str, getDefaultStorageLocation())
+        ) { rate, location ->
+            TelemetrySettings(samplingRateHz = rate, storageLocation = location)
+        }
 
-    override fun observeSettings(): Flow<TelemetrySettings> = _settings.asStateFlow()
     override fun observeHudEnabled(): Flow<Boolean> = userPreferences.observe(TELEMETRY_HUD_ENABLED.bool, true)
 
-    override fun getSettings(): TelemetrySettings = _settings.value
-
-    override suspend fun loadSettings() {
+    override suspend fun loadSettings(): TelemetrySettings {
         val location = userPreferences.get(TELEMETRY_SETTINGS_LOCATION.str, getDefaultStorageLocation())
         val rate = userPreferences.get(TELEMETRY_SETTINGS_RATE.int, 50)
-        _settings.value = TelemetrySettings(samplingRateHz = rate, storageLocation = location)
+        return TelemetrySettings(samplingRateHz = rate, storageLocation = location)
     }
 
     override suspend fun updateSamplingRate(hz: Int) {

@@ -12,6 +12,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.settings.presentation.components.AppearanceBlock
 import com.analyzer.settings.presentation.components.HudSetupBlock
 import com.analyzer.settings.presentation.components.TelemetryAcquisitionBlock
+import com.project.analyzer.chooser.FileChooserDialog
+import com.project.analyzer.chooser.SelectionMode
+import com.project.analyzer.chooser.rememberFileChooserState
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
@@ -44,6 +47,17 @@ private fun Screen(
     dispatch: (SettingsIntent) -> Unit = {},
     navigateTo: (Route) -> Unit = {},
 ) {
+    val directoryChooserState = rememberFileChooserState(
+        initialPath = state.storageLocation.ifBlank { null },
+        selectionMode = SelectionMode.DIRECTORY,
+        title = "Select storage location",
+        onResult = { selectedPath ->
+            selectedPath?.let { path ->
+                dispatch(SettingsIntent.ChangeStorageLocation(path))
+            }
+        }
+    )
+
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp),
         backgroundColor = SimAnalyzerTheme.material.background
@@ -79,10 +93,13 @@ private fun Screen(
                     dispatch(SettingsIntent.ChangeSamplingRate(it))
                 },
                 onBrowseClick = {
+                    directoryChooserState.show()
                 }
             )
         }
     }
+
+    FileChooserDialog(state = directoryChooserState)
 }
 
 @Preview

@@ -1,9 +1,6 @@
 package com.analyzer.settings.presentation.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,14 +9,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,11 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,6 +32,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.slider.CustomSlider
 import com.project.analyzer.ui.slider.THUMB_RADIUS
+import com.project.analyzer.ui.textField.TextField
 import kotlin.math.roundToInt
 
 private const val MIN_RATE = 10
@@ -50,7 +41,6 @@ private const val MAX_RATE = 100
 
 private val STORAGE_FIELD_HEIGHT = 36.dp
 private val STORAGE_FIELD_RADIUS = 8.dp
-private val STORAGE_FIELD_BORDER = 1.dp
 
 @Composable
 internal fun TelemetryAcquisitionBlock(
@@ -224,71 +214,26 @@ private fun StoragePathField(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var focused by remember { mutableStateOf(false) }
-
-    val shape = RoundedCornerShape(STORAGE_FIELD_RADIUS)
-
-    val border = SimAnalyzerTheme.material.primary.copy(alpha = if (focused) 0.75f else 0.45f)
-
-    val iconTint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.70f)
     val textColor = SimAnalyzerTheme.material.onSurface
         .copy(alpha = 0.85f)
 
     var text by remember(value) { mutableStateOf(value) }
 
-    Row(
-        modifier = modifier
-            .height(STORAGE_FIELD_HEIGHT)
-            .clip(shape)
-            .background(SimAnalyzerTheme.material.background)
-            .border(STORAGE_FIELD_BORDER, border, shape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) { onClick() }
-            .padding(start = 18.dp, end = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Folder,
-            contentDescription = null,
-            tint = iconTint,
-            modifier = Modifier.size(20.dp)
-        )
-
-        Spacer(modifier = Modifier.width(14.dp))
-
-        BasicTextField(
-            value = text,
-            onValueChange = {
-                text = it.trim()
-                onValueChange(it.trim())
-            },
-            singleLine = true,
-            cursorBrush = SolidColor(SimAnalyzerTheme.material.primary),
-            textStyle = TextStyle(
-                color = textColor,
-                fontSize = 12.sp,
-            ),
-            modifier = Modifier
-                .weight(1f)
-                .onFocusChanged { focused = it.isFocused },
-            decorationBox = { inner ->
-                Box(Modifier.fillMaxWidth()) {
-                    if (text.isBlank()) {
-                        Text(
-                            text = placeholder,
-                            color = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.55f),
-                            fontSize = 12.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    inner()
-                }
-            }
-        )
-    }
+    TextField(
+        value = text,
+        placeholder = placeholder,
+        leadingIcon = Icons.Filled.Folder,
+        onValueChange = {
+            text = it.trim()
+            onValueChange(it.trim())
+        },
+        singleLine = true,
+        textStyle = TextStyle(
+            color = textColor,
+            fontSize = 12.sp,
+        ),
+        modifier = modifier.onClick(onClick = onClick)
+    )
 }
 
 @Composable

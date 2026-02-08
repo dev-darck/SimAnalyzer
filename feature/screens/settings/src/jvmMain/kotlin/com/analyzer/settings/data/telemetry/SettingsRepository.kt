@@ -8,8 +8,7 @@ interface SettingsRepository {
 
     fun observeSettings(): Flow<TelemetrySettings>
     fun observeHudEnabled(): Flow<Boolean>
-    fun getSettings(): TelemetrySettings
-    suspend fun loadSettings()
+    suspend fun loadSettings(): TelemetrySettings
     suspend fun updateSamplingRate(hz: Int)
     suspend fun updateHudEnabled(enabled: Boolean)
     suspend fun updateStorageLocation(path: String)
