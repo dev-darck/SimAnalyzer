@@ -1,0 +1,162 @@
+package com.project.analyzer.chooser.presentation.components
+
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons.Filled
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.project.analyzer.chooser.domain.model.TreeNode
+import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.onClick
+
+@Composable
+fun FileTree(
+    nodes: List<TreeNode>,
+    currentDir: String,
+    scrollToIndex: Int,
+    onToggle: (path: String) -> Unit,
+    onSelect: (path: String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(scrollToIndex) {
+        if (scrollToIndex >= 0 && scrollToIndex < nodes.size) {
+            listState.animateScrollToItem(scrollToIndex)
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        if (nodes.isEmpty()) {
+            Text(
+                text = "Select a drive to browse",
+                fontSize = 12.sp,
+                color = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.align(Alignment.Center),
+            )
+        } else {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(1.dp),
+            ) {
+                items(items = nodes, key = { it.path }) { node ->
+                    TreeRow(
+                        node = node,
+                        isSelected = node.path == currentDir,
+                        onToggle = { onToggle(node.path) },
+                        onSelect = { onSelect(node.path) },
+                    )
+                }
+            }
+        }
+
+        VerticalScrollbar(
+            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+            adapter = rememberScrollbarAdapter(listState),
+        )
+    }
+}
+
+@Composable
+private fun TreeRow(
+    node: TreeNode,
+    isSelected: Boolean,
+    onToggle: () -> Unit,
+    onSelect: () -> Unit,
+) {
+    val chevronAngle by animateFloatAsState(
+        targetValue = if (node.expanded) 90f else 0f,
+        animationSpec = tween(durationMillis = 150),
+        label = "chevron",
+    )
+
+    val background = if (isSelected) {
+        SimAnalyzerTheme.material.primary.copy(alpha = 0.14f)
+    } else {
+        SimAnalyzerTheme.material.surface
+    }
+
+    val startPadding = (12 + node.depth * 16).dp
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(6.dp))
+            .background(background)
+            .onClick(onClick = {
+                onToggle()
+                onSelect()
+            })
+            .padding(start = startPadding, end = 8.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) {
+            when {
+                node.loading -> CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 1.5.dp,
+                    color = SimAnalyzerTheme.material.primary,
+                )
+
+                node.hasChildren -> Icon(
+                    imageVector = Filled.ChevronRight,
+                    contentDescription = if (node.expanded) "Collapse" else "Expand",
+                    modifier = Modifier.size(16.dp).rotate(chevronAngle),
+                    tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.6f),
+                )
+            }
+        }
+
+        Spacer(Modifier.width(4.dp))
+
+        Icon(
+            imageVector = if (node.expanded) Filled.FolderOpen else Filled.Folder,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.75f),
+        )
+
+        Spacer(Modifier.width(6.dp))
+
+        Text(
+            text = node.name,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            fontSize = 12.sp,
+            color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}

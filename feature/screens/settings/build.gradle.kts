@@ -17,6 +17,7 @@ moduleImpl {
         projects.core.utils.jvmImpl
         projects.core.math.jvmImpl
         projects.core.preference.api.jvmImpl
+        projects.feature.screens.chooser.jvmImpl
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

@@ -89,23 +89,10 @@ internal class SettingsViewModel(
     private fun handleChangeStorageLocation(path: String) {
         viewModelScope.launch {
             val validationResult = telemetrySettingsRepository.validateStorageLocation(path)
-            val error = mapValidationError(validationResult)
-
-//            _state.update { it.copy(storageLocationError = error) }
 
             if (validationResult == StorageValidationResult.Valid) {
                 telemetrySettingsRepository.updateStorageLocation(path)
             }
-        }
-    }
-
-    private fun mapValidationError(result: StorageValidationResult): String? {
-        return when (result) {
-            StorageValidationResult.Valid -> null
-            StorageValidationResult.Empty -> "Storage location cannot be empty"
-            StorageValidationResult.NotADirectory -> "Selected path is not a directory"
-            StorageValidationResult.NotWritable -> "Cannot write to selected directory"
-            StorageValidationResult.CannotCreate -> "Cannot create directory at selected path"
         }
     }
 }
