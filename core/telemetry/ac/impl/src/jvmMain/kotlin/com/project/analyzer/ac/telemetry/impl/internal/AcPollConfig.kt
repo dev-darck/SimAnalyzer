@@ -1,11 +1,5 @@
 package com.project.analyzer.ac.telemetry.impl.internal
 
-import com.project.analyzer.api.di.SessionScope
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
-
-@Inject
-@SingleIn(SessionScope::class)
 data class AcPollConfig(
     /** Poll interval for active session (~60Hz) */
     val pollIntervalNanos: Long = 16_666_667L,
