@@ -12,21 +12,18 @@ import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
-@BindingContainer
 @ContributesTo(ScreenScope::class)
-interface HudSettingsBindings {
+@BindingContainer
+object HudSettingsBindings {
 
-    companion object {
-
-        @Provides
-        @IntoMap
-        @ViewModelKey(HudSettingsViewModel::class)
-        fun provideHudSettingsViewModel(
-            preferences: HudPreferences,
-            panels: Provider<Set<HudPanel>>,
-        ): ViewModel = HudSettingsViewModel(
-            preferences = preferences,
-            panels = panels
-        )
-    }
+    @Provides
+    @IntoMap
+    @ViewModelKey(HudSettingsViewModel::class)
+    private fun provideHudSettingsViewModel(
+        preferences: HudPreferences,
+        panels: Provider<Set<HudPanel>>,
+    ): ViewModel = HudSettingsViewModel(
+        preferences = preferences,
+        panels = panels
+    )
 }

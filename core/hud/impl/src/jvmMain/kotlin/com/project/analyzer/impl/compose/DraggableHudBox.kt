@@ -2,6 +2,7 @@ package com.project.analyzer.impl.compose
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.hoverable
@@ -10,7 +11,13 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.LockOpen
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +25,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -27,6 +36,7 @@ import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
+import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlin.math.roundToInt
 
 @Composable
@@ -36,6 +46,8 @@ internal fun DraggableHudBox(
     hitRegions: HitRegions,
     overlayController: OverlayController,
     onIntent: (HudIntent) -> Unit,
+    inputLocked: Boolean,
+    onToggleInputLock: (() -> Unit)?,
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit = {}
 ) {
@@ -108,6 +120,28 @@ internal fun DraggableHudBox(
                     onIntent(HudIntent.SavePosition(panelId, localOffset))
                 }
             ),
-        content = content
-    )
+    ) {
+        content()
+
+        if (onToggleInputLock != null && (inputLocked || isHovered || isDragging)) {
+            val shape = RoundedCornerShape(6.dp)
+            val accent = if (inputLocked) SimAnalyzerTheme.material.primary else SimAnalyzerTheme.material.onSurface
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(6.dp)
+                    .clip(shape)
+                    .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.6f), shape)
+                    .clickable(onClick = onToggleInputLock)
+                    .padding(4.dp)
+            ) {
+                Icon(
+                    imageVector = if (inputLocked) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
 }

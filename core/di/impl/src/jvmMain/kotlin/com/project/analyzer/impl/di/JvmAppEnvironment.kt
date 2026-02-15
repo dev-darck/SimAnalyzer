@@ -2,7 +2,7 @@ package com.project.analyzer.impl.di
 
 import com.project.analyzer.api.di.AppEnvironment
 
-internal class JvmAppEnvironment : AppEnvironment {
+class JvmAppEnvironment : AppEnvironment {
 
     override val isDev: Boolean = System.getProperty("sim.dev") == "true" || System.getProperty("idea.active") == "true"
     override val osName: String by lazy { System.getProperty("os.name").lowercase() }

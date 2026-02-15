@@ -14,6 +14,7 @@ import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectEntry
 import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectPath
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleExpand
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleHidden
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 
+@Inject
 class FileChooserViewModel(
     private val useCase: FileChooserUseCase,
 ) : ViewModel() {

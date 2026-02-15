@@ -13,7 +13,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.awaitApplication
 import androidx.compose.ui.window.rememberWindowState
@@ -21,8 +20,8 @@ import com.project.analyzer.composeApp.Res.Res
 import com.project.analyzer.composeApp.Res.app_icon
 import com.project.analyzer.crash.presentation.CrashBoundary
 import com.project.analyzer.impl.compose.OverlayWindow
-import com.project.analyzer.impl.di.AppGraph
-import com.project.analyzer.impl.di.createAppGraph
+import com.project.analyzer.impl.di.AppComponent
+import com.project.analyzer.impl.di.createAppComponent
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.utils.LogbackConfigurator
 import com.project.analyzer.utils.SingleInstanceGuard
@@ -33,33 +32,36 @@ import java.awt.SystemTray
 
 suspend fun main() {
     SingleInstanceGuard.acquireOrExit()
-    val appGraph = createAppGraph()
+    val appGraph = createAppComponent()
     val initTheme = appGraph.themeRepository.loadTheme()
     LogbackConfigurator.configure()
-    appGraph.telemetryLifecycle.launchTelemetry()
-    awaitApplication {
-        CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
-            var themeMode by remember { mutableStateOf(initTheme) }
+    try {
+        appGraph.appLifecycle.start()
+        awaitApplication {
+            CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
+                var themeMode by remember { mutableStateOf(initTheme) }
 
-            LaunchedEffect(Unit) {
-                appGraph.themeRepository.observeThemeMode().collect { mode ->
-                    themeMode = mode
+                LaunchedEffect(Unit) {
+                    appGraph.themeRepository.observeThemeMode().collect { mode ->
+                        themeMode = mode
+                    }
                 }
-            }
 
-            SimAnalyzerTheme(themeMode = themeMode) {
-                CrashBoundary {
-                    App(appGraph)
+                SimAnalyzerTheme(themeMode = themeMode) {
+                    CrashBoundary {
+                        App(appGraph)
+                    }
                 }
             }
         }
+    } finally {
+        runCatching { appGraph.appLifecycle.stop() }
+        SingleInstanceGuard.release()
     }
-    appGraph.telemetryLifecycle.finishTelemetry()
-    SingleInstanceGuard.release()
 }
 
 @Composable
-private fun ApplicationScope.App(appGraph: AppGraph) {
+private fun ApplicationScope.App(appGraph: AppComponent) {
     var showAppWindow by remember { mutableStateOf(true) }
     val showHud by appGraph.hudPreferences.observeHudEnabled().collectAsState(true)
     var showOverlay by remember { mutableStateOf(appGraph.hudPanels.isNotEmpty()) }
@@ -103,8 +105,6 @@ private fun ApplicationScope.App(appGraph: AppGraph) {
         visible = showHud && showOverlay,
         onCloseRequest = { showOverlay = false },
         panels = appGraph.hudPanels,
-        state = rememberWindowState(
-            placement = WindowPlacement.Maximized,
-        )
+        state = rememberWindowState()
     )
 }

@@ -1,0 +1,122 @@
+{
+  "trackId": "red_bull_ring_gp",
+  "trackName": "red_bull_ring_gp",
+  "createdAtEpochMs": 1767571623468,
+  "referencePoint": "FRONT_AXLE",
+  "startFinish": {
+    "center": {
+      "x": 366.3447,
+      "y": 279.3952
+    },
+    "forward": {
+      "x": -0.9593369,
+      "y": 0.28226373
+    },
+    "normal": {
+      "x": -0.28226373,
+      "y": -0.9593369
+    },
+    "halfWidthMeters": 10.0
+  },
+  "sectors": [
+    {
+      "index": 1,
+      "start": {
+        "center": {
+          "x": 366.3447,
+          "y": 279.3952
+        },
+        "forward": {
+          "x": -0.9593369,
+          "y": 0.28226373
+        },
+        "normal": {
+          "x": -0.28226373,
+          "y": -0.9593369
+        },
+        "halfWidthMeters": 10.0
+      },
+      "finish": {
+        "center": {
+          "x": -503.9051,
+          "y": -249.47758
+        },
+        "forward": {
+          "x": -0.71760225,
+          "y": -0.69645315
+        },
+        "normal": {
+          "x": 0.69645315,
+          "y": -0.71760225
+        },
+        "halfWidthMeters": 8.0
+      }
+    },
+    {
+      "index": 2,
+      "start": {
+        "center": {
+          "x": -503.9051,
+          "y": -249.47758
+        },
+        "forward": {
+          "x": -0.71760225,
+          "y": -0.69645315
+        },
+        "normal": {
+          "x": 0.69645315,
+          "y": -0.71760225
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": -176.24895,
+          "y": 48.647144
+        },
+        "forward": {
+          "x": 0.5012374,
+          "y": 0.8653099
+        },
+        "normal": {
+          "x": -0.8653099,
+          "y": 0.5012374
+        },
+        "halfWidthMeters": 8.0
+      }
+    },
+    {
+      "index": 3,
+      "start": {
+        "center": {
+          "x": -176.24895,
+          "y": 48.647144
+        },
+        "forward": {
+          "x": 0.5012374,
+          "y": 0.8653099
+        },
+        "normal": {
+          "x": -0.8653099,
+          "y": 0.5012374
+        },
+        "halfWidthMeters": 8.0
+      },
+      "finish": {
+        "center": {
+          "x": 366.3447,
+          "y": 279.3952
+        },
+        "forward": {
+          "x": -0.9593369,
+          "y": 0.28226373
+        },
+        "normal": {
+          "x": -0.28226373,
+          "y": -0.9593369
+        },
+        "halfWidthMeters": 10.0
+      }
+    }
+  ]
+}

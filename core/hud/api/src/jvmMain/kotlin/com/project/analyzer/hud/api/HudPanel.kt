@@ -12,6 +12,7 @@ public interface HudPanel {
     public val defaultAnchor: HudAnchor get() = HudAnchor.TopLeft
     public val defaultMarginPx: IntOffset get() = IntOffset(16, 16)
     public val hasSettings: Boolean get() = false
+    public val isDevOnly: Boolean get() = false
 
     @Composable
     public fun DemoContent(modifier: Modifier) {

@@ -4,8 +4,8 @@ import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.settings.InputHudSettings
 import com.project.analyzer.inputs.settings.repository.InputHudSettingsRepository
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.utils.ext.orZero
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn

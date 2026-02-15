@@ -23,6 +23,7 @@ import com.project.analyzer.navigation.impl.AppNavGraph
 import com.project.analyzer.navigation.impl.rememberNavigationState
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
+import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
 import org.jetbrains.compose.resources.painterResource
 
@@ -36,7 +37,7 @@ fun WindowScope.App(
     val items = remember {
         listOf(
             NavItem(Root.Live, "Live", Icons.Filled.Live),
-//            NavItem(Root.Session, "Session", Icons.Outlined.AccountBox),
+            NavItem(Root.Session, "Session", Icons.Filled.Session),
 //            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
             NavItem(Root.Settings, "Settings", Icons.Filled.Settings)
         )

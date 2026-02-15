@@ -24,8 +24,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.project.analyzer.live.Res.Res
-import com.project.analyzer.live.Res.fuel
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.fuel
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.painterResource
 

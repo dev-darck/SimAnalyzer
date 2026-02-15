@@ -2,15 +2,18 @@ package com.project.analyzer.fuel.data
 
 import com.project.analyzer.fuel.data.model.SavedFuelData
 import com.project.analyzer.fuel.domain.repository.FuelRepository
+import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.SessionPref
 import com.project.analyzer.preference.api.StringPrefKey
 import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 @Inject
+@SingleIn(HudScope::class)
 internal class FuelRepositoryImpl(
     @param:SessionPref
     private val preference: Preference,

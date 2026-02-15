@@ -5,8 +5,8 @@ import com.project.analyzer.fuel.domain.model.FuelEstimate
 import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.math.Ewma
 import com.project.analyzer.math.MathEps.EPS_9_DOUBLE
-import com.project.analyzer.telemetry.ac.api.contract.LapValidity
-import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
+import com.project.analyzer.telemetry.api.contract.LapValidity
+import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import dev.zacsweers.metro.Inject
 import kotlin.math.max
 import kotlin.math.min

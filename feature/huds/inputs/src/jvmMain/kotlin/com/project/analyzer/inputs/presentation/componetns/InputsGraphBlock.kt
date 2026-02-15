@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -23,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.project.analyzer.inputs.presentation.InputsHudUiState
 import com.project.analyzer.inputs.presentation.model.InputsSeries
 import com.project.analyzer.theme.SimAnalyzerTheme
+import kotlin.math.roundToInt
 
 private val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
 
@@ -31,6 +33,11 @@ internal fun InputsGraphBlock(
     state: InputsHudUiState,
     modifier: Modifier = Modifier
 ) {
+    val throttlePath = remember { Path() }
+    val brakePath = remember { Path() }
+    val clutchPath = remember { Path() }
+    val steerPath = remember { Path() }
+
     Row(modifier = modifier) {
 
         if (state.settings.showLegend) {
@@ -113,7 +120,8 @@ internal fun InputsGraphBlock(
                     plotW = plotW,
                     yMap = ::yPedal,
                     pick = { t, _, _, _ -> t },
-                    color = tColor
+                    color = tColor,
+                    path = throttlePath
                 )
             }
             if (state.settings.showBrake) {
@@ -123,7 +131,8 @@ internal fun InputsGraphBlock(
                     plotW = plotW,
                     yMap = ::yPedal,
                     pick = { _, b, _, _ -> b },
-                    color = bColor
+                    color = bColor,
+                    path = brakePath
                 )
             }
             if (state.settings.showClutch) {
@@ -133,7 +142,8 @@ internal fun InputsGraphBlock(
                     plotW = plotW,
                     yMap = ::yPedal,
                     pick = { _, _, c, _ -> c },
-                    color = cColor
+                    color = cColor,
+                    path = clutchPath
                 )
             }
             if (state.settings.showSteer) {
@@ -143,7 +153,8 @@ internal fun InputsGraphBlock(
                     plotW = plotW,
                     yMap = ::ySteer,
                     pick = { _, _, _, s -> s },
-                    color = sColor
+                    color = sColor,
+                    path = steerPath
                 )
             }
         }
@@ -156,16 +167,19 @@ private fun DrawScope.drawSeries(
     plotW: Float,
     yMap: (Float) -> Float,
     pick: (t: Float, b: Float, c: Float, s: Float) -> Float,
-    color: Color
+    color: Color,
+    path: Path
 ) {
     val n = series.size
     if (n < 2) return
 
     val dx = plotW / (n - 1).toFloat()
-    val path = Path()
+    val maxPoints = plotW.roundToInt().coerceAtLeast(2)
+    val step = ((n - 1) + (maxPoints - 2)) / (maxPoints - 1)
+    path.reset()
 
     var first = true
-    series.forEachOldestToNewest { i, t, b, c, s ->
+    series.forEachOldestToNewest(step = step) { i, t, b, c, s ->
         val x = left + i * dx
         val v = pick(t, b, c, s)
         val y = yMap(v)

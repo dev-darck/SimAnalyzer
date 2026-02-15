@@ -10,13 +10,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.settings.presentation.components.AppearanceBlock
+import com.analyzer.settings.presentation.components.DevSettingsBlock
 import com.analyzer.settings.presentation.components.HudSetupBlock
 import com.analyzer.settings.presentation.components.TelemetryAcquisitionBlock
+import com.analyzer.settings.presentation.components.TelemetryGameSelectionBlock
 import com.project.analyzer.chooser.FileChooserDialog
 import com.project.analyzer.chooser.SelectionMode
 import com.project.analyzer.chooser.rememberFileChooserState
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
+import com.project.analyzer.settings.BuildConfig
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -89,13 +92,43 @@ private fun Screen(
                 samplingRateHz = state.samplingRateHz,
                 storageLocation = state.storageLocation,
                 storageLocationError = state.storageLocationError,
+                storageSizeLabel = state.storageSizeLabel,
+                recordingEnabled = state.recordingEnabled,
+                recordingWarning = state.recordingWarning,
+                maxRecordedLaps = state.maxRecordedLaps,
                 onSamplingRateChange = {
                     dispatch(SettingsIntent.ChangeSamplingRate(it))
+                },
+                onStorageLocationChange = {
+                    dispatch(SettingsIntent.ChangeStorageLocation(it))
+                },
+                onRecordingEnabledChange = {
+                    dispatch(SettingsIntent.ChangeRecordingEnabled(it))
+                },
+                onMaxRecordedLapsChange = {
+                    dispatch(SettingsIntent.ChangeMaxRecordedLaps(it))
                 },
                 onBrowseClick = {
                     directoryChooserState.show()
                 }
             )
+        }
+        item("TelemetryGameSelectionBlock") {
+            TelemetryGameSelectionBlock(
+                modifier = Modifier.fillMaxHeight(),
+                selectionUi = state.gameSelectionUi,
+                onSelectionChange = { selection ->
+                    dispatch(SettingsIntent.ChangeGameSelection(selection))
+                }
+            )
+        }
+        if (BuildConfig.IS_DEBUG) {
+            item("DevSettingsBlock") {
+                DevSettingsBlock(
+                    modifier = Modifier.fillMaxHeight(),
+                    onOpen = { navigateTo(Route.SettingsRoot.DevSettings) }
+                )
+            }
         }
     }
 

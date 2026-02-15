@@ -13,7 +13,7 @@ internal fun Project.configureComposeResources() {
     compose.apply {
         extensions.configure<ResourcesExtension> {
             generateResClass = ResourceClassGeneration.Always
-            packageOfResClass = "com.project.analyzer.${project.name}.Res"
+            packageOfResClass = "com.project.analyzer${project.path.replace(":", ".")}.Res"
         }
     }
 

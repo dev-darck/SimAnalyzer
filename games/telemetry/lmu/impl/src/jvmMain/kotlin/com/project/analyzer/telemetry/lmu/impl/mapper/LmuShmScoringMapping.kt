@@ -1,0 +1,63 @@
+package com.project.analyzer.telemetry.lmu.impl.mapper
+
+import com.project.analyzer.telemetry.lmu.api.model.LmuVehicleScoring
+import com.project.analyzer.telemetry.lmu.impl.shm.structure.Rf2VehicleScoring
+import com.project.analyzer.utils.shm.toCString
+
+internal fun Rf2VehicleScoring.toModel(): LmuVehicleScoring {
+    return LmuVehicleScoring(
+        id = id,
+        driverName = driverName.toCString(),
+        vehicleName = vehicleName.toCString(),
+        totalLaps = totalLaps.toInt(),
+        sector = sector.toInt(),
+        finishStatus = finishStatus.toInt(),
+        lapDist = lapDist,
+        pathLateral = pathLateral,
+        trackEdge = trackEdge,
+        bestSector1 = bestSector1,
+        bestSector2 = bestSector2,
+        bestLapTime = bestLapTime,
+        lastSector1 = lastSector1,
+        lastSector2 = lastSector2,
+        lastLapTime = lastLapTime,
+        curSector1 = curSector1,
+        curSector2 = curSector2,
+        numPitstops = numPitstops.toInt(),
+        numPenalties = numPenalties.toInt(),
+        isPlayer = isPlayer.toBoolean(),
+        control = control.toInt(),
+        inPits = inPits.toBoolean(),
+        place = place.toUnsignedInt(),
+        vehClass = vehClass.toCString(),
+        timeBehindNext = timeBehindNext,
+        lapsBehindNext = lapsBehindNext,
+        timeBehindLeader = timeBehindLeader,
+        lapsBehindLeader = lapsBehindLeader,
+        lapStartEt = lapStartEt,
+        pos = pos.toVec3(),
+        localVel = localVel.toVec3(),
+        localAccel = localAccel.toVec3(),
+        ori = ori.toOriList(),
+        localRot = localRot.toVec3(),
+        localRotAccel = localRotAccel.toVec3(),
+        headlights = headlights.toUnsignedInt(),
+        pitState = pitState.toUnsignedInt(),
+        serverScored = serverScored.toUnsignedInt(),
+        individualPhase = individualPhase.toUnsignedInt(),
+        qualification = qualification,
+        timeBehindFastest = timeBehindFastest,
+        lapsBehindFastest = lapsBehindFastest,
+        timeBehindRisk = timeBehindRisk,
+        lapsBehindRisk = lapsBehindRisk,
+        isGhost = isGhost.toBoolean(),
+        numDuplicates = numDuplicates.toUnsignedInt(),
+        safetyCarInstruction = safetyCarInstruction.toUnsignedInt(),
+        safetyCarPrivateInstruction = safetyCarPrivateInstruction.toUnsignedInt(),
+        pitLaneStartDist = pitLaneStartDist,
+        pitLaneEndDist = pitLaneEndDist,
+        maxSpeed = maxSpeed,
+        vehicleFileName = vehicleFileName.toCString(),
+        expansion = expansion.copyOf()
+    )
+}

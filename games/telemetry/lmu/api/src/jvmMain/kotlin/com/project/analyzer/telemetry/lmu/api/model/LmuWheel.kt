@@ -1,0 +1,33 @@
+package com.project.analyzer.telemetry.lmu.api.model
+
+public data class LmuWheel(
+    val suspensionDeflection: Double,
+    val rideHeight: Double,
+    val suspensionForce: Double,
+    val brakeTemp: Double,
+    val brakePressure: Double,
+    val rotation: Double,
+    val lateralPatchVel: Double,
+    val longitudinalPatchVel: Double,
+    val lateralGroundVel: Double,
+    val longitudinalGroundVel: Double,
+    val camber: Double,
+    val lateralForce: Double,
+    val longitudinalForce: Double,
+    val tireLoad: Double,
+    val gripFraction: Double,
+    val pressure: Double,
+    val temperature: DoubleArray,
+    val wear: Double,
+    val terrainName: String,
+    val surfaceType: Int,
+    val flat: Boolean,
+    val detached: Boolean,
+    val staticUndeflectedRadius: Int,
+    val verticalTireDeflection: Double,
+    val wheelYLocation: Double,
+    val toe: Double,
+    val tireCarcassTemperature: Double,
+    val tireInnerLayerTemperature: DoubleArray,
+    val expansion: ByteArray
+)

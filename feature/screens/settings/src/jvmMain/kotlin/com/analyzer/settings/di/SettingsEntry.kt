@@ -10,8 +10,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
 @Inject
-@SingleIn(NavigationScope::class)
 @ContributesIntoSet(NavigationScope::class)
+@SingleIn(NavigationScope::class)
 class SettingsEntry : RouteEntryBuilder {
 
     override fun NavigationEntryBuilder.build() {

@@ -5,12 +5,14 @@ import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.fuel.domain.model.FuelResult
 import com.project.analyzer.fuel.domain.predictor.FuelConsumptionEngine
 import com.project.analyzer.fuel.domain.repository.FuelRepository
-import com.project.analyzer.telemetry.ac.api.contract.SessionInfo
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent
-import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
+import com.project.analyzer.hud.api.HudScope
+import com.project.analyzer.telemetry.api.contract.SessionInfo
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
+import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 
 @Inject
+@SingleIn(HudScope::class)
 internal class FuelConsumptionUseCaseImpl(
     private val telemetry: TelemetryLifecycle,
     private val engine: FuelConsumptionEngine,

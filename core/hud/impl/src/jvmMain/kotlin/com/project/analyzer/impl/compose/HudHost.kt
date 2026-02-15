@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -37,6 +38,10 @@ internal fun HudHost(
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
     val panelSizes = remember { mutableStateMapOf<String, IntSize>() }
 
+    LaunchedEffect(state.inputLocked) {
+        overlayController.setInputLocked(state.inputLocked)
+    }
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -55,9 +60,11 @@ internal fun HudHost(
                             anchor = panel.defaultAnchor,
                             margin = panel.defaultMarginPx,
                             container = containerSize,
-                            panel = panelSizes.get(id)
+                            panel = panelSizes[id]
                         ),
                         onIntent = dispatch,
+                        inputLocked = state.inputLocked,
+                        onToggleInputLock = viewModel::toggleInputLock,
                         hitRegions = hitRegions,
                         overlayController = overlayController,
                         modifier = Modifier.zIndex(panel.zIndex.toFloat())

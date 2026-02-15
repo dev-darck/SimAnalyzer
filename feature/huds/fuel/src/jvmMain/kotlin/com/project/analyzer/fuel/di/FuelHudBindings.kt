@@ -10,7 +10,7 @@ import com.project.analyzer.fuel.presentation.viewmodel.FuelHudViewModel
 import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.SessionPref
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
@@ -19,8 +19,8 @@ import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.serialization.json.Json
 
-@BindingContainer
 @ContributesTo(HudScope::class)
+@BindingContainer
 object FuelHudBindings {
 
     @Provides
@@ -41,11 +41,11 @@ object FuelHudBindings {
     private fun provideFuelRepository(
         @SessionPref
         preference: Preference,
-        son: Json
+        json: Json
     ): FuelRepository =
         FuelRepositoryImpl(
             preference = preference,
-            json = son
+            json = json
         )
 
     @Provides

@@ -28,6 +28,11 @@ internal class HudViewModel(
             }
         }
         viewModelScope.launch {
+            preferences.observeInputLocked().collect { locked ->
+                _state.update { current -> current.copy(inputLocked = locked) }
+            }
+        }
+        viewModelScope.launch {
             loadPositions()
         }
     }
@@ -40,6 +45,14 @@ internal class HudViewModel(
             is HudIntent.Restart -> restartPanel(intent.id)
             is HudIntent.HideAll -> hideAllPanels()
             is HudIntent.SavePosition -> savePosition(intent.id, intent.offset)
+        }
+    }
+
+    fun toggleInputLock() {
+        val next = !_state.value.inputLocked
+        _state.update { it.copy(inputLocked = next) }
+        viewModelScope.launch {
+            preferences.setInputLocked(next)
         }
     }
 

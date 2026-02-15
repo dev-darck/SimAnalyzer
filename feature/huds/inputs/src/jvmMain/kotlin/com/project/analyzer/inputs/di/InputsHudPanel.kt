@@ -19,8 +19,8 @@ import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Inject
-@SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
+@SingleIn(HudScope::class)
 class InputsHudPanel : HudPanel {
 
     override val id: String = "inputs"

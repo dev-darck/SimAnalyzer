@@ -1,10 +1,12 @@
 package com.project.analyzer.live.domain.usecase
 
+import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.live.domain.mapper.LiveScreenStateMapper
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycle
-import com.project.analyzer.telemetry.ac.api.contract.TelemetryLifecycleEvent
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.scan
 
 @Inject
+@SingleIn(ScreenScope::class)
 internal class LiveTelemetryUseCaseImpl(
     private val telemetry: TelemetryLifecycle,
     private val mapper: LiveScreenStateMapper,
