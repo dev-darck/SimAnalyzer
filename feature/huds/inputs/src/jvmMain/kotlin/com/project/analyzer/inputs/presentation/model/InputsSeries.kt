@@ -55,4 +55,27 @@ internal class InputsSeries(
             block(i, throttle[idx], brake[idx], clutch[idx], steer[idx])
         }
     }
+
+    inline fun forEachOldestToNewest(step: Int, block: (i: Int, t: Float, b: Float, c: Float, s: Float) -> Unit) {
+        if (step <= 1) {
+            forEachOldestToNewest(block)
+            return
+        }
+
+        val n = size
+        if (n <= 0) return
+
+        val start = if (n < capacity) 0 else head
+        var i = 0
+        while (i < n) {
+            val idx = (start + i) % capacity
+            block(i, throttle[idx], brake[idx], clutch[idx], steer[idx])
+            i += step
+        }
+
+        if ((n - 1) % step != 0) {
+            val idx = (start + (n - 1)) % capacity
+            block(n - 1, throttle[idx], brake[idx], clutch[idx], steer[idx])
+        }
+    }
 }

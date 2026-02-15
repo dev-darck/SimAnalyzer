@@ -9,10 +9,10 @@ import com.project.analyzer.live.presentation.components.Sector
 import com.project.analyzer.live.presentation.components.ValueStatus
 import com.project.analyzer.live.presentation.components.WheelPos
 import com.project.analyzer.live.presentation.components.WheelUi
-import com.project.analyzer.telemetry.ac.api.model.TelemetryFrame
-import com.project.analyzer.telemetry.ac.api.model.car.wheels.WheelFrame
-import com.project.analyzer.telemetry.ac.api.model.lap.SectorFrame
-import com.project.analyzer.telemetry.ac.api.model.lap.SectorStatus
+import com.project.analyzer.telemetry.api.model.TelemetryFrame
+import com.project.analyzer.telemetry.api.model.car.wheels.WheelFrame
+import com.project.analyzer.telemetry.api.model.lap.SectorFrame
+import com.project.analyzer.telemetry.api.model.lap.SectorStatus
 import com.project.analyzer.utils.ext.formatDeltaTime
 import com.project.analyzer.utils.ext.formatSectorTime
 import com.project.analyzer.utils.ext.fromMsToLapTime

@@ -10,8 +10,8 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 
-@BindingContainer
 @ContributesTo(CrashScope::class)
+@BindingContainer
 object CrashBindings {
 
     @Provides
@@ -20,12 +20,12 @@ object CrashBindings {
         copyReportUseCase: CopyReportUseCase,
         openFileUseCase: OpenFileUseCase,
         openLogsFolderUseCase: OpenLogsFolderUseCase,
-        reportOnGitHubUseCase: ReportOnGitHubUseCase
+        reportOnGitHubUseCase: ReportOnGitHubUseCase,
     ): CrashViewModel = CrashViewModel(
         copyReportUseCase = copyReportUseCase,
         openFileUseCase = openFileUseCase,
         openLogsFolderUseCase = openLogsFolderUseCase,
-        reportOnGitHubUseCase = reportOnGitHubUseCase
+        reportOnGitHubUseCase = reportOnGitHubUseCase,
     )
 
     @Provides
@@ -43,6 +43,6 @@ object CrashBindings {
     @Provides
     @SingleIn(CrashScope::class)
     fun provideReportOnGitHubUseCase(
-        copyReportUseCase: CopyReportUseCase
+        copyReportUseCase: CopyReportUseCase,
     ): ReportOnGitHubUseCase = ReportOnGitHubUseCase(copyReportUseCase)
 }

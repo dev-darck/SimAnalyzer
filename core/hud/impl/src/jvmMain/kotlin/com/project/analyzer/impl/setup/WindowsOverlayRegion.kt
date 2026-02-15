@@ -2,6 +2,7 @@ package com.project.analyzer.impl.setup
 
 import androidx.compose.ui.unit.IntRect
 import com.sun.jna.Native
+import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.GDI32
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef
@@ -21,10 +22,10 @@ internal object WindowsOverlayRegion {
             return
         }
 
-        val hwnd = WinDef.HWND(Native.getComponentPointer(window))
+        val hwnd = resolveHwnd(window) ?: return
 
         val rc = WinDef.RECT()
-        user32.GetWindowRect(hwnd, rc)
+        if (!user32.GetWindowRect(hwnd, rc)) return
         val physW = (rc.right - rc.left).coerceAtLeast(1)
         val physH = (rc.bottom - rc.top).coerceAtLeast(1)
 
@@ -52,14 +53,22 @@ internal object WindowsOverlayRegion {
     }
 
     private fun setEmptyRegion(window: Window) {
-        val hwnd = WinDef.HWND(Native.getComponentPointer(window))
+        val hwnd = resolveHwnd(window) ?: return
         val empty = gdi32.CreateRectRgn(0, 0, 0, 0)
         val ok = user32.SetWindowRgn(hwnd, empty, true)
         if (ok == 0) gdi32.DeleteObject(empty)
     }
 
     fun resetToFullWindow(window: Window) {
-        val hwnd = WinDef.HWND(Native.getComponentPointer(window))
+        val hwnd = resolveHwnd(window) ?: return
         user32.SetWindowRgn(hwnd, null, true)
+    }
+
+    private fun resolveHwnd(window: Window): WinDef.HWND? {
+        if (!window.isDisplayable) return null
+        val ptr = Native.getComponentPointer(window)
+        if (ptr == Pointer.NULL) return null
+        val hwnd = WinDef.HWND(ptr)
+        return if (user32.IsWindow(hwnd)) hwnd else null
     }
 }

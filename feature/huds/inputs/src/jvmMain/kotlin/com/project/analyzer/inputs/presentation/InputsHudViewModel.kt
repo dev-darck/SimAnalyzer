@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.domain.usecase.InputsUseCase
 import com.project.analyzer.inputs.presentation.model.InputsSeries
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,6 +20,7 @@ import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.max
 
+@Inject
 internal class InputsHudViewModel(
     private val useCase: InputsUseCase,
 ) : ViewModel() {

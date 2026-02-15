@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.compose.HudPreferences
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@Inject
 internal class HudSettingsViewModel(
     private val preferences: HudPreferences,
     private val panels: Provider<Set<HudPanel>>,
@@ -21,7 +23,12 @@ internal class HudSettingsViewModel(
 
     init {
         viewModelScope.launch {
-            _state.update { it.copy(panels = panels.invoke().toList()) }
+            _state.update {
+                it.copy(
+                    panels = panels.invoke()
+                    .filter { panel -> !panel.isDevOnly }
+                    .sortedBy { panel -> panel.id })
+            }
         }
 
         viewModelScope.launch {

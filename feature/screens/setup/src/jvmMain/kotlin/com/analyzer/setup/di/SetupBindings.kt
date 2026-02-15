@@ -4,8 +4,6 @@ import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 
-@BindingContainer
 @ContributesTo(ScreenScope::class)
-internal object SetupBindings {
-
-}
+@BindingContainer
+object SetupBindings

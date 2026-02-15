@@ -1,32 +1,25 @@
-import com.project.analyzer.applyPlugin
-import com.project.analyzer.deps
-import com.project.analyzer.dsl.AppModuleExtension
-import com.project.analyzer.dsl.ModuleExtension
+import com.project.analyzer.scope.ProjectScope
 import org.gradle.api.Project
 
-fun Project.app(block: AppModuleExtension.() -> Unit = {}) {
-    pluginManager.applyPlugin(deps.plugins.convention.app.plugin)
+private const val APP_PLUGIN_ID = "convention-compose-app"
+private const val MODULE_API_PLUGIN_ID = "convention-module-api"
+private const val MODULE_IMPL_PLUGIN_ID = "convention-module-impl"
 
-    val extension = extensions.findByType(AppModuleExtension::class.java)
-        ?: extensions.create("app", AppModuleExtension::class.java, this)
-
-    extension.block()
+internal fun Project.projectScope(block: ProjectScope.() -> Unit) {
+    ProjectScope(this).block()
 }
 
-fun Project.moduleApi(block: ModuleExtension.() -> Unit = {}) {
-    pluginManager.applyPlugin(deps.plugins.convention.module.api.plugin)
-
-    val extension = extensions.findByType(ModuleExtension::class.java)
-        ?: extensions.create("moduleApi", ModuleExtension::class.java, this)
-
-    extension.block()
+fun Project.app(block: ProjectScope.() -> Unit = {}) {
+    pluginManager.apply(APP_PLUGIN_ID)
+    projectScope(block)
 }
 
-fun Project.moduleImpl(block: ModuleExtension.() -> Unit = {}) {
-    pluginManager.applyPlugin(deps.plugins.convention.module.impl.plugin)
+fun Project.moduleApi(block: ProjectScope.() -> Unit = {}) {
+    pluginManager.apply(MODULE_API_PLUGIN_ID)
+    projectScope(block)
+}
 
-    val extension = extensions.findByType(ModuleExtension::class.java)
-        ?: extensions.create("moduleImpl", ModuleExtension::class.java, this)
-
-    extension.block()
+fun Project.moduleImpl(block: ProjectScope.() -> Unit = {}) {
+    pluginManager.apply(MODULE_IMPL_PLUGIN_ID)
+    projectScope(block)
 }

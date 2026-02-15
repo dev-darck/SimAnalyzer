@@ -13,8 +13,8 @@ import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
-@BindingContainer
 @ContributesTo(ScreenScope::class)
+@BindingContainer
 interface SettingsBindings {
 
     @Binds
@@ -25,9 +25,12 @@ interface SettingsBindings {
         @Provides
         @IntoMap
         @ViewModelKey(SettingsViewModel::class)
-        fun provideSettingsViewModel(
+        private fun provideSettingsViewModel(
             themeRepository: ThemeRepository,
             telemetrySettingsRepository: SettingsRepository
-        ): ViewModel = SettingsViewModel(themeRepository, telemetrySettingsRepository)
+        ): ViewModel = SettingsViewModel(
+            themeRepository = themeRepository,
+            telemetrySettingsRepository = telemetrySettingsRepository
+        )
     }
 }

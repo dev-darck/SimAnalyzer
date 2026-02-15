@@ -8,9 +8,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.util.Locale
 
 internal fun Project.configureDesktopBuildConfig(
-    block: DesktopBuildConfigSpec.() -> Unit
+    spec: DesktopBuildConfigSpec
 ) {
-    val spec = DesktopBuildConfigSpec().apply(block)
     val buildType = detectDesktopBuildType()
     val isDebug = buildType == DesktopBuildType.Debug
     val isPortable = detectPortableFlag()
@@ -82,7 +81,7 @@ internal fun Project.configureDesktopBuildConfig(
     }
 }
 
-class DesktopBuildConfigSpec {
+internal class DesktopBuildConfigSpec {
 
     var packageName: String? = null
 
@@ -95,7 +94,7 @@ class DesktopBuildConfigSpec {
     fun release(block: Fields.() -> Unit) = release.apply(block)
 }
 
-class Fields {
+internal class Fields {
 
     internal val fields = mutableListOf<Field>()
 
@@ -105,13 +104,13 @@ class Fields {
     fun long(name: String, value: Long) = fields.add(Field("Long", name, "${value}L"))
 }
 
-data class Field(
+internal data class Field(
     val type: String,
     val name: String,
     val valueLiteral: String
 )
 
-enum class DesktopBuildType {
+internal enum class DesktopBuildType {
     Debug,
     Release
 }

@@ -9,9 +9,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
+import com.project.analyzer.game.impl.GameDetector
+import com.project.analyzer.game.impl.GameProfiles
 import com.project.analyzer.hud.api.HudPanel
-import com.project.analyzer.impl.setup.game.GameConfig
-import com.project.analyzer.impl.setup.game.GameDetector
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.impl.setup.region.internal.InMemoryHitRegions
@@ -48,13 +48,12 @@ fun OverlayWindow(
         }
 
         val gameDetector = remember {
-            val configs = listOf(
-                GameConfig(
-                    titlePatterns = listOf("Evo"),
-                    processNames = listOf("evo.exe", "AssettoCorsaEVO.exe", "acevo", "evo")
-                )
+            val configs = GameProfiles.detectorConfigs()
+            GameDetector(
+                configs = configs,
+                requireForeground = true,
+                coroutineDispatcher = winApiDispatcher
             )
-            GameDetector(configs = configs, coroutineDispatcher = winApiDispatcher)
         }
 
         val overlayController = remember(gameDetector, hitRegions) {

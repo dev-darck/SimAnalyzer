@@ -8,6 +8,7 @@ import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
 import com.project.analyzer.fuel.domain.usecase.FuelConsumptionUseCase
 import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.map.toUiState
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
 
+@Inject
 internal class FuelHudViewModel(
     private val useCase: FuelConsumptionUseCase,
 ) : ViewModel() {

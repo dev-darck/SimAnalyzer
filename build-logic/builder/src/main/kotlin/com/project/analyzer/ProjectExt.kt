@@ -11,15 +11,15 @@ import org.gradle.plugin.use.PluginDependency
  * workaround to make version catalog accessible in convention plugins
  * https://github.com/gradle/gradle/issues/15383
  */
-val Project.deps: LibrariesForLibs
+internal val Project.deps: LibrariesForLibs
     get() = if (project.name != "gradle-kotlin-dsl-accessors") {
         the()
     } else {
         error("VersionCatalog can't work without gradle-kotlin-dsl-accessors")
     }
 
-fun PluginManager.applyPlugin(provider: Provider<PluginDependency>) =
+internal fun PluginManager.applyPlugin(provider: Provider<PluginDependency>) =
     apply(provider.plugin)
 
-val Provider<PluginDependency>.plugin: String
+internal val Provider<PluginDependency>.plugin: String
     get() = get().pluginId

@@ -23,6 +23,7 @@ public data class Vec3(
  * Converts a Vec3 to Vec2 using XZ plane. Returns null if coordinates are invalid.
  */
 public fun Vec3.toVec2XZIfValid(maxAbsCoordinate: Float): Vec2? {
+    if (!x.isFinite() || !z.isFinite()) return null
     if (x == 0f && z == 0f) return null
     if (abs(x) > maxAbsCoordinate || abs(z) > maxAbsCoordinate) return null
     return Vec2(x, z)

@@ -3,11 +3,10 @@ package com.project.analyzer.detekt
 import dev.detekt.gradle.Detekt
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.api.Project
-import org.gradle.internal.Actions.with
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 
-internal fun Project.configureDetekt(block: DetektExtension.() -> Unit = {}) = with(project) {
+internal fun Project.configureDetekt(block: DetektExtension.() -> Unit = {}) = project.run {
     extensions.configure<DetektExtension> {
         block()
         buildUponDefaultConfig.set(true)

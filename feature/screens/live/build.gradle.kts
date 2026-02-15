@@ -8,7 +8,7 @@ moduleImpl {
         projects.core.navigation.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.core.ui.jvmImpl
-        projects.core.telemetry.ac.api.jvmImpl
+        projects.core.telemetry.api.jvmImpl
         projects.core.utils.jvmImpl
         projects.core.math.jvmImpl
 

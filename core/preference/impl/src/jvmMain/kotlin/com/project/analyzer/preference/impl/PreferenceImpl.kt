@@ -10,6 +10,7 @@ import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.utils.AppDirectories
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -56,12 +57,15 @@ class PreferenceImpl(
                 if (e is IOException) emit(emptyPreferences()) else throw e
             }
             .map { preferences -> preferences[prefsKey] }
+            .distinctUntilChanged()
     }
 
     override fun <T> observe(
         key: Key<T>,
         default: T
-    ): Flow<T> = observe(key).map { it ?: default }
+    ): Flow<T> = observe(key)
+        .map { it ?: default }
+        .distinctUntilChanged()
 
     override suspend fun <T> contains(key: Key<T>): Boolean {
         val prefsKey = key.toPreferencesKey()

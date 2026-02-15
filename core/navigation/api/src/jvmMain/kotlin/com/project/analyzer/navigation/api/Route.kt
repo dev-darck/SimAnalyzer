@@ -26,7 +26,14 @@ public sealed class Route(
         public data object Session : SessionRoot(true)
 
         @Serializable
-        public data object SessionDetails : SessionRoot(false)
+        public data class SessionDetails(
+            public val sessionId: Long,
+        ) : SessionRoot(false) {
+
+            override fun equals(other: Any?): Boolean = other is SessionDetails
+
+            override fun hashCode(): Int = SessionDetails::class.hashCode()
+        }
     }
 
     @Serializable
@@ -44,5 +51,8 @@ public sealed class Route(
 
         @Serializable
         public data object HudSettings : SettingsRoot(false)
+
+        @Serializable
+        public data object DevSettings : SettingsRoot(false)
     }
 }

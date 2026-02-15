@@ -14,8 +14,8 @@ import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
-@BindingContainer
 @ContributesTo(HudScope::class)
+@BindingContainer
 interface InputsHudBindings {
 
     @Binds
@@ -29,7 +29,7 @@ interface InputsHudBindings {
         @Provides
         @IntoMap
         @ViewModelKey(InputsHudViewModel::class)
-        fun provideInputsHudViewModel(
+        private fun provideInputsHudViewModel(
             inputHudUseCase: InputsUseCase
         ): ViewModel = InputsHudViewModel(inputHudUseCase)
     }

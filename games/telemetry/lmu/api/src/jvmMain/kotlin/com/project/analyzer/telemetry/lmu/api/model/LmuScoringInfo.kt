@@ -1,0 +1,36 @@
+package com.project.analyzer.telemetry.lmu.api.model
+
+import com.project.analyzer.math.Vec3
+
+public data class LmuScoringInfo(
+    val trackName: String,
+    val session: Int,
+    val currentEt: Double,
+    val endEt: Double,
+    val maxLaps: Int,
+    val lapDist: Double,
+    val gamePhase: Int,
+    val yellowFlagState: Int,
+    val sectorFlag: IntArray,
+    val startLight: Int,
+    val numRedLights: Int,
+    val inRealtime: Boolean,
+    val playerName: String,
+    val plrFileName: String,
+    val darkCloud: Double,
+    val raining: Double,
+    val ambientTemp: Double,
+    val trackTemp: Double,
+    val wind: Vec3,
+    val minPathWetness: Double,
+    val maxPathWetness: Double,
+    val gameMode: Int,
+    val isPasswordProtected: Boolean,
+    val serverPort: Int,
+    val serverPublicIP: Long,
+    val maxPlayers: Int,
+    val serverName: String,
+    val startEt: Float,
+    val avgPathWetness: Double,
+    val expansion: ByteArray
+)
