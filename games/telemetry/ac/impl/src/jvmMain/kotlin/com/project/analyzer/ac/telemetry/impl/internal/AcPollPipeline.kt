@@ -36,7 +36,7 @@ internal class AcPollPipeline(
     private val snapshotPool = ArrayDeque<AcRawSnapshot>(SNAPSHOT_POOL_SIZE)
 
     private var boundSnapshot: AcRawSnapshot? = null
-    private val snapshotMemory = object : AcSharedMemory {
+    private val boundSnapshotMemory = object : AcSharedMemory {
         override val physics: SPageFilePhysics
             get() = requireBoundSnapshot().physics
 
@@ -60,20 +60,19 @@ internal class AcPollPipeline(
 
     init {
         repeat(SNAPSHOT_POOL_SIZE) {
-            snapshotPool.addLast(createSnapshot())
+            snapshotPool.addLast(newSnapshot())
         }
     }
 
     fun start(scope: CoroutineScope): Channel<PollResult> {
-        val existing = channel
-        if (existing != null) return existing
+        channel?.let { return it }
 
         val created = Channel<PollResult>(capacity = SNAPSHOT_POOL_SIZE + STATE_BUFFER_CAPACITY)
         channel = created
 
         pollJob = scope.launch(ensurePollDispatcher()) {
             pollLoop.start { result ->
-                enqueueResult(result, created)
+                handlePollResult(result, created)
             }
         }
 
@@ -96,58 +95,59 @@ internal class AcPollPipeline(
     }
 
     fun release(snapshot: AcRawSnapshot) {
-        releaseSnapshot(snapshot)
+        releaseToPool(snapshot)
     }
 
-    private fun enqueueResult(result: PollResult, channel: Channel<PollResult>) {
+    private fun handlePollResult(result: PollResult, channel: Channel<PollResult>) {
         when (result) {
-            is PollResult.StateChanged -> {
-                currentState = result.state
-                if (result.state == GameConnectionState.DISCONNECTED) {
-                    fallback.clear()
-                }
-                if (!channel.trySend(result).isSuccess) {
-                    logDrop("state_change", System.nanoTime())
-                }
-            }
-
-            is PollResult.Frame -> {
-                val pooled = acquireSnapshot()
-                if (pooled == null) {
-                    logDrop("pool_empty", result.snapshot.timestampNs)
-                    return
-                }
-
-                copySnapshot(result.snapshot, pooled)
-                readSnapshot(pooled)
-
-                try {
-                    fallback.patchIfNeeded(
-                        bindSnapshot(pooled),
-                        pooled.timestampNs.takeIf { it > 0L } ?: System.nanoTime(),
-                        currentState
-                    )
-                } catch (error: Exception) {
-                    releaseSnapshot(pooled)
-                    throw error
-                } finally {
-                    boundSnapshot = null
-                }
-
-                if (!channel.trySend(PollResult.Frame(pooled)).isSuccess) {
-                    releaseSnapshot(pooled)
-                    logDrop("queue_full", pooled.timestampNs)
-                }
-            }
+            is PollResult.StateChanged -> handleStateChanged(result, channel)
+            is PollResult.Frame -> handleFrame(result.snapshot, channel)
         }
     }
 
-    private fun drainPendingSnapshots(channel: Channel<PollResult>) {
-        while (true) {
-            val result = channel.tryReceive().getOrNull() ?: break
-            if (result is PollResult.Frame) {
-                releaseSnapshot(result.snapshot)
-            }
+    private fun handleStateChanged(result: PollResult.StateChanged, channel: Channel<PollResult>) {
+        currentState = result.state
+        if (result.state == GameConnectionState.DISCONNECTED) {
+            fallback.clear()
+        }
+        if (!channel.trySend(result).isSuccess) {
+            logDrop("state_change", System.nanoTime())
+        }
+    }
+
+    private fun handleFrame(source: AcRawSnapshot, channel: Channel<PollResult>) {
+        val pooled = acquireFromPool()
+        if (pooled == null) {
+            logDrop("pool_empty", source.timestampNs)
+            return
+        }
+
+        copySnapshot(source, pooled)
+        readSnapshot(pooled)
+
+        try {
+            patchWithFallback(pooled)
+        } catch (error: Exception) {
+            releaseToPool(pooled)
+            throw error
+        }
+
+        if (!channel.trySend(PollResult.Frame(pooled)).isSuccess) {
+            releaseToPool(pooled)
+            logDrop("queue_full", pooled.timestampNs)
+        }
+    }
+
+    private fun patchWithFallback(snapshot: AcRawSnapshot) {
+        boundSnapshot = snapshot
+        try {
+            fallback.patchIfNeeded(
+                shm = boundSnapshotMemory,
+                loopStartNanos = snapshot.timestampNs.takeIf { it > 0L } ?: System.nanoTime(),
+                gameState = currentState
+            )
+        } finally {
+            boundSnapshot = null
         }
     }
 
@@ -158,17 +158,26 @@ internal class AcPollPipeline(
         }
     }
 
-    private fun acquireSnapshot(): AcRawSnapshot? = synchronized(poolLock) {
+    private fun drainPendingSnapshots(channel: Channel<PollResult>) {
+        while (true) {
+            val result = channel.tryReceive().getOrNull() ?: break
+            if (result is PollResult.Frame) {
+                releaseToPool(result.snapshot)
+            }
+        }
+    }
+
+    private fun acquireFromPool(): AcRawSnapshot? = synchronized(poolLock) {
         if (snapshotPool.isEmpty()) null else snapshotPool.removeFirst()
     }
 
-    private fun releaseSnapshot(snapshot: AcRawSnapshot) {
+    private fun releaseToPool(snapshot: AcRawSnapshot) {
         synchronized(poolLock) {
             snapshotPool.addLast(snapshot)
         }
     }
 
-    private fun createSnapshot(): AcRawSnapshot =
+    private fun newSnapshot(): AcRawSnapshot =
         AcRawSnapshot(
             physics = SPageFilePhysics(),
             graphics = SPageFileGraphics(),
@@ -203,11 +212,6 @@ internal class AcPollPipeline(
     private fun copyStatics(source: SPageFileStatic, target: SPageFileStatic) {
         source.pointer.read(0, staticsBuffer, 0, staticsSize)
         target.pointer.write(0, staticsBuffer, 0, staticsSize)
-    }
-
-    private fun bindSnapshot(snapshot: AcRawSnapshot): AcSharedMemory {
-        boundSnapshot = snapshot
-        return snapshotMemory
     }
 
     private fun requireBoundSnapshot(): AcRawSnapshot =

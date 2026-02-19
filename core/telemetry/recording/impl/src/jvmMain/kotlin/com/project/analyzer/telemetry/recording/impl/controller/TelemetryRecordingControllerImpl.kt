@@ -61,18 +61,24 @@ class TelemetryRecordingControllerImpl(
     )
 
     private var job: Job? = null
+    private var startupCleanupJob: Job? = null
     private var state: ControllerState = ControllerState()
 
     override suspend fun start() {
         if (job?.isActive == true) return
-        cleanupUnsavedSessions(reason = "app_start")
+        startupCleanupJob?.cancelAndJoin()
 
         job = scope.launch {
             inputFlow().collect(::handleInput)
         }
+        startupCleanupJob = scope.launch {
+            cleanupUnsavedSessions(reason = "app_start")
+        }
     }
 
     override suspend fun stop() {
+        startupCleanupJob?.cancelAndJoin()
+        startupCleanupJob = null
         job?.cancelAndJoin()
         job = null
 

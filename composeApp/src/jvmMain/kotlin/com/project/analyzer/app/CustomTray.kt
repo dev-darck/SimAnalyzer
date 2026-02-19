@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
@@ -52,6 +53,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
@@ -61,6 +63,7 @@ import androidx.compose.ui.window.rememberDialogState
 import com.project.analyzer.composeApp.Res.Res
 import com.project.analyzer.composeApp.Res.tray_icon
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.icons.Session
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.imageResource
@@ -73,15 +76,19 @@ import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.WindowEvent
 import java.awt.event.WindowFocusListener
+import kotlin.time.Duration.Companion.milliseconds
 
-private const val ShowDelay = 50L
+private val SHOW_DELAY_MS = 50.milliseconds.inWholeMilliseconds
+private val MENU_WIDTH_DP = 228.dp
+private val MENU_HEIGHT_DP = 232.dp
 
 @Composable
 fun ApplicationScope.CustomTray(
     brandName: String,
     overlayVisible: Boolean,
     onMainAction: () -> Unit,
-    onOverlayToggle: () -> Unit
+    onOverlayToggle: () -> Unit,
+    onOpenSession: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var menuPosition by remember { mutableStateOf(Pair(0, 0)) }
@@ -93,7 +100,6 @@ fun ApplicationScope.CustomTray(
         if (!SystemTray.isSupported()) return@DisposableEffect onDispose { }
 
         val tray = SystemTray.getSystemTray()
-
         val awt: Image = trayBitmap.toAwtImage()
 
         val trayIcon = TrayIcon(awt, BuildConfig.APP_NAME).apply {
@@ -109,7 +115,7 @@ fun ApplicationScope.CustomTray(
                         MouseEvent.BUTTON3 -> {
                             menuPosition = Pair(e.xOnScreen, e.yOnScreen)
                             scope.launch {
-                                delay(ShowDelay)
+                                delay(SHOW_DELAY_MS)
                                 showMenu = true
                             }
                         }
@@ -136,6 +142,10 @@ fun ApplicationScope.CustomTray(
                 onMainAction()
                 showMenu = false
             },
+            onOpenSession = {
+                onOpenSession()
+                showMenu = false
+            },
             onExit = ::exitApplication
         )
     }
@@ -149,15 +159,14 @@ private fun TrayMenuWindow(
     onDismiss: () -> Unit,
     onOverlayToggle: () -> Unit,
     onOpenApp: () -> Unit,
+    onOpenSession: () -> Unit,
     onExit: () -> Unit
 ) {
-    val menuWidthDp = 220.dp
-    val menuHeightDp = 240.dp
     val density = LocalDensity.current
 
     val (xDp, yDp) = remember(position.first, position.second, density.density) {
-        val menuWidthPx = with(density) { menuWidthDp.roundToPx() }
-        val menuHeightPx = with(density) { menuHeightDp.roundToPx() }
+        val menuWidthPx = with(density) { MENU_WIDTH_DP.roundToPx() }
+        val menuHeightPx = with(density) { MENU_HEIGHT_DP.roundToPx() }
 
         val click = Point(position.first, position.second)
 
@@ -177,7 +186,7 @@ private fun TrayMenuWindow(
     }
 
     val state = rememberDialogState(
-        size = DpSize(menuWidthDp, menuHeightDp),
+        size = DpSize(MENU_WIDTH_DP, MENU_HEIGHT_DP),
         position = WindowPosition.Absolute(x = xDp, y = yDp)
     )
 
@@ -217,7 +226,9 @@ private fun TrayMenuWindow(
                     if (it.type == KeyEventType.KeyDown && it.key == Key.Escape) {
                         onDismiss()
                         true
-                    } else false
+                    } else {
+                        false
+                    }
                 }
         ) {
             TrayMenuContent(
@@ -225,6 +236,7 @@ private fun TrayMenuWindow(
                 overlayVisible = overlayVisible,
                 onOverlayToggle = onOverlayToggle,
                 onOpenApp = onOpenApp,
+                onOpenSession = onOpenSession,
                 onExit = onExit
             )
         }
@@ -235,9 +247,10 @@ private fun TrayMenuWindow(
 private fun TrayMenuContent(
     brandName: String,
     overlayVisible: Boolean,
-    onOverlayToggle: () -> Unit,
-    onOpenApp: () -> Unit,
-    onExit: () -> Unit
+    onOverlayToggle: () -> Unit = {},
+    onOpenApp: () -> Unit = {},
+    onOpenSession: () -> Unit = {},
+    onExit: () -> Unit = {}
 ) {
     val surface = SimAnalyzerTheme.material.surface
     val outline = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.75f)
@@ -255,18 +268,27 @@ private fun TrayMenuContent(
         modifier = Modifier.fillMaxSize(),
         shape = RoundedCornerShape(14.dp),
         color = surface,
-        shadowElevation = 10.dp,
+        shadowElevation = 12.dp,
         border = BorderStroke(1.dp, outline),
     ) {
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(8.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(if (overlayVisible) SimAnalyzerTheme.material.primary else textSecondary.copy(alpha = 0.6f))
+                )
+
+                Spacer(Modifier.width(8.dp))
+
                 Column(Modifier.weight(1f)) {
                     Text(
                         text = brandName,
@@ -275,14 +297,14 @@ private fun TrayMenuContent(
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Quick actions",
+                        text = "Tray actions",
                         color = textSecondary,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
 
                 StatusPill(
-                    text = if (overlayVisible) "HUD ON" else "HUD OFF",
+                    text = if (overlayVisible) "ON" else "OFF",
                     background = if (overlayVisible)
                         SimAnalyzerTheme.material.secondaryContainer
                     else
@@ -295,7 +317,7 @@ private fun TrayMenuContent(
             }
 
             HorizontalDivider(color = outline)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
 
             TrayMenuItem(
                 icon = Icons.AutoMirrored.Outlined.OpenInNew,
@@ -307,8 +329,17 @@ private fun TrayMenuContent(
             )
 
             TrayMenuItem(
+                icon = Icons.Filled.Session,
+                text = "Open session",
+                onClick = onOpenSession,
+                hoverColor = hoverPill,
+                textColor = textPrimary,
+                iconTint = accent
+            )
+
+            TrayMenuItem(
                 icon = if (overlayVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
-                text = if (overlayVisible) "Hide HUD overlay" else "Show HUD overlay",
+                text = "HUD overlay",
                 onClick = onOverlayToggle,
                 hoverColor = hoverPill,
                 textColor = textPrimary,
@@ -328,9 +359,9 @@ private fun TrayMenuContent(
                 }
             )
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
             HorizontalDivider(color = outline)
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
 
             TrayMenuItem(
                 icon = Icons.Outlined.PowerSettingsNew,
@@ -358,7 +389,7 @@ private fun TrayMenuItem(
     val hovered by interaction.collectIsHoveredAsState()
 
     val bg by animateColorAsState(
-        targetValue = if (hovered) hoverColor.copy(alpha = 0.35f) else Color.Transparent,
+        targetValue = if (hovered) hoverColor.copy(alpha = 0.28f) else Color.Transparent,
         animationSpec = tween(120)
     )
 
@@ -372,22 +403,23 @@ private fun TrayMenuItem(
                 interactionSource = interaction,
                 indication = null
             ) { onClick() }
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = iconTint,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(16.dp)
         )
 
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(8.dp))
 
         Text(
             text = text,
             color = textColor,
             style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Medium,
             modifier = Modifier.weight(1f)
         )
 
@@ -416,6 +448,17 @@ private fun StatusPill(
             color = foreground,
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TrayMenuPreview() {
+    SimAnalyzerTheme {
+        TrayMenuContent(
+            brandName = "SimAnalyzer",
+            overlayVisible = true
         )
     }
 }

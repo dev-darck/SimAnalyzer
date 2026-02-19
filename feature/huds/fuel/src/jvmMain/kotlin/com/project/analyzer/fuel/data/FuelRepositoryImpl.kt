@@ -1,6 +1,7 @@
 package com.project.analyzer.fuel.data
 
 import com.project.analyzer.fuel.data.model.SavedFuelData
+import com.project.analyzer.fuel.domain.model.FuelIdentityKey
 import com.project.analyzer.fuel.domain.repository.FuelRepository
 import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.preference.api.Preference
@@ -57,13 +58,13 @@ internal class FuelRepositoryImpl(
             savedAtEpochMs = System.currentTimeMillis()
         )
 
-        val key = buildKey(carModel, trackId)
+        val key = buildKey(carModel, trackId) ?: return
         logger.info { "FuelRepositoryImpl save fuel consumption data: $dto by key: ${key.name}" }
         preference.put(key to json.encodeToString(FuelDataDto.serializer(), dto))
     }
 
     override suspend fun load(carModel: String, trackId: String): SavedFuelData? {
-        val key = buildKey(carModel, trackId)
+        val key = buildKey(carModel, trackId) ?: return null
         val jsonString = preference.getOrNull(key) ?: return null
 
         return try {
@@ -80,13 +81,16 @@ internal class FuelRepositoryImpl(
     }
 
     override suspend fun clear(carModel: String, trackId: String) {
-        preference.remove(buildKey(carModel, trackId))
+        val key = buildKey(carModel, trackId) ?: return
+        preference.remove(key)
     }
 
-    private fun buildKey(carModel: String, trackId: String): StringPrefKey {
-        val sanitizedCar = carModel.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-        val sanitizedTrack = trackId.replace(Regex("[^a-zA-Z0-9_-]"), "_")
-        return StringPrefKey("${KEY_PREFIX}${sanitizedCar}_$sanitizedTrack")
+    private fun buildKey(carModel: String, trackId: String): StringPrefKey? {
+        val identity = FuelIdentityKey.from(
+            carModel = carModel,
+            trackId = trackId
+        ) ?: return null
+        return StringPrefKey("${KEY_PREFIX}${identity.carModel}_${identity.trackId}")
     }
 
     @Serializable

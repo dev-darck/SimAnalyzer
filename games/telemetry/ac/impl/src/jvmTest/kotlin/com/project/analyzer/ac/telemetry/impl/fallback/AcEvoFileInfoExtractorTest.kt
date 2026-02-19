@@ -3,10 +3,10 @@ package com.project.analyzer.ac.telemetry.impl.fallback
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.AcEvoFileInfoExtractor
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.AcEvoLogLocator
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 import java.nio.file.Files
@@ -163,5 +163,104 @@ class AcEvoFileInfoExtractorTest {
         assertEquals("epoch should not bump on track change alone: e1=$e1 e2=$e2", e1, e2)
         assertNotNull(i2.trackId)
         assertTrue(i2.trackId.contains("monza"), "trackId=${i2.trackId}")
+    }
+
+    @Test
+    fun `dynamic track preset line resolves unknown track without hardcoded map`() {
+        val dir = Files.createTempDirectory("acevo-extractor5").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] Creating physics track: Some Fancy Track",
+                "[2026-01-31 12:00:00.010] Loading DynamicTrack preset: content\\tracks\\my_custom_track\\dynamic_track\\Sprint.dynamictrackpresetcompressed"
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals("my_custom_track_sprint", info.trackId)
+    }
+
+    @Test
+    fun `layout track file line resolves track id when container or slug is missing`() {
+        val dir = Files.createTempDirectory("acevo-extractor6").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] Creating physics track: New Fantasy Track",
+                "[2026-01-31 12:00:00.050] Loaded 0 TrackLayoutBezier points from content\\tracks\\new_fantasy_track\\layouts\\layout_2.track_layout"
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals("new_fantasy_track_2", info.trackId)
+    }
+
+    @Test
+    fun `game started line sets session type from game mode marker`() {
+        val dir = Files.createTempDirectory("acevo-extractor7").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] Game Started! GameModeType_QUALIFYING | Monza GP Qualifying 1200 seconds @2014/8/15 10:45:0 | ks_bmw_m4_gt3"
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals(EvoSessionType.QUALIFYING, info.sessionType)
+    }
+
+    @Test
+    fun `track name refreshes from new track id after session boundary even without physics line`() {
+        val dir = Files.createTempDirectory("acevo-extractor8").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] Creating physics track: Old Track",
+                "[2026-01-31 12:00:00.010] TRACK NAME old_track gp"
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val first = ex.poll()
+        assertEquals("old_track_gp", first.trackId)
+        assertNotNull(first.trackName)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:09:00.000] Reset session requested",
+                "[2026-01-31 12:10:00.000] Loading DynamicTrack preset: content\\tracks\\new_track\\dynamic_track\\Sprint.dynamictrackpresetcompressed"
+            )
+        )
+
+        val second = ex.poll()
+        assertEquals("new_track_sprint", second.trackId)
+        assertEquals("new_track_sprint", second.trackName)
     }
 }

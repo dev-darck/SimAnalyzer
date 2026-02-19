@@ -12,6 +12,9 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONTAINER
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DRIVER
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DRIVER_ON_CAR
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DYNAMIC_TRACK_PRESET
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_GAME_MODE_TYPE
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_LAYOUT_TRACK_FILE
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_MY_CAR
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PENALTY_KEY
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PHYSICS_TRACK
@@ -21,6 +24,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_TRACK_SLUG
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.ResolvedTrack
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.TrackIdSource
+import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -69,6 +73,10 @@ internal class AcEvoLogParser {
         var slugLayout: String? = null
         var containerFolder: String? = null
         var containerLayout: String? = null
+        var dynamicTrackFolder: String? = null
+        var dynamicTrackLayout: String? = null
+        var layoutFileFolder: String? = null
+        var layoutFileLayout: String? = null
 
         var bestCar: String? = null
         var bestCarSource: CarSource = CarSource.NONE
@@ -129,6 +137,11 @@ internal class AcEvoLogParser {
                 if (gameStartedTs == null) {
                     gameStartedTs = parseTimestamp(line)?.let(::parseTimestampMs)
                 }
+
+                RE_GAME_MODE_TYPE.find(line)?.groupValues?.getOrNull(1)?.let {
+                    sessionType = EvoSessionType.fromLogString(it)
+                }
+
                 val parts = line.split("|").map { it.trim() }
                 parts.getOrNull(1)?.takeIf { it.isNotBlank() }?.let {
                     gameStartedTrackName = cleanGameStartedTrack(it)
@@ -148,9 +161,16 @@ internal class AcEvoLogParser {
 
             RE_TRACK_SLUG.find(line)?.let { m ->
                 val tokens = m.groupValues[1].split(Regex("\\s+")).filter { it.isNotBlank() }
-                if (tokens.size >= 2) {
-                    slugBase = tokens.dropLast(1).joinToString("_")
-                    slugLayout = tokens.last()
+                when {
+                    tokens.size >= 2 -> {
+                        slugBase = tokens.dropLast(1).joinToString("_")
+                        slugLayout = tokens.last()
+                    }
+
+                    tokens.size == 1 -> {
+                        slugBase = tokens.first()
+                        slugLayout = null
+                    }
                 }
             }
 
@@ -158,6 +178,20 @@ internal class AcEvoLogParser {
                 RE_CONTAINER.find(line)?.let {
                     containerFolder = it.groupValues[1]
                     containerLayout = it.groupValues[2]
+                }
+            }
+
+            if (dynamicTrackFolder == null) {
+                RE_DYNAMIC_TRACK_PRESET.find(line)?.let {
+                    dynamicTrackFolder = it.groupValues[1]
+                    dynamicTrackLayout = it.groupValues[2]
+                }
+            }
+
+            if (layoutFileFolder == null) {
+                RE_LAYOUT_TRACK_FILE.find(line)?.let {
+                    layoutFileFolder = it.groupValues[1]
+                    layoutFileLayout = it.groupValues[2]
                 }
             }
 
@@ -191,6 +225,10 @@ internal class AcEvoLogParser {
             slugLayout = slugLayout,
             containerFolder = containerFolder,
             containerLayout = containerLayout,
+            dynamicTrackFolder = dynamicTrackFolder,
+            dynamicTrackLayout = dynamicTrackLayout,
+            layoutFileFolder = layoutFileFolder,
+            layoutFileLayout = layoutFileLayout,
             carModel = bestCar,
             carSource = bestCarSource,
             driverName = driverName,
@@ -219,30 +257,71 @@ internal class AcEvoLogParser {
     }
 
     fun resolveTrackId(p: Parsed, lastInfo: EvoFileInfo): ResolvedTrack {
-        val baseFromPhysics = p.physicsTrackName?.let(::normalize)
-        val baseFromSlug = p.slugBase?.let(::normalize)
-        val baseFromGameStarted = p.gameStartedTrackName?.let(::normalize)
-        val baseFromFolder = p.containerFolder?.let(::normalize)
+        val baseFromSlug = p.slugBase?.takeIf { it.isNotBlank() }
+        val baseFromContainer = p.containerFolder?.takeIf { it.isNotBlank() }
+        val baseFromDynamic = p.dynamicTrackFolder?.takeIf { it.isNotBlank() }
+        val baseFromLayoutFile = p.layoutFileFolder?.takeIf { it.isNotBlank() }
+        val baseFromGameStarted = p.gameStartedTrackName?.takeIf { it.isNotBlank() }
+        val baseFromPhysics = p.physicsTrackName?.takeIf { it.isNotBlank() }
 
-        val base = baseFromPhysics ?: baseFromSlug ?: baseFromGameStarted ?: baseFromFolder
+        val layoutFromSlug = p.slugLayout?.takeIf { it.isNotBlank() }
+        val layoutFromContainer = p.containerLayout?.takeIf { it.isNotBlank() }?.let(::mapContainerLayout)
+        val layoutFromDynamic = p.dynamicTrackLayout?.takeIf { it.isNotBlank() }?.let(::mapContainerLayout)
+        val layoutFromLayoutFile = p.layoutFileLayout?.takeIf { it.isNotBlank() }?.let(::mapContainerLayout)
 
-        val layoutFromSlug = p.slugLayout?.let(::normalize)
-        val layoutFromContainer = p.containerLayout?.let { normalize(mapContainerLayout(it)) }
-        val layout = layoutFromSlug ?: layoutFromContainer
+        val slugCandidate = buildTrackCandidate(
+            base = baseFromSlug,
+            preferredLayout = layoutFromSlug,
+            fallbackLayout = layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile
+        )
+        val containerCandidate = buildTrackCandidate(
+            base = baseFromContainer ?: baseFromDynamic,
+            preferredLayout = layoutFromContainer ?: layoutFromDynamic,
+            fallbackLayout = layoutFromSlug ?: layoutFromLayoutFile
+        )
+        val layoutFileCandidate = buildTrackCandidate(
+            base = baseFromLayoutFile,
+            preferredLayout = layoutFromLayoutFile,
+            fallbackLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic
+        )
+        val gameStartedCandidate = buildTrackCandidate(
+            base = baseFromGameStarted,
+            preferredLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile
+        )
+        val physicsCandidate = buildTrackCandidate(
+            base = baseFromPhysics,
+            preferredLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile
+        )
 
-        val candidateId = buildTrackId(base, layout)
-        val candidateSource = when {
-            layoutFromSlug != null -> TrackIdSource.SLUG
-            layoutFromContainer != null -> TrackIdSource.CONTAINER
-            baseFromGameStarted != null -> TrackIdSource.GAME_STARTED
-            else -> TrackIdSource.NONE
+        val (candidateId, candidateLayout, candidateSource) = when {
+            slugCandidate.id != null -> Triple(slugCandidate.id, slugCandidate.layout, TrackIdSource.SLUG)
+            containerCandidate.id != null -> Triple(
+                containerCandidate.id,
+                containerCandidate.layout,
+                TrackIdSource.CONTAINER
+            )
+
+            layoutFileCandidate.id != null -> Triple(
+                layoutFileCandidate.id,
+                layoutFileCandidate.layout,
+                TrackIdSource.CONTAINER
+            )
+
+            gameStartedCandidate.id != null -> Triple(
+                gameStartedCandidate.id,
+                gameStartedCandidate.layout,
+                TrackIdSource.GAME_STARTED
+            )
+
+            physicsCandidate.id != null -> Triple(physicsCandidate.id, physicsCandidate.layout, TrackIdSource.NONE)
+            else -> Triple(null, null, TrackIdSource.NONE)
         }
 
         val stableId = lastInfo.trackId?.takeIf { it.isNotBlank() }
         val stableSource = trackIdSource
         val stableLayout = lastInfo.layoutId?.takeIf { it.isNotBlank() }
 
-        if (stableId != null && stableLayout != null && layout.isNullOrBlank()) {
+        if (stableId != null && stableLayout != null && candidateLayout.isNullOrBlank()) {
             return ResolvedTrack(
                 trackId = stableId,
                 layout = stableLayout,
@@ -268,7 +347,7 @@ internal class AcEvoLogParser {
 
         return ResolvedTrack(
             trackId = effectiveId,
-            layout = if (effectiveId == candidateId) layout else lastInfo.layoutId,
+            layout = if (effectiveId == candidateId) candidateLayout else lastInfo.layoutId,
             source = effectiveSource
         )
     }
@@ -277,6 +356,21 @@ internal class AcEvoLogParser {
         val n = physicsName?.trim()?.takeIf { it.isNotBlank() } ?: return null
         val l = layout?.trim()?.takeIf { it.isNotBlank() } ?: return n
         return "$n ${l.uppercase()}"
+    }
+
+    private fun buildTrackCandidate(
+        base: String?,
+        preferredLayout: String?,
+        fallbackLayout: String? = null
+    ): CandidateTrack {
+        val normalizedBase = base?.takeIf { it.isNotBlank() } ?: return CandidateTrack()
+        val effectiveLayout = preferredLayout?.takeIf { it.isNotBlank() } ?: fallbackLayout?.takeIf { it.isNotBlank() }
+        val normalizedId = TrackIdNormalizer.normalize(track = normalizedBase, layout = effectiveLayout)
+            .takeIf { it.isNotBlank() } ?: return CandidateTrack()
+        return CandidateTrack(
+            id = normalizedId,
+            layout = effectiveLayout
+        )
     }
 
     private fun parsePlayerCar(line: String): Pair<String, CarSource>? {
@@ -318,26 +412,20 @@ internal class AcEvoLogParser {
         return s
     }
 
-    private fun buildTrackId(base: String?, layout: String?): String? {
-        val b = base?.takeIf { it.isNotBlank() } ?: return null
-        val l = layout?.takeIf { it.isNotBlank() } ?: return b
-        return if (b.endsWith("_$l")) b else "${b}_$l"
-    }
-
-    private fun normalize(raw: String): String =
-        raw.lowercase().trim()
-            .replace(Regex("\\s+"), "_")
-            .replace(Regex("[^a-z0-9_]"), "_")
-            .replace(Regex("_+"), "_")
-            .trim('_')
-
     private fun mapContainerLayout(raw: String): String {
-        return when (normalize(raw)) {
+        return when (normalizeToken(raw)) {
             "gp_circuit" -> "gp"
             "gp_circuit_shortcut", "gp_circuit_short", "gp_shortcut" -> "gp_short"
             else -> raw
         }
     }
+
+    private fun normalizeToken(raw: String): String =
+        raw.lowercase().trim()
+            .replace(Regex("\\s+"), "_")
+            .replace(Regex("[^a-z0-9_]"), "_")
+            .replace(Regex("_+"), "_")
+            .trim('_')
 
     private fun cleanGameStartedTrack(raw: String): String {
         val noDate = raw.substringBefore("@").trim()
@@ -429,6 +517,10 @@ internal class AcEvoLogParser {
     }.getOrNull()
 
     private companion object {
+        data class CandidateTrack(
+            val id: String? = null,
+            val layout: String? = null
+        )
 
         val PENALTY_GROUP_WINDOW_MS = 3.seconds.inWholeMilliseconds
 

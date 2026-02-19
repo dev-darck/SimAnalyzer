@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import kotlin.math.ceil
 import kotlin.math.max
 
 @Inject
@@ -29,13 +28,9 @@ internal class InputsHudViewModel(
     private val steerPeakDecay: Float = 0.995f
     private val steerPeakMin: Float = 0.10f
 
-    private var hzEwma: Double = 60.0
-    private var lastSampleTsNs: Long = 0L
-
     private val _state = MutableStateFlow(InputsHudUiState())
     val state: StateFlow<InputsHudUiState> = _state.asStateFlow()
 
-    private var lastAppliedCapacity: Int = _state.value.series.capacity
     private var telemetryJob: Job? = null
 
     init {
@@ -120,8 +115,6 @@ internal class InputsHudViewModel(
             }
 
             is InputsResult.Sample -> {
-                updateHzEwma(result.timestampNs)
-
                 val t = result.throttle.coerceIn(0f, 1f)
                 val b = result.brake.coerceIn(0f, 1f)
                 val c = result.clutch.coerceIn(0f, 1f)
@@ -153,45 +146,26 @@ internal class InputsHudViewModel(
 
     private fun resetSessionDerivedState() {
         steerPeakAbs = 0.35f
-        hzEwma = 60.0
-        lastSampleTsNs = 0L
-        lastAppliedCapacity = 0
-    }
-
-    private fun updateHzEwma(tsNs: Long) {
-        if (tsNs <= 0L) return
-
-        val prev = lastSampleTsNs
-        lastSampleTsNs = tsNs
-        if (prev <= 0L) return
-
-        val dtNs = tsNs - prev
-        if (dtNs !in 1_000_000L..1_000_000_000L) return
-
-        val hz = 1e9 / dtNs.toDouble()
-        if (hz !in 1.0..500.0) return
-
-        val alpha = 0.05
-        hzEwma = (hzEwma * (1.0 - alpha) + hz * alpha).coerceIn(10.0, 240.0)
     }
 
     private fun applyHistoryCapacityIfNeeded(state: InputsHudUiState): InputsSeries {
         val seconds = state.settings.historySeconds.coerceIn(1, 3)
-        val targetCap = ceil(seconds * hzEwma).toInt().coerceIn(60, 2000)
-
-        if (targetCap == lastAppliedCapacity) return state.series
-
-        lastAppliedCapacity = targetCap
+        val targetCap = (seconds * UI_SAMPLES_PER_SECOND).coerceIn(60, 2000)
+        if (state.series.capacity == targetCap) return state.series
         return state.series.resizedCopy(targetCap)
     }
 
     private fun newEmptySeriesFor(state: InputsHudUiState): InputsSeries {
         val seconds = state.settings.historySeconds.coerceIn(1, 3)
-        val targetCap = ceil(seconds * hzEwma).toInt().coerceIn(60, 2000)
-        lastAppliedCapacity = targetCap
+        val targetCap = (seconds * UI_SAMPLES_PER_SECOND).coerceIn(60, 2000)
         return InputsSeries(capacity = targetCap)
     }
 
     private fun nextTick(tick: Long): Long =
         if (tick >= Long.MAX_VALUE - 1) 0L else tick + 1
+
+    private companion object {
+
+        const val UI_SAMPLES_PER_SECOND: Int = 240
+    }
 }

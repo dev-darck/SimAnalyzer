@@ -13,7 +13,6 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.yield
 import java.util.concurrent.locks.LockSupport
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
@@ -34,15 +33,19 @@ class AcPollLoop(
 
     private val errorLogLimiter = NsRateLimiter(ERROR_LOG_INTERVAL_NS)
     private val noChangeLogLimiter = NsRateLimiter(NO_CHANGE_LOG_INTERVAL_NS)
+
     private var lastNeedsFallback: Boolean = false
     private var lastEmittedFrameNs: Long = 0L
+
     private var currentState: GameConnectionState = GameConnectionState.DISCONNECTED
     private var currentDataSource: DataSourceType = DataSourceType.NATIVE
+
     private var lastDetectedPhysicsPacket: Int = -1
     private var lastDetectedGraphicsPacket: Int = -1
     private var stalePacketCounter: Int = 0
     private var activePacketCounter: Int = 0
     private var graphicsStaleCounter: Int = 0
+
     private var disconnectedPollMs: Long = DISCONNECTED_POLL_MIN_MS
     private var frameId: Long = 0L
     private var lastPhysicsPacket: Int = -1
@@ -69,6 +72,7 @@ class AcPollLoop(
     fun stop() {
         currentState = GameConnectionState.DISCONNECTED
         currentDataSource = DataSourceType.NATIVE
+
         resetCounters()
         disconnectedPollMs = DISCONNECTED_POLL_MIN_MS
         shm.close()
@@ -76,17 +80,18 @@ class AcPollLoop(
 
     private suspend fun dispatch(onResult: (PollResult) -> Unit) {
         shm.readAll()
+
         val detection = detectGameState()
         handleStateTransition(detection, onResult)
 
         when (detection.state) {
-            GameConnectionState.DISCONNECTED -> idleLoop(onResult)
-            GameConnectionState.IN_MENU -> menuLoop(onResult)
-            GameConnectionState.IN_SESSION -> sessionLoop(onResult)
+            GameConnectionState.DISCONNECTED -> runDisconnectedLoop(onResult)
+            GameConnectionState.IN_MENU -> runMenuLoop(onResult)
+            GameConnectionState.IN_SESSION -> runSessionLoop(onResult)
         }
     }
 
-    private suspend fun idleLoop(onResult: (PollResult) -> Unit) {
+    private suspend fun runDisconnectedLoop(onResult: (PollResult) -> Unit) {
         lastPhysicsPacket = -1
         lastGraphicsPacket = -1
 
@@ -96,7 +101,6 @@ class AcPollLoop(
 
             shm.readAll()
             val detection = detectGameState()
-
             if (detection.state != GameConnectionState.DISCONNECTED) {
                 handleStateTransition(detection, onResult)
                 return
@@ -104,20 +108,14 @@ class AcPollLoop(
         }
     }
 
-    private suspend fun menuLoop(onResult: (PollResult) -> Unit) {
+    private suspend fun runMenuLoop(onResult: (PollResult) -> Unit) {
         while (currentCoroutineContext().isActive) {
-            val now = System.nanoTime()
-
-            frameId++
-            reusableSnapshot.frameId = frameId
-            reusableSnapshot.timestampNs = now
-            onResult(PollResult.Frame(reusableSnapshot))
+            emitMenuFrame(onResult)
 
             delay(cfg.menuPollMs)
 
             shm.readAll()
             val detection = detectGameState()
-
             if (detection.state != GameConnectionState.IN_MENU) {
                 handleStateTransition(detection, onResult)
                 return
@@ -127,16 +125,23 @@ class AcPollLoop(
         }
     }
 
-    private suspend fun sessionLoop(onResult: (PollResult) -> Unit) {
+    private fun emitMenuFrame(onResult: (PollResult) -> Unit) {
+        val now = System.nanoTime()
+
+        frameId += 1L
+        reusableSnapshot.frameId = frameId
+        reusableSnapshot.timestampNs = now
+
+        onResult(PollResult.Frame(reusableSnapshot))
+    }
+
+    private suspend fun runSessionLoop(onResult: (PollResult) -> Unit) {
         var nextTickNanos = System.nanoTime()
 
         while (currentCoroutineContext().isActive) {
             val now = System.nanoTime()
 
             shm.readAll()
-            val physics = shm.physics
-            val graphics = shm.graphics
-
             val detection = detectGameState()
 
             if (detection.state != GameConnectionState.IN_SESSION) {
@@ -145,50 +150,69 @@ class AcPollLoop(
             }
 
             handleFallbackChange(detection)
+            emitSessionFrameIfNeeded(now, onResult)
 
-            val physicsPacket = physics.packetId
-            val graphicsPacket = graphics.packetId
+            nextTickNanos = sleepUntilNextTick(nextTickNanos + cfg.pollIntervalNanos)
+        }
+    }
 
-            val hasChanges = physicsPacket != lastPhysicsPacket ||
-                graphicsPacket != lastGraphicsPacket
+    private fun emitSessionFrameIfNeeded(now: Long, onResult: (PollResult) -> Unit) {
+        val physics = shm.physics
+        val graphics = shm.graphics
 
-            if (hasChanges) {
-                lastPhysicsPacket = physicsPacket
-                lastGraphicsPacket = graphicsPacket
+        val physicsPacket = physics.packetId
+        val graphicsPacket = graphics.packetId
+        val hasChanges = physicsPacket != lastPhysicsPacket || graphicsPacket != lastGraphicsPacket
 
-                frameId++
-                reusableSnapshot.frameId = frameId
-                reusableSnapshot.timestampNs = now
-                onResult(PollResult.Frame(reusableSnapshot))
+        if (hasChanges) {
+            lastPhysicsPacket = physicsPacket
+            lastGraphicsPacket = graphicsPacket
 
-                lastEmittedFrameNs = now
-            } else {
-                if (noChangeLogLimiter.shouldLog(now)) {
-                    val sinceMs = (now - lastEmittedFrameNs) / NS_PER_MS
-                    val g = graphics
-                    logger.debug {
-                        "[poll] IN_SESSION but no packet changes for ${sinceMs}ms " +
-                            "gfx(packet=${g.packetId} status=${g.status} session=${g.session} idx=${g.sessionIndex}) " +
-                            "phy(packet=${physics.packetId} stale=$stalePacketCounter)"
-                    }
-                }
-            }
+            frameId += 1L
+            reusableSnapshot.frameId = frameId
+            reusableSnapshot.timestampNs = now
+            onResult(PollResult.Frame(reusableSnapshot))
 
-            nextTickNanos += cfg.pollIntervalNanos
+            lastEmittedFrameNs = now
+            return
+        }
 
-            val currentNanos = System.nanoTime()
-            if (currentNanos - nextTickNanos > cfg.maxDriftNanos) {
-                nextTickNanos = currentNanos
-            }
+        logSessionNoChanges(now, graphics, physics)
+    }
 
-            val remainingNs = nextTickNanos - currentNanos
+    private fun logSessionNoChanges(now: Long, graphics: SPageFileGraphics, physics: SPageFilePhysics) {
+        if (!noChangeLogLimiter.shouldLog(now)) return
 
-            when {
-                remainingNs > DELAY_THRESHOLD_NS -> delay(remainingNs / NS_PER_MS)
-                remainingNs > 0L -> LockSupport.parkNanos(remainingNs)
-                else -> yield()
+        val sinceMs = (now - lastEmittedFrameNs) / NS_PER_MS
+        logger.debug {
+            "[poll] IN_SESSION but no packet changes for ${sinceMs}ms " +
+                "gfx(packet=${graphics.packetId} status=${graphics.status} session=${graphics.session} idx=${graphics.sessionIndex}) " +
+                "phy(packet=${physics.packetId} stale=$stalePacketCounter)"
+        }
+    }
+
+    private suspend fun sleepUntilNextTick(scheduledTickNs: Long): Long {
+        val nowNs = System.nanoTime()
+
+        val nextTickNs = when {
+            scheduledTickNs > nowNs -> scheduledTickNs
+
+            // Late tick: skip missed slots instead of spinning in zero-sleep catch-up bursts.
+            nowNs - scheduledTickNs > cfg.maxDriftNanos -> nowNs
+
+            else -> {
+                val missedIntervals = ((nowNs - scheduledTickNs) / cfg.pollIntervalNanos) + 1L
+                scheduledTickNs + missedIntervals * cfg.pollIntervalNanos
             }
         }
+
+        val remainingNs = nextTickNs - nowNs
+        when {
+            remainingNs > DELAY_THRESHOLD_NS -> delay(remainingNs / NS_PER_MS)
+            remainingNs > 0L -> LockSupport.parkNanos(remainingNs)
+        }
+
+        return nextTickNs
     }
 
     private fun handleStateTransition(
@@ -206,17 +230,7 @@ class AcPollLoop(
         currentState = detection.state
         currentDataSource = detection.dataSource
 
-        logger.info {
-            val g = shm.graphics
-            val p = shm.physics
-            val stateStr = "[poll] state: $oldState/$oldSource -> ${detection.state}/${detection.dataSource} "
-            val fallbackStr = "needsFallback=${detection.needsFallback} "
-            val gfxStr = "gfx(packet=${g.packetId}, status=${g.status}, session=${g.session}, " +
-                "idx=${g.sessionIndex}, laps=${g.completedLaps}, left=${g.sessionTimeLeft}) "
-            val phyStr = "phy(packet=${p.packetId}, rpm=${p.rpm}, speed=${p.speedKmh}, " +
-                "stale=$stalePacketCounter, active=$activePacketCounter)"
-            stateStr + fallbackStr + gfxStr + phyStr
-        }
+        logStateTransition(oldState, oldSource, detection)
 
         if (oldState == GameConnectionState.DISCONNECTED && detection.state != GameConnectionState.DISCONNECTED) {
             disconnectedPollMs = DISCONNECTED_POLL_MIN_MS
@@ -226,11 +240,31 @@ class AcPollLoop(
         onResult(PollResult.StateChanged(detection.state, detection.dataSource))
     }
 
-    private fun handleFallbackChange(detection: Detection) {
-        if (detection.needsFallback != lastNeedsFallback) {
-            lastNeedsFallback = detection.needsFallback
-            logger.info { "[poll] needsFallback changed -> ${detection.needsFallback} (source=$currentDataSource)" }
+    private fun logStateTransition(
+        oldState: GameConnectionState,
+        oldSource: DataSourceType,
+        detection: Detection,
+    ) {
+        logger.info {
+            val g = shm.graphics
+            val p = shm.physics
+
+            val stateStr = "[poll] state: $oldState/$oldSource -> ${detection.state}/${detection.dataSource} "
+            val fallbackStr = "needsFallback=${detection.needsFallback} "
+            val gfxStr = "gfx(packet=${g.packetId}, status=${g.status}, session=${g.session}, " +
+                "idx=${g.sessionIndex}, laps=${g.completedLaps}, left=${g.sessionTimeLeft}) "
+            val phyStr = "phy(packet=${p.packetId}, rpm=${p.rpm}, speed=${p.speedKmh}, " +
+                "stale=$stalePacketCounter, active=$activePacketCounter)"
+
+            stateStr + fallbackStr + gfxStr + phyStr
         }
+    }
+
+    private fun handleFallbackChange(detection: Detection) {
+        if (detection.needsFallback == lastNeedsFallback) return
+
+        lastNeedsFallback = detection.needsFallback
+        logger.info { "[poll] needsFallback changed -> ${detection.needsFallback} (source=$currentDataSource)" }
     }
 
     private fun detectGameState(): Detection {
@@ -250,59 +284,105 @@ class AcPollLoop(
         val graphicsIsStale = updateGraphicsStaleness(graphics)
         val hasNativeGraphics = hasGraphicsSignal(graphics)
         val hasNativeStatic = hasNativeSignature(statics)
+
         val hasPhysicsPacket = updatePhysicsActivity(physics)
         val physicsIsActive = activePacketCounter >= ACTIVE_PACKET_THRESHOLD
         val physicsIsInactive = stalePacketCounter >= STALE_PACKET_THRESHOLD
 
-        val isNative = hasNativeGraphics || hasNativeStatic
-
-        val canUseGraphicsStatus = hasNativeGraphics && graphics.status in STATUS_OFF..STATUS_PAUSE
-        val setupMenuVisible = canUseGraphicsStatus && graphics.isSetupMenuVisible != 0
-        val statusOverride = if (canUseGraphicsStatus) {
-            when (graphics.status) {
-                STATUS_OFF, STATUS_REPLAY, STATUS_PAUSE -> GameConnectionState.IN_MENU
-                else -> if (setupMenuVisible) GameConnectionState.IN_MENU else null
-            }
-        } else {
-            null
-        }
-        val statusHint = if (canUseGraphicsStatus && !graphicsIsStale && graphics.status == STATUS_LIVE) {
-            GameConnectionState.IN_SESSION
-        } else {
-            null
-        }
+        val statusOverride = resolveStatusOverride(graphics, hasNativeGraphics)
+        val statusHint = resolveStatusHint(graphics, hasNativeGraphics, graphicsIsStale)
 
         val needsStaticPatch = statics.track.toKString().isBlank() ||
             statics.carModel.toKString().isBlank() ||
             statics.numCars <= 0 ||
             statics.numberOfSessions <= 0 ||
             statics.sectorCount <= 0
+
+        val isNative = hasNativeGraphics || hasNativeStatic
         val needsFallback = !hasNativeGraphics || needsStaticPatch
 
         if (isNative) {
-            val state = when {
-                statusOverride != null -> statusOverride
-                hasPhysicsPacket && physicsIsActive -> GameConnectionState.IN_SESSION
-                hasPhysicsPacket && physicsIsInactive -> GameConnectionState.IN_MENU
-                statusHint != null -> statusHint
-                else -> if (currentState == GameConnectionState.IN_SESSION) currentState else GameConnectionState.IN_MENU
-            }
-
             return Detection(
-                state = state,
+                state = resolveNativeState(
+                    statusOverride = statusOverride,
+                    statusHint = statusHint,
+                    hasPhysicsPacket = hasPhysicsPacket,
+                    physicsIsActive = physicsIsActive,
+                    physicsIsInactive = physicsIsInactive,
+                ),
                 dataSource = DataSourceType.NATIVE,
-                needsFallback = needsFallback
+                needsFallback = needsFallback,
             )
         }
 
-        val fallbackState = when {
+        return Detection(
+            state = resolveFallbackState(
+                hasPhysicsPacket = hasPhysicsPacket,
+                physicsIsActive = physicsIsActive,
+                physicsIsInactive = physicsIsInactive,
+            ),
+            dataSource = DataSourceType.FALLBACK,
+            needsFallback = hasPhysicsPacket,
+        )
+    }
+
+    private fun resolveStatusOverride(
+        graphics: SPageFileGraphics,
+        hasNativeGraphics: Boolean,
+    ): GameConnectionState? {
+        if (!hasNativeGraphics) return null
+        if (graphics.status !in STATUS_OFF..STATUS_PAUSE) return null
+
+        val setupMenuVisible = graphics.isSetupMenuVisible != 0
+        return when (graphics.status) {
+            STATUS_OFF, STATUS_REPLAY, STATUS_PAUSE -> GameConnectionState.IN_MENU
+            else -> if (setupMenuVisible) GameConnectionState.IN_MENU else null
+        }
+    }
+
+    private fun resolveStatusHint(
+        graphics: SPageFileGraphics,
+        hasNativeGraphics: Boolean,
+        graphicsIsStale: Boolean,
+    ): GameConnectionState? {
+        if (!hasNativeGraphics) return null
+        if (graphicsIsStale) return null
+        if (graphics.status != STATUS_LIVE) return null
+        return GameConnectionState.IN_SESSION
+    }
+
+    private fun resolveNativeState(
+        statusOverride: GameConnectionState?,
+        statusHint: GameConnectionState?,
+        hasPhysicsPacket: Boolean,
+        physicsIsActive: Boolean,
+        physicsIsInactive: Boolean,
+    ): GameConnectionState {
+        return when {
+            statusOverride != null -> statusOverride
+            hasPhysicsPacket && physicsIsActive -> GameConnectionState.IN_SESSION
+            hasPhysicsPacket && physicsIsInactive -> GameConnectionState.IN_MENU
+            statusHint != null -> statusHint
+            currentState == GameConnectionState.IN_SESSION -> currentState
+            else -> GameConnectionState.IN_MENU
+        }
+    }
+
+    private fun resolveFallbackState(
+        hasPhysicsPacket: Boolean,
+        physicsIsActive: Boolean,
+        physicsIsInactive: Boolean,
+    ): GameConnectionState {
+        return when {
             physicsIsActive -> GameConnectionState.IN_SESSION
-            physicsIsInactive ->
+
+            physicsIsInactive -> {
                 if (hasPhysicsPacket) {
                     GameConnectionState.IN_MENU
                 } else {
                     GameConnectionState.DISCONNECTED
                 }
+            }
 
             else -> when {
                 currentState == GameConnectionState.IN_SESSION -> currentState
@@ -310,12 +390,6 @@ class AcPollLoop(
                 else -> GameConnectionState.DISCONNECTED
             }
         }
-
-        return Detection(
-            state = fallbackState,
-            dataSource = DataSourceType.FALLBACK,
-            needsFallback = hasPhysicsPacket
-        )
     }
 
     private fun hasNativeSignature(statics: SPageFileStatic): Boolean {

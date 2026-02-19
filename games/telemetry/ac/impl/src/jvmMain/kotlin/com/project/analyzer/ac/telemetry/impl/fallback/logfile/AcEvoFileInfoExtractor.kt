@@ -3,6 +3,7 @@ package com.project.analyzer.ac.telemetry.impl.fallback.logfile
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.Parsed
+import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.utils.logger
 import dev.zacsweers.metro.Inject
@@ -47,40 +48,7 @@ class AcEvoFileInfoExtractor(
         val parsed = parser.parseLines(lines)
 
         maybeBumpEpoch(parsed)
-
-        val resolved = parser.resolveTrackId(parsed, lastInfo)
-
-        val trackName = parser.buildDisplayName(parsed.physicsTrackName, resolved.layout)
-            ?: parsed.gameStartedTrackName
-            ?: lastInfo.trackName
-            ?: resolved.trackId
-
-        val fallbackTrackId = buildFallbackTrackId(trackName, resolved.layout)
-        val effectiveTrackId = when {
-            !resolved.trackId.isNullOrBlank() -> resolved.trackId
-            !fallbackTrackId.isNullOrBlank() -> fallbackTrackId
-            else -> lastInfo.trackId
-        }
-
-        val newCar = parser.chooseCarModel(parsed, lastInfo)
-
-        val effectiveSessionType = parsed.sessionType ?: lastInfo.sessionType
-
-        lastInfo = lastInfo.copy(
-            trackName = trackName,
-            trackId = effectiveTrackId,
-            layoutId = resolved.layout ?: lastInfo.layoutId,
-            carModel = newCar ?: lastInfo.carModel,
-            driverName = parsed.driverName ?: lastInfo.driverName,
-            driverSteamId = parsed.driverSteamId ?: lastInfo.driverSteamId,
-            hasPenalty = parsed.penalty != null || lastInfo.hasPenalty,
-            penaltyId = parsed.penalty?.id ?: lastInfo.penaltyId,
-            penaltyReason = parsed.penalty?.reason ?: lastInfo.penaltyReason,
-            penaltyTimestamp = parsed.penalty?.timestamp ?: lastInfo.penaltyTimestamp,
-            sessionEpoch = sessionEpoch,
-            sessionType = effectiveSessionType,
-            playerCarUuid = parser.currentPlayerCarUuid ?: lastInfo.playerCarUuid
-        )
+        mergeParsedIntoLastInfo(parsed, includePenalties = true)
 
         return lastInfo
     }
@@ -154,6 +122,10 @@ class AcEvoFileInfoExtractor(
         raf = RandomAccessFile(file, "r")
         pending = ""
         lastPos = file.length()
+        lastGameStartedBumpMs = 0L
+        lastHardBoundaryBumpMs = 0L
+        lastGameStartedTsMs = null
+        lastHardBoundaryTsMs = null
 
         bumpEpoch("reopen:$reason")
         primeFromTail(file)
@@ -176,31 +148,13 @@ class AcEvoFileInfoExtractor(
         val read = r.read(buf)
         if (read <= 0) return
 
-        val lines = buf.decodeToString(endIndex = read).split('\n').map { it.trimEnd('\r') }
+        val tailText = buf.decodeToString(endIndex = read)
+        val safeText = if (start > 0L) tailText.substringAfter('\n', missingDelimiterValue = "") else tailText
+        val lines = safeText.split('\n').map { it.trimEnd('\r') }.filter { it.isNotBlank() }
+        if (lines.isEmpty()) return
+
         val parsed = parser.parseLines(lines, includePenalties = false)
-        val resolved = parser.resolveTrackId(parsed, lastInfo)
-        val trackName = parser.buildDisplayName(parsed.physicsTrackName, resolved.layout)
-            ?: parsed.gameStartedTrackName
-            ?: resolved.trackId
-        val fallbackTrackId = buildFallbackTrackId(trackName, resolved.layout)
-        val effectiveTrackId = when {
-            !resolved.trackId.isNullOrBlank() -> resolved.trackId
-            !fallbackTrackId.isNullOrBlank() -> fallbackTrackId
-            else -> null
-        }
-
-        val newCar = parser.chooseCarModel(parsed, lastInfo)
-
-        lastInfo = lastInfo.copy(
-            trackId = effectiveTrackId,
-            layoutId = resolved.layout,
-            trackName = trackName,
-            carModel = newCar,
-            driverName = parsed.driverName,
-            driverSteamId = parsed.driverSteamId,
-            sessionType = parsed.sessionType ?: EvoSessionType.UNKNOWN,
-            playerCarUuid = parser.currentPlayerCarUuid
-        )
+        mergeParsedIntoLastInfo(parsed, includePenalties = false)
     }
 
     private fun readNewLines(file: File): List<String> {
@@ -290,7 +244,11 @@ class AcEvoFileInfoExtractor(
         sessionEpoch++
         lastInfo = lastInfo.copy(
             sessionEpoch = sessionEpoch,
-            sessionType = EvoSessionType.UNKNOWN
+            sessionType = EvoSessionType.UNKNOWN,
+            hasPenalty = false,
+            penaltyId = null,
+            penaltyReason = null,
+            penaltyTimestamp = null
         )
         parser.resetForEpoch()
         logger.info { "EvoFileInfo epoch++ -> $sessionEpoch ($reason)" }
@@ -307,16 +265,76 @@ class AcEvoFileInfoExtractor(
 
     private fun buildFallbackTrackId(trackName: String?, layout: String?): String? {
         val name = trackName?.trim()?.takeIf { it.isNotBlank() } ?: return null
-        val base = normalize(name)
-        val layoutId = layout?.trim()?.takeIf { it.isNotBlank() }?.let(::normalize)
-        if (layoutId.isNullOrBlank()) return base
-        return if (base.endsWith("_$layoutId")) base else "${base}_$layoutId"
+        return TrackIdNormalizer.normalize(
+            track = name,
+            layout = layout
+        ).takeIf { it.isNotBlank() }
     }
 
-    private fun normalize(raw: String): String =
-        raw.lowercase().trim()
-            .replace(Regex("\\s+"), "_")
-            .replace(Regex("[^a-z0-9_]"), "_")
-            .replace(Regex("_+"), "_")
-            .trim('_')
+    private fun mergeParsedIntoLastInfo(parsed: Parsed, includePenalties: Boolean) {
+        val resolved = parser.resolveTrackId(parsed, lastInfo)
+        val effectiveLayout = resolved.layout ?: lastInfo.layoutId
+
+        val rawTrackName = resolveTrackName(
+            parsed = parsed,
+            effectiveTrackId = resolved.trackId ?: lastInfo.trackId,
+            effectiveLayout = effectiveLayout
+        )
+        val trackName = rawTrackName?.trim()?.takeIf { it.isNotBlank() }
+
+        val fallbackTrackId = buildFallbackTrackId(trackName, effectiveLayout)
+        val effectiveTrackId = when {
+            !resolved.trackId.isNullOrBlank() -> resolved.trackId
+            !fallbackTrackId.isNullOrBlank() -> fallbackTrackId
+            else -> lastInfo.trackId
+        }
+
+        val newCar = parser.chooseCarModel(parsed, lastInfo)
+        val effectiveSessionType = parsed.sessionType ?: lastInfo.sessionType
+
+        val hasPenalty = if (includePenalties) {
+            parsed.penalty != null || lastInfo.hasPenalty
+        } else {
+            lastInfo.hasPenalty
+        }
+
+        lastInfo = lastInfo.copy(
+            trackName = trackName,
+            trackId = effectiveTrackId,
+            layoutId = effectiveLayout,
+            carModel = newCar ?: lastInfo.carModel,
+            driverName = parsed.driverName ?: lastInfo.driverName,
+            driverSteamId = parsed.driverSteamId ?: lastInfo.driverSteamId,
+            hasPenalty = hasPenalty,
+            penaltyId = if (includePenalties) parsed.penalty?.id ?: lastInfo.penaltyId else lastInfo.penaltyId,
+            penaltyReason = if (includePenalties) parsed.penalty?.reason
+                ?: lastInfo.penaltyReason else lastInfo.penaltyReason,
+            penaltyTimestamp = if (includePenalties) parsed.penalty?.timestamp
+                ?: lastInfo.penaltyTimestamp else lastInfo.penaltyTimestamp,
+            sessionEpoch = sessionEpoch,
+            sessionType = effectiveSessionType,
+            playerCarUuid = parser.currentPlayerCarUuid ?: lastInfo.playerCarUuid
+        )
+    }
+
+    private fun resolveTrackName(
+        parsed: Parsed,
+        effectiveTrackId: String?,
+        effectiveLayout: String?
+    ): String? {
+        parser.buildDisplayName(parsed.physicsTrackName, effectiveLayout)?.let { return it }
+        parser.buildDisplayName(parsed.gameStartedTrackName, effectiveLayout)?.let { return it }
+
+        val previousName = lastInfo.trackName?.trim()?.takeIf { it.isNotBlank() }
+        val previousTrackId = lastInfo.trackId?.trim()?.takeIf { it.isNotBlank() }
+        val newTrackId = effectiveTrackId?.trim()?.takeIf { it.isNotBlank() }
+
+        if (previousName != null) {
+            if (newTrackId == null || previousTrackId == null || newTrackId == previousTrackId) {
+                return previousName
+            }
+        }
+
+        return newTrackId ?: previousName
+    }
 }

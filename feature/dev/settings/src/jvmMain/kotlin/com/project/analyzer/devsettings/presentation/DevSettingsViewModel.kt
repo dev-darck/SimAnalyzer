@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
 internal class DevSettingsViewModel(
@@ -142,7 +143,7 @@ internal class DevSettingsViewModel(
     private fun observeTelemetryFrames() {
         viewModelScope.launch {
             telemetryLifecycle.frames
-                .sample(250L)
+                .sample(TELEMETRY_SAMPLE_MS)
                 .collect { frame ->
                     val session = frame.session
                     val track = session?.track
@@ -205,5 +206,10 @@ internal class DevSettingsViewModel(
             .joinToString(" ") { part ->
                 part.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
             }
+    }
+
+    private companion object {
+
+        val TELEMETRY_SAMPLE_MS: Long = 250.milliseconds.inWholeMilliseconds
     }
 }

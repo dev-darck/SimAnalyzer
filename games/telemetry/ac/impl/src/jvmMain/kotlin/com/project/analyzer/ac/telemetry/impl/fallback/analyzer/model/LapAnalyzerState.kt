@@ -36,7 +36,7 @@ class LapAnalyzerState {
     private var lastSectorsMs: IntArray = IntArray(0)
     private var bestSectorsMs: IntArray = IntArray(0)
     private val gateLastTriggerNs = mutableMapOf<String, Long>()
-    private val gateCooldownNs = 900_000_000L
+    private val gateCooldownNs = 900.milliseconds.inWholeNanoseconds
 
     var currentLapValid: Boolean = true
         private set

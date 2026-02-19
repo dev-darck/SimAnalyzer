@@ -1,6 +1,7 @@
 package com.project.analyzer.app
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,23 +18,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.icons.Live
+import com.project.analyzer.ui.icons.Session
+import com.project.analyzer.ui.icons.Settings
 
+@Immutable
 data class NavItem(
     val key: Root,
     val title: String,
@@ -42,12 +53,12 @@ data class NavItem(
 
 @Composable
 fun Sidebar(
-    topIcon: @Composable (() -> Unit)? = null,
-    items: List<NavItem>,
-    bottomItemsCount: Int = 0,
     selectedKey: Root,
-    onSelect: (NavItem) -> Unit,
-    modifier: Modifier = Modifier
+    items: List<NavItem>,
+    modifier: Modifier = Modifier,
+    topIcon: @Composable (() -> Unit)? = null,
+    bottomItemsCount: Int = 0,
+    onSelect: (NavItem) -> Unit = {},
 ) {
     val sidebarBg = SimAnalyzerTheme.material.surface
     val selectedPill = SimAnalyzerTheme.material.secondaryContainer
@@ -55,6 +66,13 @@ fun Sidebar(
     val selectedColor = SimAnalyzerTheme.material.primary
     val normalText = SimAnalyzerTheme.material.onSurfaceVariant
     val normalIcon = SimAnalyzerTheme.material.onSurfaceVariant
+    val boundedBottomItemsCount = bottomItemsCount.coerceIn(0, items.size)
+    val mainItems = remember(items, boundedBottomItemsCount) {
+        items.dropLast(boundedBottomItemsCount)
+    }
+    val trailingItems = remember(items, boundedBottomItemsCount) {
+        items.takeLast(boundedBottomItemsCount)
+    }
 
     Surface(
         modifier = modifier
@@ -80,22 +98,60 @@ fun Sidebar(
                 Spacer(Modifier.height(18.dp))
             }
 
-            items.forEachIndexed { index, item ->
-                if (index == items.size - bottomItemsCount) {
-                    Spacer(Modifier.weight(1f))
-                }
+            SidebarItemsGroup(
+                items = mainItems,
+                selectedKey = selectedKey,
+                selectedPill = selectedPill,
+                hoverPill = hoverPill,
+                selectedColor = selectedColor,
+                normalText = normalText,
+                normalIcon = normalIcon,
+                onSelect = onSelect
+            )
 
-                SidebarItem(
-                    item = item,
-                    selected = item.key == selectedKey,
-                    selectedPill = selectedPill,
-                    hoverPill = hoverPill,
-                    selectedColor = selectedColor,
-                    normalText = normalText,
-                    normalIcon = normalIcon,
-                    onClick = { onSelect(item) }
-                )
+            if (trailingItems.isNotEmpty()) {
+                Spacer(Modifier.weight(1f))
+            }
 
+            SidebarItemsGroup(
+                items = trailingItems,
+                selectedKey = selectedKey,
+                selectedPill = selectedPill,
+                hoverPill = hoverPill,
+                selectedColor = selectedColor,
+                normalText = normalText,
+                normalIcon = normalIcon,
+                onSelect = onSelect
+            )
+        }
+    }
+}
+
+@Composable
+private fun SidebarItemsGroup(
+    items: List<NavItem>,
+    selectedKey: Root,
+    selectedPill: Color,
+    hoverPill: Color,
+    selectedColor: Color,
+    normalText: Color,
+    normalIcon: Color,
+    onSelect: (NavItem) -> Unit
+) {
+    items.forEachIndexed { index, item ->
+        key(item.key) {
+            SidebarItem(
+                item = item,
+                selected = item.key == selectedKey,
+                selectedPill = selectedPill,
+                hoverPill = hoverPill,
+                selectedColor = selectedColor,
+                normalText = normalText,
+                normalIcon = normalIcon,
+                onClick = { onSelect(item) }
+            )
+
+            if (index != items.lastIndex) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
@@ -134,13 +190,17 @@ private fun SidebarItem(
         targetValue = if (selected) selectedColor else normalIcon,
         animationSpec = tween(120)
     )
+    val itemScale by animateScale(selected = selected, hovered = hovered)
 
     Column(
         modifier = Modifier
             .width(56.dp)
+            .scale(itemScale)
             .clip(RoundedCornerShape(16.dp))
             .hoverable(interaction)
             .clickable(
+                enabled = !selected,
+                role = Role.Tab,
                 interactionSource = interaction,
                 indication = null
             ) { onClick() },
@@ -167,6 +227,41 @@ private fun SidebarItem(
             color = textColor,
             style = MaterialTheme.typography.labelMedium,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
+}
+
+@Composable
+private fun animateScale(selected: Boolean, hovered: Boolean): androidx.compose.runtime.State<Float> {
+    val target = when {
+        selected -> 1.04f
+        hovered -> 1.02f
+        else -> 1f
+    }
+    return androidx.compose.animation.core.animateFloatAsState(
+        targetValue = target,
+        animationSpec = tween(durationMillis = 160, easing = FastOutSlowInEasing),
+        label = "sidebarItemScale"
+    )
+}
+
+@Preview
+@Composable
+private fun SidebarItemPreview() {
+    SimAnalyzerTheme {
+
+        val items = remember {
+            listOf(
+                NavItem(Root.Live, "Live", Icons.Filled.Live),
+                NavItem(Root.Session, "Session", Icons.Filled.Session),
+//            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
+                NavItem(Root.Settings, "Settings", Icons.Filled.Settings)
+            )
+        }
+
+        Sidebar(
+            selectedKey = Root.Live,
+            items = items
         )
     }
 }
