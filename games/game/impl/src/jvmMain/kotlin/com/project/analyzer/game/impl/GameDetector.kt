@@ -22,10 +22,11 @@ import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 class GameDetector(
     private val configs: List<GameConfig>,
-    private val pollIntervalMs: Long = 200L,
+    private val pollIntervalMs: Long = 200.milliseconds.inWholeMilliseconds,
     private val requireForeground: Boolean = true,
     private val coroutineDispatcher: CoroutineDispatcher
 ) {

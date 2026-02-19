@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.sp
 import com.project.analyzer.chooser.domain.model.TreeNode
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import kotlin.time.Duration.Companion.milliseconds
+
+private val CHEVRON_ANIM_DURATION_MS = 150.milliseconds.inWholeMilliseconds.toInt()
 
 @Composable
 fun FileTree(
@@ -98,7 +101,7 @@ private fun TreeRow(
 ) {
     val chevronAngle by animateFloatAsState(
         targetValue = if (node.expanded) 90f else 0f,
-        animationSpec = tween(durationMillis = 150),
+        animationSpec = tween(durationMillis = CHEVRON_ANIM_DURATION_MS),
         label = "chevron",
     )
 

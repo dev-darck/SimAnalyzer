@@ -1,7 +1,5 @@
 package com.project.analyzer.fuel.presentation.viewmodel
 
-internal data class SessionKey(val carModel: String?, val trackId: String?)
-
 internal data class PeakState(
     var peakLitersPerLap: Double? = null,
     val peakPlanFuelLiters: MutableList<Double?> = mutableListOf()

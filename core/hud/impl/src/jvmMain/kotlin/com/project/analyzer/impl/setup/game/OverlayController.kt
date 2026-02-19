@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
@@ -261,9 +262,9 @@ class OverlayController(
     private fun startClickThroughController(scope: CoroutineScope) {
         clickThroughJob?.cancel()
         clickThroughJob = scope.launch(coroutineDispatcher) {
-            while (true) {
+            while (isActive) {
                 updateClickThroughState()
-                delay(16L)
+                delay(CLICK_THROUGH_POLL_MS)
             }
         }
     }
@@ -315,7 +316,7 @@ class OverlayController(
         boundsGuardJob = scope.launch(coroutineDispatcher) {
             while (true) {
                 guardBounds()
-                delay(150L)
+                delay(BOUNDS_GUARD_POLL_MS)
             }
         }
     }
@@ -485,6 +486,8 @@ class OverlayController(
     companion object {
 
         private const val LOCK_HANDLE_SIZE_PX = 32
+        private val CLICK_THROUGH_POLL_MS = 16.milliseconds.inWholeMilliseconds
+        private val BOUNDS_GUARD_POLL_MS = 150.milliseconds.inWholeMilliseconds
         private val INPUT_LOCK_FOCUS_GRACE_NS = 1200.milliseconds.inWholeNanoseconds
     }
 }

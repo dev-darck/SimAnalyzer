@@ -2,6 +2,8 @@ package com.project.analyzer.fuel.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.analyzer.fuel.domain.model.FuelEstimate
+import com.project.analyzer.fuel.domain.model.FuelIdentityKey
 import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.fuel.domain.model.FuelResult
 import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
@@ -20,6 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
 internal class FuelHudViewModel(
@@ -28,9 +31,10 @@ internal class FuelHudViewModel(
 
     private val safetyFactor: Double get() = 1.0 + (FuelConsumptionConfig.safetyMarginPercent / 100.0)
 
-    private var currentKey: SessionKey = SessionKey(null, null)
-    private val peaksByKey: MutableMap<SessionKey, PeakState> = mutableMapOf()
+    private var currentKey: FuelIdentityKey = FuelIdentityKey.UNKNOWN
+    private val peaksByKey: MutableMap<FuelIdentityKey, PeakState> = mutableMapOf()
     private var fuelEstimateJob: Job? = null
+    private var lastDataUiEmitNs: Long = 0L
 
     private val _state = MutableStateFlow(FuelHudUiState())
     val state: StateFlow<FuelHudUiState> = _state.asStateFlow()
@@ -58,12 +62,19 @@ internal class FuelHudViewModel(
 
     private fun handleFuelResult(result: FuelResult) {
         when (result) {
-            FuelResult.SessionEnded -> updateState { copy(isShow = false, isSessionActive = false) }
+            FuelResult.SessionEnded -> {
+                lastDataUiEmitNs = 0L
+                updateState { copy(isShow = false, isSessionActive = false) }
+            }
 
-            FuelResult.SessionPaused -> updateState { copy(isShow = false, isSessionActive = false) }
+            FuelResult.SessionPaused -> {
+                lastDataUiEmitNs = 0L
+                updateState { copy(isShow = false, isSessionActive = false) }
+            }
 
             FuelResult.Reset -> {
                 peaksByKey[currentKey]?.reset()
+                lastDataUiEmitNs = 0L
                 updateState { copy(isShow = true, isSessionActive = true) }
             }
 
@@ -74,28 +85,41 @@ internal class FuelHudViewModel(
 
     private fun handleDataResult(result: FuelResult.Data) {
         val estimate = result.estimate
-        val newKey = SessionKey(estimate.carModel, estimate.trackId)
+        val newKey = FuelIdentityKey.from(estimate.carModel, estimate.trackId) ?: FuelIdentityKey.UNKNOWN
         if (newKey != currentKey) {
             currentKey = newKey
+            lastDataUiEmitNs = 0L
         }
 
-        val baseUiState = estimate.toUiState(safetyFactor)
-        val withPeaks = applyPeakTracking(baseUiState)
+        updatePeakStateFromEstimate(estimate)
 
+        val nowNs = System.nanoTime()
+        val currentState = _state.value
+        val forceEmit = shouldForceDataEmit(currentState, estimate)
+        if (!forceEmit && nowNs - lastDataUiEmitNs < DATA_UI_EMIT_INTERVAL_NS) return
+
+        val baseUiState = estimate.toUiState(safetyFactor)
+        val withPeaks = applyPeakProjection(baseUiState)
+
+        lastDataUiEmitNs = nowNs
         updateState { withPeaks.copy(isShow = true, isSessionActive = true) }
     }
 
-    private fun applyPeakTracking(fresh: FuelHudUiState): FuelHudUiState {
+    private fun updatePeakStateFromEstimate(estimate: FuelEstimate) {
         val peakState = peaksByKey.getOrPut(currentKey) { PeakState() }
-        val canUpdatePeak = fresh.phase == FuelPhase.PER_LAP && fresh.isCurrentLapValid
+        val canUpdatePeak = estimate.phase == FuelPhase.PER_LAP && estimate.isCurrentLapValid
 
         if (canUpdatePeak) {
-            peakState.updatePeakLitersPerLap(fresh.litersPerLapRaw)
-            fresh.planFuelLitersRaw.forEachIndexed { index, value ->
-                peakState.updatePeakPlanFuel(index, value)
+            peakState.updatePeakLitersPerLap(estimate.litersPerLap)
+            val lpl = estimate.litersPerLap
+            FuelConsumptionConfig.planLaps.forEachIndexed { index, laps ->
+                peakState.updatePeakPlanFuel(index, lpl?.times(laps)?.times(safetyFactor))
             }
         }
+    }
 
+    private fun applyPeakProjection(fresh: FuelHudUiState): FuelHudUiState {
+        val peakState = peaksByKey.getOrPut(currentKey) { PeakState() }
         return fresh.copy(
             peakValue = peakState.peakLitersPerLap?.let { "%.2f L".format(Locale.US, it) } ?: "—",
             peakLitersPerLapRaw = peakState.peakLitersPerLap,
@@ -106,7 +130,19 @@ internal class FuelHudViewModel(
         )
     }
 
+    private fun shouldForceDataEmit(current: FuelHudUiState, estimate: FuelEstimate): Boolean {
+        if (!current.isShow || !current.isSessionActive) return true
+        if (current.phase != estimate.phase) return true
+        if (current.isCurrentLapValid != estimate.isCurrentLapValid) return true
+        return false
+    }
+
     private inline fun updateState(transform: FuelHudUiState.() -> FuelHudUiState) {
         _state.update { it.transform() }
+    }
+
+    private companion object {
+
+        val DATA_UI_EMIT_INTERVAL_NS: Long = 50.milliseconds.inWholeNanoseconds // 20 Hz
     }
 }

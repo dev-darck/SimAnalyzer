@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import kotlin.time.Duration.Companion.milliseconds
+
+private val TOOLTIP_DELAY_MS = 300.milliseconds.inWholeMilliseconds.toInt()
 
 @Composable
 public fun Tooltip(
@@ -28,7 +31,7 @@ public fun Tooltip(
     if (isShowTooltip) {
         TooltipArea(
             tooltip = { TooltipContent(tooltip) },
-            delayMillis = 300,
+            delayMillis = TOOLTIP_DELAY_MS,
             tooltipPlacement = cursor
         ) {
             content()

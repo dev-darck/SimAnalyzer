@@ -57,9 +57,13 @@ class SessionListViewModel(
         }
     }
 
-    private fun refresh() {
+    private fun refresh(showLoading: Boolean = true) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            if (showLoading) {
+                _state.update { it.copy(isLoading = true, error = null) }
+            } else {
+                _state.update { it.copy(error = null) }
+            }
             val sessions = repository.loadSessions()
             allSessions = sessions
             val updated = rebuildFilters(_state.value, sessions)
@@ -76,7 +80,7 @@ class SessionListViewModel(
         viewModelScope.launch {
             val saved = repository.saveSession(sessionId)
             if (saved) {
-                refresh()
+                refresh(showLoading = false)
             } else {
                 _state.update { it.copy(error = "Failed to save session.") }
             }
@@ -87,7 +91,7 @@ class SessionListViewModel(
         viewModelScope.launch {
             val deleted = repository.deleteSession(sessionId)
             if (deleted) {
-                refresh()
+                refresh(showLoading = false)
             } else {
                 _state.update { it.copy(error = "Failed to delete session.") }
             }

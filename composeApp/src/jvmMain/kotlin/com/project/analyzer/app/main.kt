@@ -22,7 +22,10 @@ import com.project.analyzer.crash.presentation.CrashBoundary
 import com.project.analyzer.impl.compose.OverlayWindow
 import com.project.analyzer.impl.di.AppComponent
 import com.project.analyzer.impl.di.createAppComponent
+import com.project.analyzer.navigation.api.Root
+import com.project.analyzer.navigation.impl.rememberNavigationState
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.theme.ThemeMode
 import com.project.analyzer.utils.LogbackConfigurator
 import com.project.analyzer.utils.SingleInstanceGuard
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
@@ -33,13 +36,12 @@ import java.awt.SystemTray
 suspend fun main() {
     SingleInstanceGuard.acquireOrExit()
     val appGraph = createAppComponent()
-    val initTheme = appGraph.themeRepository.loadTheme()
     LogbackConfigurator.configure()
     try {
         appGraph.appLifecycle.start()
         awaitApplication {
             CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
-                var themeMode by remember { mutableStateOf(initTheme) }
+                var themeMode by remember { mutableStateOf(ThemeMode.System) }
 
                 LaunchedEffect(Unit) {
                     appGraph.themeRepository.observeThemeMode().collect { mode ->
@@ -66,6 +68,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
     val showHud by appGraph.hudPreferences.observeHudEnabled().collectAsState(true)
     var showOverlay by remember { mutableStateOf(appGraph.hudPanels.isNotEmpty()) }
     val isSystemTraySupported = remember { SystemTray.isSupported() }
+    val navigationState = rememberNavigationState()
 
     val appState = rememberWindowState(
         position = WindowPosition(Alignment.Center)
@@ -75,7 +78,11 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
         brandName = BuildConfig.APP_NAME,
         overlayVisible = showOverlay,
         onMainAction = { showAppWindow = true },
-        onOverlayToggle = { showOverlay = !showOverlay }
+        onOverlayToggle = { showOverlay = !showOverlay },
+        onOpenSession = {
+            showAppWindow = true
+            navigationState.switchTopLevel(Root.Session)
+        }
     )
 
     Window(
@@ -95,6 +102,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
         FrameDecorator { decorator ->
             App(
                 providerFactory = appGraph.entryProviderFactory,
+                navigationState = navigationState,
                 decorator = decorator,
                 onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() }
             )

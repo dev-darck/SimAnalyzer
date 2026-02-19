@@ -6,6 +6,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionT
 import com.project.analyzer.api.di.SessionScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
 @SingleIn(SessionScope::class)
@@ -18,15 +19,15 @@ class FileInfoExtractorStabilizer(
 
     data class Tuning(
         val confirmCount: Int = 3,
-        val promoteMs: Long = 250L,
+        val promoteMs: Long = 250.milliseconds.inWholeMilliseconds,
 
-        val sessionPromoteMs: Long = 250L,
+        val sessionPromoteMs: Long = 250.milliseconds.inWholeMilliseconds,
         val sessionConfirmCount: Int = 3,
 
-        val practicePromoteMs: Long = 1500L,
+        val practicePromoteMs: Long = 1500.milliseconds.inWholeMilliseconds,
         val practiceConfirmCount: Int = 10,
 
-        val uuidPromoteMs: Long = 500L,
+        val uuidPromoteMs: Long = 500.milliseconds.inWholeMilliseconds,
         val uuidConfirmCount: Int = 5,
     )
 

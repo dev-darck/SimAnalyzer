@@ -1,6 +1,7 @@
 package com.project.analyzer.fuel.domain.usecase
 
 import com.project.analyzer.fuel.data.model.SavedFuelData
+import com.project.analyzer.fuel.domain.model.FuelIdentityKey
 import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.fuel.domain.model.FuelResult
 import com.project.analyzer.fuel.domain.predictor.FuelConsumptionEngine
@@ -101,8 +102,9 @@ internal class FuelConsumptionUseCaseImpl(
                 val merged = currentSession ?: return null
                 val identityChanged = didIdentityChange(prev, merged)
 
-                val becameReady = (prev?.carModel.orEmpty().isBlank() || prev?.trackId.orEmpty().isBlank()) &&
-                    merged.carModel.isNotBlank() && merged.trackId.isNotBlank()
+                val prevKey = prev?.toFuelIdentityKey()
+                val newKey = merged.toFuelIdentityKey()
+                val becameReady = prevKey == null && newKey != null
 
                 if (becameReady) {
                     savedFuelData = loadIfIdentityReady(merged)
@@ -189,36 +191,36 @@ internal class FuelConsumptionUseCaseImpl(
         sessionBestValidLapTimeMs = null
         savedFuelData = null
 
-        val s = currentSession
-        if (s != null && s.carModel.isNotBlank() && s.trackId.isNotBlank()) {
-            repository.clear(s.carModel, s.trackId)
+        currentSession?.toFuelIdentityKey()?.let { key ->
+            repository.clear(
+                carModel = key.carModel,
+                trackId = key.trackId
+            )
         }
     }
 
     private suspend fun flushIfNeeded(reason: String) {
-        val s = currentSession ?: return
-        val car = s.carModel.trim()
-        val track = s.trackId.trim()
-        if (car.isBlank() || track.isBlank()) return
+        val key = currentSession?.toFuelIdentityKey() ?: return
 
         val peak = sessionPeakLitersPerLap
         val best = sessionBestValidLapTimeMs
         if (peak <= 0.0 && best == null) return
 
         repository.updateIfBetter(
-            carModel = car,
-            trackId = track,
+            carModel = key.carModel,
+            trackId = key.trackId,
             peakLitersPerLap = peak.takeIf { it > 0.0 },
             bestValidLapTimeMs = best
         )
-        logger.info { "Fuel flush ($reason) car=$car track=$track peak=$peak bestMs=$best" }
+        logger.info { "Fuel flush ($reason) key=${key.composite} peak=$peak bestMs=$best" }
     }
 
     private suspend fun loadIfIdentityReady(session: SessionInfo): SavedFuelData? {
-        val car = session.carModel.trim()
-        val track = session.trackId.trim()
-        if (car.isBlank() || track.isBlank()) return null
-        return repository.load(car, track)
+        val key = session.toFuelIdentityKey() ?: return null
+        return repository.load(
+            carModel = key.carModel,
+            trackId = key.trackId
+        )
     }
 
     private fun resetState(full: Boolean) {
@@ -251,23 +253,25 @@ internal class FuelConsumptionUseCaseImpl(
 
     private fun didIdentityChange(old: SessionInfo?, new: SessionInfo): Boolean {
         if (old == null) return false
-        val oldCar = old.carModel.trim()
-        val oldTrack = old.trackId.trim()
-        val newCar = new.carModel.trim()
-        val newTrack = new.trackId.trim()
-
-        val carChanged = oldCar.isNotBlank() && newCar.isNotBlank() && oldCar != newCar
-        val trackChanged = oldTrack.isNotBlank() && newTrack.isNotBlank() && oldTrack != newTrack
-        return carChanged || trackChanged
+        val oldKey = old.toFuelIdentityKey() ?: return false
+        val newKey = new.toFuelIdentityKey() ?: return false
+        return oldKey != newKey
     }
 
     private fun logIdentity(prefix: String, session: SessionInfo) {
-        val msg = "$prefix sessionId=${session.sessionId} car=${session.carModel} track=${session.trackId}"
+        val key = session.toFuelIdentityKey()
+        val msg = "$prefix sessionId=${session.sessionId} key=${key?.composite ?: "<pending>"}"
         if (msg != lastIdentityLog) {
             lastIdentityLog = msg
             logger.info { msg }
         }
     }
+
+    private fun SessionInfo.toFuelIdentityKey(): FuelIdentityKey? =
+        FuelIdentityKey.from(
+            carModel = carModel,
+            trackId = trackId
+        )
 
     sealed interface Input {
         data class Frame(val frame: TelemetryFrame) : Input

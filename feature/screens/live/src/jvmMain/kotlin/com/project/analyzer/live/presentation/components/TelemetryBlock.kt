@@ -44,6 +44,9 @@ import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.milliseconds
+
+private val TOP_BAR_ANIMATION_MS = 160.milliseconds.inWholeMilliseconds.toInt()
 
 @Composable
 internal fun TelemetryBlock(
@@ -138,7 +141,7 @@ private fun TopIntegratedProgressBar(
 
     val frac by animateFloatAsState(
         targetValue = targetFrac,
-        animationSpec = tween(durationMillis = 160, easing = LinearOutSlowInEasing),
+        animationSpec = tween(durationMillis = TOP_BAR_ANIMATION_MS, easing = LinearOutSlowInEasing),
         label = "TopBar"
     )
 

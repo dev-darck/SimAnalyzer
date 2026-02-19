@@ -17,6 +17,18 @@ internal object RegexConst {
         pattern = """content[\\/]+tracks[\\/]+([^\\/]+)[\\/]+containers[\\/]+layout_([^\\/.]+)\.scene""",
         option = RegexOption.IGNORE_CASE
     )
+    val RE_DYNAMIC_TRACK_PRESET = Regex(
+        pattern = """content[\\/]+tracks[\\/]+([^\\/]+)[\\/]+dynamic_track[\\/]+([^\\/.]+)\.dynamictrackpresetcompressed""",
+        option = RegexOption.IGNORE_CASE
+    )
+    val RE_LAYOUT_TRACK_FILE = Regex(
+        pattern = """content[\\/]+tracks[\\/]+([^\\/]+)[\\/]+layouts[\\/]+layout_([^\\/.]+)\.track_layout""",
+        option = RegexOption.IGNORE_CASE
+    )
+    val RE_GAME_MODE_TYPE = Regex(
+        pattern = """\bGameModeType_([A-Za-z0-9_]+)\b""",
+        option = RegexOption.IGNORE_CASE
+    )
     val RE_CONNECTING_GAMECAR = Regex(
         pattern = """connecting\s+gamecar\s+([0-9a-fA-F-]+)\s*\(([^|]+)\|\s*(\d*)\)""",
         option = RegexOption.IGNORE_CASE
