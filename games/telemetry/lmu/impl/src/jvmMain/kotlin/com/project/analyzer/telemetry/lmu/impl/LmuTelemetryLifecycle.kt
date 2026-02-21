@@ -1,6 +1,7 @@
 package com.project.analyzer.telemetry.lmu.impl
 
 import com.project.analyzer.api.di.IO
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.LapValidity
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionField
@@ -80,6 +81,8 @@ internal class LmuTelemetryLifecycle(
 
         appScope.cancel()
         resetState()
+
+        LeakCanaryRuntime.watch(this, "LmuTelemetryLifecycle")
     }
 
     private suspend fun listenLoop() {

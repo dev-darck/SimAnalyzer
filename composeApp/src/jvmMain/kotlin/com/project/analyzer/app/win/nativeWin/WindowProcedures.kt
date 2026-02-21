@@ -23,6 +23,7 @@ import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCHITTEST
 import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCLBUTTONDOWN
 import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCLBUTTONUP
 import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCMOUSEMOVE
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.utils.logger
 import com.sun.jna.Native
 import com.sun.jna.NativeLibrary
@@ -259,6 +260,8 @@ internal class ComposeWindowProcedure(
                 }
             }
         }
+
+        LeakCanaryRuntime.watch(this, "ComposeWindowProcedure")
     }
 }
 
@@ -348,5 +351,7 @@ internal class SkiaLayerWindowProcedure(skiaLayer: SkiaLayer, private val hitTes
                 }
             }
         }
+
+        LeakCanaryRuntime.watch(this, "SkiaLayerWindowProcedure")
     }
 }

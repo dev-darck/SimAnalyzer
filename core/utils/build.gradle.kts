@@ -5,6 +5,7 @@ moduleApi {
     }
     dependencies {
         projects.core.di.api.jvmImpl
+        projects.core.leak.api.jvmImpl
 
         lib.kotlin.logging.jvmImpl
         lib.sfl4j.api.jvmImpl

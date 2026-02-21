@@ -1,7 +1,7 @@
 package com.project.analyzer.live.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
 import dev.zacsweers.metro.Inject
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 
 @Inject
-internal class LiveViewModel(private val useCase: LiveTelemetryUseCase) : ViewModel() {
+internal class LiveViewModel(private val useCase: LiveTelemetryUseCase) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(LiveScreenState())
     val state: StateFlow<LiveScreenState> = _state.asStateFlow()

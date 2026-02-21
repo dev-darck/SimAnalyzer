@@ -2,6 +2,8 @@ package com.project.analyzer.impl.di
 
 import com.project.analyzer.api.di.AppLifecycle
 import com.project.analyzer.api.di.IO
+import com.project.analyzer.leak.api.LeakCanaryController
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingController
 import dev.zacsweers.metro.AppScope
@@ -25,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 class AppLifecycleImpl(
     private val telemetryLifecycle: TelemetryLifecycle,
     private val telemetryRecordingController: TelemetryRecordingController,
+    private val leakCanaryController: LeakCanaryController,
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
 ) : AppLifecycle {
@@ -35,6 +38,7 @@ class AppLifecycleImpl(
 
     override suspend fun start() {
         if (!started.compareAndSet(false, true)) return
+        LeakCanaryRuntime.install(leakCanaryController)
         startupJob?.cancelAndJoin()
         startupJob = scope.launch {
             coroutineScope {
@@ -43,6 +47,9 @@ class AppLifecycleImpl(
                 }
                 launch {
                     runCatching { telemetryRecordingController.start() }
+                }
+                launch {
+                    runCatching { leakCanaryController.start() }
                 }
             }
         }
@@ -60,6 +67,10 @@ class AppLifecycleImpl(
             launch {
                 runCatching { telemetryLifecycle.finishTelemetry() }
             }
+            launch {
+                runCatching { leakCanaryController.stop() }
+            }
         }
+        LeakCanaryRuntime.uninstall(leakCanaryController)
     }
 }

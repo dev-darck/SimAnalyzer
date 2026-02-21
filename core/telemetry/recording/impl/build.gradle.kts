@@ -12,6 +12,7 @@ moduleImpl {
         projects.core.preference.api.jvmImpl
         projects.core.utils.jvmImpl
         projects.core.di.api.jvmImpl
+        projects.core.leak.api.jvmImpl
 
         lib.metro.runtime.jvmImpl
     }

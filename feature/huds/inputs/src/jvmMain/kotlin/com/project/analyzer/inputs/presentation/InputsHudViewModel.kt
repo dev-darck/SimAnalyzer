@@ -1,10 +1,10 @@
 package com.project.analyzer.inputs.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.domain.usecase.InputsUseCase
 import com.project.analyzer.inputs.presentation.model.InputsSeries
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +20,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 @Inject
-internal class InputsHudViewModel(private val useCase: InputsUseCase) : ViewModel() {
+internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwareViewModel() {
 
     private var steerPeakAbs: Float = 0.35f
     private val steerPeakDecay: Float = 0.995f

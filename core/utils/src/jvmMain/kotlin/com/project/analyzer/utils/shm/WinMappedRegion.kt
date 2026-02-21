@@ -1,5 +1,6 @@
 package com.project.analyzer.utils.shm
 
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.WinNT
@@ -27,9 +28,20 @@ public class WinMappedRegion(private val mappingName: String) : Closeable {
     }
 
     override fun close() {
-        view?.let { kernel32.UnmapViewOfFile(it) }
-        handle?.let { kernel32.CloseHandle(it) }
+        val closingView = view
+        val closingHandle = handle
+
+        closingView?.let { kernel32.UnmapViewOfFile(it) }
+        closingHandle?.let { kernel32.CloseHandle(it) }
+
         view = null
         handle = null
+
+        if (closingView != null) {
+            LeakCanaryRuntime.watch(closingView, "WinMappedRegion.view($mappingName)")
+        }
+        if (closingHandle != null) {
+            LeakCanaryRuntime.watch(closingHandle, "WinMappedRegion.handle($mappingName)")
+        }
     }
 }

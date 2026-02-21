@@ -5,6 +5,7 @@ import com.project.analyzer.ac.telemetry.impl.internal.DataSourceType
 import com.project.analyzer.ac.telemetry.impl.internal.recording.AcRawFrameEncoder
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionDefaults
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
@@ -93,6 +94,8 @@ class AcTelemetryRecordingSource(
 
     override fun close() {
         scope.cancel()
+
+        LeakCanaryRuntime.watch(this, "AcTelemetryRecordingSource")
     }
 
     private fun dataSourceId(source: DataSourceType): Int = if (source == DataSourceType.FALLBACK) 1 else 0

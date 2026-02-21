@@ -1,6 +1,7 @@
 package com.project.analyzer.telemetry.lmu.impl.shm
 
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.lmu.api.model.LmuTelemetrySnapshot
 import com.project.analyzer.telemetry.lmu.impl.LmuTelemetryFeed
 import com.project.analyzer.telemetry.lmu.impl.mapper.LmuShmMapper
@@ -40,6 +41,7 @@ internal class LmuSharedMemoryTelemetryFeed(private val shm: LmuSharedMemory, pr
 
     override fun close() {
         shm.close()
+        LeakCanaryRuntime.watch(this, "LmuSharedMemoryTelemetryFeed")
     }
 
     private fun readFrame(): LmuTelemetrySnapshot? {

@@ -7,6 +7,7 @@ app {
 
     dependencies {
         projects.core.di.api.jvmImpl
+        projects.core.leak.api.jvmImpl
         projects.core.di.impl.jvmImpl
         projects.core.navigation.api.jvmImpl
         projects.core.navigation.impl.jvmImpl

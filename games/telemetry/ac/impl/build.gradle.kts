@@ -14,6 +14,7 @@ moduleImpl {
         projects.games.telemetry.ac.api.jvmImpl
         projects.core.telemetry.recording.api.jvmImpl
         projects.core.di.api.jvmImpl
+        projects.core.leak.api.jvmImpl
         projects.core.math.jvmImpl
         projects.core.utils.jvmImpl
         projects.games.game.api.jvmImpl

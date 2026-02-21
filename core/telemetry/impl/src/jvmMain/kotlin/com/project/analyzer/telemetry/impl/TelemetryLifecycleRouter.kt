@@ -6,6 +6,7 @@ import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.game.impl.GameDetector
 import com.project.analyzer.game.impl.GameProfiles
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.TelemetryGameSettings
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
@@ -127,6 +128,8 @@ class TelemetryLifecycleRouter(
         executeCleanup(cleanup)
 
         scope.cancel()
+
+        LeakCanaryRuntime.watch(this, "TelemetryLifecycleRouter")
     }
 
     private fun autoGameIdFlow(): Flow<GameId?> = autoDetector.observeGameWindow().map { info ->

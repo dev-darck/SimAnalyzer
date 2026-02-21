@@ -9,6 +9,7 @@ import com.project.analyzer.game.impl.WS_EX_TOOLWINDOW
 import com.project.analyzer.game.impl.user32Ex
 import com.project.analyzer.impl.setup.WindowsOverlayRegion
 import com.project.analyzer.impl.setup.region.HitRegions
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.utils.NsRateLimiter
 import com.sun.jna.Native
 import com.sun.jna.Pointer
@@ -156,6 +157,7 @@ class OverlayController(
 
         logger.info("Detach from window ${overlayWindow?.name} overlayHwnd=$overlayHwnd")
 
+        val closingHwnd = overlayHwnd
         expectedBounds = null
         lastClickThrough = null
         gameDetector.setOverlayHwnd(null)
@@ -163,6 +165,10 @@ class OverlayController(
         overlayHwnd = null
 
         _state.update { OverlayState() }
+
+        if (closingHwnd != null) {
+            LeakCanaryRuntime.watch(closingHwnd, "OverlayController.hwnd")
+        }
     }
 
     fun setInputLocked(locked: Boolean) {

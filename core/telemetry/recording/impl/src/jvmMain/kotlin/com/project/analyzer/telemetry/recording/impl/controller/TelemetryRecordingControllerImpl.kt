@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.recording.impl.controller
 
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionInfo
 import com.project.analyzer.telemetry.api.contract.SessionType
@@ -93,6 +94,8 @@ class TelemetryRecordingControllerImpl(
 
         cleanupUnsavedSessions(reason = "app_stop")
         scope.cancel()
+
+        LeakCanaryRuntime.watch(this, "TelemetryRecordingController")
     }
 
     private fun inputFlow(): Flow<TelemetryRecordingInput> {

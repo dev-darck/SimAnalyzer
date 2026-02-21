@@ -1,14 +1,11 @@
 package com.project.analyzer.calibration.presentation.trackmap
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.trackmap.TrackMapStatsCalculator
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
-import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
-import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,9 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Inject
-@ViewModelKey(TrackMapLibraryViewModel::class)
-@ContributesIntoMap(ScreenScope::class)
-class TrackMapLibraryViewModel(private val repository: TrackMapRepository) : ViewModel() {
+class TrackMapLibraryViewModel(private val repository: TrackMapRepository) : LeakAwareViewModel() {
 
     private val stats = TrackMapStatsCalculator()
 

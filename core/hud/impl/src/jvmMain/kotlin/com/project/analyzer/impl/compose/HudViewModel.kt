@@ -1,15 +1,15 @@
 package com.project.analyzer.impl.compose
 
 import androidx.compose.ui.unit.IntOffset
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal class HudViewModel(private val preferences: HudPreferences) : ViewModel() {
+internal class HudViewModel(private val preferences: HudPreferences) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(HudUiState())
     val state: StateFlow<HudUiState> = _state.asStateFlow()
