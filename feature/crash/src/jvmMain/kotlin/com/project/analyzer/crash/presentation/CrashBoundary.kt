@@ -36,11 +36,7 @@ fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) 
                     appVersion = appVersion,
                 )
 
-                if (!crashDialogShown.compareAndSet(
-                        expectedValue = false,
-                        newValue = true,
-                    )
-                ) {
+                if (!crashDialogShown.compareAndSet(expectedValue = false, newValue = true)) {
                     return@WindowExceptionHandler
                 }
 

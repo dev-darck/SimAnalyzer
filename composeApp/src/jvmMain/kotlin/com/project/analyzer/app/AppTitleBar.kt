@@ -45,7 +45,7 @@ import com.project.analyzer.app.win.hittest.winMaximizeButtonRect
 import com.project.analyzer.app.win.hittest.winMinimizeButtonRect
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import java.awt.Frame
 import java.awt.event.WindowStateListener
 

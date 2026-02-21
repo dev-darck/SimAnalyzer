@@ -6,8 +6,8 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
 import com.project.analyzer.ac.telemetry.impl.shm.structure.toKString
 import com.project.analyzer.api.di.SessionScope
-import com.project.analyzer.utils.NsRateLimiter
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.currentCoroutineContext
@@ -22,15 +22,12 @@ import kotlin.time.Duration.Companion.seconds
 @SingleIn(SessionScope::class)
 class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig) {
 
+    private val logger = logger()
     private val reusableSnapshot = AcRawSnapshot(
         physics = shm.physics,
         graphics = shm.graphics,
         statics = shm.statics,
     )
-
-    private val errorLogLimiter = NsRateLimiter(ERROR_LOG_INTERVAL_NS)
-    private val noChangeLogLimiter = NsRateLimiter(NO_CHANGE_LOG_INTERVAL_NS)
-
     private var lastNeedsFallback: Boolean = false
     private var lastEmittedFrameNs: Long = 0L
 
@@ -54,11 +51,31 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
                 dispatch(onResult)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Exception) {
-                val now = System.nanoTime()
-                if (errorLogLimiter.shouldLog(now)) {
-                    logger.error(e) { "[poll] loop error state=$currentState source=$currentDataSource" }
+            } catch (e: Throwable) {
+                val wasState = currentState
+
+                runCatching { shm.close() }
+
+                currentState = GameConnectionState.DISCONNECTED
+                currentDataSource = DataSourceType.NATIVE
+                resetCounters()
+                lastPhysicsPacket = -1
+                lastGraphicsPacket = -1
+                disconnectedPollMs = DISCONNECTED_POLL_MIN_MS
+
+                logger.error(e) {
+                    "poll loop error (was state=$wasState), shm closed, treating as disconnect"
                 }
+
+                runCatching {
+                    onResult(
+                        PollResult.StateChanged(
+                            state = GameConnectionState.DISCONNECTED,
+                            dataSource = DataSourceType.NATIVE,
+                        ),
+                    )
+                }
+
                 if (currentCoroutineContext().isActive) {
                     delay(cfg.reconnectDelayMs)
                 }
@@ -178,12 +195,10 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
     }
 
     private fun logSessionNoChanges(now: Long, graphics: SPageFileGraphics, physics: SPageFilePhysics) {
-        if (!noChangeLogLimiter.shouldLog(now)) return
-
-        val sinceMs = (now - lastEmittedFrameNs) / NS_PER_MS
-        logger.debug {
-            "[poll] IN_SESSION but no packet changes for ${sinceMs}ms " +
-                "gfx(packet=${graphics.packetId} status=${graphics.status} session=${graphics.session} idx=${graphics.sessionIndex}) " +
+        logger.atDebug(RATE_LIMITED) {
+            message = "IN_SESSION but no packet changes for ${now}ms " +
+                "gfx(packet=${graphics.packetId} status=${graphics.status} session=${graphics.session} " +
+                "idx=${graphics.sessionIndex}) " +
                 "phy(packet=${physics.packetId} stale=$stalePacketCounter)"
         }
     }
@@ -230,23 +245,31 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
             disconnectedPollMs = DISCONNECTED_POLL_MIN_MS
         }
 
-        handleFallbackChange(detection)
-        onResult(PollResult.StateChanged(detection.state, detection.dataSource))
+        onResult(
+            PollResult.StateChanged(
+                state = detection.state,
+                dataSource = detection.dataSource,
+            ),
+        )
     }
 
-    private fun logStateTransition(oldState: GameConnectionState, oldSource: DataSourceType, detection: Detection) {
-        logger.info {
-            val g = shm.graphics
-            val p = shm.physics
+    private fun logStateTransition(
+        oldState: GameConnectionState,
+        oldSource: DataSourceType,
+        detection: Detection,
+    ) {
+        val g = shm.graphics
+        val p = shm.physics
 
-            val stateStr = "[poll] state: $oldState/$oldSource -> ${detection.state}/${detection.dataSource} "
-            val fallbackStr = "needsFallback=${detection.needsFallback} "
+        logger.atInfo(RATE_LIMITED) {
+            val stateStr = "$oldState($oldSource) -> ${detection.state}(${detection.dataSource}) "
+            val fallbackStr = "fallback=${detection.needsFallback} "
             val gfxStr = "gfx(packet=${g.packetId}, status=${g.status}, session=${g.session}, " +
-                "idx=${g.sessionIndex}, laps=${g.completedLaps}, left=${g.sessionTimeLeft}) "
+                "idx=${g.sessionIndex}, completedLaps=${g.completedLaps}, stale=$graphicsStaleCounter) "
             val phyStr = "phy(packet=${p.packetId}, rpm=${p.rpm}, speed=${p.speedKmh}, " +
                 "stale=$stalePacketCounter, active=$activePacketCounter)"
 
-            stateStr + fallbackStr + gfxStr + phyStr
+            message = stateStr + fallbackStr + gfxStr + phyStr
         }
     }
 
@@ -254,7 +277,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         if (detection.needsFallback == lastNeedsFallback) return
 
         lastNeedsFallback = detection.needsFallback
-        logger.info { "[poll] needsFallback changed -> ${detection.needsFallback} (source=$currentDataSource)" }
+        logger.info { "needsFallback changed -> ${detection.needsFallback} (source=$currentDataSource)" }
     }
 
     private fun detectGameState(): Detection {
@@ -462,8 +485,5 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         val DELAY_THRESHOLD_NS = 5.milliseconds.inWholeNanoseconds
 
         val NS_PER_MS = 1.milliseconds.inWholeNanoseconds
-
-        val ERROR_LOG_INTERVAL_NS = 5.seconds.inWholeNanoseconds
-        val NO_CHANGE_LOG_INTERVAL_NS = 2.seconds.inWholeNanoseconds
     }
 }

@@ -10,7 +10,7 @@ import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisi
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSample
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSource
 import com.project.analyzer.telemetry.recording.api.recording.TelemetrySamplingGate
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher

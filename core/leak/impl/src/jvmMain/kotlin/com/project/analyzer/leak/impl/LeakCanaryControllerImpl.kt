@@ -3,7 +3,7 @@ package com.project.analyzer.leak.impl
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.leak.api.LeakCanaryController
 import com.project.analyzer.utils.AppDirectories
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import com.sun.management.HotSpotDiagnosticMXBean
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -18,11 +18,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import leakcanary.Clock
 import leakcanary.GcTrigger
 import leakcanary.KeyedWeakReference
-import leakcanary.ObjectWatcher
-import leakcanary.OnObjectRetainedListener
+import leakcanary.ReferenceQueueRetainedObjectTracker
+import leakcanary.inProcess
 import shark.HeapAnalysis
 import shark.HeapAnalysisFailure
 import shark.HeapAnalysisSuccess
@@ -38,8 +37,6 @@ import java.lang.management.ManagementFactory
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -56,22 +53,18 @@ class LeakCanaryControllerImpl(
     @param:IO private val ioDispatcher: CoroutineDispatcher,
 ) : LeakCanaryController {
 
+    private val logger = logger()
     private val config = LeakCanaryConfig.fromSystemProperties()
     private val started = AtomicBoolean(false)
     private val analysisInProgress = AtomicBoolean(false)
     private val lastAnalysisUptimeMs = AtomicLong(0)
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
-    private val clock: Clock = UptimeClock
 
-    private val retainedListener = OnObjectRetainedListener {
-        scheduleAnalysis("object retained")
-    }
+    private val clock = UptimeClock
 
     @Volatile
-    private var objectWatcher: ObjectWatcher? = null
+    private var retainedObjectTracker: ReferenceQueueRetainedObjectTracker? = null
 
-    @Volatile
-    private var scheduler: ScheduledExecutorService? = null
     private val objectWatcherMutex = Mutex()
 
     private val watcherLock = Any()
@@ -80,7 +73,7 @@ class LeakCanaryControllerImpl(
 
     override suspend fun start() {
         if (!config.enabled) {
-            logger.info { "LeakCanary disabled (enabled via '$PROP_ENABLED')." }
+            logger.info { "LeakCanary disabled." }
             return
         }
         if (!started.compareAndSet(false, true)) return
@@ -97,18 +90,16 @@ class LeakCanaryControllerImpl(
 
         scope.coroutineContext.cancelChildren()
 
-        objectWatcher?.removeOnObjectRetainedListener(retainedListener)
-        objectWatcher = null
-        scheduler?.shutdownNow()
-        scheduler = null
+        retainedObjectTracker = null
 
         logger.info { "LeakCanary stopped." }
     }
 
     override fun watch(watchedObject: Any, description: String) {
         if (!config.enabled || !started.get()) return
-        val watcher = objectWatcher ?: return
-        watcher.expectWeaklyReachable(watchedObject = watchedObject, description = description)
+        val tracker = retainedObjectTracker ?: return
+
+        tracker.expectDeletionOnTriggerFor(watchedObject, description)
     }
 
     override fun dumpNow(reason: String?) {
@@ -117,24 +108,20 @@ class LeakCanaryControllerImpl(
     }
 
     private suspend fun ensureWatcher() {
-        objectWatcher ?: objectWatcherMutex.withLock(watcherLock) {
-            if (objectWatcher != null) return
+        retainedObjectTracker ?: objectWatcherMutex.withLock(watcherLock) {
+            if (retainedObjectTracker != null) return
 
-            val scheduler = Executors.newSingleThreadScheduledExecutor(WatcherThreadFactory)
-            val executor = DelayedExecutor(scheduler, config.watchDelayMillis)
-            val watcher = ObjectWatcher(clock, executor) { config.enabled && started.get() }
-
-            watcher.addOnObjectRetainedListener(retainedListener)
-
-            this.scheduler = scheduler
-            this.objectWatcher = watcher
+            retainedObjectTracker = ReferenceQueueRetainedObjectTracker(
+                clock = clock,
+                onObjectRetainedListener = {}
+            )
         }
     }
 
     private fun scheduleAnalysis(reason: String) {
         if (!config.enabled || !started.get()) return
 
-        val now = clock.uptimeMillis()
+        val now = clock.uptime().inWholeMilliseconds
         val last = lastAnalysisUptimeMs.get()
 
         if (now - last < config.analysisCooldownMillis) return
@@ -154,15 +141,15 @@ class LeakCanaryControllerImpl(
     }
 
     private suspend fun analyzeRetainedObjects(reason: String) {
-        val watcher = objectWatcher ?: return
-        val retainedCount = watcher.retainedObjectCount
+        val tracker = retainedObjectTracker ?: return
+        val retainedCount = tracker.retainedObjectCount
         if (retainedCount == 0) return
 
-        GcTrigger.Default.runGc()
-        if (watcher.retainedObjectCount == 0) return
+        GcTrigger.inProcess().runGc()
+        if (tracker.retainedObjectCount == 0) return
 
         val heapDumpFile = newHeapDumpFile()
-        KeyedWeakReference.heapDumpUptimeMillis = clock.uptimeMillis()
+        KeyedWeakReference.heapDumpUptimeMillis = clock.uptime().inWholeMilliseconds
         if (!dumpHeap(heapDumpFile)) return
 
         val analyzer = HeapAnalyzer(OnAnalysisProgressListener.NO_OP)
@@ -286,6 +273,8 @@ class LeakCanaryControllerImpl(
 }
 
 private object SharkLogger : SharkLog.Logger {
+
+    private val logger = logger()
 
     override fun d(message: String) {
         logger.debug { message }

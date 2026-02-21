@@ -1,6 +1,12 @@
 package com.project.analyzer.scope
 
 import com.project.analyzer.ProjectDsl
+import com.project.analyzer.base.configureLeakCanaryJvm
+import com.project.analyzer.base.configureMetro
+import com.project.analyzer.base.configureTest
+import com.project.analyzer.kmp.configureDesktopBuildConfig
+import com.project.analyzer.kmp.configureLogger
+import com.project.analyzer.kmp.configureProtoSerializer
 import dev.detekt.gradle.extensions.DetektExtension
 import dev.zacsweers.metro.gradle.MetroPluginExtension
 import org.gradle.api.Project
@@ -44,27 +50,34 @@ class ProjectScope(
     }
 
     fun metro(block: MetroPluginExtension.() -> Unit = {}) {
-        metroImpl(block)
+        configureMetro(block)
     }
 
     fun proto() {
-        protoImpl()
+        configureProtoSerializer()
     }
 
     fun logger() {
-        loggerImpl()
+        configureLogger()
     }
 
     fun leakCanary() {
-        leakCanaryImpl()
+        configureLeakCanaryJvm()
     }
 
     fun test(config: TestOptions.() -> Unit = { both() }) {
-        testImpl(config)
+        val options = TestOptions().apply(config)
+
+        configureTest {
+            if (options.delegate.enableUnit) unit()
+            if (options.delegate.enableUi) ui()
+        }
     }
 
     fun buildConfig(block: BuildConfigOptions.() -> Unit) {
-        buildConfigImpl(block)
+        val options = BuildConfigOptions().apply(block)
+
+        configureDesktopBuildConfig(options.spec)
     }
 
     fun dependencies(scope: DependenciesScope.() -> Unit = {}) {

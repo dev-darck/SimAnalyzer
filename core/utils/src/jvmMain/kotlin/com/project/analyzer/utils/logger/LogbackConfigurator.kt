@@ -1,7 +1,9 @@
-package com.project.analyzer.utils
+package com.project.analyzer.utils.logger
 
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.classic.joran.JoranConfigurator
+import com.project.analyzer.utils.AppPaths
+import com.project.analyzer.utils.BuildConfig
 import org.slf4j.LoggerFactory
 
 public object LogbackConfigurator {

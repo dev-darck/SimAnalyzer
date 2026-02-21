@@ -24,7 +24,7 @@ import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCLBUTTONDOWN
 import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCLBUTTONUP
 import com.project.analyzer.app.win.nativeWin.WinUserConst.WM_NCMOUSEMOVE
 import com.project.analyzer.leak.api.LeakCanaryRuntime
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import com.sun.jna.Native
 import com.sun.jna.NativeLibrary
 import com.sun.jna.Platform
@@ -52,6 +52,7 @@ internal class ComposeWindowProcedure(
     private val onWindowInsetUpdate: (WindowInsets) -> Unit,
 ) : WindowProcedure {
 
+    private val logger = logger()
     private val windowPointer = (window as? ComposeWindow)?.windowHandle?.let(::Pointer)
         ?: Native.getWindowPointer(window)
 

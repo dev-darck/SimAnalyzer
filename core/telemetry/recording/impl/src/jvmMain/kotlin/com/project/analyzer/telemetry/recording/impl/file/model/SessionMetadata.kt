@@ -21,6 +21,7 @@ internal data class SessionMetadata(
     val frameCount: Long,
     val receivedFrames: Long,
     val droppedFrames: Long,
+    val skippedFrames: Long = 0,
     val firstTimestampNs: Long?,
     val lastTimestampNs: Long?,
     val fileVersion: Int,

@@ -5,8 +5,8 @@ import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
-import com.project.analyzer.utils.NsRateLimiter
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -15,12 +15,10 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
-import kotlin.time.Duration.Companion.seconds
 
 internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fallback: AcEvoFallbackShmPatcher) {
 
-    private val dropLogLimiter = NsRateLimiter(DROP_LOG_INTERVAL_NS)
-
+    private val logger = logger()
     private val physicsSize = SPageFilePhysics().size()
     private val graphicsSize = SPageFileGraphics().size()
     private val staticsSize = SPageFileStatic().size()
@@ -108,19 +106,24 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
             fallback.clear()
         }
         if (!channel.trySend(result).isSuccess) {
-            logDrop("state_change", System.nanoTime())
+            logDrop("state_change")
         }
     }
 
     private fun handleFrame(source: AcRawSnapshot, channel: Channel<PollResult>) {
         val pooled = acquireFromPool()
         if (pooled == null) {
-            logDrop("pool_empty", source.timestampNs)
+            logDrop("pool_empty")
             return
         }
 
-        copySnapshot(source, pooled)
-        readSnapshot(pooled)
+        try {
+            copySnapshot(source, pooled)
+            readSnapshot(pooled)
+        } catch (e: Throwable) {
+            releaseToPool(pooled)
+            throw e
+        }
 
         try {
             patchWithFallback(pooled)
@@ -131,7 +134,7 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
 
         if (!channel.trySend(PollResult.Frame(pooled)).isSuccess) {
             releaseToPool(pooled)
-            logDrop("queue_full", pooled.timestampNs)
+            logDrop("queue_full")
         }
     }
 
@@ -148,11 +151,8 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
         }
     }
 
-    private fun logDrop(reason: String, nowNs: Long) {
-        val now = if (nowNs > 0L) nowNs else System.nanoTime()
-        if (dropLogLimiter.shouldLog(now)) {
-            logger.warn { "[lifecycle] dropped poll result ($reason)" }
-        }
+    private fun logDrop(reason: String) {
+        logger.atWarn(RATE_LIMITED) { message = "dropped poll result ($reason)" }
     }
 
     private fun drainPendingSnapshots(channel: Channel<PollResult>) {
@@ -232,6 +232,5 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
 
         const val SNAPSHOT_POOL_SIZE: Int = 128
         const val STATE_BUFFER_CAPACITY: Int = 8
-        val DROP_LOG_INTERVAL_NS: Long = 2.seconds.inWholeNanoseconds
     }
 }

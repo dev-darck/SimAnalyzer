@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
@@ -18,6 +17,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.hud.api.HudAnchor
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.setup.game.OverlayController
@@ -32,7 +32,7 @@ internal fun HudHost(
     modifier: Modifier = Modifier,
 ) {
     val viewModel: HudViewModel = metroViewModel()
-    val state by viewModel.state.collectAsState()
+    val state by viewModel.state.collectAsStateWithLifecycle()
     val dispatch = viewModel::dispatch
     val panelsById = remember(panels) { panels.associateBy { it.id } }
     var containerSize by remember { mutableStateOf(IntSize.Zero) }

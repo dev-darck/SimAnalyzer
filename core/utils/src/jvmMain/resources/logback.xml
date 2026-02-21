@@ -4,12 +4,25 @@
     <property name="CONSOLE_LEVEL" value="${CONSOLE_LEVEL:-OFF}" />
     <property name="FILE_LEVEL" value="${FILE_LEVEL:-INFO}" />
 
-    <property name="CONSOLE_PATTERN" value="${CONSOLE_PATTERN:-%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n}" />
-    <property name="FILE_PATTERN" value="${FILE_PATTERN:-%date %-5level %logger{36} - %msg%n}" />
+    <!--
+        %logger{0}  = short class name only:       TelemetryLifecycleRouter
+        %logger{20} = abbreviated package + class:  c.p.a.t.i.TelemetryLifecycleRouter
+        %logger{50} = full path (less truncation)
+        %thread     = thread/coroutine name — essential for async debugging
+    -->
+    <property name="CONSOLE_PATTERN"
+              value="%d{HH:mm:ss.SSS} %-5level [%thread] %logger{0}.%method - %msg%n"/>
+    <property name="FILE_PATTERN"
+              value="%date %-5level [%thread] %logger{20} - %msg%n"/>
 
     <property name="MAX_FILE_SIZE" value="${MAX_FILE_SIZE:-2MB}" />
     <property name="MAX_HISTORY" value="${MAX_HISTORY:-3}" />
     <property name="TOTAL_SIZE_CAP" value="${TOTAL_SIZE_CAP:-30MB}" />
+
+    <turboFilter class="com.project.analyzer.utils.logger.RateLimitingFilter">
+        <markerName>RATE_LIMITED</markerName>
+        <frequency>240</frequency>
+    </turboFilter>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -32,6 +45,7 @@
             <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
             <maxHistory>${MAX_HISTORY}</maxHistory>
             <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
         </rollingPolicy>
 
         <encoder>

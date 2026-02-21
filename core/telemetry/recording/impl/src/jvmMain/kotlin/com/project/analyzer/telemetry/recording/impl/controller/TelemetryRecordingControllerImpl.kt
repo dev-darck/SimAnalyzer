@@ -23,7 +23,7 @@ import com.project.analyzer.telemetry.recording.impl.controller.TelemetryRecordi
 import com.project.analyzer.telemetry.recording.impl.file.META_FILE_NAME
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
 import com.project.analyzer.telemetry.recording.impl.index.TelemetryFrameIndexBuilder
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher

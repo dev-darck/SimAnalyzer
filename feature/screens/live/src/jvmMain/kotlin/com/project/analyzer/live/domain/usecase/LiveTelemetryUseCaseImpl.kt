@@ -36,8 +36,7 @@ internal class LiveTelemetryUseCaseImpl(
                     is TelemetryLifecycleEvent.SessionPaused -> false
 
                     is TelemetryLifecycleEvent.SessionEnded,
-                    is TelemetryLifecycleEvent.SimDisconnected,
-                        -> false
+                    is TelemetryLifecycleEvent.SimDisconnected -> false
 
                     else -> active
                 }

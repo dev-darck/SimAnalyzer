@@ -16,7 +16,7 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import com.project.analyzer.utils.shm.toKString
 import com.project.analyzer.utils.shm.writeWString
 import dev.zacsweers.metro.Inject
@@ -31,6 +31,8 @@ class AcEvoFallbackShmPatcher(
     private val lapAnalyzer: FallbackLapAnalyzer,
     private val fuelAnalyzer: FallbackFuelAnalyzer,
 ) {
+
+    private val logger = logger()
 
     private var lastSessionEpoch: Long = -1L
     private val identityResetDetector = IdentityResetDetector()
@@ -293,7 +295,8 @@ class AcEvoFallbackShmPatcher(
 
         if (sessionType != lastPatchedSessionType) {
             logger.info {
-                "FallbackSHM sessionType: ${lastPatchedSessionType.name} -> ${sessionType.name} (shmValue=${sessionType.shmValue})"
+                "FallbackSHM sessionType: ${lastPatchedSessionType.name} ->" +
+                    " ${sessionType.name} (shmValue=${sessionType.shmValue})"
             }
             lastPatchedSessionType = sessionType
         }

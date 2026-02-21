@@ -1,6 +1,6 @@
 package com.project.analyzer.ac.telemetry.impl.fallback.logfile
 
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import java.io.File
 import kotlin.math.min

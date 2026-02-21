@@ -5,7 +5,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionT
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.Parsed
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import com.project.analyzer.api.di.SessionScope
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import java.io.File

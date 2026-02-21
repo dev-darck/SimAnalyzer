@@ -147,7 +147,10 @@ private fun ColorScheme.animated(): ColorScheme = copy(
 )
 
 @Composable
-public fun SimAnalyzerTheme(themeMode: ThemeMode = ThemeMode.System, content: @Composable () -> Unit = {}) {
+public fun SimAnalyzerTheme(
+    themeMode: ThemeMode = ThemeMode.System,
+    content: @Composable () -> Unit = {}
+) {
     val isSystemDark = isSystemInDarkTheme()
 
     val darkTheme = when (themeMode) {
