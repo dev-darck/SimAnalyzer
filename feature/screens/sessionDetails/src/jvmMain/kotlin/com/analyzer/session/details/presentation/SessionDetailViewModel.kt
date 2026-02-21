@@ -1,6 +1,5 @@
 package com.analyzer.session.details.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.analyzer.session.data.model.LapSummary
 import com.analyzer.session.data.model.RecordedSessionDetail
@@ -13,6 +12,7 @@ import com.analyzer.session.details.presentation.model.SessionDetailIntent
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.utils.ext.formatDeltaTime
 import com.project.analyzer.utils.ext.fromMsToLapTime
 import dev.zacsweers.metro.Inject
@@ -28,7 +28,7 @@ import java.util.Locale
 import kotlin.math.ceil
 
 @Inject
-class SessionDetailViewModel(private val repository: RecordedSessionRepository) : ViewModel() {
+class SessionDetailViewModel(private val repository: RecordedSessionRepository) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(SessionDetailState())
     val state: StateFlow<SessionDetailState> = _state.asStateFlow()

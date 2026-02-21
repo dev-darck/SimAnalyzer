@@ -17,6 +17,8 @@ moduleImpl {
         projects.core.utils.jvmImpl
         projects.core.preference.api.jvmImpl
         projects.core.preference.impl.jvmImpl
+        projects.core.leak.api.jvmImpl
+        projects.core.leak.impl.jvmImpl
         projects.feature.huds.fuel.jvmImpl
         projects.feature.screens.setup.jvmImpl
         projects.feature.screens.settings.jvmImpl

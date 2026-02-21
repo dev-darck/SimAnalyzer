@@ -1,11 +1,11 @@
 package com.analyzer.settings.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.analyzer.settings.data.telemetry.SettingsRepository
 import com.analyzer.settings.data.telemetry.SettingsRepositoryImpl.StorageValidationResult
 import com.analyzer.settings.data.theme.ThemeRepository
 import com.project.analyzer.game.api.GameSelection
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 internal class SettingsViewModel(
     private val themeRepository: ThemeRepository,
     private val telemetrySettingsRepository: SettingsRepository,
-) : ViewModel() {
+) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
     val state: StateFlow<SettingsState> = _state.asStateFlow()

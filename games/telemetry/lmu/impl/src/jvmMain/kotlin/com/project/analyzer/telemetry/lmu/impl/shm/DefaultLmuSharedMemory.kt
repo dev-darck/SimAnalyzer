@@ -1,6 +1,7 @@
 package com.project.analyzer.telemetry.lmu.impl.shm
 
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.lmu.impl.shm.structure.Rf2ScoringInfo
 import com.project.analyzer.telemetry.lmu.impl.shm.structure.Rf2VehicleScoring
 import com.project.analyzer.telemetry.lmu.impl.shm.structure.Rf2VehicleTelemetry
@@ -93,10 +94,21 @@ internal class DefaultLmuSharedMemory : LmuSharedMemory {
     }
 
     override fun close() {
+        val closingTelemetry = telemetryPointer
+        val closingScoring = scoringPointer
+
         telemetryRegion.close()
         scoringRegion.close()
         telemetryPointer = null
         scoringPointer = null
+
+        if (closingTelemetry != null) {
+            LeakCanaryRuntime.watch(closingTelemetry, "LmuSharedMemory.telemetryPointer")
+        }
+        if (closingScoring != null) {
+            LeakCanaryRuntime.watch(closingScoring, "LmuSharedMemory.scoringPointer")
+        }
+        LeakCanaryRuntime.watch(this, "LmuSharedMemory")
     }
 
     override fun copyTelemetryBytes(target: ByteArray, offset: Int, expectedVersion: Int): Boolean {

@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.lmu.impl.recording
 
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.lmu.api.model.LmuTelemetrySnapshot
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionDefaults
@@ -87,6 +88,8 @@ internal class LmuTelemetryRecordingSource(
 
     override fun close() {
         scope.cancel()
+
+        LeakCanaryRuntime.watch(this, "LmuTelemetryRecordingSource")
     }
 
     private companion object {

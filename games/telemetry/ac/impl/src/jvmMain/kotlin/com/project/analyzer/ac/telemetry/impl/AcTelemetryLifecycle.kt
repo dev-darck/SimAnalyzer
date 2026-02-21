@@ -10,6 +10,7 @@ import com.project.analyzer.ac.telemetry.impl.internal.PollResult
 import com.project.analyzer.ac.telemetry.impl.internal.mapper.AcMapper
 import com.project.analyzer.ac.telemetry.impl.recording.AcTelemetryRecordingEmitter
 import com.project.analyzer.api.di.IO
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.LapValidity
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionField
@@ -52,7 +53,7 @@ class AcTelemetryLifecycle(
     private var appScope = createScope()
     private var processingJob: Job? = null
 
-    private val pollPipeline = AcPollPipeline(pollLoop, fallback)
+    private val pollPipeline = AcPollPipeline(pollLoop = pollLoop, fallback = fallback)
 
     private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
         replay = 1,
@@ -98,6 +99,8 @@ class AcTelemetryLifecycle(
         pollPipeline.stop()
         appScope.cancel()
         resetAll()
+
+        LeakCanaryRuntime.watch(this, "AcTelemetryLifecycle")
     }
 
     private fun launchLoop() {
@@ -174,15 +177,13 @@ class AcTelemetryLifecycle(
             }
 
             GameConnectionState.IN_MENU to GameConnectionState.IN_SESSION,
-            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION,
-                -> {
+            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION -> {
                 pendingEnter = PendingEnter(wasPaused = (sessionState == SessionState.PAUSED))
                 logger.debug { "[lifecycle] pendingEnter set (wasPaused=${pendingEnter?.wasPaused}) (source=$source)" }
             }
 
             GameConnectionState.IN_MENU to GameConnectionState.DISCONNECTED,
-            GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED,
-                -> {
+            GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED -> {
                 if (sessionState != SessionState.NONE && sessionId > 0L) {
                     logger.info { "[lifecycle] SessionEnded id=$sessionId reason=SIM_DISCONNECTED (source=$source)" }
                     _events.tryEmit(TelemetryLifecycleEvent.SessionEnded(sessionId, SessionEndReason.SIM_DISCONNECTED))

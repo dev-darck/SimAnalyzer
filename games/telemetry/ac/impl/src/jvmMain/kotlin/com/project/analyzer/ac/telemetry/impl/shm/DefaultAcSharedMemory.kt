@@ -4,6 +4,7 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.utils.shm.WinMappedRegion
 import com.sun.jna.Pointer
 import dev.zacsweers.metro.ContributesBinding
@@ -66,5 +67,7 @@ class DefaultAcSharedMemory(names: AcShmNames) : AcSharedMemory {
         physicsAttached = false
         graphicsAttached = false
         staticsAttached = false
+
+        LeakCanaryRuntime.watch(this, "AcSharedMemory")
     }
 }

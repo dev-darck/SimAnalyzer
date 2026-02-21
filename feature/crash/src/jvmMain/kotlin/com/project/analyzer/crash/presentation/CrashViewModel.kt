@@ -1,12 +1,12 @@
 package com.project.analyzer.crash.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.crash.domain.CrashReport
 import com.project.analyzer.crash.domain.usecase.CopyReportUseCase
 import com.project.analyzer.crash.domain.usecase.OpenFileUseCase
 import com.project.analyzer.crash.domain.usecase.OpenLogsFolderUseCase
 import com.project.analyzer.crash.domain.usecase.ReportOnGitHubUseCase
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -19,7 +19,7 @@ class CrashViewModel(
     private val openFileUseCase: OpenFileUseCase,
     private val openLogsFolderUseCase: OpenLogsFolderUseCase,
     private val reportOnGitHubUseCase: ReportOnGitHubUseCase,
-) : ViewModel() {
+) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(CrashScreenState(CrashReport()))
     val state = _state.asStateFlow()

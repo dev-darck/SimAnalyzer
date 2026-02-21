@@ -1,11 +1,9 @@
 package com.project.analyzer.calibration.presentation.verify
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
 import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
-import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.model.CalibrationSample
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
@@ -17,11 +15,10 @@ import com.project.analyzer.calibration.domain.usecase.flipDirection
 import com.project.analyzer.calibration.presentation.components.fmt
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
-import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,8 +29,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.atan2
 
 @Inject
-@ViewModelKey(CalibrationVerifyViewModel::class)
-@ContributesIntoMap(ScreenScope::class)
 class CalibrationVerifyViewModel(
     private val loadUseCase: LoadTrackCalibrationUseCase,
     private val saveUseCase: SaveTrackCalibrationUseCase,
@@ -42,7 +37,7 @@ class CalibrationVerifyViewModel(
     private val lapAnalyzer: FallbackLapAnalyzer,
     gateCrossingDetector: GateCrossingDetector,
     overlayDebugBus: OverlayDebugBus,
-) : ViewModel() {
+) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(CalibrationVerifyState())
     val state: StateFlow<CalibrationVerifyState> = _state.asStateFlow()

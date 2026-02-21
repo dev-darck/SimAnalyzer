@@ -1,6 +1,5 @@
 package com.project.analyzer.fuel.presentation.viewmodel
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.fuel.domain.model.FuelEstimate
 import com.project.analyzer.fuel.domain.model.FuelIdentityKey
@@ -10,6 +9,7 @@ import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
 import com.project.analyzer.fuel.domain.usecase.FuelConsumptionUseCase
 import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.map.toUiState
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
-internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : ViewModel() {
+internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : LeakAwareViewModel() {
 
     private val safetyFactor: Double get() = 1.0 + (FuelConsumptionConfig.safetyMarginPercent / 100.0)
 

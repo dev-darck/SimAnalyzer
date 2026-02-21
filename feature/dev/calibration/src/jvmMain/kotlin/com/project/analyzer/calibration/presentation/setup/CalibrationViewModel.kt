@@ -1,8 +1,6 @@
 package com.project.analyzer.calibration.presentation.setup
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.model.CalibrationSample
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
@@ -14,13 +12,12 @@ import com.project.analyzer.calibration.presentation.components.fmt
 import com.project.analyzer.calibration.presentation.overlay.OverlayPublisher
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.calibration.SectorCalibration
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
-import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -28,14 +25,12 @@ import kotlinx.coroutines.launch
 import kotlin.math.atan2
 
 @Inject
-@ViewModelKey(CalibrationViewModel::class)
-@ContributesIntoMap(ScreenScope::class)
 class CalibrationViewModel(
     private val captureGate: CaptureGateOnStandstillUseCase,
     private val saveUseCase: SaveTrackCalibrationUseCase,
     private val sampleProvider: TelemetrySampleProvider,
     overlayDebugBus: OverlayDebugBus,
-) : ViewModel() {
+) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(CalibrationState())
     val state: StateFlow<CalibrationState> = _state
@@ -306,7 +301,7 @@ class CalibrationViewModel(
             
             FL: ${fmt(w?.fl)}   FR: ${fmt(w?.fr)}
             RL: ${fmt(w?.rl)}   RR: ${fmt(w?.rr)}
-            """.trimIndent()
+        """.trimIndent()
     }
 
     private fun slugify(text: String): String = text

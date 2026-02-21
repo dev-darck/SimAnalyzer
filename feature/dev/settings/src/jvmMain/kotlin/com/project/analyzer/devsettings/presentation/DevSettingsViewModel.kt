@@ -1,9 +1,9 @@
 package com.project.analyzer.devsettings.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.compose.HudPreferences
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import dev.zacsweers.metro.Inject
@@ -24,7 +24,7 @@ internal class DevSettingsViewModel(
     private val telemetryLifecycle: TelemetryLifecycle,
     private val hudPreferences: HudPreferences,
     private val panels: Provider<Set<HudPanel>>,
-) : ViewModel() {
+) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(DevSettingsState())
     val state: StateFlow<DevSettingsState> = _state.asStateFlow()

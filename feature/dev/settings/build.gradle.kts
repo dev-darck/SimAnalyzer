@@ -4,6 +4,7 @@ moduleImpl {
 
     dependencies {
         projects.core.di.api.jvmImpl
+        projects.core.leak.api.jvmImpl
         projects.core.hud.api.jvmImpl
         projects.core.hud.impl.jvmImpl
         projects.core.navigation.api.jvmImpl

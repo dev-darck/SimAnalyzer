@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.recording.impl.file
 
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionConfig
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
 import com.project.analyzer.telemetry.recording.api.index.TelemetryFrameIndex
@@ -88,6 +89,8 @@ class FileTelemetryRecorder(
         compressionJob.join()
 
         scope.cancel()
+
+        LeakCanaryRuntime.watch(this, "FileTelemetryRecorder")
     }
 
     private suspend fun sendCommand(command: RecordCommand) {

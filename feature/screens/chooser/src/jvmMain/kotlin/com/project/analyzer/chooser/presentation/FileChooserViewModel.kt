@@ -1,6 +1,5 @@
 package com.project.analyzer.chooser.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.chooser.domain.model.File
 import com.project.analyzer.chooser.domain.model.TreeResult
@@ -14,6 +13,7 @@ import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectEntry
 import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectPath
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleExpand
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleHidden
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import java.nio.file.Path
 
 @Inject
-class FileChooserViewModel(private val useCase: FileChooserUseCase) : ViewModel() {
+class FileChooserViewModel(private val useCase: FileChooserUseCase) : LeakAwareViewModel() {
 
     private val _uiState = MutableStateFlow(FileUiState())
     val state: StateFlow<FileUiState> = _uiState.asStateFlow()

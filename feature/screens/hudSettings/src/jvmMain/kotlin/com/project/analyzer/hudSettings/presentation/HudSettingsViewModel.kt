@@ -1,9 +1,9 @@
 package com.project.analyzer.hudSettings.presentation
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.compose.HudPreferences
+import com.project.analyzer.leak.api.LeakAwareViewModel
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 internal class HudSettingsViewModel(
     private val preferences: HudPreferences,
     private val panels: Provider<Set<HudPanel>>,
-) : ViewModel() {
+) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(HudUiState())
     val state: StateFlow<HudUiState> = _state.asStateFlow()
