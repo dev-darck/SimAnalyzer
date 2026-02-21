@@ -20,18 +20,16 @@ internal class LmuShmMapper {
         playerIndex: Int,
         telemetry: Rf2VehicleTelemetry,
         scoring: Rf2VehicleScoring?,
-        scoringInfo: Rf2ScoringInfo?
-    ): LmuTelemetrySnapshot {
-        return LmuTelemetrySnapshot(
-            frameId = frameId,
-            telemetryVersion = telemetryVersion,
-            scoringVersion = scoringVersion,
-            numVehicles = numVehicles,
-            playerIndex = playerIndex,
-            telemetry = telemetry.toModel(),
-            scoring = scoring?.toModel(),
-            scoringInfo = scoringInfo?.toModel(),
-            timestampNs = System.nanoTime()
-        )
-    }
+        scoringInfo: Rf2ScoringInfo?,
+    ): LmuTelemetrySnapshot = LmuTelemetrySnapshot(
+        frameId = frameId,
+        telemetryVersion = telemetryVersion,
+        scoringVersion = scoringVersion,
+        numVehicles = numVehicles,
+        playerIndex = playerIndex,
+        telemetry = telemetry.toModel(),
+        scoring = scoring?.toModel(),
+        scoringInfo = scoringInfo?.toModel(),
+        timestampNs = System.nanoTime(),
+    )
 }

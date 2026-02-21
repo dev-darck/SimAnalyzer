@@ -7,10 +7,7 @@ interface FileSystemRepository {
 
     suspend fun loadSideBars(): SidebarInfo
 
-    suspend fun listSubdirectories(
-        dir: Path,
-        showHidden: Boolean,
-    ): List<Path>
+    suspend fun listSubdirectories(dir: Path, showHidden: Boolean): List<Path>
 
     suspend fun resolvePath(text: String): Path?
 }

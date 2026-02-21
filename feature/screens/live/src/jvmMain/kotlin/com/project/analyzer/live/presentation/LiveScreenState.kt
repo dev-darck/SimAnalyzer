@@ -45,7 +45,7 @@ internal data class LiveScreenState(
             ElectronicItemUi("ABS", "0"),
             ElectronicItemUi("MAP", "0"),
             ElectronicItemUi("BB", "0%"),
-        )
+        ),
     ),
 
     val wheels: List<WheelUi> = listOf(

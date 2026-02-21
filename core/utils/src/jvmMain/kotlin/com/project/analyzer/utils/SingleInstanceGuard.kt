@@ -22,7 +22,7 @@ public object SingleInstanceGuard {
     private val lockPath = Paths.get(
         System.getProperty("user.home"),
         ".simanalyzer${if (BuildConfig.IS_DEBUG) "-debug" else ""}",
-        "app.lock"
+        "app.lock",
     )
 
     public suspend fun acquireOrExit(): Unit = withContext(Dispatchers.IO) {
@@ -31,7 +31,7 @@ public object SingleInstanceGuard {
         channel = FileChannel.open(
             lockPath,
             StandardOpenOption.CREATE,
-            StandardOpenOption.WRITE
+            StandardOpenOption.WRITE,
         )
 
         lock = try {

@@ -26,9 +26,8 @@ data class CalibrationState(
     val currentPosition: Vec2? = null,
     val currentForward: Vec2? = null,
     val speedKmh: Float = 0f,
-    val headingDegrees: Float = 0f
+    val headingDegrees: Float = 0f,
 ) {
-
     val canVerify: Boolean get() = !lastSavedTrackId.isNullOrBlank()
     val sectorCount: Int get() = 1 + sectorStartMarks.size
 

@@ -53,11 +53,10 @@ class TelemetryRecordingControllerImpl(
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
 ) : TelemetryRecordingController {
-
     private val scope = CoroutineScope(
         SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
             logger.error(e) { "[recording] recording controller failed" }
-        }
+        },
     )
 
     private var job: Job? = null
@@ -117,7 +116,7 @@ class TelemetryRecordingControllerImpl(
     private suspend fun handleConfig(config: TelemetryAcquisitionConfig) {
         state = state.copy(
             recordingEnabled = config.recordingEnabled,
-            maxRecordedLaps = config.maxRecordedLaps
+            maxRecordedLaps = config.maxRecordedLaps,
         )
 
         if (!config.recordingEnabled) {
@@ -139,7 +138,7 @@ class TelemetryRecordingControllerImpl(
                     currentGameId = null,
                     currentDataSource = null,
                     baseCompletedLaps = null,
-                    blockedSessionId = state.blockedSessionId.takeIf { it == event.session.sessionId }
+                    blockedSessionId = state.blockedSessionId.takeIf { it == event.session.sessionId },
                 )
             }
 
@@ -159,8 +158,8 @@ class TelemetryRecordingControllerImpl(
                             trackId = updated.trackId.ifBlank { null },
                             airTempC = state.lastAirTempC,
                             trackTempC = state.lastTrackTempC,
-                            dataSource = state.currentDataSource
-                        )
+                            dataSource = state.currentDataSource,
+                        ),
                     )
                 }
             }
@@ -194,7 +193,7 @@ class TelemetryRecordingControllerImpl(
                     recorder.endSession(
                         gameId = gameId,
                         sessionId = sessionId,
-                        reason = SessionEndReason.SIM_DISCONNECTED.name
+                        reason = SessionEndReason.SIM_DISCONNECTED.name,
                     )
                 }
                 state = state.clearSessionState()
@@ -222,8 +221,8 @@ class TelemetryRecordingControllerImpl(
                     gameId = snapshot.currentGameId ?: sample.gameId,
                     airTempC = state.lastAirTempC,
                     trackTempC = state.lastTrackTempC,
-                    dataSource = sample.dataSource
-                )
+                    dataSource = sample.dataSource,
+                ),
             )
         }
 
@@ -242,7 +241,7 @@ class TelemetryRecordingControllerImpl(
                 dataSourceId = sample.dataSourceId,
                 payload = sample.payload,
                 index = index,
-            )
+            ),
         )
 
         if (shouldStopOnLapLimit(sample.frame)) {
@@ -252,7 +251,7 @@ class TelemetryRecordingControllerImpl(
                 currentGameId = null,
                 currentDataSource = null,
                 baseCompletedLaps = null,
-                blockedSessionId = sample.sessionId
+                blockedSessionId = sample.sessionId,
             )
         }
     }
@@ -274,7 +273,7 @@ class TelemetryRecordingControllerImpl(
                 dataSource = sample.dataSource,
                 payloadType = sample.payloadType,
                 payloadSize = sample.payload.size,
-            )
+            ),
         )
 
         state = state.copy(
@@ -283,7 +282,7 @@ class TelemetryRecordingControllerImpl(
             currentDataSource = sample.dataSource,
             baseCompletedLaps = baseCompletedLaps,
             lastAirTempC = airTempC,
-            lastTrackTempC = trackTempC
+            lastTrackTempC = trackTempC,
         )
     }
 
@@ -306,13 +305,13 @@ class TelemetryRecordingControllerImpl(
                 sessionId = sessionId,
                 gameId = gameId,
                 airTempC = airTempC,
-                trackTempC = trackTempC
-            )
+                trackTempC = trackTempC,
+            ),
         )
 
         state = state.copy(
             lastAirTempC = airTempC ?: prevAir,
-            lastTrackTempC = trackTempC ?: prevTrack
+            lastTrackTempC = trackTempC ?: prevTrack,
         )
     }
 
@@ -330,8 +329,7 @@ class TelemetryRecordingControllerImpl(
     private fun completedLaps(frame: com.project.analyzer.telemetry.api.model.TelemetryFrame): Int? =
         frame.session?.completedLaps ?: frame.lap?.completedLaps
 
-    private fun SessionType.asSessionTypeString(): String? =
-        if (this == SessionType.UNKNOWN) null else name
+    private fun SessionType.asSessionTypeString(): String? = if (this == SessionType.UNKNOWN) null else name
 
     private fun normalizeTemperature(value: Float?): Float? {
         if (value == null || !value.isFinite()) return null
@@ -395,7 +393,6 @@ class TelemetryRecordingControllerImpl(
         val recordingEnabled: Boolean = true,
         val maxRecordedLaps: Int = 0,
     ) {
-
         fun clearSessionState(): ControllerState = copy(
             sessionInfo = null,
             startedSessionId = null,
@@ -404,12 +401,11 @@ class TelemetryRecordingControllerImpl(
             lastAirTempC = null,
             lastTrackTempC = null,
             baseCompletedLaps = null,
-            blockedSessionId = null
+            blockedSessionId = null,
         )
     }
 
     private companion object {
-
         const val TEMP_UPDATE_EPSILON_C = 0.25f
         const val MIN_REASONABLE_TEMP_C = -80f
         const val MAX_REASONABLE_TEMP_C = 120f

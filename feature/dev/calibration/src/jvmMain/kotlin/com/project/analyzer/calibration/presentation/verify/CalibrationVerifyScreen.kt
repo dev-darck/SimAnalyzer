@@ -55,11 +55,11 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
             .background(SimAnalyzerTheme.material.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CalibrationSectionCard(
             title = "Verify calibration",
-            subtitle = state.calibration?.trackName ?: trackId
+            subtitle = state.calibration?.trackName ?: trackId,
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onBack) { Text("Back") }
@@ -85,36 +85,36 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
 
         CalibrationSectionCard(
             title = "Lap timing",
-            subtitle = "Live lap and sector splits."
+            subtitle = "Live lap and sector splits.",
         ) {
             TimingRow("Lap", state.currentLapMs, state.lastLapMs, state.bestLapMs)
             TimingRow(
                 "S1",
                 state.currentSectorMs.takeIf { state.currentSectorIndex == 1 },
                 state.lastS1Ms,
-                state.bestS1Ms
+                state.bestS1Ms,
             )
             TimingRow(
                 "S2",
                 state.currentSectorMs.takeIf { state.currentSectorIndex == 2 },
                 state.lastS2Ms,
-                state.bestS2Ms
+                state.bestS2Ms,
             )
             TimingRow(
                 "S3",
                 state.currentSectorMs.takeIf { state.currentSectorIndex == 3 },
                 state.lastS3Ms,
-                state.bestS3Ms
+                state.bestS3Ms,
             )
         }
 
         CalibrationSectionCard(
             title = "Direction and gates",
-            subtitle = "Verify alignment and crossings."
+            subtitle = "Verify alignment and crossings.",
         ) {
             DirectionInfoCard(
                 forward = state.currentForward,
-                headingDegrees = state.headingDegrees
+                headingDegrees = state.headingDegrees,
             )
             Spacer(modifier = Modifier.height(10.dp))
             GateDebugSection(
@@ -133,7 +133,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         state.debugTelemetry?.let { debugText ->
             CalibrationSectionCard(
                 title = "Telemetry snapshot",
-                subtitle = "Click to copy the raw payload."
+                subtitle = "Click to copy the raw payload.",
             ) {
                 Column(
                     modifier = Modifier
@@ -143,16 +143,16 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                         .border(
                             width = 1.dp,
                             color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f),
-                            shape = SimAnalyzerTheme.shapes.medium
+                            shape = SimAnalyzerTheme.shapes.medium,
                         )
                         .onClick { copyToClipboard(debugText) }
-                        .padding(12.dp)
+                        .padding(12.dp),
                 ) {
                     Text(
                         text = debugText,
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
-                        color = SimAnalyzerTheme.material.onSurface
+                        color = SimAnalyzerTheme.material.onSurface,
                     )
                 }
             }
@@ -160,19 +160,19 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
 
         CalibrationSectionCard(
             title = "Recent events",
-            subtitle = "Latest gate crossings and sync changes."
+            subtitle = "Latest gate crossings and sync changes.",
         ) {
             Text(
                 text = "Last event: ${state.lastEvent ?: "-"}",
                 style = MaterialTheme.typography.bodySmall,
-                color = SimAnalyzerTheme.material.onSurfaceVariant
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(8.dp))
             if (state.events.isEmpty()) {
                 Text(
                     text = "No events yet.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             } else {
                 Column(
@@ -183,13 +183,13 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                         .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.2f))
                         .padding(10.dp)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     state.events.forEach { event ->
                         Text(
                             text = event,
                             style = MaterialTheme.typography.bodySmall,
-                            color = SimAnalyzerTheme.material.onSurface
+                            color = SimAnalyzerTheme.material.onSurface,
                         )
                     }
                 }
@@ -202,13 +202,13 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
 private fun TimingRow(name: String, current: Long?, last: Long?, best: Long?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = name,
             style = MaterialTheme.typography.bodyMedium,
             color = SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             TimingCell("Cur", current)
@@ -224,12 +224,12 @@ private fun TimingCell(label: String, value: Long?) {
         Text(
             text = "$label:",
             style = MaterialTheme.typography.bodySmall,
-            color = SimAnalyzerTheme.material.onSurfaceVariant
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = formatMs(value),
             style = MaterialTheme.typography.bodySmall,
-            color = SimAnalyzerTheme.material.onSurface
+            color = SimAnalyzerTheme.material.onSurface,
         )
     }
 }
@@ -239,18 +239,18 @@ private fun StatusRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = SimAnalyzerTheme.material.onSurfaceVariant
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -272,12 +272,12 @@ private fun MessageBanner(message: String) {
             .clip(SimAnalyzerTheme.shapes.medium)
             .background(background)
             .border(1.dp, accent.copy(alpha = 0.4f), SimAnalyzerTheme.shapes.medium)
-            .padding(10.dp)
+            .padding(10.dp),
     ) {
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall,
-            color = accent
+            color = accent,
         )
     }
 }

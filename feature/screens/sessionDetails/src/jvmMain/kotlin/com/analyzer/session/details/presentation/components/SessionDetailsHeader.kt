@@ -49,9 +49,9 @@ internal fun SessionDetailsHeader(
             .border(
                 width = 1.dp,
                 color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.25f),
-                shape = SimAnalyzerTheme.shapes.large
+                shape = SimAnalyzerTheme.shapes.large,
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         if (maxWidth < 960.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -60,25 +60,25 @@ internal fun SessionDetailsHeader(
                     sortFilter = sortFilter,
                     showFilter = showFilter,
                     onSortSelect = onSortSelect,
-                    onShowSelect = onShowSelect
+                    onShowSelect = onShowSelect,
                 )
             }
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 SessionDetailsInfoRow(
                     chips = header.chips,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 SessionDetailsFiltersRow(
                     sortFilter = sortFilter,
                     showFilter = showFilter,
                     onSortSelect = onSortSelect,
-                    onShowSelect = onShowSelect
+                    onShowSelect = onShowSelect,
                 )
             }
         }
@@ -86,14 +86,11 @@ internal fun SessionDetailsHeader(
 }
 
 @Composable
-private fun SessionDetailsInfoRow(
-    chips: List<String>,
-    modifier: Modifier = Modifier,
-) {
+private fun SessionDetailsInfoRow(chips: List<String>, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         chips.forEachIndexed { index, chip ->
             SessionInfoItem(
@@ -102,32 +99,29 @@ private fun SessionDetailsInfoRow(
                     1 -> Icons.Filled.DirectionsCar
                     else -> Icons.Filled.LocationOn
                 },
-                text = chip
+                text = chip,
             )
         }
     }
 }
 
 @Composable
-private fun SessionInfoItem(
-    icon: ImageVector,
-    text: String,
-) {
+private fun SessionInfoItem(icon: ImageVector, text: String) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = SimAnalyzerTheme.material.onSurfaceVariant
+            tint = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = text,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
             fontSize = 13.sp,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -141,15 +135,15 @@ private fun SessionDetailsFiltersRow(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         FilterDropdown(
             filter = sortFilter,
-            onSelect = onSortSelect
+            onSelect = onSortSelect,
         )
         FilterDropdown(
             filter = showFilter,
-            onSelect = onShowSelect
+            onSelect = onShowSelect,
         )
     }
 }
@@ -159,12 +153,12 @@ private fun SessionDetailsFiltersRow(
 private fun SessionDetailsHeaderPreview() {
     val sortOptions = listOf(
         DropdownOptionUi(id = "lap", label = "Lap"),
-        DropdownOptionUi(id = "best", label = "Best lap")
+        DropdownOptionUi(id = "best", label = "Best lap"),
     )
     val showOptions = listOf(
         DropdownOptionUi(id = "all", label = "All laps"),
         DropdownOptionUi(id = "valid", label = "Valid laps"),
-        DropdownOptionUi(id = "invalid", label = "Invalid laps")
+        DropdownOptionUi(id = "invalid", label = "Invalid laps"),
     )
 
     SimAnalyzerTheme {
@@ -172,23 +166,23 @@ private fun SessionDetailsHeaderPreview() {
             header = SessionDetailHeaderUi(
                 title = "Session",
                 subtitle = "Jan 18, 2026, 22:50",
-                chips = listOf("Air: 00°C / Track: 00°C", "Car Name", "Location")
+                chips = listOf("Air: 00°C / Track: 00°C", "Car Name", "Location"),
             ),
             sortFilter = DropdownFilterUi(
                 label = "Sort by",
                 selectedId = "lap",
                 selectedLabel = "Lap",
-                options = sortOptions
+                options = sortOptions,
             ),
             showFilter = DropdownFilterUi(
                 label = "Show",
                 selectedId = "all",
                 selectedLabel = "All laps",
-                options = showOptions
+                options = showOptions,
             ),
             onSortSelect = {},
             onShowSelect = {},
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

@@ -17,10 +17,7 @@ import com.project.analyzer.calibration.presentation.overlay.state.OverlayDebugS
 import com.project.analyzer.math.Vec2
 
 @Composable
-fun DebugInfoPanel(
-    state: OverlayDebugState,
-    modifier: Modifier = Modifier
-) {
+fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
     val carPos = state.carPos
     val carDir = state.carDir ?: Vec2.Up
 
@@ -28,12 +25,12 @@ fun DebugInfoPanel(
         modifier
             .padding(14.dp)
             .background(Color(0x66000000))
-            .padding(10.dp)
+            .padding(10.dp),
     ) {
         Text(
             "Overlay Debug",
             color = Color.White,
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyLarge,
         )
 
         Spacer(Modifier.height(8.dp))
@@ -67,7 +64,7 @@ fun DebugInfoPanel(
                     "margin=${fmt(gi.margin)} " +
                     "dot=${fmt(gi.directionDot!!)} " +
                     "crossed=${gi.isCrossed}",
-                color = if (gi.isInside) Color(0xFFB6FFB6) else Color(0xFFFFB6B6)
+                color = if (gi.isInside) Color(0xFFB6FFB6) else Color(0xFFFFB6B6),
             )
         }
     }

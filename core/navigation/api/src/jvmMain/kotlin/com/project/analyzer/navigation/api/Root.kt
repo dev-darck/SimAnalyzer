@@ -6,5 +6,5 @@ public enum class Root {
     Track,
     Setup,
 
-    Settings
+    Settings,
 }

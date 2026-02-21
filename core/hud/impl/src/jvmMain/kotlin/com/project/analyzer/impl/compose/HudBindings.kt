@@ -15,8 +15,5 @@ object HudBindings {
     @Provides
     @IntoMap
     @ViewModelKey(HudViewModel::class)
-    private fun provideHudViewModel(
-        preferences: HudPreferences
-    ): ViewModel = HudViewModel(preferences)
-
+    private fun provideHudViewModel(preferences: HudPreferences): ViewModel = HudViewModel(preferences)
 }

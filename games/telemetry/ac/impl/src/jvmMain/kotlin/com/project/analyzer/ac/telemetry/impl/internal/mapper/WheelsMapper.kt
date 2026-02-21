@@ -12,32 +12,28 @@ import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(SessionScope::class)
-class WheelsMapper(
-    private val cache: AcSessionCache
-) {
+class WheelsMapper(private val cache: AcSessionCache) {
 
-    fun map(physics: SPageFilePhysics, graphics: SPageFileGraphics): WheelsFrame {
-        return WheelsFrame(
-            fl = mapWheel(physics, WHEEL_FL),
-            fr = mapWheel(physics, WHEEL_FR),
-            rl = mapWheel(physics, WHEEL_RL),
-            rr = mapWheel(physics, WHEEL_RR),
+    fun map(physics: SPageFilePhysics, graphics: SPageFileGraphics): WheelsFrame = WheelsFrame(
+        fl = mapWheel(physics, WHEEL_FL),
+        fr = mapWheel(physics, WHEEL_FR),
+        rl = mapWheel(physics, WHEEL_RL),
+        rr = mapWheel(physics, WHEEL_RR),
 
-            tyreCompound = cache.tyreCompound.takeIf { it.isNotBlank() },
-            currentTyreSet = graphics.currentTyreSet,
-            strategyTyreSet = graphics.strategyTyreSet,
-            isRainTyres = graphics.rainTyres.toBoolean(),
+        tyreCompound = cache.tyreCompound.takeIf { it.isNotBlank() },
+        currentTyreSet = graphics.currentTyreSet,
+        strategyTyreSet = graphics.strategyTyreSet,
+        isRainTyres = graphics.rainTyres.toBoolean(),
 
-            mfdPressureLF = graphics.mfdTyrePressureLF,
-            mfdPressureRF = graphics.mfdTyrePressureRF,
-            mfdPressureLR = graphics.mfdTyrePressureLR,
-            mfdPressureRR = graphics.mfdTyrePressureRR,
-            mfdTyreSet = graphics.mfdTyreSet,
+        mfdPressureLF = graphics.mfdTyrePressureLF,
+        mfdPressureRF = graphics.mfdTyrePressureRF,
+        mfdPressureLR = graphics.mfdTyrePressureLR,
+        mfdPressureRR = graphics.mfdTyrePressureRR,
+        mfdTyreSet = graphics.mfdTyreSet,
 
-            frontBrakeCompound = physics.frontBrakeCompound,
-            rearBrakeCompound = physics.rearBrakeCompound,
-        )
-    }
+        frontBrakeCompound = physics.frontBrakeCompound,
+        rearBrakeCompound = physics.rearBrakeCompound,
+    )
 
     private fun mapWheel(physics: SPageFilePhysics, index: Int): WheelFrame {
         val contactOffset = index * 3
@@ -77,19 +73,19 @@ class WheelsMapper(
             contactPoint = Vec3(
                 physics.tyreContactPoint[contactOffset],
                 physics.tyreContactPoint[contactOffset + 1],
-                physics.tyreContactPoint[contactOffset + 2]
+                physics.tyreContactPoint[contactOffset + 2],
             ),
             contactNormal = Vec3(
                 physics.tyreContactNormal[contactOffset],
                 physics.tyreContactNormal[contactOffset + 1],
-                physics.tyreContactNormal[contactOffset + 2]
+                physics.tyreContactNormal[contactOffset + 2],
             ),
 
             contactHeading = Vec3(
                 physics.tyreContactHeading[contactOffset],
                 physics.tyreContactHeading[contactOffset + 1],
-                physics.tyreContactHeading[contactOffset + 2]
-            )
+                physics.tyreContactHeading[contactOffset + 2],
+            ),
         )
     }
 

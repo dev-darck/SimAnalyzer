@@ -30,10 +30,14 @@ internal class LiveTelemetryUseCaseImpl(
             .scan(false) { active, ev ->
                 when (ev) {
                     is TelemetryLifecycleEvent.SessionStarted -> true
+
                     is TelemetryLifecycleEvent.SessionResumed -> true
+
                     is TelemetryLifecycleEvent.SessionPaused -> false
+
                     is TelemetryLifecycleEvent.SessionEnded,
-                    is TelemetryLifecycleEvent.SimDisconnected -> false
+                    is TelemetryLifecycleEvent.SimDisconnected,
+                        -> false
 
                     else -> active
                 }

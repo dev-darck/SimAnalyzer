@@ -33,7 +33,7 @@ internal fun FuelEstimate.toUiState(safetyFactor: Double): FuelHudUiState {
             lpl?.let { it * laps * safetyFactor }
         },
         confidence = confidence,
-        isCurrentLapValid = isCurrentLapValid
+        isCurrentLapValid = isCurrentLapValid,
     )
 }
 
@@ -55,24 +55,20 @@ private fun FuelEstimate.formatLapBasis(lapTimeSec: Double): String {
     return if (isLapTimeFromCompletedLap) formatted else "≈$formatted"
 }
 
-private fun buildPlanRows(
-    litersPerLap: Double?,
-    lapTimeSec: Double,
-    safetyFactor: Double
-): List<PlanRowUi> = FuelConsumptionConfig.planLaps.map { laps ->
-    val totalTimeSec = laps * lapTimeSec
-    val fuelNeeded = litersPerLap?.let { it * laps * safetyFactor }
+private fun buildPlanRows(litersPerLap: Double?, lapTimeSec: Double, safetyFactor: Double): List<PlanRowUi> =
+    FuelConsumptionConfig.planLaps.map { laps ->
+        val totalTimeSec = laps * lapTimeSec
+        val fuelNeeded = litersPerLap?.let { it * laps * safetyFactor }
 
-    PlanRowUi(
-        label = "$laps laps",
-        timeText = formatDuration(totalTimeSec),
-        fuelText = fuelNeeded?.let { "${it.roundToInt()} L" } ?: "—",
-        peakFuelText = "—"
-    )
-}
+        PlanRowUi(
+            label = "$laps laps",
+            timeText = formatDuration(totalTimeSec),
+            fuelText = fuelNeeded?.let { "${it.roundToInt()} L" } ?: "—",
+            peakFuelText = "—",
+        )
+    }
 
-private fun Double.formatLiters(decimals: Int): String =
-    String.format(Locale.US, "%.${decimals}f L", this)
+private fun Double.formatLiters(decimals: Int): String = String.format(Locale.US, "%.${decimals}f L", this)
 
 private fun formatDuration(totalSec: Double): String {
     val minutes = (totalSec / 60).toInt()

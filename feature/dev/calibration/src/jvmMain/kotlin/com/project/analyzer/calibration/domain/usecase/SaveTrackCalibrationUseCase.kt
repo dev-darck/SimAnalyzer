@@ -8,12 +8,9 @@ import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(ScreenScope::class)
-class SaveTrackCalibrationUseCase(
-    private val repo: TrackCalibrationRepository
-) {
+class SaveTrackCalibrationUseCase(private val repo: TrackCalibrationRepository) {
 
     suspend fun save(calibration: TrackCalibration) = repo.save(calibration)
 
     suspend fun loadAll(): List<String> = repo.loadAll().map { it.trackId }
-
 }

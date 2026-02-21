@@ -12,12 +12,7 @@ public fun Long.nsToSec(): Double = this.toDouble() * EPS_9_DOUBLE
  * Pure dt computation without state.
  * Returns null if timestamps are invalid or prev == 0.
  */
-public fun dtSecFromNs(
-    nowNs: Long,
-    prevNs: Long,
-    minDtSec: Double = EPS_4_DOUBLE,
-    maxDtSec: Double = 0.5,
-): Double? {
+public fun dtSecFromNs(nowNs: Long, prevNs: Long, minDtSec: Double = EPS_4_DOUBLE, maxDtSec: Double = 0.5): Double? {
     if (nowNs <= 0L || prevNs <= 0L) return null
     val dt = (nowNs - prevNs) * EPS_9_DOUBLE
     if (!dt.isFinite()) return null

@@ -38,7 +38,6 @@ internal fun InputsHudSettingsContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-
         SettingSwitch(title = "Throttle line", checked = settings.showThrottle) { v ->
             onChange(settings.copy(showThrottle = v))
         }
@@ -90,7 +89,7 @@ internal fun InputsHudSettingsContent(
             onSelect = { sec ->
                 draft = draft.copy(historySeconds = sec)
                 onChange(draft)
-            }
+            },
         )
     }
 }
@@ -101,26 +100,23 @@ private fun SettingSwitch(title: String, checked: Boolean, onChecked: (Boolean) 
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            color = SimAnalyzerTheme.material.onSurface
+            color = SimAnalyzerTheme.material.onSurface,
         )
         Switch(
             checked = checked,
-            onCheckedChange = onChecked
+            onCheckedChange = onChecked,
         )
     }
 }
 
 @Composable
-private fun HistoryPicker(
-    valueSec: Int,
-    onSelect: (Int) -> Unit,
-) {
+private fun HistoryPicker(valueSec: Int, onSelect: (Int) -> Unit) {
     Column {
         Tooltip(
             tooltip =
                 "How many seconds of past inputs are visible in the graph.\n" +
                     "Shorter = more responsive (sharper). Longer = smoother, longer tail.\n" +
-                    "Example: 2s shows only recent changes, 5s shows a longer trace."
+                    "Example: 2s shows only recent changes, 5s shows a longer trace.",
         ) {
             Text(text = "History", color = SimAnalyzerTheme.material.onSurface)
         }
@@ -128,12 +124,15 @@ private fun HistoryPicker(
             options.forEach { sec ->
                 val selected = sec == valueSec
                 TextButton(
-                    onClick = { onSelect(sec) }
+                    onClick = { onSelect(sec) },
                 ) {
                     Text(
                         text = "${sec}s",
-                        color = if (selected) SimAnalyzerTheme.material.primary
-                        else SimAnalyzerTheme.material.onSurfaceVariant
+                        color = if (selected) {
+                            SimAnalyzerTheme.material.primary
+                        } else {
+                            SimAnalyzerTheme.material.onSurfaceVariant
+                        },
                     )
                 }
             }
@@ -146,7 +145,7 @@ private fun HistoryPicker(
 private fun InputsHudSettingsContentPreview() {
     SimAnalyzerTheme {
         InputsHudSettingsContent(
-            settings = InputHudSettings()
+            settings = InputHudSettings(),
         )
     }
 }

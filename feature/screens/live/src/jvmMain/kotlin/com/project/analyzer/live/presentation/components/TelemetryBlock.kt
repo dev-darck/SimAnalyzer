@@ -63,7 +63,7 @@ internal fun TelemetryBlock(
     Box(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
-            .background(color = SimAnalyzerTheme.material.surface)
+            .background(color = SimAnalyzerTheme.material.surface),
     ) {
         TopIntegratedProgressBar(
             value = rpmScale,
@@ -71,47 +71,47 @@ internal fun TelemetryBlock(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
-                .height(8.dp)
+                .height(8.dp),
         )
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 16.dp)
+                .padding(top = 16.dp),
         ) {
             ScaleLabels(
                 maxScale = maxScale,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 22.dp)
+                    .padding(horizontal = 22.dp),
             )
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(height = 130.dp)
                         .padding(horizontal = 22.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     AxisValueWithUnit(
                         value = speedStr,
                         unit = "km/h",
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
+                            .fillMaxHeight(),
                     )
 
                     GearBadge(
                         gear = gear,
                         size = 130.dp,
                         baseColor = SimAnalyzerTheme.material.primaryContainer,
-                        modifier = Modifier.size(130.dp)
+                        modifier = Modifier.size(130.dp),
                     )
 
                     AxisValueWithUnit(
@@ -119,7 +119,7 @@ internal fun TelemetryBlock(
                         unit = "rpm",
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight()
+                            .fillMaxHeight(),
                     )
                 }
             }
@@ -128,11 +128,7 @@ internal fun TelemetryBlock(
 }
 
 @Composable
-private fun TopIntegratedProgressBar(
-    value: Float,
-    max: Int,
-    modifier: Modifier = Modifier
-) {
+private fun TopIntegratedProgressBar(value: Float, max: Int, modifier: Modifier = Modifier) {
     val emptyColor = SimAnalyzerTheme.material.surfaceVariant
     val brush = SimAnalyzerTheme.horizontalGradient
 
@@ -142,7 +138,7 @@ private fun TopIntegratedProgressBar(
     val frac by animateFloatAsState(
         targetValue = targetFrac,
         animationSpec = tween(durationMillis = TOP_BAR_ANIMATION_MS, easing = LinearOutSlowInEasing),
-        label = "TopBar"
+        label = "TopBar",
     )
 
     Canvas(modifier) {
@@ -153,18 +149,21 @@ private fun TopIntegratedProgressBar(
         drawRoundRect(
             color = emptyColor,
             size = Size(w, h),
-            cornerRadius = CornerRadius(r, r)
+            cornerRadius = CornerRadius(r, r),
         )
 
         val progressW = w * frac
         if (progressW > 0.5f) {
             val rightRounded = progressW >= w - 0.5f
             val rr = RoundRect(
-                left = 0f, top = 0f, right = progressW, bottom = h,
+                left = 0f,
+                top = 0f,
+                right = progressW,
+                bottom = h,
                 topLeftCornerRadius = CornerRadius(r, r),
                 bottomLeftCornerRadius = CornerRadius(r, r),
                 topRightCornerRadius = CornerRadius(if (rightRounded) r else 0f, if (rightRounded) r else 0f),
-                bottomRightCornerRadius = CornerRadius(if (rightRounded) r else 0f, if (rightRounded) r else 0f)
+                bottomRightCornerRadius = CornerRadius(if (rightRounded) r else 0f, if (rightRounded) r else 0f),
             )
             val clip = Path().apply { addRoundRect(rr) }
             clipPath(clip) {
@@ -178,17 +177,13 @@ private fun TopIntegratedProgressBar(
             color = Color.White,
             topLeft = Offset(markerX, 0f),
             size = Size(markerW, h),
-            cornerRadius = CornerRadius(r, r)
+            cornerRadius = CornerRadius(r, r),
         )
     }
 }
 
 @Composable
-private fun ScaleLabels(
-    maxScale: Int,
-    labelCount: Int = 6,
-    modifier: Modifier = Modifier
-) {
+private fun ScaleLabels(maxScale: Int, labelCount: Int = 6, modifier: Modifier = Modifier) {
     val safeMax = maxScale.coerceAtLeast(1)
     val n = labelCount.coerceAtLeast(2)
 
@@ -201,14 +196,14 @@ private fun ScaleLabels(
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         labels.forEach { v ->
             Text(
                 text = v.roundToInt().toString(),
                 color = SimAnalyzerTheme.extended.surface50,
                 fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
         }
     }
@@ -222,14 +217,14 @@ private fun AxisValueWithUnit(
     valueStyle: TextStyle = TextStyle(
         color = SimAnalyzerTheme.material.onSurface,
         fontSize = 58.sp,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
     ),
     unitStyle: TextStyle = TextStyle(
         color = SimAnalyzerTheme.material.onSurfaceVariant,
         fontSize = 14.sp,
-        fontWeight = FontWeight.Medium
+        fontWeight = FontWeight.Medium,
     ),
-    axisBiasY: Dp = 0.dp
+    axisBiasY: Dp = 0.dp,
 ) {
     Layout(
         modifier = modifier,
@@ -238,15 +233,15 @@ private fun AxisValueWithUnit(
                 text = value,
                 style = valueStyle,
                 maxLines = 1,
-                overflow = TextOverflow.MiddleEllipsis
+                overflow = TextOverflow.MiddleEllipsis,
             )
             Text(
                 text = unit,
                 style = unitStyle,
                 maxLines = 1,
-                overflow = TextOverflow.MiddleEllipsis
+                overflow = TextOverflow.MiddleEllipsis,
             )
-        }
+        },
     ) { measurables, constraints ->
         val valueP = measurables[0].measure(constraints.copy(minWidth = 0, minHeight = 0))
         val unitP = measurables[1].measure(constraints.copy(minWidth = 0, minHeight = 0))
@@ -260,7 +255,7 @@ private fun AxisValueWithUnit(
         } else {
             max(
                 constraints.minHeight,
-                valueP.height + unitP.height
+                valueP.height + unitP.height,
             )
         }
 
@@ -283,19 +278,14 @@ private fun AxisValueWithUnit(
 }
 
 @Composable
-fun GearBadge(
-    gear: Int,
-    size: Dp,
-    baseColor: Color,
-    modifier: Modifier = Modifier,
-) {
+fun GearBadge(gear: Int, size: Dp, baseColor: Color, modifier: Modifier = Modifier) {
     val textMeasurer = rememberTextMeasurer()
     val textColor = SimAnalyzerTheme.material.onPrimary
     val style = remember(textColor) {
         TextStyle(
             color = textColor,
             fontSize = 64.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
         )
     }
 
@@ -306,7 +296,7 @@ fun GearBadge(
         drawCircle(
             color = baseColor,
             radius = r,
-            style = Stroke(width = 4.dp.toPx())
+            style = Stroke(width = 4.dp.toPx()),
         )
 
         val text = AnnotatedString(if (gear == -1) "R" else gear.toString())
@@ -327,7 +317,7 @@ private fun TelemetryBlockPreview() {
                 .fillMaxWidth()
                 .height(260.dp)
                 .background(SimAnalyzerTheme.material.background),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             TelemetryBlock(
                 speedKmh = 20,
@@ -338,7 +328,7 @@ private fun TelemetryBlockPreview() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(220.dp)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp),
             )
         }
     }

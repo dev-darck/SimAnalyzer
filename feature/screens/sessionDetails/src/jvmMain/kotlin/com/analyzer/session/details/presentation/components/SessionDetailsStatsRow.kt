@@ -13,10 +13,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.SessionStatCard
 
 @Composable
-internal fun SessionDetailsStatsRow(
-    stats: SessionDetailStatsUi,
-    modifier: Modifier = Modifier,
-) {
+internal fun SessionDetailsStatsRow(stats: SessionDetailStatsUi, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
         if (maxWidth < 900.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -29,17 +26,17 @@ internal fun SessionDetailsStatsRow(
                 SessionStatCard(
                     title = "Best Lap",
                     value = stats.bestLapLabel,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 SessionStatCard(
                     title = "Avg Lap (Valid)",
                     value = stats.averageLapLabel,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 SessionStatCard(
                     title = "Total Incidents",
                     value = stats.incidentsCount.toString(),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -54,9 +51,9 @@ private fun SessionDetailsStatsRowPreview() {
             stats = SessionDetailStatsUi(
                 bestLapLabel = "1:58.253",
                 averageLapLabel = "2:00.417",
-                incidentsCount = 3
+                incidentsCount = 3,
             ),
-            modifier = Modifier
+            modifier = Modifier,
         )
     }
 }

@@ -37,7 +37,6 @@ fun AppNavGraph(
 ) {
     val owner = rememberNavigationEventDispatcherOwner()
     CompositionLocalProvider(LocalNavigationEventDispatcherOwner provides owner) {
-
         val dispatcher = owner.navigationEventDispatcher
         val mouseInput = remember { MouseBackForwardNavigationEventInput() }
 
@@ -65,7 +64,7 @@ fun AppNavGraph(
         val previousSceneInfos = sceneState.previousScenes.map { SceneInfo(it) }
         val gestureState = rememberNavigationEventState(
             currentInfo = currentInfo,
-            backInfo = previousSceneInfos
+            backInfo = previousSceneInfos,
         )
 
         NavigationEventHandler(

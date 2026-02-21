@@ -17,10 +17,7 @@ import com.analyzer.session.details.presentation.model.LapStatus
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-internal fun StatusChip(
-    status: LapStatus,
-    modifier: Modifier = Modifier,
-) {
+internal fun StatusChip(status: LapStatus, modifier: Modifier = Modifier) {
     val accent = when (status) {
         LapStatus.Clean -> SimAnalyzerTheme.extended.teal
         LapStatus.OutLap -> SimAnalyzerTheme.extended.yellow
@@ -36,13 +33,13 @@ internal fun StatusChip(
             .background(accent.copy(alpha = 0.16f))
             .border(1.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(999.dp))
             .padding(horizontal = 10.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = statusLabel(status),
             color = accent,
             fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

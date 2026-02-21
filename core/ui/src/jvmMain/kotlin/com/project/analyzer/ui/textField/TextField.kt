@@ -68,16 +68,21 @@ public fun TextField(
     }
 
     val bgColor =
-        if (enabled) SimAnalyzerTheme.material.background
-        else SimAnalyzerTheme.material.background.copy(alpha = 0.6f)
+        if (enabled) {
+            SimAnalyzerTheme.material.background
+        } else {
+            SimAnalyzerTheme.material.background.copy(alpha = 0.6f)
+        }
 
     val clickable =
         if (enabled && readOnly) {
             Modifier.clickable(
                 interactionSource = interactionSource,
-                indication = null
+                indication = null,
             ) { onClick() }
-        } else Modifier
+        } else {
+            Modifier
+        }
 
     Row(
         modifier = modifier
@@ -87,14 +92,14 @@ public fun TextField(
             .border(1.dp, borderColor, RoundedCornerShape(8.dp))
             .then(clickable)
             .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (leadingIcon != null) {
             Icon(
                 imageVector = leadingIcon,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.70f)
+                tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.70f),
             )
             Spacer(Modifier.width(12.dp))
         }
@@ -122,12 +127,12 @@ public fun TextField(
                             color = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.55f),
                             style = textStyle,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
                     inner()
                 }
-            }
+            },
         )
 
         if (trailing != null) {

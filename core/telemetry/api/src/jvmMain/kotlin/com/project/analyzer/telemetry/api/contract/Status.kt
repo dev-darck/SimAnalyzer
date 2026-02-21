@@ -4,10 +4,10 @@ public enum class SimStatus {
     OFF,
     REPLAY,
     LIVE,
-    PAUSE;
+    PAUSE,
+    ;
 
     public companion object {
-
         public fun fromAcValue(value: Int): SimStatus = when (value) {
             0 -> OFF
             1 -> REPLAY
@@ -27,10 +27,10 @@ public enum class SessionType {
     TIME_ATTACK,
     DRIFT,
     DRAG,
-    WARMUP;
+    WARMUP,
+    ;
 
     public companion object {
-
         public fun fromAcValue(value: Int): SessionType = when (value) {
             0 -> PRACTICE
             1 -> QUALIFYING
@@ -49,16 +49,16 @@ public enum class SessionPhase {
     NONE,
     STARTING,
     GREEN_FLAG,
-    SESSION_OVER
+    SESSION_OVER,
 }
 
 public enum class LapValidity {
     VALID,
     INVALID,
-    UNKNOWN;
+    UNKNOWN,
+    ;
 
     public companion object {
-
         public fun fromBoolean(isValid: Boolean?): LapValidity = when (isValid) {
             true -> VALID
             false -> INVALID

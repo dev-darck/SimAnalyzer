@@ -16,11 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-public fun SessionStatCard(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier,
-) {
+public fun SessionStatCard(title: String, value: String, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
@@ -28,23 +24,23 @@ public fun SessionStatCard(
             .border(
                 1.dp,
                 SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.35f),
-                SimAnalyzerTheme.shapes.large
+                SimAnalyzerTheme.shapes.large,
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         Text(
             text = title.uppercase(),
             color = SimAnalyzerTheme.material.onSurfaceVariant,
             fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.4.sp
+            letterSpacing = 0.4.sp,
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = value,
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }

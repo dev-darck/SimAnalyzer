@@ -14,6 +14,5 @@ public object UtilsBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    public fun provideAppDirectories(
-    ): AppDirectories = AppDirectoriesImpl()
+    public fun provideAppDirectories(): AppDirectories = AppDirectoriesImpl()
 }

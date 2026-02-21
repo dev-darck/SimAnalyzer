@@ -4,11 +4,7 @@ import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 
-data class CapturePoint(
-    val position: Vec2,
-    val forward: Vec2,
-    val label: String,
-)
+data class CapturePoint(val position: Vec2, val forward: Vec2, val label: String)
 
 data class OverlayDebugState(
     val trackId: String? = null,

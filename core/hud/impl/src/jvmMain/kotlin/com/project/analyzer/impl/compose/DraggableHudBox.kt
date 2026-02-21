@@ -49,7 +49,7 @@ internal fun DraggableHudBox(
     inputLocked: Boolean,
     onToggleInputLock: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit = {}
+    content: @Composable BoxScope.() -> Unit = {},
 ) {
     var localOffset by remember(panelId) { mutableStateOf(offset) }
 
@@ -65,7 +65,7 @@ internal fun DraggableHudBox(
     val draggableState = rememberDraggable2DState { delta ->
         localOffset = IntOffset(
             x = localOffset.x + delta.x.roundToInt(),
-            y = localOffset.y + delta.y.roundToInt()
+            y = localOffset.y + delta.y.roundToInt(),
         )
     }
 
@@ -74,7 +74,7 @@ internal fun DraggableHudBox(
             Color.Black.copy(alpha = 0.3f)
         } else {
             Color.Transparent
-        }
+        },
     )
 
     DisposableEffect(panelId) {
@@ -98,7 +98,7 @@ internal fun DraggableHudBox(
                     left = p.x.roundToInt(),
                     top = p.y.roundToInt(),
                     right = (p.x + s.width).roundToInt(),
-                    bottom = (p.y + s.height).roundToInt()
+                    bottom = (p.y + s.height).roundToInt(),
                 )
                 if (rect != lastRect) {
                     lastRect = rect
@@ -118,7 +118,7 @@ internal fun DraggableHudBox(
                     lastRect?.let { hitRegions.put(panelId, it) }
                     overlayController.endDrag()
                     onIntent(HudIntent.SavePosition(panelId, localOffset))
-                }
+                },
             ),
     ) {
         content()
@@ -133,13 +133,13 @@ internal fun DraggableHudBox(
                     .clip(shape)
                     .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.6f), shape)
                     .clickable(onClick = onToggleInputLock)
-                    .padding(4.dp)
+                    .padding(4.dp),
             ) {
                 Icon(
                     imageVector = if (inputLocked) Icons.Outlined.Lock else Icons.Outlined.LockOpen,
                     contentDescription = null,
                     tint = accent,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }

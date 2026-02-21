@@ -18,9 +18,7 @@ import kotlinx.coroutines.withContext
 @Inject
 @ViewModelKey(TrackMapLibraryViewModel::class)
 @ContributesIntoMap(ScreenScope::class)
-class TrackMapLibraryViewModel(
-    private val repository: TrackMapRepository
-) : ViewModel() {
+class TrackMapLibraryViewModel(private val repository: TrackMapRepository) : ViewModel() {
 
     private val stats = TrackMapStatsCalculator()
 
@@ -54,7 +52,7 @@ class TrackMapLibraryViewModel(
                     bounds = bounds,
                     distanceMeters = distance,
                     pitEntryPoint = pitEntryPoint,
-                    pitExitPoint = pitExitPoint
+                    pitExitPoint = pitExitPoint,
                 )
             }
         }

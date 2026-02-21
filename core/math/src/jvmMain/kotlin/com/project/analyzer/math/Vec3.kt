@@ -3,11 +3,7 @@ package com.project.analyzer.math
 import kotlin.math.abs
 import kotlin.math.sqrt
 
-public data class Vec3(
-    val x: Float,
-    val y: Float,
-    val z: Float
-) {
+public data class Vec3(val x: Float, val y: Float, val z: Float) {
 
     public operator fun minus(o: Vec3): Vec3 = Vec3(x - o.x, y - o.y, z - o.z)
     public operator fun plus(o: Vec3): Vec3 = Vec3(x + o.x, y + o.y, z + o.z)

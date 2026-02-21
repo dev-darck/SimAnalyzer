@@ -47,12 +47,13 @@ internal class FuelConsumptionUseCaseImpl(
             val inputs = merge(
                 telemetry.frames.map { Input.Frame(it) },
                 telemetry.events.map { Input.Event(it) },
-                manualResetFlow.map { Input.ManualReset }
+                manualResetFlow.map { Input.ManualReset },
             )
 
             inputs.collect { input ->
                 val out: FuelResult? = when (input) {
                     is Input.Frame -> onFrame(input.frame)
+
                     is Input.Event -> onLifecycleEvent(input.event)
 
                     Input.ManualReset -> {
@@ -194,7 +195,7 @@ internal class FuelConsumptionUseCaseImpl(
         currentSession?.toFuelIdentityKey()?.let { key ->
             repository.clear(
                 carModel = key.carModel,
-                trackId = key.trackId
+                trackId = key.trackId,
             )
         }
     }
@@ -210,7 +211,7 @@ internal class FuelConsumptionUseCaseImpl(
             carModel = key.carModel,
             trackId = key.trackId,
             peakLitersPerLap = peak.takeIf { it > 0.0 },
-            bestValidLapTimeMs = best
+            bestValidLapTimeMs = best,
         )
         logger.info { "Fuel flush ($reason) key=${key.composite} peak=$peak bestMs=$best" }
     }
@@ -219,7 +220,7 @@ internal class FuelConsumptionUseCaseImpl(
         val key = session.toFuelIdentityKey() ?: return null
         return repository.load(
             carModel = key.carModel,
-            trackId = key.trackId
+            trackId = key.trackId,
         )
     }
 
@@ -239,15 +240,17 @@ internal class FuelConsumptionUseCaseImpl(
     private fun mergeSticky(old: SessionInfo?, incoming: SessionInfo): SessionInfo {
         if (old == null) return incoming
 
-        fun pick(oldVal: String, newVal: String): String =
-            newVal.ifBlank { oldVal }
+        fun pick(oldVal: String, newVal: String): String = newVal.ifBlank { oldVal }
 
         return old.copy(
             sessionId = incoming.sessionId,
-            sessionType = if (incoming.sessionType != old.sessionType && incoming.sessionType.name != "UNKNOWN")
-                incoming.sessionType else old.sessionType,
+            sessionType = if (incoming.sessionType != old.sessionType && incoming.sessionType.name != "UNKNOWN") {
+                incoming.sessionType
+            } else {
+                old.sessionType
+            },
             carModel = pick(old.carModel, incoming.carModel),
-            trackId = pick(old.trackId, incoming.trackId)
+            trackId = pick(old.trackId, incoming.trackId),
         )
     }
 
@@ -267,11 +270,10 @@ internal class FuelConsumptionUseCaseImpl(
         }
     }
 
-    private fun SessionInfo.toFuelIdentityKey(): FuelIdentityKey? =
-        FuelIdentityKey.from(
-            carModel = carModel,
-            trackId = trackId
-        )
+    private fun SessionInfo.toFuelIdentityKey(): FuelIdentityKey? = FuelIdentityKey.from(
+        carModel = carModel,
+        trackId = trackId,
+    )
 
     sealed interface Input {
         data class Frame(val frame: TelemetryFrame) : Input
@@ -279,8 +281,9 @@ internal class FuelConsumptionUseCaseImpl(
         data object ManualReset : Input
     }
 
-    private enum class Mode { NONE,
+    private enum class Mode {
+        NONE,
         RUNNING,
-        PAUSED
+        PAUSED,
     }
 }

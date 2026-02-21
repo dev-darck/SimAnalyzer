@@ -5,9 +5,5 @@ import com.project.analyzer.telemetry.lmu.api.model.LmuTelemetrySnapshot
 
 internal interface LmuTelemetryRecordingEmitter {
 
-    suspend fun emitSample(
-        sessionId: Long,
-        snapshot: LmuTelemetrySnapshot,
-        frame: TelemetryFrame,
-    )
+    suspend fun emitSample(sessionId: Long, snapshot: LmuTelemetrySnapshot, frame: TelemetryFrame)
 }

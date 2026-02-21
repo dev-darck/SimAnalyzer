@@ -8,7 +8,7 @@ class AcRawSnapshot(
     val physics: SPageFilePhysics,
     val graphics: SPageFileGraphics,
     val statics: SPageFileStatic,
-    var timestampNs: Long = 0L
+    var timestampNs: Long = 0L,
 ) {
 
     var frameId: Long = 0L

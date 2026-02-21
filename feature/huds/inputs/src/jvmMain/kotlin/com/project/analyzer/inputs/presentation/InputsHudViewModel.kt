@@ -20,9 +20,7 @@ import kotlin.math.abs
 import kotlin.math.max
 
 @Inject
-internal class InputsHudViewModel(
-    private val useCase: InputsUseCase,
-) : ViewModel() {
+internal class InputsHudViewModel(private val useCase: InputsUseCase) : ViewModel() {
 
     private var steerPeakAbs: Float = 0.35f
     private val steerPeakDecay: Float = 0.995f
@@ -49,6 +47,7 @@ internal class InputsHudViewModel(
     fun dispatch(intent: InputsIntent) {
         when (intent) {
             InputsIntent.Start -> subscribe()
+
             is InputsIntent.UpdateSettings -> viewModelScope.launch {
                 useCase.updateSettings(intent.inputHudSettings)
             }
@@ -78,7 +77,7 @@ internal class InputsHudViewModel(
                         clutch = 0f,
                         steerNorm = 0f,
                         series = series,
-                        renderTick = nextTick(st.renderTick)
+                        renderTick = nextTick(st.renderTick),
                     )
                 }
             }
@@ -88,7 +87,7 @@ internal class InputsHudViewModel(
                     st.copy(
                         isShow = true,
                         isSessionActive = true,
-                        renderTick = nextTick(st.renderTick)
+                        renderTick = nextTick(st.renderTick),
                     )
                 }
             }
@@ -98,7 +97,7 @@ internal class InputsHudViewModel(
                     st.copy(
                         isShow = false,
                         isSessionActive = false,
-                        renderTick = nextTick(st.renderTick)
+                        renderTick = nextTick(st.renderTick),
                     )
                 }
             }
@@ -109,7 +108,7 @@ internal class InputsHudViewModel(
                     st.copy(
                         isShow = false,
                         isSessionActive = false,
-                        renderTick = nextTick(st.renderTick)
+                        renderTick = nextTick(st.renderTick),
                     )
                 }
             }
@@ -137,7 +136,7 @@ internal class InputsHudViewModel(
                         clutch = c,
                         steerNorm = steerNorm,
                         series = series,
-                        renderTick = nextTick(st.renderTick)
+                        renderTick = nextTick(st.renderTick),
                     )
                 }
             }
@@ -161,8 +160,7 @@ internal class InputsHudViewModel(
         return InputsSeries(capacity = targetCap)
     }
 
-    private fun nextTick(tick: Long): Long =
-        if (tick >= Long.MAX_VALUE - 1) 0L else tick + 1
+    private fun nextTick(tick: Long): Long = if (tick >= Long.MAX_VALUE - 1) 0L else tick + 1
 
     private companion object {
 

@@ -18,7 +18,7 @@ class CrashViewModel(
     private val copyReportUseCase: CopyReportUseCase,
     private val openFileUseCase: OpenFileUseCase,
     private val openLogsFolderUseCase: OpenLogsFolderUseCase,
-    private val reportOnGitHubUseCase: ReportOnGitHubUseCase
+    private val reportOnGitHubUseCase: ReportOnGitHubUseCase,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CrashScreenState(CrashReport()))

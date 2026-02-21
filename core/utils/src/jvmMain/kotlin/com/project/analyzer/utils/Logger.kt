@@ -8,7 +8,6 @@ public val logger: KLogger by lazy {
 }
 
 public class NsRateLimiter(private val intervalNs: Long) {
-
     private var nextNs: Long = 0L
 
     public fun shouldLog(nowNs: Long): Boolean {

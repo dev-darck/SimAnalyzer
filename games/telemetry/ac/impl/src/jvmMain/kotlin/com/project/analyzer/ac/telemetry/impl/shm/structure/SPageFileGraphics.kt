@@ -554,13 +554,11 @@ class SPageFileGraphics(p: Pointer? = null) : Pack4Structure(p) {
     }
 }
 
-private fun FloatArray.dumpFloats(count: Int = size, decimals: Int = 2): String =
-    take(count.coerceAtMost(size))
-        .joinToString(", ", "[", "]") { "%.${decimals}f".format(it) }
+private fun FloatArray.dumpFloats(count: Int = size, decimals: Int = 2): String = take(count.coerceAtMost(size))
+    .joinToString(", ", "[", "]") { "%.${decimals}f".format(it) }
 
-private fun IntArray.dumpInts(count: Int = size): String =
-    take(count.coerceAtMost(size))
-        .joinToString(", ", "[", "]")
+private fun IntArray.dumpInts(count: Int = size): String = take(count.coerceAtMost(size))
+    .joinToString(", ", "[", "]")
 
 fun CharArray.rawCodes(): String {
     val meaningful = indexOfLast { it.code != 0 }

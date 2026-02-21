@@ -13,10 +13,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.SessionStatCard
 
 @Composable
-internal fun SessionScreenStatsRow(
-    stats: SessionStatsUi,
-    modifier: Modifier = Modifier,
-) {
+internal fun SessionScreenStatsRow(stats: SessionStatsUi, modifier: Modifier = Modifier) {
     BoxWithConstraints(modifier = modifier) {
         if (maxWidth < 900.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -30,22 +27,22 @@ internal fun SessionScreenStatsRow(
                 SessionStatCard(
                     title = "Total Distance (km)",
                     value = stats.totalDistanceLabel,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 SessionStatCard(
                     title = "Sessions",
                     value = stats.sessionsCount.toString(),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 SessionStatCard(
                     title = "Total Incidents",
                     value = stats.incidentsCount.toString(),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 SessionStatCard(
                     title = "Favorite Car",
                     value = stats.favoriteCar,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -61,8 +58,8 @@ private fun SessionScreenStatsRowPreview() {
                 totalDistanceLabel = "123.450",
                 sessionsCount = 24,
                 incidentsCount = 4,
-                favoriteCar = "Car Name"
-            )
+                favoriteCar = "Car Name",
+            ),
         )
     }
 }

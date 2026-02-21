@@ -5,9 +5,7 @@ import com.project.analyzer.live.presentation.components.ValueStatus
 import kotlin.time.Duration
 import kotlin.time.TimeSource
 
-internal class SectorsFilter(
-    private val holdAfterLap: Duration
-) {
+internal class SectorsFilter(private val holdAfterLap: Duration) {
 
     private var prevLapCount: Int? = null
 
@@ -44,7 +42,7 @@ internal class SectorsFilter(
         return current
     }
 
-    private fun isPlaceholder(list: List<Sector>): Boolean {
-        return list.all { it.value == "--.--" && it.status == ValueStatus.NORMAL }
+    private fun isPlaceholder(list: List<Sector>): Boolean = list.all {
+        it.value == "--.--" && it.status == ValueStatus.NORMAL
     }
 }

@@ -25,9 +25,7 @@ import java.util.Locale
 import kotlin.math.ceil
 
 @Inject
-class SessionListViewModel(
-    private val repository: RecordedSessionRepository,
-) : ViewModel() {
+class SessionListViewModel(private val repository: RecordedSessionRepository) : ViewModel() {
 
     private val _state = MutableStateFlow(SessionListState())
     val state: StateFlow<SessionListState> = _state.asStateFlow()
@@ -45,14 +43,43 @@ class SessionListViewModel(
     fun dispatch(intent: SessionListIntent) {
         when (intent) {
             SessionListIntent.Refresh -> refresh()
-            is SessionListIntent.ChangeGame -> updateFilter { copy(gameFilter = gameFilter.updateSelection(intent.optionId)) }
-            is SessionListIntent.ChangeTrack -> updateFilter { copy(trackFilter = trackFilter.updateSelection(intent.optionId)) }
-            is SessionListIntent.ChangeCar -> updateFilter { copy(carFilter = carFilter.updateSelection(intent.optionId)) }
-            is SessionListIntent.ChangeDate -> updateFilter { copy(dateFilter = dateFilter.updateSelection(intent.optionId)) }
-            is SessionListIntent.ChangeSort -> updateFilter { copy(sortFilter = sortFilter.updateSelection(intent.optionId)) }
+
+            is SessionListIntent.ChangeGame -> updateFilter {
+                copy(
+                    gameFilter = gameFilter.updateSelection(intent.optionId),
+                )
+            }
+
+            is SessionListIntent.ChangeTrack -> updateFilter {
+                copy(
+                    trackFilter = trackFilter.updateSelection(intent.optionId),
+                )
+            }
+
+            is SessionListIntent.ChangeCar -> updateFilter {
+                copy(
+                    carFilter = carFilter.updateSelection(intent.optionId),
+                )
+            }
+
+            is SessionListIntent.ChangeDate -> updateFilter {
+                copy(
+                    dateFilter = dateFilter.updateSelection(intent.optionId),
+                )
+            }
+
+            is SessionListIntent.ChangeSort -> updateFilter {
+                copy(
+                    sortFilter = sortFilter.updateSelection(intent.optionId),
+                )
+            }
+
             is SessionListIntent.ChangeSearch -> updateFilter { copy(searchQuery = intent.query, page = 1) }
+
             is SessionListIntent.ChangePage -> updateFilter { copy(page = intent.page) }
+
             is SessionListIntent.SaveSession -> saveSession(intent.sessionId)
+
             is SessionListIntent.DeleteSession -> deleteSession(intent.sessionId)
         }
     }
@@ -115,7 +142,7 @@ class SessionListViewModel(
             carFilter = buildFilter("Car", state.carFilter.selectedId, carOptions),
             dateFilter = buildFilter("Date", state.dateFilter.selectedId, dateOptions),
             sortFilter = buildFilter("Sort by", state.sortFilter.selectedId, sortOptions),
-            stats = buildStats(sessions)
+            stats = buildStats(sessions),
         )
     }
 
@@ -158,22 +185,18 @@ class SessionListViewModel(
             page = page,
             pageCount = pageCount,
             sessions = rows,
-            visibleSessions = visible
+            visibleSessions = visible,
         )
     }
 
-    private fun buildFilter(
-        label: String,
-        selectedId: String,
-        options: List<DropdownOptionUi>,
-    ): DropdownFilterUi {
+    private fun buildFilter(label: String, selectedId: String, options: List<DropdownOptionUi>): DropdownFilterUi {
         val resolved = if (options.any { it.id == selectedId }) selectedId else FILTER_ALL_ID
         val selectedLabel = options.firstOrNull { it.id == resolved }?.label ?: options.first().label
         return DropdownFilterUi(
             label = label,
             selectedId = resolved,
             selectedLabel = selectedLabel,
-            options = options
+            options = options,
         )
     }
 
@@ -243,11 +266,9 @@ class SessionListViewModel(
         )
     }
 
-    private fun formatDate(epochMs: Long): String =
-        dateFormatter.format(Instant.ofEpochMilli(epochMs).atZone(zoneId))
+    private fun formatDate(epochMs: Long): String = dateFormatter.format(Instant.ofEpochMilli(epochMs).atZone(zoneId))
 
-    private fun formatTime(epochMs: Long): String =
-        timeFormatter.format(Instant.ofEpochMilli(epochMs).atZone(zoneId))
+    private fun formatTime(epochMs: Long): String = timeFormatter.format(Instant.ofEpochMilli(epochMs).atZone(zoneId))
 
     private fun String?.orUnknownLabel(): String = this?.takeIf { it.isNotBlank() } ?: "Unknown"
 
@@ -257,18 +278,15 @@ class SessionListViewModel(
     private fun DropdownFilterUi.updateSelection(optionId: String): DropdownFilterUi =
         copy(selectedId = optionId, selectedLabel = options.firstOrNull { it.id == optionId }?.label ?: selectedLabel)
 
-    private fun normalizeGameId(gameId: String): String =
-        gameId.trim().lowercase(Locale.US).ifBlank { "unknown" }
+    private fun normalizeGameId(gameId: String): String = gameId.trim().lowercase(Locale.US).ifBlank { "unknown" }
 
-    private fun gameLabel(gameId: String): String {
-        return when (val normalized = normalizeGameId(gameId)) {
-            "ac" -> "AC"
-            "ace" -> "AC Evo"
-            "acc" -> "ACC"
-            "lmu" -> "LMU"
-            "unknown" -> "Unknown"
-            else -> normalized.uppercase(Locale.US)
-        }
+    private fun gameLabel(gameId: String): String = when (val normalized = normalizeGameId(gameId)) {
+        "ac" -> "AC"
+        "ace" -> "AC Evo"
+        "acc" -> "ACC"
+        "lmu" -> "LMU"
+        "unknown" -> "Unknown"
+        else -> normalized.uppercase(Locale.US)
     }
 
     private companion object {

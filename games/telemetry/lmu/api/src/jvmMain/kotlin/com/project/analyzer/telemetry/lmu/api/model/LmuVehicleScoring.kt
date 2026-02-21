@@ -55,5 +55,5 @@ public data class LmuVehicleScoring(
     val pitLaneEndDist: Double,
     val maxSpeed: Double,
     val vehicleFileName: String,
-    val expansion: ByteArray
+    val expansion: ByteArray,
 )

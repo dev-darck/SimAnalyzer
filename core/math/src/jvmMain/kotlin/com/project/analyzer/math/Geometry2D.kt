@@ -72,12 +72,7 @@ public object Geometry2D {
     }
 
     /** How far point [p] lies outside the band |dot(p-center, normal)| <= halfWidth. */
-    public fun outsideBandByNormal(
-        p: Vec2,
-        center: Vec2,
-        normal: Vec2,
-        halfWidth: Float
-    ): Float {
+    public fun outsideBandByNormal(p: Vec2, center: Vec2, normal: Vec2, halfWidth: Float): Float {
         val along = (p - center).dot(normal)
         return max(0f, abs(along) - halfWidth)
     }

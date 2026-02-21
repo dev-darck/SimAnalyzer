@@ -9,5 +9,5 @@ public data class LmuTelemetrySnapshot(
     val telemetry: LmuVehicleTelemetry,
     val scoring: LmuVehicleScoring?,
     val scoringInfo: LmuScoringInfo?,
-    val timestampNs: Long
+    val timestampNs: Long,
 )

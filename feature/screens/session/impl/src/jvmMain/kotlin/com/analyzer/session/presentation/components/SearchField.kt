@@ -21,6 +21,6 @@ internal fun SearchField(
         onValueChange = onValueChange,
         leadingIcon = Icons.Filled.Search,
         modifier = modifier
-            .height(36.dp)
+            .height(36.dp),
     )
 }

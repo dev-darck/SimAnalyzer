@@ -38,7 +38,6 @@ class CaptureGateOnStandstillUseCase(
         maxDriftMeters: Float = 0.5f,
         maxPosStdMeters: Float = 0.05f,
     ): GateCaptureResult {
-
         val moveDirRaw = awaitStableStandstill(
             waitStableMs = waitStableMs,
             speedThresholdKmh = speedThresholdKmh,
@@ -57,7 +56,7 @@ class CaptureGateOnStandstillUseCase(
         val posStd = Statistics2D.std(samples, avgPos)
         if (posStd > maxPosStdMeters) {
             throw GateCaptureException(
-                "Position noise too high (std=%.3fm, max=%.3fm).".format(posStd, maxPosStdMeters)
+                "Position noise too high (std=%.3fm, max=%.3fm).".format(posStd, maxPosStdMeters),
             )
         }
 
@@ -70,7 +69,7 @@ class CaptureGateOnStandstillUseCase(
         val moveDir = validateAndFixMoveDir(
             moveDir = moveDirRaw,
             axleForward = axleForward,
-            headingForward = headingForward
+            headingForward = headingForward,
         )
 
         val forward = (moveDir ?: axleForward ?: headingForward).safeNormalized(Vec2.Up)
@@ -96,7 +95,6 @@ class CaptureGateOnStandstillUseCase(
         speedThresholdKmh: Float,
         maxDriftMeters: Float,
     ): Vec2? {
-
         val first = provider.sample.value
         val anchor = first.pose ?: throw GateCaptureException("No telemetry data. Make sure game is running.")
 
@@ -109,8 +107,9 @@ class CaptureGateOnStandstillUseCase(
             val pose = s.pose ?: throw GateCaptureException("Lost telemetry data.")
 
             val drift = (pose.pos - anchor.pos).len()
-            if (drift > maxDriftMeters)
+            if (drift > maxDriftMeters) {
                 throw GateCaptureException("Car drifted %.2fm from capture point.".format(drift))
+            }
 
             if (firstPos == null) firstPos = pose.pos
             lastPos = pose.pos
@@ -132,10 +131,7 @@ class CaptureGateOnStandstillUseCase(
     }
 
     /** Collects position samples for [captureMs] while ensuring the car remains below a speed threshold. */
-    private suspend fun collectPositionSamples(
-        captureMs: Long,
-        speedThresholdKmh: Float,
-    ): List<Vec2> {
+    private suspend fun collectPositionSamples(captureMs: Long, speedThresholdKmh: Float): List<Vec2> {
         var captureTimeMs = 0L
         val expected = ((captureMs + CAPTURE_INTERVAL_MS - 1) / CAPTURE_INTERVAL_MS).toInt()
         val samples = ArrayList<Vec2>(expected)
@@ -154,11 +150,7 @@ class CaptureGateOnStandstillUseCase(
         return samples
     }
 
-    private fun validateAndFixMoveDir(
-        moveDir: Vec2?,
-        axleForward: Vec2?,
-        headingForward: Vec2
-    ): Vec2? {
+    private fun validateAndFixMoveDir(moveDir: Vec2?, axleForward: Vec2?, headingForward: Vec2): Vec2? {
         if (moveDir == null) return null
 
         val ref = axleForward ?: headingForward

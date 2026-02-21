@@ -5,15 +5,9 @@ import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisi
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSample
 
 internal sealed interface TelemetryRecordingInput {
-    data class TelemetryRecordingConfigInput(
-        val config: TelemetryAcquisitionConfig
-    ) : TelemetryRecordingInput
+    data class TelemetryRecordingConfigInput(val config: TelemetryAcquisitionConfig) : TelemetryRecordingInput
 
-    data class TelemetryRecordingEventInput(
-        val event: TelemetryLifecycleEvent
-    ) : TelemetryRecordingInput
+    data class TelemetryRecordingEventInput(val event: TelemetryLifecycleEvent) : TelemetryRecordingInput
 
-    data class TelemetryRecordingSampleInput(
-        val sample: TelemetryRecordingSample
-    ) : TelemetryRecordingInput
+    data class TelemetryRecordingSampleInput(val sample: TelemetryRecordingSample) : TelemetryRecordingInput
 }

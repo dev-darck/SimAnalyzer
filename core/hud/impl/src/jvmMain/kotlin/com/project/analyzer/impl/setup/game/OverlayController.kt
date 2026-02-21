@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 class OverlayController(
     private val gameDetector: GameDetector,
     private val hitRegions: HitRegions,
-    private val coroutineDispatcher: CoroutineDispatcher
+    private val coroutineDispatcher: CoroutineDispatcher,
 ) {
 
     private val user32 = User32.INSTANCE
@@ -173,7 +173,6 @@ class OverlayController(
         requestGameForeground()
     }
 
-
     private fun startTracking(scope: CoroutineScope) {
         trackingJob?.cancel()
         trackingJob = scope.launch(coroutineDispatcher) {
@@ -204,7 +203,9 @@ class OverlayController(
         applyBoundsIfNeeded(window, expected)
 
         if (!window.isVisible) {
-            logger.info("Enable full screen window to bind it to monitor size monitor id ${gameInfo.monitor.id} ${gameInfo.monitor.bounds}")
+            logger.info(
+                "Enable full screen window to bind it to monitor size monitor id ${gameInfo.monitor.id} ${gameInfo.monitor.bounds}",
+            )
             WindowsOverlayRegion.resetToFullWindow(window)
             window.isVisible = true
         }
@@ -219,7 +220,7 @@ class OverlayController(
             it.copy(
                 isVisible = true,
                 bounds = expected,
-                gameInfo = gameInfo
+                gameInfo = gameInfo,
             )
         }
     }
@@ -239,7 +240,7 @@ class OverlayController(
                 isVisible = false,
                 bounds = null,
                 gameInfo = null,
-                isDragging = false
+                isDragging = false,
             )
         }
     }
@@ -381,11 +382,14 @@ class OverlayController(
         val result = user32.SetWindowPos(
             hwnd,
             HWND(Pointer.createConstant(-1)),
-            0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
             WinUser.SWP_NOMOVE or
                 WinUser.SWP_NOSIZE or
                 WinUser.SWP_NOACTIVATE or
-                WinUser.SWP_SHOWWINDOW
+                WinUser.SWP_SHOWWINDOW,
         )
 
         val err = Native.getLastError()
@@ -414,8 +418,11 @@ class OverlayController(
             user32.SetWindowPos(
                 hwnd,
                 null,
-                0, 0, 0, 0,
-                WinUser.SWP_NOMOVE or WinUser.SWP_NOSIZE or WinUser.SWP_NOZORDER or WinUser.SWP_NOACTIVATE
+                0,
+                0,
+                0,
+                0,
+                WinUser.SWP_NOMOVE or WinUser.SWP_NOSIZE or WinUser.SWP_NOZORDER or WinUser.SWP_NOACTIVATE,
             )
         }
     }

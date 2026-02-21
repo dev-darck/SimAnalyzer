@@ -13,13 +13,11 @@ import kotlinx.coroutines.flow.first
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<TrackCalibrationRepository>())
-class TrackCalibrationStoreRepository(
-    appDirectories: AppDirectories,
-) : TrackCalibrationRepository {
+class TrackCalibrationStoreRepository(appDirectories: AppDirectories) : TrackCalibrationRepository {
 
     private val store = createTrackCalibrationStoreDataStore(
         directory = appDirectories.preferencesDir,
-        fileName = FILE_NAME
+        fileName = FILE_NAME,
     )
 
     override suspend fun save(calibration: TrackCalibration) {

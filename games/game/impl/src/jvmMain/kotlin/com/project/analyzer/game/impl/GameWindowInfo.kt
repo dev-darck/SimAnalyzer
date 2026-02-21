@@ -10,5 +10,5 @@ data class GameWindowInfo(
     val className: String,
     val bounds: Rectangle,
     val isFullscreen: Boolean,
-    val monitor: GraphicsDeviceInfo
+    val monitor: GraphicsDeviceInfo,
 )

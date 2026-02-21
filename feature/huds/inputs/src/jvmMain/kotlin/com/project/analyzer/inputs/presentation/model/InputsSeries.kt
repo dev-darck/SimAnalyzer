@@ -4,9 +4,7 @@ import androidx.compose.runtime.Stable
 import kotlin.math.min
 
 @Stable
-internal class InputsSeries(
-    val capacity: Int
-) {
+internal class InputsSeries(val capacity: Int) {
 
     val throttle = FloatArray(capacity)
     val brake = FloatArray(capacity)

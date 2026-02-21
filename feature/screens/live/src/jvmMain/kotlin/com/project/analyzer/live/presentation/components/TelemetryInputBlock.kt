@@ -36,7 +36,7 @@ fun TelemetryInputsBlock(
     brake: Float,
     throttle: Float,
     steerDeg: Float,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val cardBg = SimAnalyzerTheme.material.surface
     val barBg = SimAnalyzerTheme.material.surfaceVariant
@@ -52,13 +52,13 @@ fun TelemetryInputsBlock(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
-            .padding(22.dp)
+            .padding(22.dp),
     ) {
         Text(
             text = "Inputs",
             color = textPrimary,
             fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -101,7 +101,7 @@ fun TelemetryInputsBlock(
             modifier = Modifier.fillMaxWidth(),
             textMuted = textMuted,
             trackColor = barBg,
-            knobColor = knobColor
+            knobColor = knobColor,
         )
     }
 }
@@ -122,14 +122,14 @@ private fun HorizontalInputBar(
 
     Row(
         modifier = modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
             color = textMuted,
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.width(36.dp)
+            modifier = Modifier.width(36.dp),
         )
 
         Box(
@@ -137,7 +137,7 @@ private fun HorizontalInputBar(
                 .weight(1f)
                 .height(barHeight)
                 .clip(shape)
-                .background(barBg)
+                .background(barBg),
         ) {
             if (p > 0f) {
                 Box(
@@ -146,7 +146,7 @@ private fun HorizontalInputBar(
                         .fillMaxWidth(p)
                         .height(barHeight)
                         .clip(shape)
-                        .background(fillColor)
+                        .background(fillColor),
                 )
             }
         }
@@ -159,7 +159,7 @@ private fun HorizontalInputBar(
             fontFamily = FontFamily.Monospace,
             modifier = Modifier
                 .width(42.dp)
-                .padding(start = 8.dp)
+                .padding(start = 8.dp),
         )
     }
 }
@@ -170,7 +170,7 @@ private fun SteeringSlider(
     modifier: Modifier = Modifier,
     textMuted: Color,
     trackColor: Color,
-    knobColor: Color
+    knobColor: Color,
 ) {
     val s = steerDeg.coerceIn(-180f, 180f)
     val frac = (s + 180f) / 360f
@@ -187,7 +187,7 @@ private fun SteeringSlider(
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp)
+                .height(20.dp),
         ) {
             val w = size.width
             val h = size.height
@@ -200,7 +200,7 @@ private fun SteeringSlider(
                 color = trackColor.copy(alpha = 0.70f),
                 topLeft = Offset(0f, y),
                 size = Size(w, trackH),
-                cornerRadius = CornerRadius(r, r)
+                cornerRadius = CornerRadius(r, r),
             )
 
             val centerX = w / 2f
@@ -208,7 +208,7 @@ private fun SteeringSlider(
                 color = textMuted.copy(alpha = 0.5f),
                 start = Offset(centerX, y - 2.dp.toPx()),
                 end = Offset(centerX, y + trackH + 2.dp.toPx()),
-                strokeWidth = 1.5.dp.toPx()
+                strokeWidth = 1.5.dp.toPx(),
             )
 
             val cx = (w * frac).coerceIn(0f, w)
@@ -218,20 +218,20 @@ private fun SteeringSlider(
             drawCircle(
                 color = knobColor.copy(alpha = 0.25f),
                 radius = knobR + 3.dp.toPx(),
-                center = Offset(cx, cy)
+                center = Offset(cx, cy),
             )
 
             drawCircle(
                 color = knobColor,
                 radius = knobR,
-                center = Offset(cx, cy)
+                center = Offset(cx, cy),
             )
 
             drawCircle(
                 color = Color.Black.copy(alpha = 0.20f),
                 radius = knobR,
                 center = Offset(cx, cy),
-                style = Stroke(width = 1.dp.toPx())
+                style = Stroke(width = 1.dp.toPx()),
             )
         }
     }
@@ -246,14 +246,14 @@ private fun TelemetryInputsBlockPreview() {
                 .fillMaxWidth()
                 .background(SimAnalyzerTheme.material.background)
                 .padding(24.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             TelemetryInputsBlock(
                 clutch = 0.0f,
                 brake = 0.15f,
                 throttle = 1.0f,
                 steerDeg = 45f,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

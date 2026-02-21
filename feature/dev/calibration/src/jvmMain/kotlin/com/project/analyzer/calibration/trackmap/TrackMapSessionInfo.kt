@@ -64,7 +64,7 @@ internal fun applySessionInfo(
         trackName = resolvedTrackName,
         layoutId = resolvedLayoutId,
         currentSpeedKmh = speed,
-        currentPosition = position
+        currentPosition = position,
     )
 }
 
@@ -74,15 +74,13 @@ internal fun resolveTrackIdForSave(state: TrackMapRecorderState): String {
     return slugifyTrackId(state.trackName)
 }
 
-private fun slugifyTrackId(text: String): String {
-    return text
-        .lowercase()
-        .trim()
-        .replace(WHITESPACE_REGEX, "_")
-        .replace(NON_SLUG_CHARS_REGEX, "_")
-        .replace(MULTIPLE_UNDERSCORES_REGEX, "_")
-        .trim('_')
-}
+private fun slugifyTrackId(text: String): String = text
+    .lowercase()
+    .trim()
+    .replace(WHITESPACE_REGEX, "_")
+    .replace(NON_SLUG_CHARS_REGEX, "_")
+    .replace(MULTIPLE_UNDERSCORES_REGEX, "_")
+    .trim('_')
 
 private val WHITESPACE_REGEX = Regex("""\s+""")
 private val NON_SLUG_CHARS_REGEX = Regex("""[^a-z0-9_]+""")

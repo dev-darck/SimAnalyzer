@@ -6,6 +6,4 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @DataStoreSerializer
-internal data class TrackMapStore(
-    val maps: List<TrackMap> = emptyList()
-)
+internal data class TrackMapStore(val maps: List<TrackMap> = emptyList())

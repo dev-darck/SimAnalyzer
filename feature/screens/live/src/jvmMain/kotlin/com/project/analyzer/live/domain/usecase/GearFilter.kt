@@ -4,9 +4,7 @@ import kotlin.time.Duration
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-internal class GearFilter(
-    private val confirmNonForwardFor: Duration
-) {
+internal class GearFilter(private val confirmNonForwardFor: Duration) {
 
     private var lastStableRaw: Int = 1
     private var pendingNonForwardRaw: Int? = null

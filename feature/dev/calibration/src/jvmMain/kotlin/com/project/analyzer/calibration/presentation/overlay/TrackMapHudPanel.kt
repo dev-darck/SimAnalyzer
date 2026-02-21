@@ -29,9 +29,7 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
-class TrackMapHudPanel(
-    private val recorder: TrackMapRecorder
-) : HudPanel {
+class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
 
     override val id: String = "track_map_builder"
     override val description: String = "Track map capture overlay"
@@ -49,7 +47,7 @@ class TrackMapHudPanel(
                 modifier = Modifier.matchParentSize(),
                 backgroundAlpha = 0.7f,
                 borderAlpha = 0.5f,
-                showStatus = true
+                showStatus = true,
             )
 
             Row(
@@ -59,7 +57,7 @@ class TrackMapHudPanel(
                     .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.75f))
                     .padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (state.recording) {
                     Button(onClick = recorder::stop) {
@@ -73,14 +71,14 @@ class TrackMapHudPanel(
 
                 Button(
                     onClick = recorder::markPitEntry,
-                    enabled = state.recording
+                    enabled = state.recording,
                 ) {
                     Text("Pit in")
                 }
 
                 Button(
                     onClick = recorder::markPitExit,
-                    enabled = state.recording
+                    enabled = state.recording,
                 ) {
                     Text("Pit out")
                 }

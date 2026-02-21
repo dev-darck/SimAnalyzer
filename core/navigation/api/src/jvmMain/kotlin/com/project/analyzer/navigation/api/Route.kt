@@ -4,10 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Serializable
-public sealed class Route(
-    public val isRoot: Boolean,
-    public val topLevel: Root,
-) : NavKey {
+public sealed class Route(public val isRoot: Boolean, public val topLevel: Root) : NavKey {
 
     @Serializable
     public sealed class LiveRoot(public val root: Boolean = false) : Route(root, Root.Live) {
@@ -26,9 +23,7 @@ public sealed class Route(
         public data object Session : SessionRoot(true)
 
         @Serializable
-        public data class SessionDetails(
-            public val sessionId: Long,
-        ) : SessionRoot(false) {
+        public data class SessionDetails(public val sessionId: Long) : SessionRoot(false) {
 
             override fun equals(other: Any?): Boolean = other is SessionDetails
 

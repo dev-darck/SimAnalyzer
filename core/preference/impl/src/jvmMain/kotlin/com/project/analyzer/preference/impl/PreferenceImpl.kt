@@ -16,15 +16,12 @@ import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.IOException
 
-class PreferenceImpl(
-    private val directories: AppDirectories,
-    preferenceName: String
-) : Preference {
+class PreferenceImpl(private val directories: AppDirectories, preferenceName: String) : Preference {
 
     private val dataStore: DataStore<Preferences> by lazy {
         PreferenceDataStoreFactory.create(
             corruptionHandler = androidx.datastore.core.handlers.ReplaceFileCorruptionHandler(
-                produceNewData = { emptyPreferences() }
+                produceNewData = { emptyPreferences() },
             ),
         ) {
             File(directories.preferencesDir, preferenceName)
@@ -60,10 +57,7 @@ class PreferenceImpl(
             .distinctUntilChanged()
     }
 
-    override fun <T> observe(
-        key: Key<T>,
-        default: T
-    ): Flow<T> = observe(key)
+    override fun <T> observe(key: Key<T>, default: T): Flow<T> = observe(key)
         .map { it ?: default }
         .distinctUntilChanged()
 

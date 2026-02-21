@@ -5,5 +5,5 @@ public enum class HudAnchor {
     TopRight,
     BottomLeft,
     BottomRight,
-    Center
+    Center,
 }

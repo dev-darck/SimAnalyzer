@@ -1,9 +1,6 @@
 package com.project.analyzer.telemetry.api.model.session
 
-public data class Penalty(
-    val type: PenaltyType? = null,
-    val penaltyTimeSec: Float? = null,
-)
+public data class Penalty(val type: PenaltyType? = null, val penaltyTimeSec: Float? = null)
 
 public enum class PenaltyType {
     NONE,

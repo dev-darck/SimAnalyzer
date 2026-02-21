@@ -4,7 +4,7 @@ import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.model.CalibrationSample
 import com.project.analyzer.calibration.data.model.WheelDebug
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
-import com.project.analyzer.math.MinLen
+import com.project.analyzer.math.MIN_LEN
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
@@ -23,9 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 @Inject
 @SingleIn(ScreenScope::class)
 @ContributesBinding(ScreenScope::class, binding = binding<TelemetrySampleProvider>())
-class TelemetrySampleProviderImpl(
-    telemetry: TelemetryLifecycle,
-) : TelemetrySampleProvider {
+class TelemetrySampleProviderImpl(telemetry: TelemetryLifecycle) : TelemetrySampleProvider {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -77,7 +75,7 @@ class TelemetrySampleProviderImpl(
         .stateIn(
             scope,
             SharingStarted.Eagerly,
-            CalibrationSample(pose = null, speedKmh = 0f, headingRad = 0f)
+            CalibrationSample(pose = null, speedKmh = 0f, headingRad = 0f),
         )
 
     private fun computeAxleForward(wheels: WheelDebug?): Vec2? {
@@ -88,6 +86,6 @@ class TelemetrySampleProviderImpl(
         if (front == null || rear == null) return null
 
         val d = front - rear
-        return if (d.len() > MinLen) d.safeNormalized() else null
+        return if (d.len() > MIN_LEN) d.safeNormalized() else null
     }
 }

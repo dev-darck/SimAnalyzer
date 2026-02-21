@@ -25,10 +25,8 @@ public fun Int.formatSectorTime(): String {
  * Checks if tyre pressure is in optimal range for GT3 cars
  * Optimal: 27-28 psi, Acceptable: 26-29 psi
  */
-public fun Float.isTyrePressureOptimal(
-    optimalMin: Float = 26f,
-    optimalMax: Float = 29f
-): Boolean = this in optimalMin..optimalMax
+public fun Float.isTyrePressureOptimal(optimalMin: Float = 26f, optimalMax: Float = 29f): Boolean =
+    this in optimalMin..optimalMax
 
 /**
  * Determines tyre temperature zone based on core temp
@@ -36,11 +34,11 @@ public fun Float.isTyrePressureOptimal(
  */
 public enum class TyreTemperatureZone {
 
-    COLD,      // < 70°C - blue
-    WARMING,   // 70-80°C - cyan
-    OPTIMAL,   // 80-100°C - green
-    HOT,       // 100-110°C - yellow
-    OVERHEAT   // > 110°C - red
+    COLD, // < 70°C - blue
+    WARMING, // 70-80°C - cyan
+    OPTIMAL, // 80-100°C - green
+    HOT, // 100-110°C - yellow
+    OVERHEAT, // > 110°C - red
 }
 
 public fun Float.getTyreTemperatureZone(): TyreTemperatureZone = when {
@@ -57,11 +55,11 @@ public fun Float.getTyreTemperatureZone(): TyreTemperatureZone = when {
  */
 public enum class BrakeTemperatureZone {
 
-    COLD,      // < 200°C
-    WARMING,   // 200-300°C
-    OPTIMAL,   // 300-600°C
-    HOT,       // 600-800°C
-    OVERHEAT   // > 800°C
+    COLD, // < 200°C
+    WARMING, // 200-300°C
+    OPTIMAL, // 300-600°C
+    HOT, // 600-800°C
+    OVERHEAT, // > 800°C
 }
 
 public fun Float.getBrakeTemperatureZone(): BrakeTemperatureZone = when {

@@ -10,8 +10,8 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 
-private const val UserPrefName = "app_preferences.preferences_pb"
-private const val SessionPrefName = "session_preferences.preferences_pb"
+private const val USER_PREF_NAME = "app_preferences.preferences_pb"
+private const val SESSION_PREF_NAME = "session_preferences.preferences_pb"
 
 @BindingContainer
 @ContributesTo(AppScope::class)
@@ -22,7 +22,7 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun provideUserPref(directories: AppDirectories): Preference = PreferenceImpl(
         directories = directories,
-        preferenceName = UserPrefName
+        preferenceName = USER_PREF_NAME,
     )
 
     @Provides
@@ -30,6 +30,6 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun provideSessionPref(directories: AppDirectories): Preference = PreferenceImpl(
         directories = directories,
-        preferenceName = SessionPrefName
+        preferenceName = SESSION_PREF_NAME,
     )
 }

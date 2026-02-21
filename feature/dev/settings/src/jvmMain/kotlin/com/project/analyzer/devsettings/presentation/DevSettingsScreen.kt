@@ -49,40 +49,36 @@ private enum class DevSettingsSection {
     TrackMap,
     TrackMapLibrary,
     Telemetry,
-    Hud
+    Hud,
 }
 
-private data class DevNavItem(
-    val section: DevSettingsSection,
-    val title: String,
-    val subtitle: String,
-)
+private data class DevNavItem(val section: DevSettingsSection, val title: String, val subtitle: String)
 
 private val devNavItems = listOf(
     DevNavItem(
         section = DevSettingsSection.Calibration,
         title = "Calibration",
-        subtitle = "Capture start/finish and sector gates"
+        subtitle = "Capture start/finish and sector gates",
     ),
     DevNavItem(
         section = DevSettingsSection.TrackMap,
         title = "Track map",
-        subtitle = "Capture and save the track layout"
+        subtitle = "Capture and save the track layout",
     ),
     DevNavItem(
         section = DevSettingsSection.TrackMapLibrary,
         title = "Track maps",
-        subtitle = "Browse saved track layouts"
+        subtitle = "Browse saved track layouts",
     ),
     DevNavItem(
         section = DevSettingsSection.Telemetry,
         title = "Telemetry inspector",
-        subtitle = "Live frame values without auto-scroll"
+        subtitle = "Live frame values without auto-scroll",
     ),
     DevNavItem(
         section = DevSettingsSection.Hud,
         title = "Calibration HUD",
-        subtitle = "Debug overlays and minimap"
+        subtitle = "Debug overlays and minimap",
     ),
 )
 
@@ -96,7 +92,7 @@ internal fun DevSettingsScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         val isCompact = maxWidth < 980.dp
 
@@ -106,31 +102,31 @@ internal fun DevSettingsScreen() {
                 DevSettingsNavRow(
                     items = devNavItems,
                     selected = section,
-                    onSelect = { section = it }
+                    onSelect = { section = it },
                 )
                 DevSettingsContent(
                     section = section,
                     state = state,
                     onToggleHudPanel = viewModel::setDevHudPanelEnabled,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         } else {
             Row(
                 modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 DevSettingsNavColumn(
                     items = devNavItems,
                     selected = section,
                     onSelect = { section = it },
-                    modifier = Modifier.widthIn(min = 250.dp, max = 320.dp)
+                    modifier = Modifier.widthIn(min = 250.dp, max = 320.dp),
                 )
                 DevSettingsContent(
                     section = section,
                     state = state,
                     onToggleHudPanel = viewModel::setDevHudPanelEnabled,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -143,20 +139,20 @@ private fun DevSettingsHeader() {
         modifier = Modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = "Developer settings",
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 20.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Calibration tools, telemetry diagnostics, and dev HUDs.",
             color = SimAnalyzerTheme.material.onSurfaceVariant,
             fontSize = 12.sp,
-            style = MaterialTheme.typography.labelMedium
+            style = MaterialTheme.typography.labelMedium,
         )
     }
 }
@@ -170,7 +166,7 @@ private fun DevSettingsNavColumn(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         DevSettingsHeader()
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -178,7 +174,7 @@ private fun DevSettingsNavColumn(
                 DevSettingsNavCard(
                     item = item,
                     selected = item.section == selected,
-                    onClick = { onSelect(item.section) }
+                    onClick = { onSelect(item.section) },
                 )
             }
         }
@@ -196,13 +192,13 @@ private fun DevSettingsNavRow(
         modifier = modifier
             .horizontalScroll(rememberScrollState())
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items.forEach { item ->
             DevSettingsNavChip(
                 item = item,
                 selected = item.section == selected,
-                onClick = { onSelect(item.section) }
+                onClick = { onSelect(item.section) },
             )
         }
     }
@@ -233,19 +229,19 @@ private fun DevSettingsNavCard(
             .background(background)
             .border(1.dp, borderColor, SimAnalyzerTheme.shapes.medium)
             .onClick(onClick = onClick)
-            .padding(14.dp)
+            .padding(14.dp),
     ) {
         Text(
             text = item.title,
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 14.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = item.subtitle,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp
+            fontSize = 12.sp,
         )
     }
 }
@@ -275,13 +271,13 @@ private fun DevSettingsNavChip(
             .border(1.dp, borderColor, RoundedCornerShape(999.dp))
             .onClick(onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = item.title,
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 12.sp,
-            style = MaterialTheme.typography.labelMedium
+            style = MaterialTheme.typography.labelMedium,
         )
     }
 }
@@ -296,9 +292,13 @@ private fun DevSettingsContent(
     Box(modifier = modifier) {
         when (section) {
             DevSettingsSection.Calibration -> CalibrationHost()
+
             DevSettingsSection.TrackMap -> TrackMapBuilderScreen()
+
             DevSettingsSection.TrackMapLibrary -> TrackMapLibraryScreen()
+
             DevSettingsSection.Telemetry -> TelemetryInspectorScreen(state = state.telemetry)
+
             DevSettingsSection.Hud -> DevHudSettingsScreen(
                 state = state.hud,
                 onToggleHudPanel = onToggleHudPanel,
@@ -317,17 +317,17 @@ private fun DevHudSettingsScreen(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         SectionCard(
             title = "Calibration HUD overlays",
-            subtitle = "Dev-only panels for gate capture and telemetry debug."
+            subtitle = "Dev-only panels for gate capture and telemetry debug.",
         )
 
         if (!state.hudEnabled) {
             SectionCard(
                 title = "HUD disabled",
-                subtitle = "Enable the telemetry HUD in Settings to make overlays visible."
+                subtitle = "Enable the telemetry HUD in Settings to make overlays visible.",
             )
         }
 
@@ -336,14 +336,14 @@ private fun DevHudSettingsScreen(
                 Text(
                     text = "No dev HUD panels registered.",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.panels.forEach { panel ->
                         DevHudPanelRow(
                             panel = panel,
-                            onToggle = { enabled -> onToggleHudPanel(panel.id, enabled) }
+                            onToggle = { enabled -> onToggleHudPanel(panel.id, enabled) },
                         )
                     }
                 }
@@ -353,32 +353,28 @@ private fun DevHudSettingsScreen(
 }
 
 @Composable
-private fun DevHudPanelRow(
-    panel: DevHudPanelUi,
-    onToggle: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun DevHudPanelRow(panel: DevHudPanelUi, onToggle: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(SimAnalyzerTheme.shapes.medium)
             .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.22f))
             .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = panel.title,
                 color = SimAnalyzerTheme.material.onSurface,
                 fontSize = 14.sp,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
             if (panel.description.isNotBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = panel.description,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
             }
         }
@@ -389,8 +385,8 @@ private fun DevHudPanelRow(
                 checkedThumbColor = SimAnalyzerTheme.material.onSurface,
                 checkedTrackColor = SimAnalyzerTheme.material.primary,
                 uncheckedThumbColor = SimAnalyzerTheme.material.onSurfaceVariant,
-                uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f)
-            )
+                uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f),
+            ),
         )
     }
 }
@@ -406,20 +402,20 @@ private fun SectionCard(
             .fillMaxWidth()
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = title,
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
         if (subtitle != null) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = subtitle,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
         }
         if (content != null) {
@@ -430,10 +426,7 @@ private fun SectionCard(
 }
 
 @Composable
-private fun TelemetryInspectorScreen(
-    state: TelemetryInspectorState,
-    modifier: Modifier = Modifier,
-) {
+private fun TelemetryInspectorScreen(state: TelemetryInspectorState, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize()) {
         TelemetryInspectorHeader(state)
         Spacer(modifier = Modifier.height(12.dp))
@@ -441,7 +434,7 @@ private fun TelemetryInspectorScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .weight(1f)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             items(state.entries, key = { it.path }) { entry ->
                 TelemetryEntryRow(entry = entry)
@@ -456,48 +449,48 @@ private fun TelemetryInspectorHeader(state: TelemetryInspectorState) {
         modifier = Modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = "Status: ${state.status}",
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 14.sp
+            fontSize = 14.sp,
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = "Session: ${state.sessionType}",
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp
+            fontSize = 12.sp,
         )
         Text(
             text = "Track: ${state.trackLabel}",
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp
+            fontSize = 12.sp,
         )
         Text(
             text = "Car: ${state.carLabel}",
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp
+            fontSize = 12.sp,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "Frame: ${state.frameId ?: "-"}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
             Text(
                 text = "Fields: ${state.entries.size}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
             Text(
                 text = "Updated: ${state.lastUpdatedLabel}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
         }
     }
@@ -511,20 +504,20 @@ private fun TelemetryEntryRow(entry: TelemetryEntry) {
             .clip(RoundedCornerShape(10.dp))
             .background(SimAnalyzerTheme.material.surface.copy(alpha = 0.85f))
             .padding(10.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = entry.path,
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 12.sp,
-            modifier = Modifier.weight(0.6f)
+            modifier = Modifier.weight(0.6f),
         )
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = entry.value,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
             fontSize = 12.sp,
-            modifier = Modifier.weight(0.4f)
+            modifier = Modifier.weight(0.4f),
         )
     }
 }
@@ -540,21 +533,21 @@ private fun DevSettingsScreenPreview() {
             carLabel = "BMW",
             frameId = 128,
             lastUpdatedLabel = "12:00:00.000",
-            entries = listOf(TelemetryEntry("frame.car.speedKmh", "120"))
+            entries = listOf(TelemetryEntry("frame.car.speedKmh", "120")),
         ),
         hud = DevHudState(
             hudEnabled = true,
             panels = listOf(
                 DevHudPanelUi("calibration_debug", "Calibration Debug", "Debug telemetry", true),
                 DevHudPanelUi("calibration_minimap", "Calibration MiniMap", "Live minimap", false),
-            )
-        )
+            ),
+        ),
     )
 
     SimAnalyzerTheme {
         DevHudSettingsScreen(
             state = sample.hud,
-            onToggleHudPanel = { _, _ -> }
+            onToggleHudPanel = { _, _ -> },
         )
     }
 }

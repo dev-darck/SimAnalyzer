@@ -118,7 +118,7 @@ public val DarkColorScheme: ColorScheme = darkColorScheme(
 
 internal val DarkExtendedColors = ExtendedColors(
     material = DarkColorScheme,
-    
+
     shadow = DarkShadow,
     shadowSecondary = DarkShadowSecondary,
     errorOutline = DarkErrorOutline,

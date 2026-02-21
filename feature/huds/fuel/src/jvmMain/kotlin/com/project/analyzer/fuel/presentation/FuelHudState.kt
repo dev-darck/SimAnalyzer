@@ -26,12 +26,7 @@ data class FuelHudUiState(
     val planFuelLitersRaw: List<Double?> = emptyList(),
     val isCurrentLapValid: Boolean = true,
 
-    val confidence: Double = 0.0
+    val confidence: Double = 0.0,
 )
 
-data class PlanRowUi(
-    val label: String,
-    val timeText: String,
-    val fuelText: String,
-    val peakFuelText: String = "—"
-)
+data class PlanRowUi(val label: String, val timeText: String, val fuelText: String, val peakFuelText: String = "—")

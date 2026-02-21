@@ -25,14 +25,12 @@ import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
-internal class FuelHudViewModel(
-    private val useCase: FuelConsumptionUseCase,
-) : ViewModel() {
+internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : ViewModel() {
 
     private val safetyFactor: Double get() = 1.0 + (FuelConsumptionConfig.safetyMarginPercent / 100.0)
 
     private var currentKey: FuelIdentityKey = FuelIdentityKey.UNKNOWN
-    private val peaksByKey: MutableMap<FuelIdentityKey, PeakState> = mutableMapOf()
+    private val peaksByKey: MutableMap<FuelIdentityKey, Session> = mutableMapOf()
     private var fuelEstimateJob: Job? = null
     private var lastDataUiEmitNs: Long = 0L
 
@@ -79,6 +77,7 @@ internal class FuelHudViewModel(
             }
 
             FuelResult.NoData -> updateState { copy(isShow = true, isSessionActive = true) }
+
             is FuelResult.Data -> handleDataResult(result)
         }
     }
@@ -106,7 +105,7 @@ internal class FuelHudViewModel(
     }
 
     private fun updatePeakStateFromEstimate(estimate: FuelEstimate) {
-        val peakState = peaksByKey.getOrPut(currentKey) { PeakState() }
+        val peakState = peaksByKey.getOrPut(currentKey) { Session() }
         val canUpdatePeak = estimate.phase == FuelPhase.PER_LAP && estimate.isCurrentLapValid
 
         if (canUpdatePeak) {
@@ -119,14 +118,14 @@ internal class FuelHudViewModel(
     }
 
     private fun applyPeakProjection(fresh: FuelHudUiState): FuelHudUiState {
-        val peakState = peaksByKey.getOrPut(currentKey) { PeakState() }
+        val peakState = peaksByKey.getOrPut(currentKey) { Session() }
         return fresh.copy(
             peakValue = peakState.peakLitersPerLap?.let { "%.2f L".format(Locale.US, it) } ?: "—",
             peakLitersPerLapRaw = peakState.peakLitersPerLap,
             planRows = fresh.planRows.mapIndexed { index, row ->
                 val peakLiters = peakState.peakPlanFuelLiters.getOrNull(index)
                 row.copy(peakFuelText = peakLiters?.let { "${it.roundToInt()} L" } ?: "—")
-            }
+            },
         )
     }
 

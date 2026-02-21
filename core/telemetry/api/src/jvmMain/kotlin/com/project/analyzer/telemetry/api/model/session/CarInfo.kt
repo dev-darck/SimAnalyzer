@@ -35,11 +35,15 @@ public data class CarInfo(
         if (tyreRadius != null) {
             if (other.tyreRadius == null) return false
             if (!tyreRadius.contentEquals(other.tyreRadius)) return false
-        } else if (other.tyreRadius != null) return false
+        } else if (other.tyreRadius != null) {
+            return false
+        }
         if (suspensionMaxTravel != null) {
             if (other.suspensionMaxTravel == null) return false
             if (!suspensionMaxTravel.contentEquals(other.suspensionMaxTravel)) return false
-        } else if (other.suspensionMaxTravel != null) return false
+        } else if (other.suspensionMaxTravel != null) {
+            return false
+        }
         return carModel == other.carModel &&
             carSkin == other.carSkin &&
             carId == other.carId &&

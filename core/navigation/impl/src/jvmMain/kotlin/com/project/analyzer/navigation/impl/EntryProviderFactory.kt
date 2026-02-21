@@ -17,9 +17,7 @@ import dev.zacsweers.metro.binding
 @Inject
 @SingleIn(NavigationScope::class)
 @ContributesBinding(NavigationScope::class, binding = binding<EntryFactory>())
-class EntryProviderFactory(
-    private val builders: Set<@JvmSuppressWildcards RouteEntryBuilder>
-) : EntryFactory {
+class EntryProviderFactory(private val builders: Set<@JvmSuppressWildcards RouteEntryBuilder>) : EntryFactory {
 
     override fun create(): (Route) -> NavEntry<Route> = entryProvider {
         val adapter: NavigationEntryBuilder = Nav3EntryAdapter(this)
@@ -30,15 +28,13 @@ class EntryProviderFactory(
     }
 }
 
-private class Nav3EntryAdapter(
-    private val scope: EntryProviderScope<Route>
-) : NavigationEntryBuilder {
+private class Nav3EntryAdapter(private val scope: EntryProviderScope<Route>) : NavigationEntryBuilder {
 
     override fun <T : Route> entry(
         key: T,
         contentKey: Any,
         metadata: Map<String, Any>,
-        content: @Composable (T) -> Unit
+        content: @Composable (T) -> Unit,
     ) {
         scope.addEntryProvider(
             key = key,
@@ -46,7 +42,7 @@ private class Nav3EntryAdapter(
             metadata = metadata,
             content = {
                 content(it)
-            }
+            },
         )
     }
 }

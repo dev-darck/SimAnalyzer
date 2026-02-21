@@ -7,7 +7,7 @@ internal enum class ValueStatus {
     NORMAL,
     BEST,
     COMPLETED,
-    INVALID
+    INVALID,
 }
 
 @Composable

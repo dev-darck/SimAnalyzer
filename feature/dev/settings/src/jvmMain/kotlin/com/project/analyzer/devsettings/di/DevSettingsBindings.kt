@@ -27,6 +27,6 @@ object DevSettingsBindings {
     ): ViewModel = DevSettingsViewModel(
         telemetryLifecycle = telemetryLifecycle,
         hudPreferences = hudPreferences,
-        panels = panels
+        panels = panels,
     )
 }

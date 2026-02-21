@@ -16,10 +16,7 @@ import kotlin.math.max
 
 @Inject
 @SingleIn(SessionScope::class)
-class LapMapper(
-    private val cache: AcSessionCache,
-    private val lapState: AcLapState
-) {
+class LapMapper(private val cache: AcSessionCache, private val lapState: AcLapState) {
 
     private var lastCompletedLaps: Int = -1
     private var lastLapSectors: List<SectorFrame> = emptyList()
@@ -39,7 +36,7 @@ class LapMapper(
     fun map(
         graphics: SPageFileGraphics,
         fallback: LapTimingSnapshot? = null,
-        sectorCountOverride: Int? = null
+        sectorCountOverride: Int? = null,
     ): LapFrame {
         val useFallback = fallback?.isActive == true && sectorCountOverride != null
         if (useFallback != usingFallback) {
@@ -75,7 +72,7 @@ class LapMapper(
                 currentSectorIndex = currentSectorIndex,
                 lastSectorTimeMs = lastSectorTime,
                 isValidLap = isValidLap,
-                sectorCountOverride = sectorCountOverride
+                sectorCountOverride = sectorCountOverride,
             )
 
             if (completedLaps != lastCompletedLaps) {
@@ -121,10 +118,7 @@ class LapMapper(
         )
     }
 
-    private fun buildFallbackSectors(
-        snapshot: LapTimingSnapshot,
-        sectorCount: Int
-    ): List<SectorFrame> {
+    private fun buildFallbackSectors(snapshot: LapTimingSnapshot, sectorCount: Int): List<SectorFrame> {
         val count = max(sectorCount, max(snapshot.lastSectorsMs.size, snapshot.bestSectorsMs.size))
         if (count <= 0) return emptyList()
 
@@ -157,7 +151,7 @@ class LapMapper(
                 bestTimeMs = best,
                 deltaToBestMs = delta,
                 status = status,
-                validity = validity
+                validity = validity,
             )
         }
     }

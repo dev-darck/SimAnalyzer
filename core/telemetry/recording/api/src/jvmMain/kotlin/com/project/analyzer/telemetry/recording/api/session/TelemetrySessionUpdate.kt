@@ -8,5 +8,5 @@ public data class TelemetrySessionUpdate(
     val trackId: String? = null,
     val airTempC: Float? = null,
     val trackTempC: Float? = null,
-    val dataSource: String? = null
+    val dataSource: String? = null,
 )

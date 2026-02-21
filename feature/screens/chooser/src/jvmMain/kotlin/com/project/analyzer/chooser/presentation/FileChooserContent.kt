@@ -131,10 +131,7 @@ private fun Content(
 }
 
 @Composable
-private fun Header(
-    selectionMode: SelectionMode,
-    modifier: Modifier = Modifier,
-) {
+private fun Header(selectionMode: SelectionMode, modifier: Modifier = Modifier) {
     val title = when (selectionMode) {
         SelectionMode.FILE -> "Select a file"
         SelectionMode.DIRECTORY -> "Select a directory"
@@ -265,7 +262,7 @@ private fun BaseTextField(
         textStyle = textStyle.copy(
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f),
         ),
-        modifier = modifier
+        modifier = modifier,
     )
 }
 

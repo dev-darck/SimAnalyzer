@@ -40,13 +40,13 @@ internal fun TimingBoardBlock(
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
-            .background(SimAnalyzerTheme.material.surface)
+            .background(SimAnalyzerTheme.material.surface),
     ) {
         BlockHeader(lapCount)
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 22.dp, end = 22.dp, bottom = 8.dp)
+                .padding(start = 22.dp, end = 22.dp, bottom = 8.dp),
         ) {
             TimingHeaderRow()
             TimingDivider()
@@ -55,7 +55,7 @@ internal fun TimingBoardBlock(
                 type = "Current lap",
                 time = currentLapTime,
                 delta = deltaCurrentTime,
-                deltaColor = if (!deltaCurrentIsPositive) positiveColor else negativeColor
+                deltaColor = if (!deltaCurrentIsPositive) positiveColor else negativeColor,
             )
 
             TimingDivider()
@@ -64,7 +64,7 @@ internal fun TimingBoardBlock(
                 type = "Last lap",
                 time = lastLapTime,
                 delta = deltaLastTime,
-                deltaColor = if (!deltaLastIsPositive) positiveColor else negativeColor
+                deltaColor = if (!deltaLastIsPositive) positiveColor else negativeColor,
             )
 
             TimingDivider()
@@ -73,24 +73,19 @@ internal fun TimingBoardBlock(
                 type = "Best lap",
                 time = bestLapTime,
                 delta = "-",
-                deltaColor = SimAnalyzerTheme.extended.surface50
+                deltaColor = SimAnalyzerTheme.extended.surface50,
             )
         }
     }
 }
 
 @Composable
-private fun TimingRow(
-    type: String,
-    time: String,
-    delta: String,
-    deltaColor: Color,
-) {
+private fun TimingRow(type: String, time: String, delta: String, deltaColor: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = type,
@@ -110,7 +105,7 @@ private fun TimingRow(
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurface,
             style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Text(
@@ -121,7 +116,7 @@ private fun TimingRow(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -132,7 +127,7 @@ private fun TimingHeaderRow() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = "TYPE",
@@ -141,7 +136,7 @@ private fun TimingHeaderRow() {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
         )
 
         Text(
@@ -152,7 +147,7 @@ private fun TimingHeaderRow() {
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f),
             style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
 
         Text(
@@ -163,7 +158,7 @@ private fun TimingHeaderRow() {
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f),
             style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -183,14 +178,14 @@ private fun BlockHeader(lapCount: Int) {
             .background(SimAnalyzerTheme.material.secondaryContainer)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = "Timing Board",
             fontSize = 20.sp,
             maxLines = 1,
             style = MaterialTheme.typography.labelMedium,
-            color = SimAnalyzerTheme.material.onSurface
+            color = SimAnalyzerTheme.material.onSurface,
         )
 
         Text(
@@ -198,7 +193,7 @@ private fun BlockHeader(lapCount: Int) {
             fontSize = 12.sp,
             maxLines = 1,
             style = MaterialTheme.typography.bodyMedium,
-            color = SimAnalyzerTheme.extended.surface50
+            color = SimAnalyzerTheme.extended.surface50,
         )
     }
 }

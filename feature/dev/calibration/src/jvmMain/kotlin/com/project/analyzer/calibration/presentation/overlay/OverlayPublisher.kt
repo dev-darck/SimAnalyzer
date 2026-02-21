@@ -7,9 +7,7 @@ import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import kotlin.math.abs
 
-class OverlayPublisher(
-    private val overlayDebugBus: OverlayDebugBus
-) {
+class OverlayPublisher(private val overlayDebugBus: OverlayDebugBus) {
 
     data class Timing(
         val currentLapMs: Long? = null,
@@ -67,11 +65,7 @@ class OverlayPublisher(
         }
     }
 
-    private fun buildGateInfo(
-        carPos: Vec2?,
-        carDir: Vec2?,
-        gates: Map<String, Gate>
-    ): List<GateDebugInfo> {
+    private fun buildGateInfo(carPos: Vec2?, carDir: Vec2?, gates: Map<String, Gate>): List<GateDebugInfo> {
         if (carPos == null || carDir == null) return emptyList()
 
         val carDirN = carDir.safeNormalized(Vec2(0f, 1f))
@@ -98,7 +92,7 @@ class OverlayPublisher(
                 isInside = inside,
                 margin = margin,
                 dParallel = dParallel,
-                gate = gate
+                gate = gate,
             )
         }
     }

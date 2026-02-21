@@ -10,7 +10,7 @@ import androidx.compose.runtime.setValue
 
 enum class SelectionMode {
     FILE,
-    DIRECTORY
+    DIRECTORY,
 }
 
 @Stable
@@ -18,7 +18,7 @@ class FileChooserState internal constructor(
     initialPath: String?,
     title: String,
     selectionMode: SelectionMode,
-    private val onResult: (String?) -> Unit
+    private val onResult: (String?) -> Unit,
 ) {
 
     var isVisible by mutableStateOf(false)
@@ -53,7 +53,7 @@ fun rememberFileChooserState(
     initialPath: String? = null,
     title: String = "Select file",
     selectionMode: SelectionMode = SelectionMode.FILE,
-    onResult: (String?) -> Unit = {}
+    onResult: (String?) -> Unit = {},
 ): FileChooserState {
     val linkToResult = rememberUpdatedState(onResult)
 
@@ -62,7 +62,7 @@ fun rememberFileChooserState(
             initialPath = initialPath,
             title = title,
             selectionMode = selectionMode,
-            onResult = linkToResult.value
+            onResult = linkToResult.value,
         )
     }
 }

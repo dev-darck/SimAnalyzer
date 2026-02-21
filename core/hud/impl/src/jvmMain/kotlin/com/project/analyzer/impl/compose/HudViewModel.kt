@@ -9,9 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal class HudViewModel(
-    private val preferences: HudPreferences
-) : ViewModel() {
+internal class HudViewModel(private val preferences: HudPreferences) : ViewModel() {
 
     private val _state = MutableStateFlow(HudUiState())
     val state: StateFlow<HudUiState> = _state.asStateFlow()
@@ -83,7 +81,7 @@ internal class HudViewModel(
             if (id in current.visiblePanels) {
                 val newVersion = (current.visiblePanels[id] ?: 0) + 1
                 current.copy(
-                    visiblePanels = current.visiblePanels + (id to newVersion)
+                    visiblePanels = current.visiblePanels + (id to newVersion),
                 )
             } else {
                 current

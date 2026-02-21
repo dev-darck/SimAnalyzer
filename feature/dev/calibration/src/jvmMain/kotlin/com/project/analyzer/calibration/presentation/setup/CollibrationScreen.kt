@@ -47,7 +47,7 @@ fun CalibrationScreen(onVerify: (String) -> Unit = {}) {
     CalibrationContent(
         state = state,
         dispatchEvent = viewModel::dispatch,
-        onVerify = onVerify
+        onVerify = onVerify,
     )
 }
 
@@ -55,7 +55,7 @@ fun CalibrationScreen(onVerify: (String) -> Unit = {}) {
 private fun CalibrationContent(
     state: CalibrationState,
     dispatchEvent: (CalibrationIntent) -> Unit,
-    onVerify: (String) -> Unit
+    onVerify: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -63,20 +63,20 @@ private fun CalibrationContent(
             .background(SimAnalyzerTheme.material.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CalibrationHeader(state)
 
         CalibrationSectionCard(
             title = "Track identity",
-            subtitle = "Match the active session to a stable trackId."
+            subtitle = "Match the active session to a stable trackId.",
         ) {
             TrackNameBlock(state) { dispatchEvent(CalibrationIntent.TrackNameChanged(it)) }
         }
 
         CalibrationSectionCard(
             title = "Capture settings",
-            subtitle = "Choose the reference point and capture radius."
+            subtitle = "Choose the reference point and capture radius.",
         ) {
             SettingsBlock(
                 state = state,
@@ -87,14 +87,14 @@ private fun CalibrationContent(
 
         CalibrationSectionCard(
             title = "Gate capture",
-            subtitle = "Capture Start/Finish, then add extra sector starts."
+            subtitle = "Capture Start/Finish, then add extra sector starts.",
         ) {
             GateRow(
                 title = "Start/Finish",
                 gate = state.startFinish,
                 enabled = !state.isBusy,
                 onClick = { dispatchEvent(CalibrationIntent.CaptureStartFinish) },
-                onFlip = { dispatchEvent(CalibrationIntent.FlipStartFinishDirection) }
+                onFlip = { dispatchEvent(CalibrationIntent.FlipStartFinishDirection) },
             )
             Spacer(modifier = Modifier.height(10.dp))
             SectorsBlock(
@@ -105,12 +105,12 @@ private fun CalibrationContent(
 
         CalibrationSectionCard(
             title = "Actions",
-            subtitle = "Save this calibration or reset to start over."
+            subtitle = "Save this calibration or reset to start over.",
         ) {
             ActionsBlock(
                 state = state,
                 onSave = { dispatchEvent(CalibrationIntent.Save) },
-                onReset = { dispatchEvent(CalibrationIntent.Reset) }
+                onReset = { dispatchEvent(CalibrationIntent.Reset) },
             )
 
             if (state.canVerify) {
@@ -128,19 +128,19 @@ private fun CalibrationContent(
 
         CalibrationSectionCard(
             title = "Saved calibrations",
-            subtitle = "Verify previously captured trackIds."
+            subtitle = "Verify previously captured trackIds.",
         ) {
             ChooseToVerify(
                 state = state,
                 dispatchEvent = dispatchEvent,
-                onVerify = onVerify
+                onVerify = onVerify,
             )
         }
 
         state.debugTelemetry?.let { debugText ->
             CalibrationSectionCard(
                 title = "Live telemetry",
-                subtitle = "Raw snapshot from the current frame."
+                subtitle = "Raw snapshot from the current frame.",
             ) {
                 Column(
                     modifier = Modifier
@@ -150,15 +150,15 @@ private fun CalibrationContent(
                         .border(
                             width = 1.dp,
                             color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f),
-                            shape = SimAnalyzerTheme.shapes.medium
+                            shape = SimAnalyzerTheme.shapes.medium,
                         )
-                        .padding(12.dp)
+                        .padding(12.dp),
                 ) {
                     Text(
                         text = debugText,
                         style = MaterialTheme.typography.bodySmall,
                         fontFamily = FontFamily.Monospace,
-                        color = SimAnalyzerTheme.material.onSurface
+                        color = SimAnalyzerTheme.material.onSurface,
                     )
                 }
             }
@@ -170,7 +170,7 @@ private fun CalibrationContent(
 private fun ChooseToVerify(
     state: CalibrationState,
     dispatchEvent: (CalibrationIntent) -> Unit,
-    onVerify: (String) -> Unit = {}
+    onVerify: (String) -> Unit = {},
 ) {
     val dispatch by rememberUpdatedState(dispatchEvent)
 
@@ -179,13 +179,13 @@ private fun ChooseToVerify(
     }
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (state.listOfData.isEmpty()) {
             Text(
                 "No saved calibrations yet.",
                 style = MaterialTheme.typography.bodySmall,
-                color = SimAnalyzerTheme.material.onSurfaceVariant
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
         } else {
             state.listOfData.forEach { trackId ->
@@ -196,12 +196,12 @@ private fun ChooseToVerify(
                         .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.22f))
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
                         text = trackId,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = SimAnalyzerTheme.material.onSurface
+                        color = SimAnalyzerTheme.material.onSurface,
                     )
                     OutlinedButton(onClick = { onVerify(trackId) }) {
                         Text("Verify")
@@ -220,7 +220,7 @@ private fun CalibrationHeader(state: CalibrationState) {
 
     CalibrationSectionCard(
         title = "Track calibration",
-        subtitle = "Capture Start/Finish and extra sectors for telemetry splits."
+        subtitle = "Capture Start/Finish and extra sectors for telemetry splits.",
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             HeaderRow(label = "Detected track", value = detectedTrack.ifBlank { "-" })
@@ -233,7 +233,7 @@ private fun CalibrationHeader(state: CalibrationState) {
         Text(
             text = "Saved calibrations override bundled defaults.",
             style = MaterialTheme.typography.bodySmall,
-            color = SimAnalyzerTheme.material.onSurfaceVariant
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
 
         Spacer(modifier = Modifier.height(10.dp))
@@ -241,20 +241,26 @@ private fun CalibrationHeader(state: CalibrationState) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             StatusPill(
                 label = if (state.startFinish != null) "Start/Finish ready" else "Start/Finish missing",
-                accent = if (state.startFinish != null) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.material.onSurfaceVariant
+                accent = if (state.startFinish !=
+                    null
+                ) {
+                    SimAnalyzerTheme.extended.teal
+                } else {
+                    SimAnalyzerTheme.material.onSurfaceVariant
+                },
             )
             StatusPill(
                 label = "Sectors: ${state.sectorCount}",
-                accent = SimAnalyzerTheme.material.primary
+                accent = SimAnalyzerTheme.material.primary,
             )
             StatusPill(
                 label = if (state.isReadyToSave()) "Ready to save" else "Not ready",
-                accent = if (state.isReadyToSave()) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.extended.amber
+                accent = if (state.isReadyToSave()) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.extended.amber,
             )
             if (state.isBusy) {
                 StatusPill(
                     label = "Capturing",
-                    accent = SimAnalyzerTheme.extended.orange
+                    accent = SimAnalyzerTheme.extended.orange,
                 )
             }
         }
@@ -266,7 +272,7 @@ private fun HeaderRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,
@@ -277,7 +283,7 @@ private fun HeaderRow(label: String, value: String) {
             text = value,
             style = MaterialTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -291,16 +297,16 @@ private fun StatusPill(label: String, accent: androidx.compose.ui.graphics.Color
             .border(
                 width = 1.dp,
                 color = accent.copy(alpha = 0.4f),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(999.dp)
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(999.dp),
             )
             .padding(horizontal = 10.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
             color = accent,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
@@ -322,12 +328,12 @@ private fun MessageBanner(message: String) {
             .clip(SimAnalyzerTheme.shapes.medium)
             .background(background)
             .border(1.dp, accent.copy(alpha = 0.4f), SimAnalyzerTheme.shapes.medium)
-            .padding(10.dp)
+            .padding(10.dp),
     ) {
         Text(
             text = message,
             style = MaterialTheme.typography.bodySmall,
-            color = accent
+            color = accent,
         )
     }
 }
@@ -339,7 +345,7 @@ private fun CalibrationPreview() {
         CalibrationContent(
             state = CalibrationState(trackName = "Track 1", lastSavedTrackId = "track_1"),
             dispatchEvent = {},
-            onVerify = {}
+            onVerify = {},
         )
     }
 }

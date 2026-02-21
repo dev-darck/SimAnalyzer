@@ -6,7 +6,6 @@ import com.sun.jna.platform.win32.WinNT
 import java.io.Closeable
 
 public class WinMappedRegion(private val mappingName: String) : Closeable {
-
     private val kernel32 = Kernel32.INSTANCE
 
     private var handle: WinNT.HANDLE? = null

@@ -14,9 +14,7 @@ import dev.zacsweers.metro.binding
 @Inject
 @SingleIn(SessionScope::class)
 @ContributesBinding(SessionScope::class, binding = binding<AcSharedMemory>())
-class DefaultAcSharedMemory(
-    names: AcShmNames
-) : AcSharedMemory {
+class DefaultAcSharedMemory(names: AcShmNames) : AcSharedMemory {
 
     private val physicsRegion = WinMappedRegion(names.physics)
     private val graphicsRegion = WinMappedRegion(names.graphics)

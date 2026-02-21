@@ -17,8 +17,7 @@ class BackStack<T : Route>(internal val stack: SnapshotStateList<T>) :
     StateObject by stack,
     RandomAccess by stack
 
-internal class BackStackSerializer<T : Route>(elementSerializer: KSerializer<T>) :
-    KSerializer<BackStack<T>> {
+internal class BackStackSerializer<T : Route>(elementSerializer: KSerializer<T>) : KSerializer<BackStack<T>> {
 
     private val delegate = SnapshotStateListSerializer(elementSerializer)
 
@@ -30,7 +29,6 @@ internal class BackStackSerializer<T : Route>(elementSerializer: KSerializer<T>)
         encoder.encodeSerializableValue(serializer = delegate, value = value.stack)
     }
 
-    override fun deserialize(decoder: Decoder): BackStack<T> {
-        return BackStack(stack = decoder.decodeSerializableValue(deserializer = delegate))
-    }
+    override fun deserialize(decoder: Decoder): BackStack<T> =
+        BackStack(stack = decoder.decodeSerializableValue(deserializer = delegate))
 }

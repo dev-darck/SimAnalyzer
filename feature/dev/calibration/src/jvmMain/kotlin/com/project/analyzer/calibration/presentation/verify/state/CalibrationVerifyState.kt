@@ -15,13 +15,13 @@ data class GateDebugInfo(
     val isInside: Boolean,
     val margin: Float,
     val dParallel: Float,
-    val gate: Gate
+    val gate: Gate,
 )
 
 enum class EditingGate {
     START_FINISH,
     SECTOR_1_FINISH,
-    SECTOR_2_FINISH
+    SECTOR_2_FINISH,
 }
 
 data class CalibrationVerifyState(
@@ -61,5 +61,5 @@ data class CalibrationVerifyState(
     val currentPosition: Vec2? = null,
     val currentForward: Vec2? = null,
     val speedKmh: Float = 0f,
-    val headingDegrees: Float = 0f
+    val headingDegrees: Float = 0f,
 )

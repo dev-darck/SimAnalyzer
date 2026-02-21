@@ -47,5 +47,5 @@ data class EvoFileInfo(
     val penaltyReason: String? = null,
     val penaltyTimestamp: String? = null,
     val sessionType: EvoSessionType = EvoSessionType.UNKNOWN,
-    val playerCarUuid: String? = null
+    val playerCarUuid: String? = null,
 )

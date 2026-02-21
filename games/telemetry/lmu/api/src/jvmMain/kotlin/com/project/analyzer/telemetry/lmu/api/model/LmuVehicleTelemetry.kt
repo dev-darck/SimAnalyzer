@@ -75,5 +75,5 @@ public data class LmuVehicleTelemetry(
     val electricBoostWaterTemperature: Double,
     val electricBoostMotorState: Int,
     val expansion: ByteArray,
-    val wheels: List<LmuWheel>
+    val wheels: List<LmuWheel>,
 )

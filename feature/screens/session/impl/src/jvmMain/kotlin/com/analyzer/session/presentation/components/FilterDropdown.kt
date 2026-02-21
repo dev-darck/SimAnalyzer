@@ -34,25 +34,21 @@ import com.analyzer.session.presentation.model.DropdownFilterUi
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-internal fun FilterDropdown(
-    filter: DropdownFilterUi,
-    onSelect: (String) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+internal fun FilterDropdown(filter: DropdownFilterUi, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
     var expanded by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(12.dp)
 
     Box(modifier = modifier) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
                 text = filter.label.uppercase(),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
-                letterSpacing = 0.4.sp
+                letterSpacing = 0.4.sp,
             )
             Row(
                 modifier = Modifier
@@ -63,21 +59,21 @@ internal fun FilterDropdown(
                     .clickable { expanded = true }
                     .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
                     text = filter.selectedLabel,
                     color = SimAnalyzerTheme.material.onSecondaryContainer,
                     fontSize = 12.sp,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = null,
                     tint = SimAnalyzerTheme.material.onSecondaryContainer,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(18.dp),
                 )
             }
         }
@@ -88,7 +84,7 @@ internal fun FilterDropdown(
             modifier = Modifier
                 .clip(shape)
                 .background(SimAnalyzerTheme.material.surface)
-                .border(1.dp, SimAnalyzerTheme.material.outlineVariant, shape)
+                .border(1.dp, SimAnalyzerTheme.material.outlineVariant, shape),
         ) {
             filter.options.forEach { option ->
                 DropdownMenuItem(
@@ -102,7 +98,7 @@ internal fun FilterDropdown(
                     onClick = {
                         expanded = false
                         onSelect(option.id)
-                    }
+                    },
                 )
             }
         }

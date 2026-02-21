@@ -5,7 +5,6 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import kotlinx.coroutines.flow.StateFlow
 
 interface TelemetrySampleProvider {
-
     val sample: StateFlow<CalibrationSample>
     fun setReferencePoint(point: ReferencePoint)
 }

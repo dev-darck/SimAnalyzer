@@ -24,35 +24,32 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 
 @Composable
-internal fun DevSettingsBlock(
-    modifier: Modifier = Modifier,
-    onOpen: () -> Unit = {},
-) {
+internal fun DevSettingsBlock(modifier: Modifier = Modifier, onOpen: () -> Unit = {}) {
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = "Developer",
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 20.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Calibration, telemetry inspector, diagnostics",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                     fontSize = 13.sp,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
 
@@ -64,23 +61,23 @@ internal fun DevSettingsBlock(
                     .border(
                         width = 1.dp,
                         color = SimAnalyzerTheme.material.primary.copy(alpha = 0.35f),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(10.dp),
                     )
                     .onClick(onClick = onOpen)
                     .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "Open",
                     color = SimAnalyzerTheme.material.onSurface,
                     fontSize = 12.sp,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = ">",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
             }
         }

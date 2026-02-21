@@ -3,13 +3,10 @@ package com.project.analyzer.calibration.trackmap
 class TrackMapLapTracker(
     private val merger: TrackMapMerger,
     private val stats: TrackMapStatsCalculator,
-    private val minPointsToSave: Int
+    private val minPointsToSave: Int,
 ) {
 
-    fun handleLapTransition(
-        lapIndex: Int?,
-        runtime: TrackMapRecorderRuntime
-    ): TrackMapLapTransitionResult {
+    fun handleLapTransition(lapIndex: Int?, runtime: TrackMapRecorderRuntime): TrackMapLapTransitionResult {
         if (lapIndex == null) return TrackMapLapTransitionResult()
 
         val previous = runtime.lastLapIndex
@@ -34,7 +31,7 @@ class TrackMapLapTracker(
             runtime.lastLapIndex = lapIndex
             return TrackMapLapTransitionResult(
                 message = "Lap with pit lane ignored",
-                forcePublish = true
+                forcePublish = true,
             )
         }
 
@@ -52,7 +49,7 @@ class TrackMapLapTracker(
                 message = "Lap too short, keep recording",
                 forcePublish = true,
                 completedLapPoints = completedLap,
-                lapAccepted = false
+                lapAccepted = false,
             )
         }
 
@@ -71,15 +68,14 @@ class TrackMapLapTracker(
         return TrackMapLapTransitionResult(
             forcePublish = true,
             completedLapPoints = completedLap,
-            lapAccepted = true
+            lapAccepted = true,
         )
     }
 
-    private fun updateTrackDistance(current: Float, lapDistance: Float, lapsRecorded: Int): Float {
-        return if (lapsRecorded <= 0) {
+    private fun updateTrackDistance(current: Float, lapDistance: Float, lapsRecorded: Int): Float =
+        if (lapsRecorded <= 0) {
             lapDistance
         } else {
             ((current * lapsRecorded) + lapDistance) / (lapsRecorded + 1)
         }
-    }
 }

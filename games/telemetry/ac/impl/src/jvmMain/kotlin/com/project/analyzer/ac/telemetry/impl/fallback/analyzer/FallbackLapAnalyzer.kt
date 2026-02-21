@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.seconds
 @SingleIn(AppScope::class)
 class FallbackLapAnalyzer(
     private val calibrationLoader: TrackCalibrationLoader,
-    private val gateDetector: GateCrossingDetector
+    private val gateDetector: GateCrossingDetector,
 ) {
 
     private val state = LapAnalyzerState()
@@ -113,7 +113,7 @@ class FallbackLapAnalyzer(
             tyreDirtyLevel = physics.tyreDirtyLevel,
             carDamage = physics.carDamage,
             numberOfTyresOut = physics.numberOfTyresOut,
-            hasPenalty = false
+            hasPenalty = false,
         )
 
         val previous = state.previousPose
@@ -143,7 +143,7 @@ class FallbackLapAnalyzer(
         timestampNs: Long,
         previousPose: CarPose,
         currentPose: CarPose,
-        calibration: TrackCalibration
+        calibration: TrackCalibration,
     ) {
         state.ensureLapStarted(timestampNs)
 
@@ -183,7 +183,7 @@ class FallbackLapAnalyzer(
         timestampNs: Long,
         previousPose: CarPose,
         currentPose: CarPose,
-        calibration: TrackCalibration
+        calibration: TrackCalibration,
     ) {
         val crossing = gateDetector.detectCrossing(
             previousPose,
@@ -207,7 +207,7 @@ class FallbackLapAnalyzer(
         timestampNs: Long,
         previousPose: CarPose,
         currentPose: CarPose,
-        calibration: TrackCalibration
+        calibration: TrackCalibration,
     ) {
         val currentSector = state.currentSectorIndex
         val nextSectorGate = findNextSectorFinishGate(calibration, currentSector) ?: return
@@ -228,7 +228,7 @@ class FallbackLapAnalyzer(
         timestampNs: Long,
         previousPose: CarPose,
         currentPose: CarPose,
-        calibration: TrackCalibration
+        calibration: TrackCalibration,
     ) {
         val crossing = gateDetector.detectCrossing(previousPose, currentPose, calibration.startFinish)
 
@@ -240,7 +240,9 @@ class FallbackLapAnalyzer(
                 if (isValidSequence) {
                     state.completeLap(timestampNs, crossing.interpolationFactor)
                 } else {
-                    logger.info { "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - re-syncing" }
+                    logger.info {
+                        "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - re-syncing"
+                    }
                     state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
                 }
             } else {
@@ -256,9 +258,7 @@ class FallbackLapAnalyzer(
         return calibration.sectors.firstOrNull { it.index == sectorNumber }?.finish
     }
 
-    private fun getSectorCount(calibration: TrackCalibration): Int {
-        return calibration.sectors.size.coerceAtLeast(1)
-    }
+    private fun getSectorCount(calibration: TrackCalibration): Int = calibration.sectors.size.coerceAtLeast(1)
 
     private companion object {
 

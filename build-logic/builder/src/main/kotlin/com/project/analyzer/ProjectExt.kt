@@ -12,11 +12,12 @@ import org.gradle.plugin.use.PluginDependency
  * https://github.com/gradle/gradle/issues/15383
  */
 internal val Project.deps: LibrariesForLibs
-    get() = if (project.name != "gradle-kotlin-dsl-accessors") {
-        the()
-    } else {
-        error("VersionCatalog can't work without gradle-kotlin-dsl-accessors")
-    }
+    get() =
+        if (project.name != "gradle-kotlin-dsl-accessors") {
+            the()
+        } else {
+            error("VersionCatalog can't work without gradle-kotlin-dsl-accessors")
+        }
 
 internal fun PluginManager.applyPlugin(provider: Provider<PluginDependency>) =
     apply(provider.plugin)

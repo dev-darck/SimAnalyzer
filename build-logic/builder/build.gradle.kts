@@ -3,8 +3,6 @@ plugins {
 }
 
 dependencies {
-    compileOnly(libs.gradle.compose.hot.reload)
-
     /**
      * workaround to make version catalog accessible in convention plugins
      * https://github.com/gradle/gradle/issues/15383

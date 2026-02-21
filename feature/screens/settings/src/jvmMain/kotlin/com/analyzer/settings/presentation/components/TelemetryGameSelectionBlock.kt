@@ -53,7 +53,7 @@ internal fun TelemetryGameSelectionBlock(
         modifier = modifier
             .clip(shape = SimAnalyzerTheme.shapes.large)
             .background(color = SimAnalyzerTheme.material.surface)
-            .padding(all = 16.dp)
+            .padding(all = 16.dp),
     ) {
         Text(
             text = "Game selection",
@@ -74,9 +74,8 @@ internal fun TelemetryGameSelectionBlock(
 
         GameSelectionDropdown(
             selectionUi = selectionUi,
-            onSelectionChange = onSelectionChange
+            onSelectionChange = onSelectionChange,
         )
-
     }
 }
 
@@ -110,7 +109,7 @@ private fun GameSelectionDropdown(
                 .onSizeChanged { menuWidthPx = it.width }
                 .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GameModeChip(
                 label = selectionUi.tag,
@@ -120,7 +119,7 @@ private fun GameSelectionDropdown(
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
                     text = currentLabel,
@@ -143,12 +142,12 @@ private fun GameSelectionDropdown(
                     .size(30.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(accentColor.copy(alpha = 0.18f)),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
                     contentDescription = "Select game",
-                    tint = accentColor
+                    tint = accentColor,
                 )
             }
         }
@@ -160,7 +159,7 @@ private fun GameSelectionDropdown(
                 .then(if (menuWidthDp != null) Modifier.width(menuWidthDp) else Modifier)
                 .clip(shape)
                 .background(SimAnalyzerTheme.material.surface)
-                .border(1.dp, SimAnalyzerTheme.material.outlineVariant, shape)
+                .border(1.dp, SimAnalyzerTheme.material.outlineVariant, shape),
         ) {
             options.forEachIndexed { index, option ->
                 val isSelected = option.selection == selectionUi.selection
@@ -206,7 +205,7 @@ private fun GameSelectionDropdown(
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(itemBackground)
+                        .background(itemBackground),
                 )
                 if (index != options.lastIndex) {
                     Spacer(modifier = Modifier.height(6.dp))
@@ -217,18 +216,13 @@ private fun GameSelectionDropdown(
 }
 
 @Composable
-private fun GameModeChip(
-    label: String,
-    background: Color,
-    textColor: Color,
-    modifier: Modifier = Modifier,
-) {
+private fun GameModeChip(label: String, background: Color, textColor: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(background)
             .padding(horizontal = 10.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
@@ -245,7 +239,7 @@ private fun GameModeChip(
 private fun TelemetryGameSelectionBlockPreview() {
     SimAnalyzerTheme {
         TelemetryGameSelectionBlock(
-            selectionUi = buildGameSelectionUi(GameSelection.Manual(GameId.AC))
+            selectionUi = buildGameSelectionUi(GameSelection.Manual(GameId.AC)),
         )
     }
 }

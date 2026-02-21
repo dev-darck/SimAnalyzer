@@ -42,9 +42,7 @@ data class TrackMapRecorderState(
     val lastSavedTrackId: String? = null,
     val lastSavedAtEpochMs: Long? = null,
 ) {
-
     companion object {
-
         const val DEFAULT_MIN_SPACING_METERS = 0.5f
         const val DEFAULT_MAX_SPACING_METERS = 6f
         const val DEFAULT_MIN_ANGLE_DEG = 3f

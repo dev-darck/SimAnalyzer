@@ -22,26 +22,24 @@ import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-public fun Pagination(
-    page: Int,
-    pageCount: Int,
-    onPageChange: (Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+public fun Pagination(page: Int, pageCount: Int, onPageChange: (Int) -> Unit, modifier: Modifier = Modifier) {
     if (pageCount <= 1) return
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = Icons.Filled.ChevronLeft,
             contentDescription = "Previous page",
-            tint = if (page > 1) SimAnalyzerTheme.material.onSurfaceVariant
-            else SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.3f),
+            tint = if (page > 1) {
+                SimAnalyzerTheme.material.onSurfaceVariant
+            } else {
+                SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.3f)
+            },
             modifier = Modifier
                 .size(18.dp)
-                .clickable(enabled = page > 1) { onPageChange(page - 1) }
+                .clickable(enabled = page > 1) { onPageChange(page - 1) },
         )
 
         buildPageItems(page, pageCount).forEach { item ->
@@ -50,7 +48,7 @@ public fun Pagination(
                     text = "...",
                     fontSize = 11.sp,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 2.dp)
+                    modifier = Modifier.padding(horizontal = 2.dp),
                 )
             } else {
                 val isSelected = item == page
@@ -58,18 +56,24 @@ public fun Pagination(
                     modifier = Modifier
                         .clip(RoundedCornerShape(6.dp))
                         .background(
-                            if (isSelected) SimAnalyzerTheme.material.primary.copy(alpha = 0.2f)
-                            else SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.15f)
+                            if (isSelected) {
+                                SimAnalyzerTheme.material.primary.copy(alpha = 0.2f)
+                            } else {
+                                SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.15f)
+                            },
                         )
                         .clickable { onPageChange(item) }
                         .padding(horizontal = 8.dp, vertical = 4.dp),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = item.toString(),
                         fontSize = 11.sp,
-                        color = if (isSelected) SimAnalyzerTheme.material.primary
-                        else SimAnalyzerTheme.material.onSurfaceVariant
+                        color = if (isSelected) {
+                            SimAnalyzerTheme.material.primary
+                        } else {
+                            SimAnalyzerTheme.material.onSurfaceVariant
+                        },
                     )
                 }
             }
@@ -78,11 +82,14 @@ public fun Pagination(
         Icon(
             imageVector = Icons.Filled.ChevronRight,
             contentDescription = "Next page",
-            tint = if (page < pageCount) SimAnalyzerTheme.material.onSurfaceVariant
-            else SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.3f),
+            tint = if (page < pageCount) {
+                SimAnalyzerTheme.material.onSurfaceVariant
+            } else {
+                SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.3f)
+            },
             modifier = Modifier
                 .size(18.dp)
-                .clickable(enabled = page < pageCount) { onPageChange(page + 1) }
+                .clickable(enabled = page < pageCount) { onPageChange(page + 1) },
         )
     }
 }

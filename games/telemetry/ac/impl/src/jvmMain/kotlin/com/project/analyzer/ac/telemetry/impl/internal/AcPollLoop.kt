@@ -20,10 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Inject
 @SingleIn(SessionScope::class)
-class AcPollLoop(
-    private val shm: AcSharedMemory,
-    private val cfg: AcPollConfig,
-) {
+class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig) {
 
     private val reusableSnapshot = AcRawSnapshot(
         physics = shm.physics,
@@ -215,10 +212,7 @@ class AcPollLoop(
         return nextTickNs
     }
 
-    private fun handleStateTransition(
-        detection: Detection,
-        onResult: (PollResult) -> Unit,
-    ) {
+    private fun handleStateTransition(detection: Detection, onResult: (PollResult) -> Unit) {
         if (detection.state == currentState && detection.dataSource == currentDataSource) {
             handleFallbackChange(detection)
             return
@@ -240,11 +234,7 @@ class AcPollLoop(
         onResult(PollResult.StateChanged(detection.state, detection.dataSource))
     }
 
-    private fun logStateTransition(
-        oldState: GameConnectionState,
-        oldSource: DataSourceType,
-        detection: Detection,
-    ) {
+    private fun logStateTransition(oldState: GameConnectionState, oldSource: DataSourceType, detection: Detection) {
         logger.info {
             val g = shm.graphics
             val p = shm.physics
@@ -273,7 +263,7 @@ class AcPollLoop(
             return Detection(
                 state = GameConnectionState.DISCONNECTED,
                 dataSource = DataSourceType.NATIVE,
-                needsFallback = false
+                needsFallback = false,
             )
         }
 
@@ -326,10 +316,7 @@ class AcPollLoop(
         )
     }
 
-    private fun resolveStatusOverride(
-        graphics: SPageFileGraphics,
-        hasNativeGraphics: Boolean,
-    ): GameConnectionState? {
+    private fun resolveStatusOverride(graphics: SPageFileGraphics, hasNativeGraphics: Boolean): GameConnectionState? {
         if (!hasNativeGraphics) return null
         if (graphics.status !in STATUS_OFF..STATUS_PAUSE) return null
 
@@ -357,38 +344,34 @@ class AcPollLoop(
         hasPhysicsPacket: Boolean,
         physicsIsActive: Boolean,
         physicsIsInactive: Boolean,
-    ): GameConnectionState {
-        return when {
-            statusOverride != null -> statusOverride
-            hasPhysicsPacket && physicsIsActive -> GameConnectionState.IN_SESSION
-            hasPhysicsPacket && physicsIsInactive -> GameConnectionState.IN_MENU
-            statusHint != null -> statusHint
-            currentState == GameConnectionState.IN_SESSION -> currentState
-            else -> GameConnectionState.IN_MENU
-        }
+    ): GameConnectionState = when {
+        statusOverride != null -> statusOverride
+        hasPhysicsPacket && physicsIsActive -> GameConnectionState.IN_SESSION
+        hasPhysicsPacket && physicsIsInactive -> GameConnectionState.IN_MENU
+        statusHint != null -> statusHint
+        currentState == GameConnectionState.IN_SESSION -> currentState
+        else -> GameConnectionState.IN_MENU
     }
 
     private fun resolveFallbackState(
         hasPhysicsPacket: Boolean,
         physicsIsActive: Boolean,
         physicsIsInactive: Boolean,
-    ): GameConnectionState {
-        return when {
-            physicsIsActive -> GameConnectionState.IN_SESSION
+    ): GameConnectionState = when {
+        physicsIsActive -> GameConnectionState.IN_SESSION
 
-            physicsIsInactive -> {
-                if (hasPhysicsPacket) {
-                    GameConnectionState.IN_MENU
-                } else {
-                    GameConnectionState.DISCONNECTED
-                }
+        physicsIsInactive -> {
+            if (hasPhysicsPacket) {
+                GameConnectionState.IN_MENU
+            } else {
+                GameConnectionState.DISCONNECTED
             }
+        }
 
-            else -> when {
-                currentState == GameConnectionState.IN_SESSION -> currentState
-                hasPhysicsPacket -> GameConnectionState.IN_MENU
-                else -> GameConnectionState.DISCONNECTED
-            }
+        else -> when {
+            currentState == GameConnectionState.IN_SESSION -> currentState
+            hasPhysicsPacket -> GameConnectionState.IN_MENU
+            else -> GameConnectionState.DISCONNECTED
         }
     }
 

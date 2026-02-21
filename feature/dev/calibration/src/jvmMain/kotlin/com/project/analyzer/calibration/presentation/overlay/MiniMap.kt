@@ -23,7 +23,7 @@ fun MiniMap(
     gates: List<Pair<String, Gate>>,
     lastCapturePoint: CapturePoint? = null,
     pendingCapturePosition: Vec2? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val pxPerMeter = 4.5f
     val radiusMeters = 40f
@@ -32,25 +32,22 @@ fun MiniMap(
         modifier
             .size(420.dp)
             .background(Color(0x55000000))
-            .padding(10.dp)
+            .padding(10.dp),
     ) {
-
         Canvas(Modifier.fillMaxSize()) {
             val w = size.width
             val h = size.height
             val cx = w * 0.5f
             val cy = h * 0.5f
 
-            fun worldVecToScreenVec(v: Vec2): Offset {
-                return Offset(v.x, v.y)
-            }
+            fun worldVecToScreenVec(v: Vec2): Offset = Offset(v.x, v.y)
 
             fun worldToScreen(p: Vec2): Offset {
                 val d = p - carPos
                 val dv = worldVecToScreenVec(d)
                 return Offset(
                     x = cx + dv.x * pxPerMeter,
-                    y = cy + dv.y * pxPerMeter
+                    y = cy + dv.y * pxPerMeter,
                 )
             }
 
@@ -61,7 +58,7 @@ fun MiniMap(
                 val lenPx = lenMeters * pxPerMeter
                 val to = Offset(
                     from.x + dScreen.x * lenPx,
-                    from.y + dScreen.y * lenPx
+                    from.y + dScreen.y * lenPx,
                 )
 
                 drawLine(color, from, to, strokeWidth = 3f)
@@ -73,11 +70,11 @@ fun MiniMap(
 
                 val head1 = Offset(
                     to.x - dScreen.x * headLen + leftScreen.x * headWidth,
-                    to.y - dScreen.y * headLen + leftScreen.y * headWidth
+                    to.y - dScreen.y * headLen + leftScreen.y * headWidth,
                 )
                 val head2 = Offset(
                     to.x - dScreen.x * headLen - leftScreen.x * headWidth,
-                    to.y - dScreen.y * headLen - leftScreen.y * headWidth
+                    to.y - dScreen.y * headLen - leftScreen.y * headWidth,
                 )
 
                 drawLine(color, to, head1, strokeWidth = 3f)
@@ -88,7 +85,7 @@ fun MiniMap(
                 color = Color(0x22FFFFFF),
                 radius = radiusMeters * pxPerMeter,
                 center = Offset(cx, cy),
-                style = Stroke(width = 1f)
+                style = Stroke(width = 1f),
             )
 
             val carS = Offset(cx, cy)

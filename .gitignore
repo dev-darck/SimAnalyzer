@@ -33,3 +33,6 @@ google-services.json
 # Android Profiling
 *.hprof
 /.kotlin/sessions
+
+# Local planning notes
+.notes/

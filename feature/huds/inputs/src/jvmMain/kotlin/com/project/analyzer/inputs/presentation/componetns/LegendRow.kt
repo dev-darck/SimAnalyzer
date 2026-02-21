@@ -33,7 +33,7 @@ private fun LegendItem(label: String, color: androidx.compose.ui.graphics.Color)
         Box(
             modifier = Modifier
                 .size(size = 8.dp)
-                .background(color = color, shape = CircleShape)
+                .background(color = color, shape = CircleShape),
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(text = label, color = SimAnalyzerTheme.material.onSurfaceVariant)

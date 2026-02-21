@@ -23,9 +23,7 @@ import kotlinx.coroutines.launch
 import java.nio.file.Path
 
 @Inject
-class FileChooserViewModel(
-    private val useCase: FileChooserUseCase,
-) : ViewModel() {
+class FileChooserViewModel(private val useCase: FileChooserUseCase) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FileUiState())
     val state: StateFlow<FileUiState> = _uiState.asStateFlow()
@@ -108,11 +106,7 @@ class FileChooserViewModel(
         }
     }
 
-    private fun applyTreeResult(
-        result: TreeResult,
-        currentDir: String,
-        selectedDrive: String,
-    ) {
+    private fun applyTreeResult(result: TreeResult, currentDir: String, selectedDrive: String) {
         updateState {
             copy(
                 treeNodes = result.nodes,
@@ -149,10 +143,7 @@ class FileChooserViewModel(
         }
     }
 
-    private fun findDriveFor(
-        path: String,
-        drives: List<File>,
-    ): File? {
+    private fun findDriveFor(path: String, drives: List<File>): File? {
         return drives
             .filter { path.startsWith(it.path) }
             .maxByOrNull { it.path.length }

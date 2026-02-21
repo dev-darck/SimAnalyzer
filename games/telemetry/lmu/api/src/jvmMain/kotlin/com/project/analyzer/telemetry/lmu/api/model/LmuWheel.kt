@@ -29,5 +29,5 @@ public data class LmuWheel(
     val toe: Double,
     val tireCarcassTemperature: Double,
     val tireInnerLayerTemperature: DoubleArray,
-    val expansion: ByteArray
+    val expansion: ByteArray,
 )

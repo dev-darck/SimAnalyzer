@@ -1,7 +1,6 @@
 package com.project.analyzer.inputs.domain.model
 
 sealed interface InputsResult {
-
     data class SessionStarted(val sessionId: Long) : InputsResult
     data class SessionResumed(val sessionId: Long) : InputsResult
     data class SessionPaused(val sessionId: Long) : InputsResult

@@ -11,30 +11,26 @@ import dev.zacsweers.metro.SingleIn
 @SingleIn(SessionScope::class)
 class EnvironmentMapper {
 
-    fun map(physics: SPageFilePhysics, graphics: SPageFileGraphics): EnvironmentFrame {
-        return EnvironmentFrame(
-            airTempC = physics.airTemp,
-            roadTempC = physics.roadTemp,
-            airDensity = physics.airDensity,
+    fun map(physics: SPageFilePhysics, graphics: SPageFileGraphics): EnvironmentFrame = EnvironmentFrame(
+        airTempC = physics.airTemp,
+        roadTempC = physics.roadTemp,
+        airDensity = physics.airDensity,
 
-            windSpeedMps = graphics.windSpeed,
-            windDirectionDeg = Math.toDegrees(graphics.windDirection.toDouble()).toFloat(),
+        windSpeedMps = graphics.windSpeed,
+        windDirectionDeg = Math.toDegrees(graphics.windDirection.toDouble()).toFloat(),
 
-            rainIntensity = normalizeRainIntensity(graphics.rainIntensity),
-            rainIntensityIn10min = graphics.rainIntensityIn10min,
-            rainIntensityIn30min = graphics.rainIntensityIn30min,
+        rainIntensity = normalizeRainIntensity(graphics.rainIntensity),
+        rainIntensityIn10min = graphics.rainIntensityIn10min,
+        rainIntensityIn30min = graphics.rainIntensityIn30min,
 
-            surfaceGrip = graphics.surfaceGrip,
-            trackGripStatus = graphics.trackGripStatus,
+        surfaceGrip = graphics.surfaceGrip,
+        trackGripStatus = graphics.trackGripStatus,
 
-            clockSeconds = graphics.clock,
-        )
-    }
+        clockSeconds = graphics.clock,
+    )
 
     /**
      * Normalizes rain intensity from 0-3 to 0.0-1.0
      */
-    private fun normalizeRainIntensity(rawValue: Int): Float {
-        return (rawValue.coerceIn(0, 3) / 3f)
-    }
+    private fun normalizeRainIntensity(rawValue: Int): Float = (rawValue.coerceIn(0, 3) / 3f)
 }

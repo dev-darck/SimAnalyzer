@@ -91,7 +91,7 @@ internal class LiveScreenStateMapper {
             Sector(
                 index = idx + 1,
                 value = sector?.timeMs?.formatSectorTime() ?: "--.--",
-                status = sector?.let(::mapSectorStatus) ?: ValueStatus.NORMAL
+                status = sector?.let(::mapSectorStatus) ?: ValueStatus.NORMAL,
             )
         }
     }
@@ -101,6 +101,7 @@ internal class LiveScreenStateMapper {
             (sector.deltaToBestMs ?: 0) <= 0 -> ValueStatus.BEST
 
         SectorStatus.COMPLETED -> ValueStatus.COMPLETED
+
         else -> ValueStatus.NORMAL
     }
 
@@ -137,22 +138,22 @@ internal class LiveScreenStateMapper {
             ElectronicItemUi(
                 title = "SLIP (max)",
                 value = "%.2f".format(Locale.US, maxSlip),
-                highlighted = slipWarning
+                highlighted = slipWarning,
             ),
             ElectronicItemUi(
                 title = "LOAD",
                 value = "${"%.1f".format(Locale.US, maxLoadKn)}kN",
-                highlighted = false
+                highlighted = false,
             ),
             ElectronicItemUi(
                 title = "TYRE (avg)",
                 value = "${"%.1f".format(Locale.US, avgTyreTemp)}°",
-                highlighted = avgTyreTemp !in 60f..100f
+                highlighted = avgTyreTemp !in 60f..100f,
             ),
             ElectronicItemUi(
                 title = "BB",
                 value = "${"%.1f".format(Locale.US, brakeBiasPct)}%",
-                highlighted = false
+                highlighted = false,
             ),
         )
 
@@ -183,7 +184,7 @@ internal class LiveScreenStateMapper {
             susMm = susMm,
             psiOk = psi.isTyrePressureOptimal(),
             slip = slip,
-            brakeTempC = brakeTemp
+            brakeTempC = brakeTemp,
         )
     }
 }

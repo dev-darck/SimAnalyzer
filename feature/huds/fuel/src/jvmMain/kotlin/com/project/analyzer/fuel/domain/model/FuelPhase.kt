@@ -15,5 +15,5 @@ enum class FuelPhase {
     PREDICTIVE,
 
     /** Per-lap mode - have completed lap(s) with measured fuel */
-    PER_LAP
+    PER_LAP,
 }

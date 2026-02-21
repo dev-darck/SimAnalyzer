@@ -41,12 +41,12 @@ import kotlinx.coroutines.launch
 
 @Inject
 class AcTelemetryLifecycle(
-    private val pollLoop: AcPollLoop,
-    private val fallback: AcEvoFallbackShmPatcher,
     private val mapper: AcMapper,
     private val recordingEmitter: AcTelemetryRecordingEmitter,
     @param:IO
-    private val ioDispatcher: CoroutineDispatcher
+    private val ioDispatcher: CoroutineDispatcher,
+    pollLoop: AcPollLoop,
+    fallback: AcEvoFallbackShmPatcher,
 ) : TelemetryLifecycle {
 
     private var appScope = createScope()
@@ -57,13 +57,13 @@ class AcTelemetryLifecycle(
     private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
         replay = 1,
         extraBufferCapacity = 32,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val events = _events.asSharedFlow()
 
     private val _frames: MutableSharedFlow<TelemetryFrame> = MutableSharedFlow(
         replay = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
 
@@ -145,12 +145,11 @@ class AcTelemetryLifecycle(
         }
     }
 
-    private fun createScope(): CoroutineScope =
-        CoroutineScope(
-            SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
-                logger.error(e) { "[lifecycle] uncaught exception" }
-            }
-        )
+    private fun createScope(): CoroutineScope = CoroutineScope(
+        SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
+            logger.error(e) { "[lifecycle] uncaught exception" }
+        },
+    )
 
     private fun processStateChange(newState: GameConnectionState, source: DataSourceType) {
         val oldState = lastConnectionState
@@ -175,13 +174,15 @@ class AcTelemetryLifecycle(
             }
 
             GameConnectionState.IN_MENU to GameConnectionState.IN_SESSION,
-            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION -> {
+            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION,
+                -> {
                 pendingEnter = PendingEnter(wasPaused = (sessionState == SessionState.PAUSED))
                 logger.debug { "[lifecycle] pendingEnter set (wasPaused=${pendingEnter?.wasPaused}) (source=$source)" }
             }
 
             GameConnectionState.IN_MENU to GameConnectionState.DISCONNECTED,
-            GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED -> {
+            GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED,
+                -> {
                 if (sessionState != SessionState.NONE && sessionId > 0L) {
                     logger.info { "[lifecycle] SessionEnded id=$sessionId reason=SIM_DISCONNECTED (source=$source)" }
                     _events.tryEmit(TelemetryLifecycleEvent.SessionEnded(sessionId, SessionEndReason.SIM_DISCONNECTED))
@@ -194,11 +195,7 @@ class AcTelemetryLifecycle(
         }
     }
 
-    private suspend fun processFrame(
-        snapshot: AcRawSnapshot,
-        frame: TelemetryFrame,
-        state: GameConnectionState
-    ) {
+    private suspend fun processFrame(snapshot: AcRawSnapshot, frame: TelemetryFrame, state: GameConnectionState) {
         if (state != GameConnectionState.IN_SESSION) return
 
         val pending = pendingEnter
@@ -270,7 +267,9 @@ class AcTelemetryLifecycle(
 
     private fun startNewSessionFromFrame(frame: TelemetryFrame, replacedOld: Boolean) {
         if (replacedOld) {
-            logger.info { "[lifecycle] SessionEnded id=$sessionId reason=REPLACED_BY_NEW_SESSION (source=$lastDataSource)" }
+            logger.info {
+                "[lifecycle] SessionEnded id=$sessionId reason=REPLACED_BY_NEW_SESSION (source=$lastDataSource)"
+            }
             _events.tryEmit(TelemetryLifecycleEvent.SessionEnded(sessionId, SessionEndReason.REPLACED_BY_NEW_SESSION))
         }
 
@@ -286,7 +285,7 @@ class AcTelemetryLifecycle(
             sessionId = sessionId,
             sessionType = sessionType,
             carModel = car,
-            trackId = track
+            trackId = track,
         )
 
         logger.info {
@@ -416,6 +415,5 @@ class AcTelemetryLifecycle(
         sessionState = SessionState.NONE
         pendingEnter = null
         currentSession = null
-
     }
 }

@@ -13,27 +13,27 @@ public data class Units(
             speed = SpeedUnit.KMH,
             pressure = PressureUnit.KPA,
             temperature = TemperatureUnit.C,
-            distance = DistanceUnit.M
+            distance = DistanceUnit.M,
         )
     }
 }
 
 public enum class SpeedUnit {
     KMH,
-    MPS
+    MPS,
 }
 
 public enum class PressureUnit {
     KPA,
-    PSI
+    PSI,
 }
 
 public enum class TemperatureUnit {
     C,
-    F
+    F,
 }
 
 public enum class DistanceUnit {
     M,
-    KM
+    KM,
 }

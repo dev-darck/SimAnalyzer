@@ -16,7 +16,5 @@ interface SessionDetailsBindings {
     @Binds
     @IntoMap
     @ViewModelKey(SessionDetailViewModel::class)
-    fun bindSessionDetailViewModel(
-        impl: SessionDetailViewModel,
-    ): ViewModel
+    fun bindSessionDetailViewModel(impl: SessionDetailViewModel): ViewModel
 }

@@ -20,9 +20,10 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-private enum class ResponsiveSize { Compact,
+private enum class ResponsiveSize {
+    Compact,
     Medium,
-    Expanded
+    Expanded,
 }
 
 @Composable
@@ -36,7 +37,7 @@ public fun ResponsiveScreen(
     mediumColumns: Int = 2,
     expandedColumns: Int = 2,
     backgroundColor: Color = Color.Transparent,
-    content: ResponsiveScope.() -> Unit
+    content: ResponsiveScope.() -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
 
@@ -47,14 +48,14 @@ public fun ResponsiveScreen(
             start = contentPadding.calculateStartPadding(layoutDirection),
             end = contentPadding.calculateEndPadding(layoutDirection),
             top = contentPadding.calculateTopPadding() + verticalSpacing,
-            bottom = contentPadding.calculateBottomPadding() + verticalSpacing
+            bottom = contentPadding.calculateBottomPadding() + verticalSpacing,
         )
     }
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(backgroundColor)
+            .background(backgroundColor),
     ) {
         val size = remember(maxWidth, compactMaxWidth, mediumMaxWidth) {
             when {
@@ -69,7 +70,7 @@ public fun ResponsiveScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(verticalSpacing),
-                    contentPadding = effectivePadding
+                    contentPadding = effectivePadding,
                 ) {
                     ListScopeAdapter(this).currentContent()
                 }
@@ -81,7 +82,7 @@ public fun ResponsiveScreen(
                     columns = StaggeredGridCells.Fixed(mediumColumns.coerceAtLeast(1)),
                     horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
                     verticalItemSpacing = verticalSpacing,
-                    contentPadding = effectivePadding
+                    contentPadding = effectivePadding,
                 ) {
                     GridScopeAdapter(this).currentContent()
                 }
@@ -93,7 +94,7 @@ public fun ResponsiveScreen(
                     columns = StaggeredGridCells.Fixed(expandedColumns.coerceAtLeast(1)),
                     horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
                     verticalItemSpacing = verticalSpacing,
-                    contentPadding = effectivePadding
+                    contentPadding = effectivePadding,
                 ) {
                     GridScopeAdapter(this).currentContent()
                 }

@@ -28,7 +28,7 @@ class GameDetector(
     private val configs: List<GameConfig>,
     private val pollIntervalMs: Long = 200.milliseconds.inWholeMilliseconds,
     private val requireForeground: Boolean = true,
-    private val coroutineDispatcher: CoroutineDispatcher
+    private val coroutineDispatcher: CoroutineDispatcher,
 ) {
 
     private val user32 = User32.INSTANCE
@@ -160,7 +160,7 @@ class GameDetector(
         val hProcess = kernel32.OpenProcess(
             WinNT.PROCESS_QUERY_INFORMATION or WinNT.PROCESS_VM_READ,
             false,
-            pid
+            pid,
         ) ?: return null
 
         return try {
@@ -168,7 +168,9 @@ class GameDetector(
             if (len > 0) {
                 val fullPath = String(pathBuffer, 0, len)
                 fullPath.substringAfterLast("\\")
-            } else null
+            } else {
+                null
+            }
         } finally {
             kernel32.CloseHandle(hProcess)
         }
@@ -195,7 +197,7 @@ class GameDetector(
                 (ub.x * tx.scaleX).roundToInt(),
                 (ub.y * tx.scaleY).roundToInt(),
                 (ub.width * tx.scaleX).roundToInt(),
-                (ub.height * tx.scaleY).roundToInt()
+                (ub.height * tx.scaleY).roundToInt(),
             )
         }
 
@@ -230,7 +232,7 @@ class GameDetector(
         return GraphicsDeviceInfo(
             id = best.iDstring,
             bounds = best.defaultConfiguration.bounds,
-            isDefault = best == ge.defaultScreenDevice
+            isDefault = best == ge.defaultScreenDevice,
         )
     }
 

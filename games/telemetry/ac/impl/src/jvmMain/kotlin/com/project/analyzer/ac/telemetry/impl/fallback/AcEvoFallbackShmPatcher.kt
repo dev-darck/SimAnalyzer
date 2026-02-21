@@ -133,7 +133,7 @@ class AcEvoFallbackShmPatcher(
                     physicsPacketId = physicsPacketId,
                     speedKmh = shm.physics.speedKmh,
                     tyreContactPoint = shm.physics.tyreContactPoint,
-                    position = pose.position
+                    position = pose.position,
                 )
                 if (shouldSoftReset) {
                     logger.info { "FallbackSHM soft reset: respawn detected (synced session)" }
@@ -157,7 +157,7 @@ class AcEvoFallbackShmPatcher(
             fuelLiters = shm.physics.fuel,
             completedLaps = lapSnapshot.completedLapsCount,
             lastLapTimeMs = lapSnapshot.lastLapTimeMs ?: 0,
-            startFinishSyncId = lapSnapshot.startFinishSyncId
+            startFinishSyncId = lapSnapshot.startFinishSyncId,
         )
         val fuelSnapshot = fuelAnalyzer.getSnapshot(currentFuelLiters = shm.physics.fuel)
 
@@ -201,11 +201,7 @@ class AcEvoFallbackShmPatcher(
         seenPenaltySet.clear()
     }
 
-    private fun patchStatics(
-        statics: SPageFileStatic,
-        info: EvoFileInfo,
-        calibration: TrackCalibration? = null
-    ) {
+    private fun patchStatics(statics: SPageFileStatic, info: EvoFileInfo, calibration: TrackCalibration? = null) {
         if (statics.numCars <= 0) statics.numCars = 1
         if (statics.numberOfSessions <= 0) statics.numberOfSessions = 1
         if (statics.sectorCount <= 0) {
@@ -262,11 +258,7 @@ class AcEvoFallbackShmPatcher(
         }
     }
 
-    private fun patchGraphicsBase(
-        graphics: SPageFileGraphics,
-        info: EvoFileInfo,
-        gameState: GameConnectionState
-    ) {
+    private fun patchGraphicsBase(graphics: SPageFileGraphics, info: EvoFileInfo, gameState: GameConnectionState) {
         if (graphics.session < 0) {
             graphics.session = when {
                 gameState != GameConnectionState.IN_SESSION -> -1
@@ -300,7 +292,9 @@ class AcEvoFallbackShmPatcher(
         }
 
         if (sessionType != lastPatchedSessionType) {
-            logger.info { "FallbackSHM sessionType: ${lastPatchedSessionType.name} -> ${sessionType.name} (shmValue=${sessionType.shmValue})" }
+            logger.info {
+                "FallbackSHM sessionType: ${lastPatchedSessionType.name} -> ${sessionType.name} (shmValue=${sessionType.shmValue})"
+            }
             lastPatchedSessionType = sessionType
         }
     }
@@ -373,7 +367,7 @@ private enum class IdentityChange {
     NONE,
     TRACK,
     CAR,
-    BOTH
+    BOTH,
 }
 
 private class RespawnResetDetector {
@@ -413,7 +407,11 @@ private class RespawnResetDetector {
 
         val hasContact =
             tyreContactPoint.size >= 6 &&
-                (abs(tyreContactPoint[0]) + abs(tyreContactPoint[2]) + abs(tyreContactPoint[3]) + abs(tyreContactPoint[5])) > 0.001f
+                (
+                    abs(
+                        tyreContactPoint[0],
+                    ) + abs(tyreContactPoint[2]) + abs(tyreContactPoint[3]) + abs(tyreContactPoint[5])
+                    ) > 0.001f
         if (!hasContact) {
             hasPrev = false
             return false
@@ -447,7 +445,6 @@ private class RespawnResetDetector {
 }
 
 private class IdentityResetDetector {
-
     private data class Identity(val trackId: String?, val carModel: String?)
 
     private var stable: Identity = Identity(trackId = null, carModel = null)
@@ -466,7 +463,7 @@ private class IdentityResetDetector {
         val c = info.carModel?.trim().takeIf { !it.isNullOrBlank() }
         stable = Identity(
             trackId = t ?: stable.trackId,
-            carModel = c ?: stable.carModel
+            carModel = c ?: stable.carModel,
         )
         pending = stable
         pendingSinceNs = nowNs
@@ -480,7 +477,7 @@ private class IdentityResetDetector {
 
         val candidate = Identity(
             trackId = newTrack ?: stable.trackId,
-            carModel = newCar ?: stable.carModel
+            carModel = newCar ?: stable.carModel,
         )
 
         if (candidate != pending) {
@@ -505,7 +502,7 @@ private class IdentityResetDetector {
         if (!trackChanged && !carChanged) {
             stable = Identity(
                 trackId = candidate.trackId ?: stable.trackId,
-                carModel = candidate.carModel ?: stable.carModel
+                carModel = candidate.carModel ?: stable.carModel,
             )
             return IdentityChange.NONE
         }

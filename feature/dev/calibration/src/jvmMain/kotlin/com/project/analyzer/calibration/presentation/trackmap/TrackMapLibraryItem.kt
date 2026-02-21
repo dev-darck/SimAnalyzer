@@ -13,5 +13,5 @@ data class TrackMapLibraryItem(
     val bounds: TrackMapBounds?,
     val distanceMeters: Float,
     val pitEntryPoint: Vec2?,
-    val pitExitPoint: Vec2?
+    val pitExitPoint: Vec2?,
 )

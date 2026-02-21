@@ -15,11 +15,8 @@ import kotlin.time.Duration.Companion.seconds
 
 @Inject
 @SingleIn(SessionScope::class)
-internal class LmuSharedMemoryTelemetryFeed(
-    private val shm: LmuSharedMemory,
-    private val shmMapper: LmuShmMapper,
-) : LmuTelemetryFeed {
-
+internal class LmuSharedMemoryTelemetryFeed(private val shm: LmuSharedMemory, private val shmMapper: LmuShmMapper) :
+    LmuTelemetryFeed {
     private var frameCounter: Long = 0L
 
     private var cachedPlayerIndex: Int? = null
@@ -67,7 +64,7 @@ internal class LmuSharedMemoryTelemetryFeed(
             playerIndex = playerIndex,
             telemetry = telemetry,
             scoring = scoring,
-            scoringInfo = scoringInfo
+            scoringInfo = scoringInfo,
         )
 
         var valid = shm.readAll() && shm.telemetryVersion == versionBefore
@@ -104,7 +101,6 @@ internal class LmuSharedMemoryTelemetryFeed(
     }
 
     private companion object {
-
         val FRAME_DELAY = 20.milliseconds
         val RETRY_DELAY = 750.milliseconds
         val PLAYER_INDEX_TTL_NS: Long = 1.seconds.inWholeNanoseconds

@@ -62,7 +62,7 @@ internal class ComposeWindowProcedure(
         leftBorderWidth = -1,
         topBorderHeight = -1,
         rightBorderWidth = -1,
-        bottomBorderHeight = -1
+        bottomBorderHeight = -1,
     )
 
     private val defaultWindowProcedure: LONG_PTR =
@@ -92,28 +92,23 @@ internal class ComposeWindowProcedure(
 
                 hitResult = when {
                     isMaximized -> hitTest(x, y)
-
                     x <= horizontalPadding && y > verticalPadding && y < height - verticalPadding -> HTLEFT
                     x <= horizontalPadding && y <= verticalPadding -> HTTOPLEFT
                     x <= horizontalPadding -> HTBOTTOMLEFT
-
                     y <= verticalPadding && x > horizontalPadding && x < width - horizontalPadding -> HTTOP
                     y <= verticalPadding && x <= horizontalPadding -> HTTOPLEFT
                     y <= verticalPadding -> HTTOPRIGHT
-
                     x >= width - horizontalPadding && y > verticalPadding && y < height - verticalPadding -> HTRIGHT
                     x >= width - horizontalPadding && y <= verticalPadding -> HTTOPRIGHT
                     x >= width - horizontalPadding -> HTBOTTOMRIGHT
-
                     y >= height - verticalPadding && x > horizontalPadding && x < width - horizontalPadding -> HTBOTTOM
                     y >= height - verticalPadding && x <= horizontalPadding -> HTBOTTOMLEFT
                     y >= height - verticalPadding -> HTBOTTOMRIGHT
-
                     else -> hitTest(x, y)
                 }
 
                 hitResult
-            }
+            },
         )
     }
 
@@ -162,18 +157,17 @@ internal class ComposeWindowProcedure(
         }
     }
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException") // JNA may throw Error; we fall back to DefWindowProc
     private fun callDefaultProc(
         user32: User32Extend,
         hWnd: HWND,
         uMsg: Int,
         wParam: WPARAM,
-        lParam: LPARAM
-    ): LRESULT {
-        return try {
-            user32.CallWindowProc(defaultWindowProcedure, hWnd, uMsg, wParam, lParam)
-        } catch (e: Error) {
-            User32.INSTANCE.DefWindowProc(hWnd, uMsg, wParam, lParam)
-        }
+        lParam: LPARAM,
+    ): LRESULT = try {
+        user32.CallWindowProc(defaultWindowProcedure, hWnd, uMsg, wParam, lParam)
+    } catch (e: Error) {
+        User32.INSTANCE.DefWindowProc(hWnd, uMsg, wParam, lParam)
     }
 
     private fun updateWindowInfo() {
@@ -244,6 +238,7 @@ internal class ComposeWindowProcedure(
         }
     }
 
+    @Suppress("NestedBlockDepth")
     fun dispose() {
         if (disposed) return
         disposed = true
@@ -267,10 +262,8 @@ internal class ComposeWindowProcedure(
     }
 }
 
-internal class SkiaLayerWindowProcedure(
-    skiaLayer: SkiaLayer,
-    private val hitTest: (x: Float, y: Float) -> Int
-) : WindowProcedure {
+internal class SkiaLayerWindowProcedure(skiaLayer: SkiaLayer, private val hitTest: (x: Float, y: Float) -> Int) :
+    WindowProcedure {
 
     private val windowHandle = HWND(Pointer(skiaLayer.windowHandle))
     internal val contentHandle = HWND(skiaLayer.canvas.let(Native::getComponentPointer))
@@ -282,6 +275,7 @@ internal class SkiaLayerWindowProcedure(
     @Volatile
     private var disposed = false
 
+    @Suppress("TooGenericExceptionCaught", "SwallowedException")
     override fun callback(hwnd: HWND, uMsg: Int, wParam: WPARAM, lParam: LPARAM): LRESULT {
         val user32 = User32Extend.instance
 
@@ -299,15 +293,18 @@ internal class SkiaLayerWindowProcedure(
             }
 
             WM_NCMOUSEMOVE -> {
-                user32.SendMessage(contentHandle, WM_MOUSEMOVE, wParam, lParam); LRESULT(0)
+                user32.SendMessage(contentHandle, WM_MOUSEMOVE, wParam, lParam)
+                LRESULT(0)
             }
 
             WM_NCLBUTTONDOWN -> {
-                user32.SendMessage(contentHandle, WM_LBUTTONDOWN, wParam, lParam); LRESULT(0)
+                user32.SendMessage(contentHandle, WM_LBUTTONDOWN, wParam, lParam)
+                LRESULT(0)
             }
 
             WM_NCLBUTTONUP -> {
-                user32.SendMessage(contentHandle, WM_LBUTTONUP, wParam, lParam); LRESULT(0)
+                user32.SendMessage(contentHandle, WM_LBUTTONUP, wParam, lParam)
+                LRESULT(0)
             }
 
             else -> {
@@ -334,6 +331,7 @@ internal class SkiaLayerWindowProcedure(
         return result
     }
 
+    @Suppress("NestedBlockDepth")
     fun dispose() {
         if (disposed) return
         disposed = true

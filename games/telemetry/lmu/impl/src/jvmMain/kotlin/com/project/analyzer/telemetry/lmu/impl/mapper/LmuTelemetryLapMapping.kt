@@ -19,7 +19,7 @@ internal fun mapLap(telemetry: LmuVehicleTelemetry, scoring: LmuVehicleScoring?)
                 add(SectorFrame(index = 0, timeMs = s.curSector1.toLapMs(), bestTimeMs = s.bestSector1.toLapMs()))
                 add(SectorFrame(index = 1, timeMs = s.curSector2.toLapMs(), bestTimeMs = s.bestSector2.toLapMs()))
             }
-        }
+        },
     )
 }
 
@@ -29,7 +29,6 @@ private fun lapTimeMs(elapsed: Double, lapStartEt: Double): Int? {
     return if (delta >= 0) (delta * MS_IN_SECOND).toInt() else null
 }
 
-private fun Double.toLapMs(): Int? =
-    if (this > 0.0) (this * MS_IN_SECOND).toInt() else null
+private fun Double.toLapMs(): Int? = if (this > 0.0) (this * MS_IN_SECOND).toInt() else null
 
 private const val MS_IN_SECOND = 1000.0

@@ -11,9 +11,7 @@ import kotlin.math.max
 
 @Inject
 @SingleIn(SessionScope::class)
-class AcLapState(
-    private val cache: AcSessionCache
-) {
+class AcLapState(private val cache: AcSessionCache) {
 
     private var lastSectorIndex: Int = -1
     private var lastRecordedSectorTimeMs: Int = -1
@@ -28,7 +26,7 @@ class AcLapState(
         currentSectorIndex: Int,
         lastSectorTimeMs: Int,
         isValidLap: Boolean,
-        sectorCountOverride: Int? = null
+        sectorCountOverride: Int? = null,
     ): List<SectorFrame> {
         val count = max(0, sectorCountOverride ?: cache.sectorCount)
         if (count <= 0) return emptyList()
@@ -47,7 +45,7 @@ class AcLapState(
                     completedIdx = lastSectorIndex,
                     count = count,
                     lastSectorTimeMs = lastSectorTimeMs,
-                    isValidLap = isValidLap
+                    isValidLap = isValidLap,
                 )
                 lastRecordedSectorTimeMs = lastSectorTimeMs
                 pendingLastSectorIndex = null
@@ -58,7 +56,7 @@ class AcLapState(
                 val completed = sectors[lastSectorIndex]
                 sectors[lastSectorIndex] = completed.copy(
                     status = SectorStatus.COMPLETED,
-                    validity = if (isValidLap) SectorValidity.VALID else SectorValidity.INVALID
+                    validity = if (isValidLap) SectorValidity.VALID else SectorValidity.INVALID,
                 )
             }
 
@@ -69,7 +67,7 @@ class AcLapState(
                     completedIdx = lastSectorIndex,
                     count = count,
                     lastSectorTimeMs = lastSectorTimeMs,
-                    isValidLap = isValidLap
+                    isValidLap = isValidLap,
                 )
                 lastRecordedSectorTimeMs = lastSectorTimeMs
             }
@@ -85,7 +83,7 @@ class AcLapState(
                 sectors[pendingIdx] = sectors[pendingIdx].copy(
                     timeMs = lastSectorTimeMs,
                     status = SectorStatus.COMPLETED,
-                    validity = if (pendingLastSectorValidity) SectorValidity.VALID else SectorValidity.INVALID
+                    validity = if (pendingLastSectorValidity) SectorValidity.VALID else SectorValidity.INVALID,
                 )
             }
 
@@ -151,7 +149,7 @@ class AcLapState(
                 deltaToBestMs = null,
                 status = SectorStatus.NOT_STARTED,
                 validity = SectorValidity.UNKNOWN,
-                invalidReason = null
+                invalidReason = null,
             )
         }
         lastSectorIndex = -1
@@ -175,12 +173,7 @@ class AcLapState(
         }.toMutableList()
     }
 
-    private fun recordCompletedSector(
-        completedIdx: Int,
-        count: Int,
-        lastSectorTimeMs: Int,
-        isValidLap: Boolean
-    ) {
+    private fun recordCompletedSector(completedIdx: Int, count: Int, lastSectorTimeMs: Int, isValidLap: Boolean) {
         if (completedIdx !in 0 until count) return
 
         val completed = sectors[completedIdx]
@@ -189,7 +182,7 @@ class AcLapState(
         sectors[completedIdx] = completed.copy(
             timeMs = lastSectorTimeMs.takeIf { it > 0 },
             status = SectorStatus.COMPLETED,
-            validity = validity
+            validity = validity,
         )
     }
 }

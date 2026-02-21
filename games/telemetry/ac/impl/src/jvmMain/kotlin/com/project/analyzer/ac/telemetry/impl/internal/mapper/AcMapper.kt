@@ -37,7 +37,7 @@ class AcMapper(
             ?: TrackIdNormalizer
                 .normalize(
                     track = statics.track.toKString(),
-                    layout = statics.trackConfiguration.toKString().takeIf { it.isNotBlank() }
+                    layout = statics.trackConfiguration.toKString().takeIf { it.isNotBlank() },
                 )
                 .takeIf { it.isNotBlank() }
 
@@ -65,13 +65,13 @@ class AcMapper(
             lap = lapMapper.map(
                 graphics = graphics,
                 fallback = lapSnapshot,
-                sectorCountOverride = sectorCountOverride
+                sectorCountOverride = sectorCountOverride,
             ),
             car = carMapper.map(physics, graphics, statics),
             wheels = wheelsMapper.map(physics, graphics),
             damage = damageMapper.map(physics),
             environment = environmentMapper.map(physics, graphics),
-            timestampNs = snapshot.timestampNs
+            timestampNs = snapshot.timestampNs,
         )
     }
 }

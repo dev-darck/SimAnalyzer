@@ -94,7 +94,7 @@ fun WindowScope.AppTitleBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .then(modifier)
+            .then(other = modifier),
     ) {
         Row(
             modifier = Modifier
@@ -103,7 +103,7 @@ fun WindowScope.AppTitleBar(
                 .background(m.surface)
                 .winCaptionBarRect(reg, key = "captionBar")
                 .padding(start = 8.dp, end = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Spacer(Modifier.width(10.dp))
 
@@ -112,7 +112,7 @@ fun WindowScope.AppTitleBar(
             Spacer(Modifier.weight(1f))
 
             Box(
-                modifier = Modifier.winExcludeFromCaption(reg, key = "navButtons")
+                modifier = Modifier.winExcludeFromCaption(reg, key = "navButtons"),
             ) {
                 NavButtons(
                     canGoBack = canGoBack,
@@ -124,7 +124,7 @@ fun WindowScope.AppTitleBar(
                     onForward = {
                         logger.info { "TitleBar: forward" }
                         onForward()
-                    }
+                    },
                 )
             }
 
@@ -132,14 +132,14 @@ fun WindowScope.AppTitleBar(
 
             Row(
                 modifier = Modifier.winExcludeFromCaption(reg, key = "sysButtons"),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 TitleBarWinButton(
                     enabled = canMinimize,
                     onClick = ::minimize,
                     hoverBg = m.surfaceVariant.copy(alpha = 0.7f),
                     iconTint = m.onSurfaceVariant,
-                    modifier = Modifier.winMinimizeButtonRect(reg, key = "minBtn")
+                    modifier = Modifier.winMinimizeButtonRect(reg, key = "minBtn"),
                 ) {
                     Icon(Icons.Outlined.Remove, "Minimize", tint = it, modifier = Modifier.size(18.dp))
                 }
@@ -149,13 +149,13 @@ fun WindowScope.AppTitleBar(
                     onClick = ::toggleMaximize,
                     hoverBg = m.surfaceVariant.copy(alpha = 0.7f),
                     iconTint = m.onSurfaceVariant,
-                    modifier = Modifier.winMaximizeButtonRect(reg, key = "maxBtn")
+                    modifier = Modifier.winMaximizeButtonRect(reg, key = "maxBtn"),
                 ) {
                     Icon(
                         imageVector = if (isMaximized) Icons.Outlined.FilterNone else Icons.Outlined.CropSquare,
                         contentDescription = "Maximize",
                         tint = it,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(18.dp),
                     )
                 }
 
@@ -167,7 +167,7 @@ fun WindowScope.AppTitleBar(
                     },
                     hoverBg = m.error.copy(alpha = 0.22f),
                     iconTint = m.onSurface,
-                    modifier = Modifier.winCloseButtonRect(reg, key = "closeBtn")
+                    modifier = Modifier.winCloseButtonRect(reg, key = "closeBtn"),
                 ) {
                     Icon(Icons.Outlined.Close, "Close", tint = it, modifier = Modifier.size(18.dp))
                 }
@@ -178,25 +178,20 @@ fun WindowScope.AppTitleBar(
             Modifier
                 .fillMaxWidth()
                 .height(1.dp)
-                .background(m.outlineVariant.copy(alpha = 0.6f))
+                .background(m.outlineVariant.copy(alpha = 0.6f)),
         )
     }
 }
 
 @Composable
-private fun NavButtons(
-    canGoBack: Boolean,
-    canGoForward: Boolean,
-    onBack: () -> Unit,
-    onForward: () -> Unit
-) {
+private fun NavButtons(canGoBack: Boolean, canGoForward: Boolean, onBack: () -> Unit, onForward: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         TitleBarPillButton(enabled = canGoBack, onClick = onBack) { tint ->
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                 contentDescription = "Back",
                 tint = tint,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
         }
 
@@ -207,18 +202,14 @@ private fun NavButtons(
                 imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
                 contentDescription = "Forward",
                 tint = tint,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(18.dp),
             )
         }
     }
 }
 
 @Composable
-private fun TitleBarPillButton(
-    enabled: Boolean,
-    onClick: () -> Unit,
-    icon: @Composable (tint: Color) -> Unit,
-) {
+private fun TitleBarPillButton(enabled: Boolean, onClick: () -> Unit, icon: @Composable (tint: Color) -> Unit) {
     val m = SimAnalyzerTheme.material
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -230,7 +221,7 @@ private fun TitleBarPillButton(
             else -> Color.Transparent
         },
         animationSpec = tween(120),
-        label = "titleNavBg"
+        label = "titleNavBg",
     )
 
     val tint by animateColorAsState(
@@ -240,7 +231,7 @@ private fun TitleBarPillButton(
             else -> m.onSurfaceVariant
         },
         animationSpec = tween(120),
-        label = "titleNavTint"
+        label = "titleNavTint",
     )
 
     Box(
@@ -250,7 +241,7 @@ private fun TitleBarPillButton(
             .background(bg)
             .hoverable(interaction)
             .onClick(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         icon(tint)
     }
@@ -271,13 +262,13 @@ private fun TitleBarWinButton(
     val bg by animateColorAsState(
         targetValue = if (enabled && hovered) hoverBg else Color.Transparent,
         animationSpec = tween(120),
-        label = "titleWinBg"
+        label = "titleWinBg",
     )
 
     val tint by animateColorAsState(
         targetValue = if (enabled) iconTint else iconTint.copy(alpha = 0.35f),
         animationSpec = tween(120),
-        label = "titleWinTint"
+        label = "titleWinTint",
     )
 
     Box(
@@ -287,7 +278,7 @@ private fun TitleBarWinButton(
             .background(bg)
             .hoverable(interaction)
             .onClick(enabled = enabled, onClick = onClick),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         icon(tint)
     }

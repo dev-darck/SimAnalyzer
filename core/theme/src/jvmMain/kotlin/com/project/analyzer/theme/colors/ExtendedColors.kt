@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 @Immutable
 public data class ExtendedColors(
     val material: ColorScheme,
-    
+
     val shadow: Color,
     val shadowSecondary: Color,
 

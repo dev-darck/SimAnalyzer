@@ -17,5 +17,5 @@ internal data class SettingsState(
     val maxRecordedLaps: Int = 0,
     val hudEnabled: Boolean = true,
     val gameSelection: GameSelection = GameSelection.Auto,
-    val gameSelectionUi: GameSelectionUi = buildGameSelectionUi(GameSelection.Auto)
+    val gameSelectionUi: GameSelectionUi = buildGameSelectionUi(GameSelection.Auto),
 )

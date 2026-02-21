@@ -58,12 +58,12 @@ private fun Screen(
             selectedPath?.let { path ->
                 dispatch(SettingsIntent.ChangeStorageLocation(path))
             }
-        }
+        },
     )
 
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        backgroundColor = SimAnalyzerTheme.material.background
+        backgroundColor = SimAnalyzerTheme.material.background,
     ) {
         item("AppearanceBlock") {
             AppearanceBlock(
@@ -71,7 +71,7 @@ private fun Screen(
                 selectedTheme = state.themeMode,
                 onThemeSelected = { mode ->
                     dispatch(SettingsIntent.ChangeTheme(mode))
-                }
+                },
             )
         }
         item("HudSetupBlock") {
@@ -83,7 +83,7 @@ private fun Screen(
                 },
                 onEditClick = {
                     navigateTo(Route.SettingsRoot.HudSettings)
-                }
+                },
             )
         }
         item("TelemetryAcquisitionBlock") {
@@ -110,7 +110,7 @@ private fun Screen(
                 },
                 onBrowseClick = {
                     directoryChooserState.show()
-                }
+                },
             )
         }
         item("TelemetryGameSelectionBlock") {
@@ -119,14 +119,14 @@ private fun Screen(
                 selectionUi = state.gameSelectionUi,
                 onSelectionChange = { selection ->
                     dispatch(SettingsIntent.ChangeGameSelection(selection))
-                }
+                },
             )
         }
         if (BuildConfig.IS_DEBUG) {
             item("DevSettingsBlock") {
                 DevSettingsBlock(
                     modifier = Modifier.fillMaxHeight(),
-                    onOpen = { navigateTo(Route.SettingsRoot.DevSettings) }
+                    onOpen = { navigateTo(Route.SettingsRoot.DevSettings) },
                 )
             }
         }

@@ -30,15 +30,13 @@ class ReportOnGitHubUseCase(private val copyReportUseCase: CopyReportUseCase) {
         appendLine("```")
     }
 
-    private fun buildGithubIssueUrl(
-        repo: String,
-        title: String,
-        body: String,
-        maxBodyChars: Int,
-    ): String {
+    private fun buildGithubIssueUrl(repo: String, title: String, body: String, maxBodyChars: Int): String {
         val base = "https://github.com/$repo/issues/new"
-        val safeBody = if (body.length <= maxBodyChars) body else
+        val safeBody = if (body.length <= maxBodyChars) {
+            body
+        } else {
             body.take(maxBodyChars) + "\n\n(Body truncated by the app. Paste the full report from clipboard.)"
+        }
 
         val t = URLEncoder.encode(title, "UTF-8")
         val b = URLEncoder.encode(safeBody, "UTF-8")

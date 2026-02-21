@@ -11,12 +11,7 @@ interface FileChooserUseCase {
 
     suspend fun toggleExpand(path: String, showHidden: Boolean): TreeResult
 
-    suspend fun openPath(
-        targetPath: String,
-        drivePath: String,
-        driveLabel: String,
-        showHidden: Boolean,
-    ): TreeResult
+    suspend fun openPath(targetPath: String, drivePath: String, driveLabel: String, showHidden: Boolean): TreeResult
 
     suspend fun refreshTree(showHidden: Boolean): TreeResult
 

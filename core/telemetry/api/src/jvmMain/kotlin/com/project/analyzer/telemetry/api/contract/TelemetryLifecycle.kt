@@ -18,7 +18,6 @@ public interface TelemetryLifecycle {
 }
 
 public sealed interface TelemetryLifecycleEvent {
-
     public data object SimConnected : TelemetryLifecycleEvent
     public data object SimDisconnected : TelemetryLifecycleEvent
 
@@ -26,17 +25,14 @@ public sealed interface TelemetryLifecycleEvent {
      * New session instance started.
      * Note: some fields can be empty/UNKNOWN at start and arrive later via SessionUpdated.
      */
-    public data class SessionStarted(
-        val session: SessionInfo = SessionInfo(0L, SessionType.UNKNOWN, "", "")
-    ) : TelemetryLifecycleEvent
+    public data class SessionStarted(val session: SessionInfo = SessionInfo(0L, SessionType.UNKNOWN, "", "")) :
+        TelemetryLifecycleEvent
 
     /**
      * Session metadata changed (sticky updates; blanks do not overwrite).
      */
-    public data class SessionUpdated(
-        val session: SessionInfo,
-        val changed: Set<SessionField>
-    ) : TelemetryLifecycleEvent
+    public data class SessionUpdated(val session: SessionInfo, val changed: Set<SessionField>) :
+        TelemetryLifecycleEvent
 
     /**
      * We left active telemetry (usually ESC/menu or physics stream becomes inactive).
@@ -44,7 +40,7 @@ public sealed interface TelemetryLifecycleEvent {
      */
     public data class SessionPaused(
         val sessionId: Long,
-        val reason: SessionPauseReason = SessionPauseReason.NOT_IN_SESSION
+        val reason: SessionPauseReason = SessionPauseReason.NOT_IN_SESSION,
     ) : TelemetryLifecycleEvent
 
     public data class SessionResumed(val sessionId: Long) : TelemetryLifecycleEvent
@@ -54,7 +50,7 @@ public sealed interface TelemetryLifecycleEvent {
      */
     public data class SessionEnded(
         val sessionId: Long = 0L,
-        val reason: SessionEndReason = SessionEndReason.SIM_DISCONNECTED
+        val reason: SessionEndReason = SessionEndReason.SIM_DISCONNECTED,
     ) : TelemetryLifecycleEvent
 
     public data class LapStarted(val lapNumber: Int) : TelemetryLifecycleEvent
@@ -71,12 +67,12 @@ public data class SessionInfo(
 public enum class SessionField {
     SESSION_TYPE,
     CAR_MODEL,
-    TRACK_ID
+    TRACK_ID,
 }
 
 public enum class SessionPauseReason {
     /** We are not in active session state (menu / paused / inactive physics) */
-    NOT_IN_SESSION
+    NOT_IN_SESSION,
 }
 
 public enum class SessionEndReason {
@@ -84,5 +80,5 @@ public enum class SessionEndReason {
     SIM_DISCONNECTED,
 
     /** A new session replaced the previous one (restart / new race / etc) */
-    REPLACED_BY_NEW_SESSION
+    REPLACED_BY_NEW_SESSION,
 }

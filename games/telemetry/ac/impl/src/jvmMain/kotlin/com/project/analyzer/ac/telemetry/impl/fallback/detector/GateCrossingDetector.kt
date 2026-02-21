@@ -15,12 +15,7 @@ import dev.zacsweers.metro.SingleIn
 @SingleIn(SessionScope::class)
 class GateCrossingDetector {
 
-    fun detectCrossing(
-        previousPose: CarPose,
-        currentPose: CarPose,
-        gate: Gate,
-    ): GateCrossing? {
-
+    fun detectCrossing(previousPose: CarPose, currentPose: CarPose, gate: Gate): GateCrossing? {
         val p0 = previousPose.position
         val p1 = currentPose.position
         val dp = p1 - p0
@@ -54,14 +49,14 @@ class GateCrossingDetector {
             p = hit,
             center = frame.center,
             normal = frame.normal,
-            halfWidth = frame.halfWidthMeters
+            halfWidth = frame.halfWidthMeters,
         )
 
         return GateCrossing(
             interpolationFactor = t,
             isForwardDirection = isForward,
             hitPoint = hit,
-            outsideByMeters = outsideBy
+            outsideByMeters = outsideBy,
         )
     }
 

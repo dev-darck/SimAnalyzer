@@ -22,20 +22,13 @@ class FileChooserUseCaseImpl(
         )
     }
 
-    override suspend fun openDrive(
-        path: String,
-        label: String,
-        showHidden: Boolean,
-    ): TreeResult {
+    override suspend fun openDrive(path: String, label: String, showHidden: Boolean): TreeResult {
         treeManager.setRoot(path, label)
         loadChildrenInto(path, showHidden)
         return treeManager.flatten(focusPath = path)
     }
 
-    override suspend fun toggleExpand(
-        path: String,
-        showHidden: Boolean,
-    ): TreeResult {
+    override suspend fun toggleExpand(path: String, showHidden: Boolean): TreeResult {
         if (treeManager.isExpanded(path)) {
             treeManager.collapse(path)
             return treeManager.flatten(focusPath = path)
