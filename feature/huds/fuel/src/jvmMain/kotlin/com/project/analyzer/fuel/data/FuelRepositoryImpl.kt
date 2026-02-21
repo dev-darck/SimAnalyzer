@@ -7,7 +7,7 @@ import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.SessionPref
 import com.project.analyzer.preference.api.StringPrefKey
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.serialization.Serializable
@@ -20,6 +20,8 @@ internal class FuelRepositoryImpl(
     private val preference: Preference,
     private val json: Json,
 ) : FuelRepository {
+
+    private val logger = logger()
 
     override suspend fun updateIfBetter(
         carModel: String,

@@ -22,8 +22,8 @@ import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent.LapFinished
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent.LapStarted
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
-import com.project.analyzer.utils.NsRateLimiter
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -49,6 +49,8 @@ class AcTelemetryLifecycle(
     pollLoop: AcPollLoop,
     fallback: AcEvoFallbackShmPatcher,
 ) : TelemetryLifecycle {
+
+    private val logger = logger()
 
     private var appScope = createScope()
     private var processingJob: Job? = null
@@ -76,9 +78,6 @@ class AcTelemetryLifecycle(
     private var lastSessionIndex: Int? = null
     private var lastCompletedLaps: Int? = null
     private var lastSessionTimeLeftSec: Float? = null
-    private val sampleLogLimiter = NsRateLimiter(2_000_000_000L)
-    private val frameErrorLimiter = NsRateLimiter(2_000_000_000L)
-
     private var sessionState: SessionState = SessionState.NONE
     private var sessionId: Long = 0L
     private var currentSession: SessionInfo? = null
@@ -121,28 +120,28 @@ class AcTelemetryLifecycle(
                     runCatching {
                         processStateChange(result.state, result.dataSource)
                     }.onFailure { error ->
-                        if (frameErrorLimiter.shouldLog(System.nanoTime())) {
-                            logger.error(error) { "[lifecycle] state processing error state=${result.state}" }
+                        logger.atError(RATE_LIMITED) {
+                            message = "state processing error state=${result.state}"
+                            cause = error
                         }
                     }
                 }
 
                 is PollResult.Frame -> {
                     val snapshot = result.snapshot
-                    try {
+                    runCatching {
                         if (connectionState == GameConnectionState.IN_SESSION) {
                             val frame = mapper.map(snapshot)
                             processFrame(snapshot, frame, connectionState)
                             _frames.tryEmit(frame)
                         }
-                    } catch (error: Exception) {
-                        val now = snapshot.timestampNs.takeIf { it > 0L } ?: System.nanoTime()
-                        if (frameErrorLimiter.shouldLog(now)) {
-                            logger.error(error) { "[lifecycle] frame processing error" }
+                    }.onFailure { error ->
+                        logger.atError(RATE_LIMITED) {
+                            message = "frame processing error"
+                            cause = error
                         }
-                    } finally {
-                        pollPipeline.release(snapshot)
                     }
+                    pollPipeline.release(snapshot)
                 }
             }
         }
@@ -150,7 +149,7 @@ class AcTelemetryLifecycle(
 
     private fun createScope(): CoroutineScope = CoroutineScope(
         SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
-            logger.error(e) { "[lifecycle] uncaught exception" }
+            logger.error(e) { "uncaught exception" }
         },
     )
 
@@ -159,7 +158,9 @@ class AcTelemetryLifecycle(
         if (oldState == newState) return
 
         lastConnectionState = newState
-        logger.info { "[lifecycle] ConnectionState: $oldState -> $newState (source=$source)" }
+        logger.atInfo(RATE_LIMITED) {
+            message = "ConnectionState: $oldState -> $newState (source=$source)"
+        }
 
         if (oldState == GameConnectionState.DISCONNECTED &&
             (newState == GameConnectionState.IN_MENU || newState == GameConnectionState.IN_SESSION)
@@ -171,7 +172,9 @@ class AcTelemetryLifecycle(
             GameConnectionState.IN_SESSION to GameConnectionState.IN_MENU -> {
                 if (sessionState == SessionState.RUNNING && sessionId > 0L) {
                     sessionState = SessionState.PAUSED
-                    logger.info { "[lifecycle] SessionPaused id=$sessionId reason=NOT_IN_SESSION (source=$source)" }
+                    logger.atInfo(RATE_LIMITED) {
+                        message = "SessionPaused id=$sessionId reason=NOT_IN_SESSION (source=$source)"
+                    }
                     _events.tryEmit(TelemetryLifecycleEvent.SessionPaused(sessionId, SessionPauseReason.NOT_IN_SESSION))
                 }
             }
@@ -179,13 +182,17 @@ class AcTelemetryLifecycle(
             GameConnectionState.IN_MENU to GameConnectionState.IN_SESSION,
             GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION -> {
                 pendingEnter = PendingEnter(wasPaused = (sessionState == SessionState.PAUSED))
-                logger.debug { "[lifecycle] pendingEnter set (wasPaused=${pendingEnter?.wasPaused}) (source=$source)" }
+                logger.atDebug(RATE_LIMITED) {
+                    message = "pendingEnter set (wasPaused=${pendingEnter?.wasPaused}) (source=$source)"
+                }
             }
 
             GameConnectionState.IN_MENU to GameConnectionState.DISCONNECTED,
             GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED -> {
                 if (sessionState != SessionState.NONE && sessionId > 0L) {
-                    logger.info { "[lifecycle] SessionEnded id=$sessionId reason=SIM_DISCONNECTED (source=$source)" }
+                    logger.atInfo(RATE_LIMITED) {
+                        message = "SessionEnded id=$sessionId reason=SIM_DISCONNECTED (source=$source)"
+                    }
                     _events.tryEmit(TelemetryLifecycleEvent.SessionEnded(sessionId, SessionEndReason.SIM_DISCONNECTED))
                 }
                 _events.tryEmit(TelemetryLifecycleEvent.SimDisconnected)
@@ -209,8 +216,8 @@ class AcTelemetryLifecycle(
 
         logInferredBoundaries(frame)
 
-        if (sampleLogLimiter.shouldLog(frame.timestampNs)) {
-            logger.debug { "[lifecycle] sample " + frameKeySummary(frame) }
+        logger.atDebug(RATE_LIMITED) {
+            message = "sample " + frameKeySummary(frame)
         }
 
         updateSessionFromFrame(frame)
@@ -227,15 +234,15 @@ class AcTelemetryLifecycle(
     private fun enterSessionOnFirstFrame(frame: TelemetryFrame, wasPaused: Boolean) {
         val isResume = wasPaused && isLikelyResume(frame)
 
-        logger.debug {
-            "[lifecycle] enterSessionOnFirstFrame wasPaused=$wasPaused isResume=$isResume " +
+        logger.atDebug(RATE_LIMITED) {
+            message = "enterSessionOnFirstFrame wasPaused=$wasPaused isResume=$isResume " +
                 "(source=$lastDataSource) " + frameKeySummary(frame)
         }
 
         if (isResume) {
             sessionState = SessionState.RUNNING
             if (sessionId > 0L) {
-                logger.info { "[lifecycle] SessionResumed id=$sessionId (source=$lastDataSource)" }
+                logger.atInfo(RATE_LIMITED) { message = "SessionResumed id=$sessionId (source=$lastDataSource)" }
                 _events.tryEmit(TelemetryLifecycleEvent.SessionResumed(sessionId))
             } else {
                 startNewSessionFromFrame(frame, replacedOld = false)
@@ -256,8 +263,8 @@ class AcTelemetryLifecycle(
         val trackChanged = track.isNotBlank() && cur.trackId.isNotBlank() && track != cur.trackId
 
         if (carChanged || trackChanged) {
-            logger.debug {
-                "[lifecycle] resume rejected: carChanged=$carChanged trackChanged=$trackChanged " +
+            logger.atDebug(RATE_LIMITED) {
+                message = "resume rejected: carChanged=$carChanged trackChanged=$trackChanged " +
                     "cur(car=${cur.carModel}, track=${cur.trackId}) " +
                     "new(car=$car, track=$track)"
             }
@@ -268,8 +275,8 @@ class AcTelemetryLifecycle(
 
     private fun startNewSessionFromFrame(frame: TelemetryFrame, replacedOld: Boolean) {
         if (replacedOld) {
-            logger.info {
-                "[lifecycle] SessionEnded id=$sessionId reason=REPLACED_BY_NEW_SESSION (source=$lastDataSource)"
+            logger.atInfo(RATE_LIMITED) {
+                message = "SessionEnded id=$sessionId reason=REPLACED_BY_NEW_SESSION (source=$lastDataSource)"
             }
             _events.tryEmit(TelemetryLifecycleEvent.SessionEnded(sessionId, SessionEndReason.REPLACED_BY_NEW_SESSION))
         }
@@ -289,8 +296,8 @@ class AcTelemetryLifecycle(
             trackId = track,
         )
 
-        logger.info {
-            "[lifecycle] SessionStarted id=$sessionId type=$sessionType " +
+        logger.atInfo(RATE_LIMITED) {
+            message = "SessionStarted id=$sessionId type=$sessionType " +
                 "idx=${frame.session?.sessionIndex} online=${frame.session?.isOnline} " +
                 "track=$track car=$car (source=$lastDataSource)"
         }
@@ -305,21 +312,27 @@ class AcTelemetryLifecycle(
 
         val newType = frame.session?.sessionType ?: SessionType.UNKNOWN
         if (newType != SessionType.UNKNOWN && newType != cur.sessionType) {
-            logger.info { "[lifecycle] SessionType changed: ${cur.sessionType} -> $newType (source=$lastDataSource)" }
+            logger.atInfo(RATE_LIMITED) {
+                message = "SessionType changed: ${cur.sessionType} -> $newType (source=$lastDataSource)"
+            }
             updated = updated.copy(sessionType = newType)
             changed += SessionField.SESSION_TYPE
         }
 
         val newCar = frame.session?.car?.carModel.orEmpty().trim()
         if (newCar.isNotBlank() && newCar != cur.carModel) {
-            logger.info { "[lifecycle] CarModel changed: ${cur.carModel} -> $newCar (source=$lastDataSource)" }
+            logger.atInfo(RATE_LIMITED) {
+                message = "CarModel changed: ${cur.carModel} -> $newCar (source=$lastDataSource)"
+            }
             updated = updated.copy(carModel = newCar)
             changed += SessionField.CAR_MODEL
         }
 
         val newTrack = frame.session?.track?.trackId.orEmpty().trim()
         if (newTrack.isNotBlank() && newTrack != cur.trackId) {
-            logger.info { "[lifecycle] TrackId changed: ${cur.trackId} -> $newTrack (source=$lastDataSource)" }
+            logger.atInfo(RATE_LIMITED) {
+                message = "TrackId changed: ${cur.trackId} -> $newTrack (source=$lastDataSource)"
+            }
             updated = updated.copy(trackId = newTrack)
             changed += SessionField.TRACK_ID
         }
@@ -335,18 +348,23 @@ class AcTelemetryLifecycle(
 
         when {
             newLapIndex != null && prevLap == null -> {
-                logger.info { "[lifecycle] LapStarted lap=$newLapIndex (source=$lastDataSource)" }
+                logger.atInfo(RATE_LIMITED) {
+                    message = "LapStarted lap=$newLapIndex (source=$lastDataSource)"
+                }
                 _events.tryEmit(LapStarted(newLapIndex))
             }
 
             newLapIndex != null && prevLap != null && newLapIndex != prevLap -> {
                 val lastLapTime = frame.lap?.lastLapTimeMs
-                logger.info {
-                    "[lifecycle] LapFinished lap=$prevLap validity=$lastLapValidity lastLapTimeMs=$lastLapTime (source=$lastDataSource)"
+                logger.atInfo(RATE_LIMITED) {
+                    message = "LapFinished lap=$prevLap validity=$lastLapValidity " +
+                        "lastLapTimeMs=$lastLapTime (source=$lastDataSource)"
                 }
                 _events.tryEmit(LapFinished(prevLap, lastLapValidity))
 
-                logger.info { "[lifecycle] LapStarted lap=$newLapIndex (source=$lastDataSource)" }
+                logger.atInfo(RATE_LIMITED) {
+                    message = "LapStarted lap=$newLapIndex (source=$lastDataSource)"
+                }
                 _events.tryEmit(LapStarted(newLapIndex))
             }
         }
@@ -359,8 +377,8 @@ class AcTelemetryLifecycle(
 
         val idx = s.sessionIndex
         if (idx!! >= 0 && lastSessionIndex != null && idx != lastSessionIndex) {
-            logger.info {
-                "[boundary] sessionIndex: $lastSessionIndex -> $idx " +
+            logger.atInfo(RATE_LIMITED) {
+                message = "[boundary] sessionIndex: $lastSessionIndex -> $idx " +
                     "type=${s.sessionType} track=${s.track?.trackId} car=${s.car?.carModel} (source=$lastDataSource)"
             }
         }
@@ -374,8 +392,8 @@ class AcTelemetryLifecycle(
         if (prevLeft != null) {
             val jumpUp = left?.let { (it - prevLeft) > 120f }
             if (jumpUp == true) {
-                logger.info {
-                    "[boundary] sessionTimeLeft jump up: $prevLeft -> $left " +
+                logger.atInfo(RATE_LIMITED) {
+                    message = "[boundary] sessionTimeLeft jump up: $prevLeft -> $left " +
                         "idx=${s.sessionIndex} type=${s.sessionType} (source=$lastDataSource)"
                 }
             }

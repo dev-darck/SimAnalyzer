@@ -11,3 +11,17 @@ plugins {
     alias(libs.plugins.ksp) apply false
     id("convention-build")
 }
+
+tasks.register("ciJvmTest") {
+    group = "verification"
+    description = "Runs all jvmTest tasks across all subprojects."
+
+    dependsOn(tasks.matching { it.name == "jvmTest" })
+}
+
+tasks.register("detektAll") {
+    group = "verification"
+    description = "Runs all detekt tasks across all subprojects."
+
+    dependsOn(tasks.matching { it.name == "detekt" })
+}

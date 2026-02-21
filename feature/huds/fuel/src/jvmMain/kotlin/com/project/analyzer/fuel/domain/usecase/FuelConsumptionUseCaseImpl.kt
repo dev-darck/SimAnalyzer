@@ -11,7 +11,7 @@ import com.project.analyzer.telemetry.api.contract.SessionInfo
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +28,7 @@ internal class FuelConsumptionUseCaseImpl(
     private val repository: FuelRepository,
 ) : FuelConsumptionUseCase {
 
+    private val logger = logger()
     private var mode: Mode = Mode.NONE
     private var activeSessionId: Long = 0L
 

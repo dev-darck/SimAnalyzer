@@ -5,6 +5,7 @@ import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.update
 @Inject
 internal class LiveViewModel(private val useCase: LiveTelemetryUseCase) : LeakAwareViewModel() {
 
+    private var job: Job? = null
     private val _state = MutableStateFlow(LiveScreenState())
     val state: StateFlow<LiveScreenState> = _state.asStateFlow()
 
@@ -25,7 +27,8 @@ internal class LiveViewModel(private val useCase: LiveTelemetryUseCase) : LeakAw
     }
 
     private fun startListening() {
-        useCase.telemetryFlow
+        job?.cancel()
+        job = useCase.telemetryFlow
             .onEach { result -> handleResult(result) }
             .launchIn(viewModelScope)
     }

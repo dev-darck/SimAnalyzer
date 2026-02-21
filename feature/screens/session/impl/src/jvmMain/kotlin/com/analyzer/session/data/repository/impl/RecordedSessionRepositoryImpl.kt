@@ -6,7 +6,7 @@ import com.analyzer.session.data.repository.RecordedSessionRepository
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,6 +27,7 @@ class RecordedSessionRepositoryImpl(
     private val ioDispatcher: CoroutineDispatcher,
 ) : RecordedSessionRepository {
 
+    private val logger = logger()
     private val sessionIndex = mutableMapOf<Long, SessionLocation>()
 
     override suspend fun loadSessions(): List<RecordedSessionSummary> = withContext(ioDispatcher) {
@@ -66,13 +67,13 @@ class RecordedSessionRepositoryImpl(
         val deleted = runCatching {
             location.dir.deleteRecursively()
         }.getOrElse { error ->
-            logger.error(error) { "[sessions] failed to delete session dir: ${location.dir.absolutePath}" }
+            logger.error(error) { "failed to delete session dir: ${location.dir.absolutePath}" }
             false
         }
 
         if (deleted) {
             sessionIndex.remove(sessionId)
-            logger.info { "[sessions] deleted session $sessionId at ${location.dir.absolutePath}" }
+            logger.info { "deleted session $sessionId at ${location.dir.absolutePath}" }
         }
 
         deleted
@@ -94,7 +95,7 @@ class RecordedSessionRepositoryImpl(
                 val selected = collisions.maxByOrNull { it.summary.startedAtMs }!!
                 if (collisions.size > 1) {
                     logger.warn {
-                        "[sessions] duplicate sessionId=$sessionId detected (${collisions.size} entries), " +
+                        "duplicate sessionId=$sessionId detected (${collisions.size} entries), " +
                             "using latest at ${selected.dir.absolutePath}"
                     }
                 }
@@ -139,7 +140,7 @@ class RecordedSessionRepositoryImpl(
     private fun readMetadata(metaFile: File): RecordedSessionMetadata? = runCatching {
         json.decodeFromString(RecordedSessionMetadata.serializer(), metaFile.readText())
     }.onFailure { error ->
-        logger.warn(error) { "[sessions] failed to decode metadata: ${metaFile.absolutePath}" }
+        logger.warn(error) { "failed to decode metadata: ${metaFile.absolutePath}" }
     }.getOrNull()
 
     private fun writeMetadata(metaFile: File, metadata: RecordedSessionMetadata): Boolean = runCatching {
@@ -152,7 +153,7 @@ class RecordedSessionRepositoryImpl(
         }
         true
     }.getOrElse { error ->
-        logger.error(error) { "[sessions] failed to write metadata: ${metaFile.absolutePath}" }
+        logger.error(error) { "failed to write metadata: ${metaFile.absolutePath}" }
         false
     }
 
@@ -226,7 +227,7 @@ class RecordedSessionRepositoryImpl(
             stream
         }
     }.onFailure { error ->
-        logger.warn(error) { "[sessions] failed to open index: ${file.absolutePath}" }
+        logger.warn(error) { "failed to open index: ${file.absolutePath}" }
     }.getOrNull()
 
     private fun readIndexHeader(file: File, data: DataInputStream): ParsedIndexHeader? {
@@ -236,11 +237,11 @@ class RecordedSessionRepositoryImpl(
         runCatching { data.readInt() }.getOrNull() ?: return null
 
         if (magic != INDEX_MAGIC) {
-            logger.warn { "[sessions] invalid index magic in ${file.absolutePath}: $magic" }
+            logger.warn { "invalid index magic in ${file.absolutePath}: $magic" }
             return null
         }
         if (recordSize < INDEX_RECORD_SIZE) {
-            logger.warn { "[sessions] invalid index recordSize=$recordSize in ${file.absolutePath}" }
+            logger.warn { "invalid index recordSize=$recordSize in ${file.absolutePath}" }
             return null
         }
 

@@ -26,8 +26,8 @@ import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.impl.rememberNavigationState
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.theme.ThemeMode
-import com.project.analyzer.utils.LogbackConfigurator
 import com.project.analyzer.utils.SingleInstanceGuard
+import com.project.analyzer.utils.logger.LogbackConfigurator
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
@@ -41,16 +41,10 @@ suspend fun main() {
         appGraph.appLifecycle.start()
         awaitApplication {
             CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
-                var themeMode by remember { mutableStateOf(ThemeMode.System) }
-
-                LaunchedEffect(Unit) {
-                    appGraph.themeRepository.observeThemeMode().collect { mode ->
-                        themeMode = mode
-                    }
-                }
+                val themeMode by appGraph.themeRepository.observeThemeMode().collectAsState(ThemeMode.System)
 
                 SimAnalyzerTheme(themeMode = themeMode) {
-                    CrashBoundary {
+                    CrashBoundary(appVersion = BuildConfig.VERSION_NAME) {
                         App(appGraph)
                     }
                 }
@@ -95,7 +89,8 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
         val density = LocalDensity.current
         LaunchedEffect(density) {
             val minW = with(density) { 800.dp.roundToPx() }
-            val minH = with(density) { 500.dp.roundToPx() }
+            val minH = with(density) { 600.dp.roundToPx() }
+
             window.minimumSize = Dimension(minW, minH)
         }
 

@@ -10,7 +10,8 @@ import com.project.analyzer.game.impl.user32Ex
 import com.project.analyzer.impl.setup.WindowsOverlayRegion
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.leak.api.LeakCanaryRuntime
-import com.project.analyzer.utils.NsRateLimiter
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.User32
@@ -30,7 +31,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
-import org.slf4j.LoggerFactory
 import java.awt.MouseInfo
 import java.awt.Rectangle
 import java.awt.Window
@@ -38,13 +38,14 @@ import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import javax.swing.SwingUtilities
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 class OverlayController(
     private val gameDetector: GameDetector,
     private val hitRegions: HitRegions,
     private val coroutineDispatcher: CoroutineDispatcher,
 ) {
+
+    private val logger = logger()
 
     private val user32 = User32.INSTANCE
 
@@ -75,8 +76,6 @@ class OverlayController(
     private var ignoreForegroundUntilNs: Long = 0L
 
     private var resizeListener: ComponentAdapter? = null
-    private val logger = LoggerFactory.getLogger(OverlayController::class.java.name)
-    private val invalidHwndLimiter = NsRateLimiter(2.seconds.inWholeNanoseconds)
 
     fun attach(window: Window, scope: CoroutineScope) {
         overlayWindow = window
@@ -98,7 +97,7 @@ class OverlayController(
         startClickThroughController(scope)
         startBoundsGuard(scope)
 
-        logger.info("Attach to window ${window.name} overlayHwnd=$overlayHwnd")
+        logger.info { "Attach to window ${window.name} overlayHwnd=$overlayHwnd" }
     }
 
     fun beginDrag() {
@@ -118,7 +117,7 @@ class OverlayController(
 
         val captureResult = user32Ex.SetCapture(hwnd)
         val lastErr = Native.getLastError()
-        logger.info("OverlayController.beginDrag: SetCapture result=$captureResult lastError=$lastErr")
+        logger.info { "SetCapture result=$captureResult lastError=$lastErr" }
     }
 
     fun endDrag() {
@@ -128,7 +127,7 @@ class OverlayController(
 
         val releaseResult = user32Ex.ReleaseCapture()
         val lastErr = Native.getLastError()
-        logger.info("OverlayController.endDrag: ReleaseCapture result=$releaseResult lastError=$lastErr")
+        logger.info { "ReleaseCapture result=$releaseResult lastError=$lastErr" }
 
         val window = overlayWindow ?: return
 
@@ -155,7 +154,7 @@ class OverlayController(
             }
         }
 
-        logger.info("Detach from window ${overlayWindow?.name} overlayHwnd=$overlayHwnd")
+        logger.info { "Detach from window ${overlayWindow?.name} overlayHwnd=$overlayHwnd" }
 
         val closingHwnd = overlayHwnd
         expectedBounds = null
@@ -209,9 +208,9 @@ class OverlayController(
         applyBoundsIfNeeded(window, expected)
 
         if (!window.isVisible) {
-            logger.info(
-                "Enable full screen window to bind it to monitor size monitor id ${gameInfo.monitor.id} ${gameInfo.monitor.bounds}",
-            )
+            logger.info {
+                "Enable full screen window to bind it to monitor size monitor id ${gameInfo.monitor.id} ${gameInfo.monitor.bounds}"
+            }
             WindowsOverlayRegion.resetToFullWindow(window)
             window.isVisible = true
         }
@@ -399,7 +398,7 @@ class OverlayController(
         )
 
         val err = Native.getLastError()
-        logger.info("Set app under apps: SetWindowPos ok=$result lastError=$err hwnd=${hwnd.pointer}")
+        logger.info { "Set app under apps: SetWindowPos ok=$result lastError=$err hwnd=${hwnd.pointer}" }
     }
 
     private fun requestGameForeground() {
@@ -490,8 +489,10 @@ class OverlayController(
 
     private fun ensureValidHwnd(hwnd: HWND?, tag: String): Boolean {
         val valid = isValidHwnd(hwnd)
-        if (!valid && invalidHwndLimiter.shouldLog(System.nanoTime())) {
-            logger.warn("OverlayController.$tag: invalid HWND=${hwnd?.pointer}")
+        if (!valid) {
+            logger.atWarn(RATE_LIMITED) {
+                message = "$tag: invalid HWND=${hwnd?.pointer}"
+            }
         }
         return valid
     }

@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.WindowScope
 import com.project.analyzer.app.win.WindowsFrameController
 import com.project.analyzer.theme.SimAnalyzerTheme
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 
 @Composable
 fun WindowScope.FrameDecorator(content: @Composable (FrameDecoratorState) -> Unit) {
@@ -43,10 +43,6 @@ fun WindowScope.FrameDecorator(content: @Composable (FrameDecoratorState) -> Uni
             .windowInsetsPadding(paddingInsets),
         color = SimAnalyzerTheme.material.background,
     ) {
-        content(
-            FrameDecoratorState(
-                win = winController,
-            ),
-        )
+        content(FrameDecoratorState(win = winController))
     }
 }

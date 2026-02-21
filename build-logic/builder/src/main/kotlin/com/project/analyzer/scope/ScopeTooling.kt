@@ -2,44 +2,8 @@ package com.project.analyzer.scope
 
 import com.project.analyzer.ProjectDsl
 import com.project.analyzer.base.TestScope
-import com.project.analyzer.base.configureLeakCanaryJvm
-import com.project.analyzer.base.configureMetro
-import com.project.analyzer.base.configureTest
 import com.project.analyzer.kmp.DesktopBuildConfigSpec
 import com.project.analyzer.kmp.Fields
-import com.project.analyzer.kmp.configureDesktopBuildConfig
-import com.project.analyzer.kmp.configureLogger
-import com.project.analyzer.kmp.configureProtoSerializer
-import dev.zacsweers.metro.gradle.MetroPluginExtension
-
-internal fun ProjectScope.metroImpl(block: MetroPluginExtension.() -> Unit = {}) {
-    configureMetro(block)
-}
-
-internal fun ProjectScope.protoImpl() {
-    configureProtoSerializer()
-}
-
-internal fun ProjectScope.loggerImpl() {
-    configureLogger()
-}
-
-internal fun ProjectScope.leakCanaryImpl() {
-    configureLeakCanaryJvm()
-}
-
-internal fun ProjectScope.testImpl(config: TestOptions.() -> Unit = { both() }) {
-    val options = TestOptions().apply(config)
-    configureTest {
-        if (options.delegate.enableUnit) unit()
-        if (options.delegate.enableUi) ui()
-    }
-}
-
-internal fun ProjectScope.buildConfigImpl(block: BuildConfigOptions.() -> Unit) {
-    val options = BuildConfigOptions().apply(block)
-    configureDesktopBuildConfig(options.spec)
-}
 
 @ProjectDsl
 class TestOptions internal constructor(

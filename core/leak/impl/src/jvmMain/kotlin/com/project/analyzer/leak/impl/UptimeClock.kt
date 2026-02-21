@@ -1,8 +1,10 @@
 package com.project.analyzer.leak.impl
 
-import leakcanary.Clock
+import leakcanary.UptimeClock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 
-internal object UptimeClock : Clock {
+internal object UptimeClock : UptimeClock {
 
-    override fun uptimeMillis(): Long = System.nanoTime() / 1_000_000L
+    override fun uptime(): Duration = System.nanoTime().nanoseconds
 }

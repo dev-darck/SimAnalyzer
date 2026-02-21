@@ -48,7 +48,8 @@ internal fun buildGameSelectionUi(
     variantOverride: GameId? = null,
     options: List<GameSelectionOptionUi> = defaultGameSelectionOptions(),
 ): GameSelectionUi {
-    val preferredSelection = if (selection is GameSelection.Manual &&
+    val preferredSelection = if (
+        selection is GameSelection.Manual &&
         selection.game == GameId.AC &&
         variantOverride != null &&
         variantOverride.isAcFamily()

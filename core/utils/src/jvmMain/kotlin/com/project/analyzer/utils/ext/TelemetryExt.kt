@@ -90,6 +90,6 @@ public fun Int.toRpmScale(): Float = this / 1000f
  * Calculates max RPM scale for gauge (rounded up to next thousand)
  */
 public fun Int.toMaxRpmScale(): Int {
-    if (this <= 0) return 10
+    if (this <= 3) return 10
     return (this / 1000) + 1
 }

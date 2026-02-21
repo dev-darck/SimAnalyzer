@@ -21,6 +21,8 @@ import com.project.analyzer.utils.ext.toDisplayGear
 import com.project.analyzer.utils.ext.toMaxRpmScale
 import com.project.analyzer.utils.ext.toRpmScale
 import com.project.analyzer.utils.ext.toSteerDegrees
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -29,6 +31,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Inject
 internal class LiveScreenStateMapper {
 
+    private val logger = logger()
     private val gearFilter = GearFilter(100.milliseconds)
     private val sectorFilter = SectorsFilter(500.milliseconds)
 
@@ -37,7 +40,14 @@ internal class LiveScreenStateMapper {
         val rpm = car.engine?.rpm ?: 0
         val sessionMaxRpm = frame.session?.car?.maxRpm ?: 0
         val engineMaxRpm = car.engine?.maxRpm ?: 0
-        val maxRpm = maxOf(engineMaxRpm, sessionMaxRpm).takeIf { it > 0 } ?: 8000
+
+        val safeSessionMax = sessionMaxRpm.takeIf { it in 1..MAX_SANE_RPM } ?: 0
+        val safeEngineMax = engineMaxRpm.takeIf { it in 1..MAX_SANE_RPM } ?: 0
+        val maxRpm = maxOf(safeEngineMax, safeSessionMax).takeIf { it > 0 } ?: DEFAULT_MAX_RPM
+
+        logger.atInfo(RATE_LIMITED) {
+            message = "rpm=$rpm maxRpm=$maxRpm (engine=$engineMaxRpm session=$sessionMaxRpm)"
+        }
 
         val fuel = car.fuel
         val (deltaLastLap, isDeltaLastLapPositive) = calculateLastLapDelta(frame)
@@ -186,5 +196,12 @@ internal class LiveScreenStateMapper {
             slip = slip,
             brakeTempC = brakeTemp,
         )
+    }
+
+    private companion object {
+
+        const val MAX_SANE_RPM = 25_000
+
+        const val DEFAULT_MAX_RPM = 8000
     }
 }

@@ -16,7 +16,8 @@ import com.project.analyzer.telemetry.recording.impl.file.model.SessionCompressi
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionEvent
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionKey
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
@@ -46,6 +47,7 @@ class FileTelemetryRecorder(
     private val ioDispatcher: CoroutineDispatcher,
 ) : TelemetryRecorder {
 
+    private val logger = logger()
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private val commandQueue = Channel<RecordCommand>(capacity = DEFAULT_QUEUE_CAPACITY)
     private val compressionQueue = Channel<SessionCompressionTask>(capacity = Channel.UNLIMITED)
@@ -120,7 +122,7 @@ class FileTelemetryRecorder(
             runCatching {
                 compressor.compress(task)
             }.onFailure { error ->
-                logger.warn(error) { "[recording] compression failed for ${task.metaFile.absolutePath}" }
+                logger.warn(error) { "compression failed for ${task.metaFile.absolutePath}" }
             }
         }
     }
@@ -150,6 +152,13 @@ class FileTelemetryRecorder(
 
         openSession(command.descriptor, command.config)?.let { opened ->
             sessions[key] = opened
+            logger.info {
+                "session opened id=${opened.metadata.sessionId} " +
+                    "samplingRate=${opened.metadata.samplingRateHz}Hz " +
+                    "sampleIntervalNs=${opened.sampleIntervalNs} " +
+                    "payloadSize=${opened.metadata.payloadSize}B " +
+                    "dir=${opened.metaFile.parentFile?.absolutePath}"
+            }
         }
     }
 
@@ -174,6 +183,7 @@ class FileTelemetryRecorder(
         val session = sessions[key] ?: return
 
         session.isPaused = true
+        logger.debug { "session paused id=${command.sessionId} reason=${command.reason}" }
         writeEvent(
             session,
             SessionEvent(
@@ -190,6 +200,7 @@ class FileTelemetryRecorder(
         val session = sessions[key] ?: return
 
         session.isPaused = false
+        logger.debug { "session resumed id=${command.sessionId}" }
         writeEvent(
             session,
             SessionEvent(
@@ -211,6 +222,11 @@ class FileTelemetryRecorder(
         descriptor: TelemetrySessionDescriptor,
         config: TelemetryAcquisitionConfig,
     ): ActiveSession? {
+        if (!config.recordingEnabled) {
+            logger.debug { "recording disabled, skipping session ${descriptor.sessionId}" }
+            return null
+        }
+
         val root = resolveStorageRoot(config.storageLocation) ?: return null
         val normalizedGameId = normalizeGameId(descriptor.gameId)
         val dir = createSessionDir(root, buildSessionDirName(descriptor))
@@ -231,7 +247,7 @@ class FileTelemetryRecorder(
                 OutputStreamWriter(FileOutputStream(eventsFile), Charsets.UTF_8),
             )
         } catch (error: IOException) {
-            logger.warn(error) { "[recording] failed to create writers for session ${descriptor.sessionId}" }
+            logger.warn(error) { "failed to create writers for session ${descriptor.sessionId}" }
             dir.deleteRecursively()
             return null
         }
@@ -296,10 +312,9 @@ class FileTelemetryRecorder(
                 ),
             )
 
-            logger.info { "[recording] session started id=${descriptor.sessionId} dir=${dir.absolutePath}" }
             session
         }.onFailure { error ->
-            logger.warn(error) { "[recording] failed to initialize session ${descriptor.sessionId}" }
+            logger.warn(error) { "failed to initialize session ${descriptor.sessionId}" }
             closeQuietly(session.eventsWriter)
             closeQuietly(session.indexOut)
             closeQuietly(session.dataOut)
@@ -323,10 +338,16 @@ class FileTelemetryRecorder(
             return
         }
 
+        val now = payload.timestampNs
+        if (!session.shouldSample(now)) {
+            session.markSkipped()
+            return
+        }
+
         val payloadSize = payload.payload.size
         if (payloadSize <= 0) {
             session.markDropped()
-            logger.warn { "[recording] empty payload dropped for session ${session.metadata.sessionId}" }
+            logger.warn { "empty payload dropped for session ${session.metadata.sessionId}" }
             return
         }
 
@@ -334,13 +355,13 @@ class FileTelemetryRecorder(
         if (!session.headerWritten) {
             if (payloadType.isBlank()) {
                 session.markDropped()
-                logger.warn { "[recording] payload type missing for session ${session.metadata.sessionId}" }
+                logger.warn { "payload type missing for session ${session.metadata.sessionId}" }
                 return
             }
             writeHeader(session, payloadType, payloadSize)
         } else if (payload.payloadType.isNotBlank() && payload.payloadType != session.metadata.payloadType) {
             session.markDropped()
-            logger.warn { "[recording] payload type mismatch for session ${session.metadata.sessionId}" }
+            logger.warn { "payload type mismatch for session ${session.metadata.sessionId}" }
             return
         }
 
@@ -350,7 +371,8 @@ class FileTelemetryRecorder(
         ) {
             session.payloadSizeMismatchLogged = true
             logger.warn {
-                "[recording] payload size changed for session ${session.metadata.sessionId}; storing per-frame sizes"
+                "payload size changed for session ${session.metadata.sessionId}: " +
+                    "expected=${session.metadata.payloadSize} actual=$payloadSize"
             }
         }
 
@@ -382,11 +404,35 @@ class FileTelemetryRecorder(
             if (session.shouldFlush(System.nanoTime())) {
                 flushSessionOutputs(session)
                 persistMetadata(session)
+                logSessionStats(session)
             }
         } catch (error: IOException) {
             session.markDropped()
-            logger.error(error) { "[recording] write failed for session ${session.metadata.sessionId}" }
+            logger.error(error) { "write failed for session ${session.metadata.sessionId}" }
             closeSession(session, endReason = "io_error")
+        }
+    }
+
+    private fun logSessionStats(session: ActiveSession) {
+        val totalDataBytes = session.framesBytesWritten
+        val indexBytes = (session.frameCount * INDEX_RECORD_SIZE) + INDEX_HEADER_SIZE
+        val totalBytes = totalDataBytes + indexBytes
+
+        val durationSec = session.recordingDurationSec()
+        val effectiveHz = if (durationSec > 0) session.frameCount.toDouble() / durationSec else 0.0
+
+        logger.atInfo(RATE_LIMITED) {
+            message = "recording stats id=${session.metadata.sessionId}: " +
+                "written=${session.frameCount} " +
+                "received=${session.receivedFrames} " +
+                "skipped=${session.skippedFrames} " +
+                "dropped=${session.droppedFrames} " +
+                "effectiveHz=${"%.1f".format(effectiveHz)} " +
+                "targetHz=${session.metadata.samplingRateHz} " +
+                "frames=${formatSize(totalDataBytes)} " +
+                "index=${formatSize(indexBytes)} " +
+                "total=${formatSize(totalBytes)} " +
+                "duration=${"%.1f".format(durationSec)}s"
         }
     }
 
@@ -420,12 +466,27 @@ class FileTelemetryRecorder(
     private fun closeSession(session: ActiveSession, endReason: String?) {
         if (session.isClosed) return
 
+        val durationSec = session.recordingDurationSec()
+        val totalDataBytes = session.framesBytesWritten
+        val indexBytes = (session.frameCount * INDEX_RECORD_SIZE) + INDEX_HEADER_SIZE
+
+        logger.info {
+            "session closing id=${session.metadata.sessionId} reason=$endReason " +
+                "written=${session.frameCount} received=${session.receivedFrames} " +
+                "skipped=${session.skippedFrames} dropped=${session.droppedFrames} " +
+                "frames=${formatSize(totalDataBytes)} index=${formatSize(indexBytes)} " +
+                "total=${formatSize(totalDataBytes + indexBytes)} " +
+                "duration=${"%.1f".format(durationSec)}s " +
+                "effectiveHz=${"%.1f".format(if (durationSec > 0) session.frameCount.toDouble() / durationSec else 0.0)}"
+        }
+
         val closedSuccessfully = runCatching {
             session.metadata = session.metadata.copy(
                 endedAtMs = System.currentTimeMillis(),
                 frameCount = session.frameCount,
                 receivedFrames = session.receivedFrames,
                 droppedFrames = session.droppedFrames,
+                skippedFrames = session.skippedFrames,
                 firstTimestampNs = session.firstFrameTimestampNs,
                 lastTimestampNs = session.lastFrameTimestampNs,
             )
@@ -446,7 +507,7 @@ class FileTelemetryRecorder(
             closeQuietly(session.dataOut)
         }.onFailure { error ->
             logger.warn(error) {
-                "[recording] failed to close session ${session.metadata.sessionId} reason=$endReason"
+                "failed to close session ${session.metadata.sessionId} reason=$endReason"
             }
             closeQuietly(session.eventsWriter)
             closeQuietly(session.indexOut)
@@ -525,7 +586,7 @@ class FileTelemetryRecorder(
                 flush()
             }
         }.onFailure { error ->
-            logger.warn(error) { "[recording] failed to write event for session ${session.metadata.sessionId}" }
+            logger.warn(error) { "failed to write event for session ${session.metadata.sessionId}" }
         }
     }
 
@@ -534,6 +595,7 @@ class FileTelemetryRecorder(
             frameCount = session.frameCount,
             receivedFrames = session.receivedFrames,
             droppedFrames = session.droppedFrames,
+            skippedFrames = session.skippedFrames,
             firstTimestampNs = session.firstFrameTimestampNs,
             lastTimestampNs = session.lastFrameTimestampNs,
         )
@@ -550,7 +612,7 @@ class FileTelemetryRecorder(
                 tmp.delete()
             }
         }.onFailure { error ->
-            logger.warn(error) { "[recording] failed to write metadata for session ${metadata.sessionId}" }
+            logger.warn(error) { "failed to write metadata for session ${metadata.sessionId}" }
         }
     }
 
@@ -568,24 +630,24 @@ class FileTelemetryRecorder(
             ),
         )
         if (result.isFailure) {
-            logger.warn { "[recording] compression task dropped for session ${session.metadata.sessionId}" }
+            logger.warn { "compression task dropped for session ${session.metadata.sessionId}" }
         }
     }
 
     private fun resolveStorageRoot(rawPath: String): File? {
         val path = rawPath.trim()
         if (path.isBlank()) {
-            logger.warn { "[recording] storage location is empty; recording disabled" }
+            logger.warn { "storage location is empty; recording disabled" }
             return null
         }
 
         val dir = File(path)
         if (!dir.exists() && !dir.mkdirs()) {
-            logger.warn { "[recording] cannot create storage directory: $path" }
+            logger.warn { "cannot create storage directory: $path" }
             return null
         }
         if (!dir.isDirectory || !dir.canWrite()) {
-            logger.warn { "[recording] storage directory not writable: $path" }
+            logger.warn { "storage directory not writable: $path" }
             return null
         }
 
@@ -627,5 +689,12 @@ class FileTelemetryRecorder(
     private companion object {
 
         val UNSAFE_DIR_CHARS_REGEX = Regex("[^a-z0-9]+")
+        const val INDEX_HEADER_SIZE = 16L
+
+        fun formatSize(bytes: Long): String = when {
+            bytes < 1024 -> "${bytes}B"
+            bytes < 1024 * 1024 -> "${"%.1f".format(bytes / 1024.0)}KB"
+            else -> "${"%.2f".format(bytes / (1024.0 * 1024.0))}MB"
+        }
     }
 }

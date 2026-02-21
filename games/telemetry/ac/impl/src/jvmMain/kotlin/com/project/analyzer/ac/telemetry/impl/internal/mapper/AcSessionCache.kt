@@ -9,12 +9,16 @@ import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.api.model.session.CarInfo
 import com.project.analyzer.telemetry.api.model.session.DriverInfo
 import com.project.analyzer.telemetry.api.model.session.TrackInfo
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(SessionScope::class)
 class AcSessionCache {
+
+    private val logger = logger()
 
     var trackInfo: TrackInfo? = null
         private set
@@ -98,6 +102,22 @@ class AcSessionCache {
         lastCarModel = carModelNow
         sectorCount = statics.sectorCount.coerceIn(1, 10)
 
+        val maxRpm = statics.maxRpm.sanitizeOrNull(0, MAX_RPM)
+        val maxTorque = statics.maxTorque.sanitizeOrNull(0f, MAX_TORQUE_NM)
+        val maxPower = statics.maxPower.sanitizeOrNull(0f, MAX_POWER_W)
+        val maxFuel = statics.maxFuel.sanitizeOrNull(0f, MAX_FUEL_LITERS)
+        val maxTurboBoost = statics.maxTurboBoost.sanitizeOrNull(0f, MAX_TURBO_BOOST)
+        val trackLength = statics.trackSPlineLength.sanitizeOrNull(0f, MAX_TRACK_LENGTH_M)
+
+        if (statics.maxRpm != (maxRpm ?: 0) || statics.maxTorque != (maxTorque ?: 0f)) {
+            logger.atWarn(RATE_LIMITED) {
+                message = "statics sanity: maxRpm=${statics.maxRpm}→$maxRpm " +
+                    "maxTorque=${statics.maxTorque}→$maxTorque " +
+                    "maxPower=${statics.maxPower}→$maxPower " +
+                    "maxFuel=${statics.maxFuel}→$maxFuel"
+            }
+        }
+
         trackInfo = TrackInfo(
             trackId = lastTrackId,
             trackName = listOf(rawTrack, rawLayout)
@@ -106,17 +126,17 @@ class AcSessionCache {
                 .ifBlank { rawTrack },
             layoutId = rawLayout.takeIf { it.isNotBlank() },
             sectorCount = sectorCount,
-            lengthMeters = statics.trackSPlineLength,
+            lengthMeters = trackLength,
         )
 
         carInfo = CarInfo(
             carModel = lastCarModel,
             carSkin = statics.carSkin.toKString().takeIf { it.isNotBlank() },
-            maxTorqueNm = statics.maxTorque,
-            maxPowerW = statics.maxPower,
-            maxRpm = statics.maxRpm,
-            maxFuelLiters = statics.maxFuel,
-            maxTurboBoost = statics.maxTurboBoost.takeIf { it > 0 },
+            maxTorqueNm = maxTorque,
+            maxPowerW = maxPower,
+            maxRpm = maxRpm,
+            maxFuelLiters = maxFuel,
+            maxTurboBoost = maxTurboBoost,
             tyreRadius = statics.tyreRadius.copyOf(),
             suspensionMaxTravel = statics.suspensionMaxTravel.copyOf(),
             dryTyresName = statics.dryTyresName.toKString().takeIf { it.isNotBlank() },
@@ -154,5 +174,21 @@ class AcSessionCache {
             changed = true
             return newValue
         }
+    }
+
+    private companion object {
+
+        const val MAX_RPM = 25_000
+        const val MAX_TORQUE_NM = 5_000f
+        const val MAX_POWER_W = 2_000_000f // 2MW ≈ 2700hp
+        const val MAX_FUEL_LITERS = 500f
+        const val MAX_TURBO_BOOST = 10f
+        const val MAX_TRACK_LENGTH_M = 100_000f // 100km — longest circuits are ~25km
+
+        fun Int.sanitizeOrNull(min: Int, max: Int): Int? =
+            if (this in min..max) this else null
+
+        fun Float.sanitizeOrNull(min: Float, max: Float): Float? =
+            if (this.isFinite() && this in min..max) this else null
     }
 }

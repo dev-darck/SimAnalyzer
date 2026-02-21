@@ -15,7 +15,7 @@ import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.lmu.api.model.LmuTelemetrySnapshot
 import com.project.analyzer.telemetry.lmu.impl.mapper.LmuTelemetryMapper
 import com.project.analyzer.telemetry.lmu.impl.recording.LmuTelemetryRecordingEmitter
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler

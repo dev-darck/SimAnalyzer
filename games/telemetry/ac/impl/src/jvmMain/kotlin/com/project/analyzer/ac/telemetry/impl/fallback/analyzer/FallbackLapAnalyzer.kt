@@ -9,7 +9,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn

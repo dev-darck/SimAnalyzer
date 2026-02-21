@@ -11,6 +11,8 @@ import com.project.analyzer.telemetry.api.model.car.CarFrame
 import com.project.analyzer.telemetry.api.model.car.ControlsFrame
 import com.project.analyzer.telemetry.api.model.car.EngineFrame
 import com.project.analyzer.telemetry.api.model.car.FuelFrame
+import com.project.analyzer.utils.logger.RATE_LIMITED
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
@@ -18,13 +20,15 @@ import dev.zacsweers.metro.SingleIn
 @SingleIn(SessionScope::class)
 class CarMapper {
 
+    private val logger = logger()
+
     fun map(physics: SPageFilePhysics, graphics: SPageFileGraphics, statics: SPageFileStatic): CarFrame = CarFrame(
         controls = mapControls(physics),
         engine = mapEngine(physics, graphics, statics),
         fuel = mapFuel(physics, graphics, statics),
         assists = mapAssists(physics, graphics),
 
-        speedKmh = physics.speedKmh,
+        speedKmh = physics.speedKmh.sanitize(0f, MAX_SPEED_KMH),
         velocity = physics.velocity.toVec3(),
         localVelocity = physics.localVelocity.toVec3(),
         accelerationG = physics.accG.toVec3(),
@@ -55,11 +59,11 @@ class CarMapper {
     )
 
     private fun mapControls(physics: SPageFilePhysics): ControlsFrame = ControlsFrame(
-        throttle = physics.gas,
-        brake = physics.brake,
-        clutch = physics.clutch,
+        throttle = physics.gas.sanitize(0f, 1f),
+        brake = physics.brake.sanitize(0f, 1f),
+        clutch = physics.clutch.sanitize(0f, 1f),
         steerAngle = physics.steerAngle,
-        brakeBias = physics.brakeBias,
+        brakeBias = physics.brakeBias.sanitize(0f, 1f),
         brakePressureFL = physics.brakePressure[0],
         brakePressureFR = physics.brakePressure[1],
         brakePressureRL = physics.brakePressure[2],
@@ -70,36 +74,53 @@ class CarMapper {
         physics: SPageFilePhysics,
         graphics: SPageFileGraphics,
         statics: SPageFileStatic,
-    ): EngineFrame = EngineFrame(
-        gear = physics.gear,
-        rpm = physics.rpm,
-        maxRpm = statics.maxRpm,
-        currentMaxRpm = physics.currentMaxRPM,
+    ): EngineFrame {
+        val rawRpm = physics.rpm
+        val rawMaxRpm = statics.maxRpm
+        val rawCurrentMaxRpm = physics.currentMaxRPM
 
-        turboBoost = physics.turboBoost.takeIf { it > 0 },
+        val rpm = rawRpm.sanitize(0, MAX_RPM)
+        val maxRpm = rawMaxRpm.sanitize(0, MAX_RPM)
+        val currentMaxRpm = rawCurrentMaxRpm.sanitize(0f, MAX_RPM.toFloat())
 
-        kersCharge = physics.kersCharge.takeIf { it > 0 },
-        kersInput = physics.kersInput.takeIf { it > 0 },
-        kersCurrentKJ = physics.kersCurrentKJ.takeIf { it > 0 },
+        if (rawRpm != rpm || rawMaxRpm != maxRpm) {
+            logger.atWarn(RATE_LIMITED) {
+                message = "RPM sanity clamped: rpm=$rawRpm→$rpm maxRpm=$rawMaxRpm→$maxRpm " +
+                    "currentMaxRpm=$rawCurrentMaxRpm→$currentMaxRpm"
+            }
+        }
 
-        ignitionOn = physics.ignitionOn.toBoolean(),
-        starterEngineOn = physics.starterEngineOn.toBoolean(),
-        isEngineRunning = physics.isEngineRunning.toBoolean(),
+        return EngineFrame(
+            gear = physics.gear.sanitize(-1, MAX_GEAR),
+            rpm = rpm,
+            maxRpm = maxRpm,
+            currentMaxRpm = currentMaxRpm,
 
-        waterTempC = physics.waterTemp,
-        exhaustTempC = graphics.exhaustTemperature,
+            turboBoost = physics.turboBoost.takeIf { it in 0f..MAX_TURBO_BOOST },
 
-        engineBrake = physics.engineBrake,
-        autoShifterOn = physics.autoShifterOn.toBoolean(),
-    )
+            kersCharge = physics.kersCharge.takeIf { it in 0f..1f },
+            kersInput = physics.kersInput.takeIf { it in 0f..1f },
+            kersCurrentKJ = physics.kersCurrentKJ.takeIf { it in 0f..MAX_KERS_KJ },
+
+            ignitionOn = physics.ignitionOn.toBoolean(),
+            starterEngineOn = physics.starterEngineOn.toBoolean(),
+            isEngineRunning = physics.isEngineRunning.toBoolean(),
+
+            waterTempC = physics.waterTemp.sanitize(MIN_TEMP_C, MAX_TEMP_C),
+            exhaustTempC = graphics.exhaustTemperature.sanitize(MIN_TEMP_C, MAX_EXHAUST_TEMP_C),
+
+            engineBrake = physics.engineBrake,
+            autoShifterOn = physics.autoShifterOn.toBoolean(),
+        )
+    }
 
     private fun mapFuel(physics: SPageFilePhysics, graphics: SPageFileGraphics, statics: SPageFileStatic): FuelFrame =
         FuelFrame(
-            fuelLiters = physics.fuel,
-            maxFuelLiters = statics.maxFuel,
-            fuelPerLapLiters = graphics.fuelXLap.takeIf { it > 0 },
-            fuelUsedLiters = graphics.usedFuel,
-            fuelEstimatedLaps = graphics.fuelEstimatedLaps.takeIf { it > 0 },
+            fuelLiters = physics.fuel.sanitize(0f, MAX_FUEL_LITERS),
+            maxFuelLiters = statics.maxFuel.sanitize(0f, MAX_FUEL_LITERS),
+            fuelPerLapLiters = graphics.fuelXLap.takeIf { it in 0f..MAX_FUEL_LITERS },
+            fuelUsedLiters = graphics.usedFuel.sanitize(0f, MAX_FUEL_LITERS),
+            fuelEstimatedLaps = graphics.fuelEstimatedLaps.takeIf { it in 0f..MAX_FUEL_ESTIMATED_LAPS },
             mfdFuelToAdd = graphics.mfdFuelToAdd,
         )
 
@@ -154,6 +175,26 @@ class CarMapper {
         }
 
         return null
+    }
+
+    private companion object {
+
+        const val MAX_RPM = 25_000 // F1 engines peak ~15k; 25k is generous
+        const val MAX_GEAR = 12 // Most cars have ≤8 gears
+        const val MAX_SPEED_KMH = 500f // Fastest road cars ~450 km/h
+        const val MAX_TURBO_BOOST = 10f // Bar
+        const val MAX_KERS_KJ = 10_000f
+        const val MAX_FUEL_LITERS = 500f
+        const val MAX_FUEL_ESTIMATED_LAPS = 999f
+        const val MIN_TEMP_C = -50f
+        const val MAX_TEMP_C = 200f // Water temp
+        const val MAX_EXHAUST_TEMP_C = 1500f
+
+        fun Int.sanitize(min: Int, max: Int): Int =
+            if (this in min..max) this else min
+
+        fun Float.sanitize(min: Float, max: Float): Float =
+            if (this.isFinite() && this in min..max) this else min
     }
 }
 

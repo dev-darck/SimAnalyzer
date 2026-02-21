@@ -3,7 +3,7 @@ package com.project.analyzer.telemetry.recording.impl.file
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionCompressionTask
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
-import com.project.analyzer.utils.logger
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.serialization.json.Json
