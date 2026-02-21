@@ -11,6 +11,7 @@ import org.jetbrains.compose.desktop.application.dsl.JvmApplication
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 internal fun ProjectScope.configureAppImpl(scope: JvmApplication.() -> Unit = {}) {
+    detektConfiguration()
     configureComposeKmp()
     configureDesktop(scope)
 }
@@ -20,6 +21,7 @@ internal fun ProjectScope.configureResourcesImpl() {
 }
 
 internal fun ProjectScope.configureDesktopAppImpl(scope: JvmApplication.() -> Unit = {}) {
+    detektConfiguration()
     configureDesktop(scope)
 }
 
@@ -34,6 +36,7 @@ internal fun ProjectScope.configureExplicitApiImpl() {
 }
 
 internal fun ProjectScope.configureLibraryImpl() {
+    detektConfiguration()
     configureKmpLibrary()
 }
 

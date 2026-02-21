@@ -23,10 +23,7 @@ import kotlin.system.exitProcess
 private val crashDialogShown = AtomicBoolean(false)
 
 @Composable
-fun CrashBoundary(
-    appVersion: String? = "dev",
-    content: @Composable () -> Unit
-) {
+fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) {
     val createCrashReport = remember { CreateCrashReportUseCase() }
 
     CompositionLocalProvider(
@@ -36,14 +33,16 @@ fun CrashBoundary(
                     throwable = throwable,
                     thread = Thread.currentThread(),
                     title = "SimAnalyzer crashed (WindowExceptionHandler)",
-                    appVersion = appVersion
+                    appVersion = appVersion,
                 )
 
                 if (!crashDialogShown.compareAndSet(
                         expectedValue = false,
-                        newValue = true
+                        newValue = true,
                     )
-                ) return@WindowExceptionHandler
+                ) {
+                    return@WindowExceptionHandler
+                }
 
                 window.isVisible = false
 
@@ -61,16 +60,13 @@ fun CrashBoundary(
                     }
                 }
             }
-        }
+        },
     ) {
         content()
     }
 }
 
-private fun showCrashDialog(
-    owner: Window,
-    crashReport: CrashReport,
-) {
+private fun showCrashDialog(owner: Window, crashReport: CrashReport) {
     val b = owner.graphicsConfiguration.bounds
 
     val desiredW = 980

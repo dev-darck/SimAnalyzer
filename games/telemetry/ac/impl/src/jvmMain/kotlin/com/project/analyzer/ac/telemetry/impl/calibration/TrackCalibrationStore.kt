@@ -6,6 +6,4 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 @DataStoreSerializer
-internal data class TrackCalibrationStore(
-    val calibrations: List<TrackCalibration> = emptyList()
-)
+internal data class TrackCalibrationStore(val calibrations: List<TrackCalibration> = emptyList())

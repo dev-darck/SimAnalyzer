@@ -3,15 +3,9 @@ package com.project.analyzer.calibration.trackmap
 import com.project.analyzer.math.Vec2
 import kotlin.math.abs
 
-class TrackMapWidthProfiler(
-    private val stats: TrackMapStatsCalculator,
-    private val minPointsToSave: Int
-) {
+class TrackMapWidthProfiler(private val stats: TrackMapStatsCalculator, private val minPointsToSave: Int) {
 
-    fun onLapAccepted(
-        runtime: TrackMapRecorderRuntime,
-        completedLapPoints: List<Vec2>
-    ): String? {
+    fun onLapAccepted(runtime: TrackMapRecorderRuntime, completedLapPoints: List<Vec2>): String? {
         if (completedLapPoints.size < minPointsToSave) return null
 
         if (runtime.centerlinePoints.isEmpty()) {
@@ -31,7 +25,7 @@ class TrackMapWidthProfiler(
     fun resolvePointWidths(
         runtime: TrackMapRecorderRuntime,
         points: List<Vec2>,
-        fallbackHalfWidthMeters: Float
+        fallbackHalfWidthMeters: Float,
     ): WidthResolution {
         if (points.isEmpty()) return WidthResolution()
 
@@ -65,14 +59,16 @@ class TrackMapWidthProfiler(
             }
         }
 
-        val averageWidth = (left.indices.sumOf { index ->
-            (left[index] + right[index]).toDouble()
-        } / left.size.coerceAtLeast(1)).toFloat()
+        val averageWidth = (
+            left.indices.sumOf { index ->
+                (left[index] + right[index]).toDouble()
+            } / left.size.coerceAtLeast(1)
+            ).toFloat()
 
         return WidthResolution(
             leftWidthsMeters = left,
             rightWidthsMeters = right,
-            averageTrackWidthMeters = averageWidth
+            averageTrackWidthMeters = averageWidth,
         )
     }
 
@@ -82,7 +78,7 @@ class TrackMapWidthProfiler(
         currentPosition: Vec2?,
         points: List<Vec2>,
         leftWidthsMeters: List<Float>,
-        rightWidthsMeters: List<Float>
+        rightWidthsMeters: List<Float>,
     ): String? {
         if (!recording) return null
         if (points.size < 2) return "Lap 1: build centerline first."
@@ -100,7 +96,7 @@ class TrackMapWidthProfiler(
             points = points,
             target = carPos,
             startIndex = runtime.lastGuidanceIndex,
-            window = WIDTH_SEARCH_WINDOW
+            window = WIDTH_SEARCH_WINDOW,
         )
         runtime.lastGuidanceIndex = nearest
         val center = points[nearest]
@@ -123,10 +119,7 @@ class TrackMapWidthProfiler(
         return "$baseHint · $direction ${"%.1f".format(absError)}m"
     }
 
-    private fun absorbEdgeLap(
-        runtime: TrackMapRecorderRuntime,
-        lapPoints: List<Vec2>
-    ) {
+    private fun absorbEdgeLap(runtime: TrackMapRecorderRuntime, lapPoints: List<Vec2>) {
         if (lapPoints.isEmpty() || runtime.centerlinePoints.size < 2) return
         runtime.ensureEdgeCapacity(runtime.centerlinePoints.size)
 
@@ -136,7 +129,7 @@ class TrackMapWidthProfiler(
                 points = runtime.centerlinePoints,
                 target = lapPoint,
                 startIndex = searchIndex,
-                window = WIDTH_SEARCH_WINDOW
+                window = WIDTH_SEARCH_WINDOW,
             )
 
             val center = runtime.centerlinePoints[searchIndex]
@@ -159,13 +152,11 @@ class TrackMapWidthProfiler(
         runtime.rightCoverageRatio = rightCovered.toFloat() / count
     }
 
-    private fun resolveCaptureTarget(runtime: TrackMapRecorderRuntime): CaptureTarget {
-        return when {
-            runtime.centerlinePoints.isEmpty() -> CaptureTarget.CENTERLINE
-            runtime.leftCoverageRatio < TARGET_EDGE_COVERAGE_RATIO -> CaptureTarget.LEFT_EDGE
-            runtime.rightCoverageRatio < TARGET_EDGE_COVERAGE_RATIO -> CaptureTarget.RIGHT_EDGE
-            else -> CaptureTarget.COMPLETE
-        }
+    private fun resolveCaptureTarget(runtime: TrackMapRecorderRuntime): CaptureTarget = when {
+        runtime.centerlinePoints.isEmpty() -> CaptureTarget.CENTERLINE
+        runtime.leftCoverageRatio < TARGET_EDGE_COVERAGE_RATIO -> CaptureTarget.LEFT_EDGE
+        runtime.rightCoverageRatio < TARGET_EDGE_COVERAGE_RATIO -> CaptureTarget.RIGHT_EDGE
+        else -> CaptureTarget.COMPLETE
     }
 
     private fun localNormal(points: List<Vec2>, index: Int): Vec2 {
@@ -177,12 +168,7 @@ class TrackMapWidthProfiler(
         return tangent.perpLeft().safeNormalized(Vec2.Up)
     }
 
-    private fun findNearestForwardIndex(
-        points: List<Vec2>,
-        target: Vec2,
-        startIndex: Int,
-        window: Int
-    ): Int {
+    private fun findNearestForwardIndex(points: List<Vec2>, target: Vec2, startIndex: Int, window: Int): Int {
         if (points.isEmpty()) return 0
         val count = points.size
         val safeStart = startIndex.coerceIn(0, count - 1)
@@ -217,14 +203,14 @@ class TrackMapWidthProfiler(
     data class WidthResolution(
         val leftWidthsMeters: List<Float> = emptyList(),
         val rightWidthsMeters: List<Float> = emptyList(),
-        val averageTrackWidthMeters: Float = TrackMapRecorderState.DEFAULT_AVERAGE_TRACK_WIDTH_METERS
+        val averageTrackWidthMeters: Float = TrackMapRecorderState.DEFAULT_AVERAGE_TRACK_WIDTH_METERS,
     )
 
     private enum class CaptureTarget {
         CENTERLINE,
         LEFT_EDGE,
         RIGHT_EDGE,
-        COMPLETE
+        COMPLETE,
     }
 
     companion object {

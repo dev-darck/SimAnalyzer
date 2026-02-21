@@ -33,12 +33,10 @@ internal fun LiveScreen() {
 }
 
 @Composable
-private fun Screen(
-    state: LiveScreenState = LiveScreenState()
-) {
+private fun Screen(state: LiveScreenState = LiveScreenState()) {
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        backgroundColor = SimAnalyzerTheme.material.background
+        backgroundColor = SimAnalyzerTheme.material.background,
     ) {
         item(key = "TelemetryBlock", isContentFull = true) {
             TelemetryBlock(
@@ -61,7 +59,7 @@ private fun Screen(
                 deltaLastTime = state.deltaLastTime,
                 deltaCurrentIsPositive = state.deltaCurrentIsPositive,
                 deltaLastIsPositive = state.deltaLastIsPositive,
-                lapCount = state.lapCount
+                lapCount = state.lapCount,
             )
         }
 
@@ -81,14 +79,14 @@ private fun Screen(
                 fuelLiters = state.fuelLiters,
                 estLaps = state.estLaps,
                 sectors = state.sectors,
-                fuelPerLap = state.fuelPerLap
+                fuelPerLap = state.fuelPerLap,
             )
         }
 
         item("ElectronicsBlock") {
             ElectronicsBlock(
                 data = state.electronics,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
 

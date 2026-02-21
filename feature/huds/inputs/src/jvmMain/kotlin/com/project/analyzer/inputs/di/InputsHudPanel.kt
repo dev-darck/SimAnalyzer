@@ -36,7 +36,7 @@ class InputsHudPanel : HudPanel {
 
         InputsHudContent(
             state = state,
-            modifier = modifier
+            modifier = modifier,
         )
     }
 
@@ -47,7 +47,7 @@ class InputsHudPanel : HudPanel {
 
         InputsHudContent(
             state = demoState(sessionActive = true, inputHudSettings = state.settings),
-            modifier = modifier
+            modifier = modifier,
         )
     }
 
@@ -61,7 +61,7 @@ class InputsHudPanel : HudPanel {
             modifier = modifier,
             onChange = { settings ->
                 vm.dispatch(InputsIntent.UpdateSettings(settings))
-            }
+            },
         )
     }
 }

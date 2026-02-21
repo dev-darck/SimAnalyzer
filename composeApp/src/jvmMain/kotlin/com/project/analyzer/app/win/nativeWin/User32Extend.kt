@@ -25,13 +25,7 @@ internal interface User32Extend : User32 {
     fun SetWindowLongPtr(hWnd: HWND, nIndex: Int, dwNewLong: LONG_PTR): LONG_PTR
 
     fun SetClassLongPtr(hWnd: HWND, nIndex: Int, dwNewLong: Pointer): LONG_PTR
-    fun CallWindowProc(
-        proc: LONG_PTR,
-        hWnd: HWND,
-        uParam: Int,
-        wParam: WPARAM,
-        lParam: LPARAM
-    ): LRESULT
+    fun CallWindowProc(proc: LONG_PTR, hWnd: HWND, uParam: Int, wParam: WPARAM, lParam: LPARAM): LRESULT
 
     fun GetSystemMetricsForDpi(nIndex: Int, dpi: UINT): Int
     fun GetDpiForWindow(hWnd: HWND): UINT
@@ -47,13 +41,12 @@ internal interface User32Extend : User32 {
     }
 }
 
-internal fun User32Extend.setWindowLong(hWnd: HWND, nIndex: Int, procedure: WindowProcedure): LONG_PTR {
-    return if (Platform.is64Bit()) {
+internal fun User32Extend.setWindowLong(hWnd: HWND, nIndex: Int, procedure: WindowProcedure): LONG_PTR =
+    if (Platform.is64Bit()) {
         SetWindowLongPtr(hWnd, nIndex, procedure)
     } else {
         SetWindowLong(hWnd, nIndex, procedure)
     }
-}
 
 internal fun User32.isWindowInMaximized(hWnd: HWND): Boolean {
     val placement = WinUser.WINDOWPLACEMENT()

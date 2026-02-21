@@ -25,4 +25,4 @@ public object MathEps {
 }
 
 /** Legacy constant from earlier code. */
-public const val MinLen: Float = 0.1F
+public const val MIN_LEN: Float = 0.1F

@@ -23,9 +23,8 @@ import kotlin.time.Duration.Companion.milliseconds
 @SingleIn(HudScope::class)
 class InputsUseCaseImpl(
     private val telemetry: TelemetryLifecycle,
-    private val settingsRepo: InputHudSettingsRepository
+    private val settingsRepo: InputHudSettingsRepository,
 ) : InputsUseCase {
-
     override val settings: Flow<InputHudSettings> = settingsRepo.data
 
     private val lifecycleResults: Flow<InputsResult>
@@ -60,7 +59,9 @@ class InputsUseCaseImpl(
                         prevClutch = lastClutch,
                         prevSteer = lastSteer,
                     )
-                ) return@collect
+                ) {
+                    return@collect
+                }
 
                 lastEmittedTsNs = frame.timestampNs.takeIf { it > 0L } ?: System.nanoTime()
                 lastThrottle = throttle
@@ -74,8 +75,8 @@ class InputsUseCaseImpl(
                         brake = brake,
                         clutch = clutch,
                         steerRadians = steer,
-                        timestampNs = frame.timestampNs
-                    )
+                        timestampNs = frame.timestampNs,
+                    ),
                 )
             }
         }
@@ -92,7 +93,6 @@ class InputsUseCaseImpl(
         is TelemetryLifecycleEvent.SessionResumed -> InputsResult.SessionResumed(sessionId)
         is TelemetryLifecycleEvent.SessionPaused -> InputsResult.SessionPaused(sessionId)
         is TelemetryLifecycleEvent.SessionEnded -> InputsResult.SessionEnded(sessionId)
-
         else -> null
     }
 
@@ -116,7 +116,7 @@ class InputsUseCaseImpl(
 
         val maxDelta = max(
             max(abs(throttle - prevThrottle), abs(brake - prevBrake)),
-            max(abs(clutch - prevClutch), abs(steer - prevSteer))
+            max(abs(clutch - prevClutch), abs(steer - prevSteer)),
         )
 
         if (maxDelta >= RAPID_CHANGE_THRESHOLD) {
@@ -127,7 +127,6 @@ class InputsUseCaseImpl(
     }
 
     private companion object {
-
         val BASE_SAMPLE_WINDOW_NS: Long = 6.milliseconds.inWholeNanoseconds // ~166 Hz in stable phases
         val FAST_SAMPLE_WINDOW_NS: Long = 3.milliseconds.inWholeNanoseconds // up to source rate on sharp changes
         const val RAPID_CHANGE_THRESHOLD: Float = 0.06f

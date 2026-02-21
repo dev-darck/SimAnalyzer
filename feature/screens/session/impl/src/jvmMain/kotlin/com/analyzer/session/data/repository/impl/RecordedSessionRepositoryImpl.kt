@@ -41,7 +41,7 @@ class RecordedSessionRepositoryImpl(
         val analysis = location.analysis ?: readAnalysis(location.metadata, location.dir)
         RecordedSessionDetail(
             summary = location.summary,
-            laps = analysis?.laps.orEmpty()
+            laps = analysis?.laps.orEmpty(),
         )
     }
 
@@ -56,7 +56,7 @@ class RecordedSessionRepositoryImpl(
         val updatedSummary = location.summary.copy(isSaved = true)
         sessionIndex[sessionId] = location.copy(
             summary = updatedSummary,
-            metadata = updatedMetadata
+            metadata = updatedMetadata,
         )
         true
     }
@@ -108,14 +108,12 @@ class RecordedSessionRepositoryImpl(
         return deduped
     }
 
-    private fun loadLocations(root: File): List<SessionLocation> {
-        return root.listFiles()
-            ?.asSequence()
-            ?.filter { it.isDirectory }
-            ?.mapNotNull(::readSessionLocation)
-            ?.toList()
-            .orEmpty()
-    }
+    private fun loadLocations(root: File): List<SessionLocation> = root.listFiles()
+        ?.asSequence()
+        ?.filter { it.isDirectory }
+        ?.mapNotNull(::readSessionLocation)
+        ?.toList()
+        .orEmpty()
 
     private fun readSessionLocation(dir: File): SessionLocation? {
         val metaFile = File(dir, META_FILE_NAME)
@@ -133,42 +131,32 @@ class RecordedSessionRepositoryImpl(
         )
     }
 
-    private fun readAnalysis(
-        metadata: RecordedSessionMetadata,
-        sessionDir: File,
-    ): IndexAnalysis? {
+    private fun readAnalysis(metadata: RecordedSessionMetadata, sessionDir: File): IndexAnalysis? {
         val indexFile = resolveIndexFile(metadata, sessionDir) ?: return null
         return analyzeIndex(indexFile)
     }
 
-    private fun readMetadata(metaFile: File): RecordedSessionMetadata? {
-        return runCatching {
-            json.decodeFromString(RecordedSessionMetadata.serializer(), metaFile.readText())
-        }.onFailure { error ->
-            logger.warn(error) { "[sessions] failed to decode metadata: ${metaFile.absolutePath}" }
-        }.getOrNull()
-    }
+    private fun readMetadata(metaFile: File): RecordedSessionMetadata? = runCatching {
+        json.decodeFromString(RecordedSessionMetadata.serializer(), metaFile.readText())
+    }.onFailure { error ->
+        logger.warn(error) { "[sessions] failed to decode metadata: ${metaFile.absolutePath}" }
+    }.getOrNull()
 
-    private fun writeMetadata(metaFile: File, metadata: RecordedSessionMetadata): Boolean {
-        return runCatching {
-            val encoded = json.encodeToString(RecordedSessionMetadata.serializer(), metadata)
-            val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
-            tmp.writeText(encoded)
-            if (!tmp.renameTo(metaFile)) {
-                metaFile.writeText(encoded)
-                tmp.delete()
-            }
-            true
-        }.getOrElse { error ->
-            logger.error(error) { "[sessions] failed to write metadata: ${metaFile.absolutePath}" }
-            false
+    private fun writeMetadata(metaFile: File, metadata: RecordedSessionMetadata): Boolean = runCatching {
+        val encoded = json.encodeToString(RecordedSessionMetadata.serializer(), metadata)
+        val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
+        tmp.writeText(encoded)
+        if (!tmp.renameTo(metaFile)) {
+            metaFile.writeText(encoded)
+            tmp.delete()
         }
+        true
+    }.getOrElse { error ->
+        logger.error(error) { "[sessions] failed to write metadata: ${metaFile.absolutePath}" }
+        false
     }
 
-    private fun buildSummary(
-        metadata: RecordedSessionMetadata,
-        analysis: IndexAnalysis?,
-    ): RecordedSessionSummary {
+    private fun buildSummary(metadata: RecordedSessionMetadata, analysis: IndexAnalysis?): RecordedSessionSummary {
         val laps = analysis?.laps.orEmpty()
         val completedLaps = laps.count { it.complete }
         val bestLapMs = laps
@@ -230,17 +218,16 @@ class RecordedSessionRepositoryImpl(
         }
     }
 
-    private fun openIndexStream(file: File) =
-        runCatching {
-            val stream = file.inputStream()
-            if (file.extension.equals("gz", ignoreCase = true)) {
-                GZIPInputStream(stream)
-            } else {
-                stream
-            }
-        }.onFailure { error ->
-            logger.warn(error) { "[sessions] failed to open index: ${file.absolutePath}" }
-        }.getOrNull()
+    private fun openIndexStream(file: File) = runCatching {
+        val stream = file.inputStream()
+        if (file.extension.equals("gz", ignoreCase = true)) {
+            GZIPInputStream(stream)
+        } else {
+            stream
+        }
+    }.onFailure { error ->
+        logger.warn(error) { "[sessions] failed to open index: ${file.absolutePath}" }
+    }.getOrNull()
 
     private fun readIndexHeader(file: File, data: DataInputStream): ParsedIndexHeader? {
         val magic = runCatching { data.readInt() }.getOrNull() ?: return null
@@ -311,12 +298,10 @@ class RecordedSessionRepositoryImpl(
         return dir.takeIf { it.exists() && it.isDirectory }
     }
 
-    private data class ParsedIndexHeader(
-        val version: Int,
-        val recordSize: Int,
-    )
+    private data class ParsedIndexHeader(val version: Int, val recordSize: Int)
 
     private companion object {
+
         const val META_FILE_NAME = "session.json"
         const val INDEX_FILE_NAME = "index.bin"
         const val COMPRESSION_GZIP = "gzip"

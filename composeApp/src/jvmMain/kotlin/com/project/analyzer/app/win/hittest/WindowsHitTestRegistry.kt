@@ -76,36 +76,41 @@ class WindowsHitTestRegistry {
                 code = code,
                 codeName = codeName(code),
                 reason = reason,
-                timeMs = System.currentTimeMillis()
+                timeMs = System.currentTimeMillis(),
             )
             lastSampleRef.set(sample)
         }
 
         closeBtn?.let {
             if (it.contains(xi, yi)) {
-                commit(WinUserConst.HTCLOSE, "closeBtn"); return WinUserConst.HTCLOSE
+                commit(WinUserConst.HTCLOSE, "closeBtn")
+                return WinUserConst.HTCLOSE
             }
         }
         maxBtn?.let {
             if (it.contains(xi, yi)) {
-                commit(WinUserConst.HTMAXBUTTON, "maxBtn"); return WinUserConst.HTMAXBUTTON
+                commit(WinUserConst.HTMAXBUTTON, "maxBtn")
+                return WinUserConst.HTMAXBUTTON
             }
         }
         minBtn?.let {
             if (it.contains(xi, yi)) {
-                commit(WinUserConst.HTMINBUTTON, "minBtn"); return WinUserConst.HTMINBUTTON
+                commit(WinUserConst.HTMINBUTTON, "minBtn")
+                return WinUserConst.HTMINBUTTON
             }
         }
 
         for ((k, r) in excludes.entries) {
             if (r.contains(xi, yi)) {
-                commit(WinUserConst.HTCLIENT, "exclude:$k"); return WinUserConst.HTCLIENT
+                commit(WinUserConst.HTCLIENT, "exclude:$k")
+                return WinUserConst.HTCLIENT
             }
         }
 
         captionBar?.let {
             if (it.contains(xi, yi)) {
-                commit(WinUserConst.HTCAPTION, "captionBar"); return WinUserConst.HTCAPTION
+                commit(WinUserConst.HTCAPTION, "captionBar")
+                return WinUserConst.HTCAPTION
             }
         }
 
@@ -143,5 +148,5 @@ data class HitTestSample(
     val code: Int = WinUserConst.HTCLIENT,
     val codeName: String = "HTCLIENT",
     val reason: String = "init",
-    val timeMs: Long = 0L
+    val timeMs: Long = 0L,
 )

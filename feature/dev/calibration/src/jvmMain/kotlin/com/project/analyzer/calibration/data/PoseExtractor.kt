@@ -39,12 +39,7 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
         return Pose2D(position, forward)
     }
 
-    private data class WheelPositions(
-        val fl: Vec2?,
-        val fr: Vec2?,
-        val rl: Vec2?,
-        val rr: Vec2?,
-    ) {
+    private data class WheelPositions(val fl: Vec2?, val fr: Vec2?, val rl: Vec2?, val rr: Vec2?) {
 
         val frontAxleCenter: Vec2? = axleCenter(fl, fr)
         val rearAxleCenter: Vec2? = axleCenter(rl, rr)
@@ -95,7 +90,9 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
             val vz = vel.z
             val sp = sqrt(vx * vx + vz * vz)
             if (sp > MIN_VELOCITY_FOR_DIRECTION) Vec2(vx / sp, vz / sp) else null
-        } else null
+        } else {
+            null
+        }
 
         val axleDir: Vec2? = run {
             val f = w?.frontAxleCenter
@@ -104,13 +101,17 @@ class PoseExtractor(private val referencePoint: ReferencePoint) {
                 val d = f - r
                 val l = d.len()
                 if (l in 1.0f..6.0f) d * (1f / l) else null
-            } else null
+            } else {
+                null
+            }
         }
 
         val heading = frame.car?.heading
         val headingDir: Vec2? = if (heading != null) {
             Heading2D.resolveFromRadiansPoseExtractor(headingRad = heading, prefer = velocityDir ?: axleDir)
-        } else null
+        } else {
+            null
+        }
 
         return velocityDir ?: axleDir ?: headingDir ?: previousForward
     }

@@ -11,10 +11,7 @@ import kotlin.math.sqrt
  * - `perpLeft()` rotates +90° (counter-clockwise): (x, y) -> (-y, x)
  * - `perpRight()` rotates -90° (clockwise):      (x, y) -> (y, -x)
  */
-public data class Vec2(
-    val x: Float,
-    val y: Float
-) {
+public data class Vec2(val x: Float, val y: Float) {
 
     public operator fun plus(o: Vec2): Vec2 = Vec2(x + o.x, y + o.y)
     public operator fun minus(o: Vec2): Vec2 = Vec2(x - o.x, y - o.y)

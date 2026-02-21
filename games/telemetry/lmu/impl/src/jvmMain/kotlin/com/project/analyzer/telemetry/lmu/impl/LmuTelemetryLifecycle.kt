@@ -49,13 +49,13 @@ internal class LmuTelemetryLifecycle(
 
     private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
         replay = 1,
-        extraBufferCapacity = 32
+        extraBufferCapacity = 32,
     )
     override val events = _events.asSharedFlow()
 
     private val _frames = MutableSharedFlow<TelemetryFrame>(
         replay = 1,
-        extraBufferCapacity = 16
+        extraBufferCapacity = 16,
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
 
@@ -103,7 +103,7 @@ internal class LmuTelemetryLifecycle(
                 sessionId,
                 SessionType.UNKNOWN,
                 frame.session?.car?.carModel.orEmpty(),
-                frame.session?.track?.trackId.orEmpty()
+                frame.session?.track?.trackId.orEmpty(),
             )
             currentSession = session
             _events.emit(TelemetryLifecycleEvent.SimConnected)
@@ -176,10 +176,9 @@ internal class LmuTelemetryLifecycle(
         currentSession = null
     }
 
-    private fun createScope(): CoroutineScope =
-        CoroutineScope(
-            SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
-                logger.error(e) { "[lmu] lifecycle uncaught exception" }
-            }
-        )
+    private fun createScope(): CoroutineScope = CoroutineScope(
+        SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
+            logger.error(e) { "[lmu] lifecycle uncaught exception" }
+        },
+    )
 }

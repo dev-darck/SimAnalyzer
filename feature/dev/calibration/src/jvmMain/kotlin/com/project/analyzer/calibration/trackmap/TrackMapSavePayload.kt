@@ -37,13 +37,13 @@ internal fun TrackMapSavePayload.toTrackMap(stats: TrackMapStatsCalculator): Tra
             TrackMapPoint.from(
                 v = point,
                 leftWidthMeters = leftWidthsMeters.getOrElse(index) { 0f },
-                rightWidthMeters = rightWidthsMeters.getOrElse(index) { 0f }
+                rightWidthMeters = rightWidthsMeters.getOrElse(index) { 0f },
             )
         },
         pitPoints = pitPoints.map { TrackMapPoint.from(it) },
         bounds = resolvedBounds,
         pitEntryIndex = pitEntryIndex,
-        pitExitIndex = pitExitIndex
+        pitExitIndex = pitExitIndex,
     )
 }
 

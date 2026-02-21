@@ -32,10 +32,7 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 @Composable
-internal fun InputsHudContent(
-    state: InputsHudUiState = InputsHudUiState(),
-    modifier: Modifier = Modifier,
-) {
+internal fun InputsHudContent(state: InputsHudUiState = InputsHudUiState(), modifier: Modifier = Modifier) {
     AnimatedVisibility(
         visible = state.isShow,
         enter = fadeIn(),
@@ -48,7 +45,7 @@ internal fun InputsHudContent(
                 .width(state.settings.widthDp.dp)
                 .clip(shape)
                 .background(color = SimAnalyzerTheme.material.surface.copy(alpha = 0.35f))
-                .padding(all = 12.dp)
+                .padding(all = 12.dp),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (state.settings.showHeader) {
@@ -62,7 +59,7 @@ internal fun InputsHudContent(
                     state = state,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(state.settings.graphHeightDp.dp)
+                        .height(state.settings.graphHeightDp.dp),
                 )
 
                 if (state.settings.showLegend) {
@@ -78,12 +75,12 @@ internal fun InputsHudContent(
 private fun Header(state: InputsHudUiState) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = state.title,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         val dotColor = if (state.isSessionActive) {
@@ -95,7 +92,7 @@ private fun Header(state: InputsHudUiState) {
         Box(
             modifier = Modifier
                 .size(size = 8.dp)
-                .background(dotColor, androidx.compose.foundation.shape.CircleShape)
+                .background(dotColor, androidx.compose.foundation.shape.CircleShape),
         )
 
         Spacer(Modifier.width(10.dp))
@@ -103,7 +100,7 @@ private fun Header(state: InputsHudUiState) {
         Text(
             text = "T ${pct(state.throttle)}  B ${pct(state.brake)}  C ${pct(state.clutch)}",
             color = SimAnalyzerTheme.material.onSurface,
-            fontFamily = FontFamily.Monospace
+            fontFamily = FontFamily.Monospace,
         )
     }
 }
@@ -116,7 +113,7 @@ internal fun InputsHudContentSessionPreview() {
     SimAnalyzerTheme {
         InputsHudContent(
             state = demoState(sessionActive = true),
-            modifier = Modifier
+            modifier = Modifier,
         )
     }
 }
@@ -127,14 +124,14 @@ internal fun InputsHudContentNoSessionPreview() {
     SimAnalyzerTheme {
         InputsHudContent(
             state = demoState(sessionActive = false),
-            modifier = Modifier
+            modifier = Modifier,
         )
     }
 }
 
 internal fun demoState(
     sessionActive: Boolean,
-    inputHudSettings: InputHudSettings = InputHudSettings()
+    inputHudSettings: InputHudSettings = InputHudSettings(),
 ): InputsHudUiState {
     val capacity = inputHudSettings.historySeconds * 60
     val series = InputsSeries(capacity = capacity)
@@ -145,22 +142,22 @@ internal fun demoState(
 
             val thr = clamp01(
                 smoothPulse(t, start = 0.20f, rise = 0.10f, end = 0.55f, fall = 0.10f) * 0.95f +
-                    smoothRamp(t, start = 0.70f, rise = 0.15f) * 0.55f
+                    smoothRamp(t, start = 0.70f, rise = 0.15f) * 0.55f,
             )
 
             val brk = clamp01(
-                smoothPulse(t, start = 0.48f, rise = 0.08f, end = 0.72f, fall = 0.10f) * 0.95f
+                smoothPulse(t, start = 0.48f, rise = 0.08f, end = 0.72f, fall = 0.10f) * 0.95f,
             )
 
             val clt = clamp01(
                 smoothPulse(t, start = 0.30f, rise = 0.05f, end = 0.38f, fall = 0.05f) * 0.25f +
-                    smoothPulse(t, start = 0.62f, rise = 0.03f, end = 0.66f, fall = 0.03f) * 0.12f
+                    smoothPulse(t, start = 0.62f, rise = 0.03f, end = 0.66f, fall = 0.03f) * 0.12f,
             )
 
             val steer = clampSigned(
                 0.10f * sin(2f * PI.toFloat() * t * 3.0f) +
                     0.05f * sin(2f * PI.toFloat() * t * 11.0f) +
-                    smoothPulseSigned(t, start = 0.55f, rise = 0.12f, end = 0.80f, fall = 0.12f) * 0.65f
+                    smoothPulseSigned(t, start = 0.55f, rise = 0.12f, end = 0.80f, fall = 0.12f) * 0.65f,
             )
 
             series.push(thr, brk, clt, steer)
@@ -178,7 +175,7 @@ internal fun demoState(
         clutch = last.clt,
         steerNorm = last.steer,
         series = series,
-        settings = inputHudSettings
+        settings = inputHudSettings,
     )
 }
 
@@ -190,7 +187,10 @@ private fun sampleAtRightEdge(series: InputsSeries): LastSample {
     var lastC = 0f
     var lastS = 0f
     series.forEachOldestToNewest { _, t, b, c, s ->
-        lastT = t; lastB = b; lastC = c; lastS = s
+        lastT = t
+        lastB = b
+        lastC = c
+        lastS = s
     }
     return LastSample(lastT, lastB, lastC, lastS)
 }
@@ -203,9 +203,7 @@ private fun smoothstep(x: Float): Float {
     return t * t * (3f - 2f * t)
 }
 
-private fun smoothRamp(t: Float, start: Float, rise: Float): Float {
-    return smoothstep((t - start) / rise)
-}
+private fun smoothRamp(t: Float, start: Float, rise: Float): Float = smoothstep((t - start) / rise)
 
 private fun smoothPulse(t: Float, start: Float, rise: Float, end: Float, fall: Float): Float {
     val up = smoothstep((t - start) / rise)
@@ -213,6 +211,5 @@ private fun smoothPulse(t: Float, start: Float, rise: Float, end: Float, fall: F
     return (up * down).coerceIn(0f, 1f)
 }
 
-private fun smoothPulseSigned(t: Float, start: Float, rise: Float, end: Float, fall: Float): Float {
-    return smoothPulse(t, start, rise, end, fall)
-}
+private fun smoothPulseSigned(t: Float, start: Float, rise: Float, end: Float, fall: Float): Float =
+    smoothPulse(t, start, rise, end, fall)

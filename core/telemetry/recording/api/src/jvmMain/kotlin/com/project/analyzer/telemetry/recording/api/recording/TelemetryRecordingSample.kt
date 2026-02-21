@@ -11,5 +11,5 @@ public data class TelemetryRecordingSample(
     val dataSource: String?,
     val payloadType: String,
     val payload: ByteArray,
-    val frame: TelemetryFrame
+    val frame: TelemetryFrame,
 )

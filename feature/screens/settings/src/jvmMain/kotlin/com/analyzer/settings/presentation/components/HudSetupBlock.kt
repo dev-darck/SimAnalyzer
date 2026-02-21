@@ -44,27 +44,27 @@ internal fun HudSetupBlock(
         modifier = modifier
             .clip(shape = SimAnalyzerTheme.shapes.large)
             .background(color = SimAnalyzerTheme.material.surface)
-            .padding(all = 16.dp)
+            .padding(all = 16.dp),
     ) {
         Text(
             text = "Huds",
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 20.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
                     text = "Huds setup",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                     fontSize = 14.sp,
-                    style = MaterialTheme.typography.labelMedium
+                    style = MaterialTheme.typography.labelMedium,
                 )
             }
 
@@ -74,19 +74,19 @@ internal fun HudSetupBlock(
                     .heightIn(min = 32.dp)
                     .background(
                         color = SimAnalyzerTheme.material.primary.copy(alpha = 0.22f),
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(8.dp),
                     )
                     .onClick(
                         enabled = isHudEnabled,
                         onClick = onEditClick,
                     ),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Edit",
                     fontSize = 12.sp,
                     fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-                    color = SimAnalyzerTheme.material.onSurface
+                    color = SimAnalyzerTheme.material.onSurface,
                 )
             }
         }
@@ -100,13 +100,13 @@ internal fun HudSetupBlock(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Display huds",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                 fontSize = 14.sp,
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
             )
 
             Switch(
@@ -116,8 +116,8 @@ internal fun HudSetupBlock(
                     checkedThumbColor = Color.White,
                     checkedTrackColor = SimAnalyzerTheme.material.primary,
                     uncheckedThumbColor = Color.LightGray,
-                    uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f)
-                )
+                    uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f),
+                ),
             )
         }
     }
@@ -136,7 +136,7 @@ private fun HudPreviewBox() {
             .clip(shape = shape)
             .background(color = bg)
             .border(width = 1.dp, color = borderColor, shape = shape)
-            .padding(14.dp)
+            .padding(14.dp),
     ) {
         ExampleHud(modifier = Modifier.align(Alignment.TopEnd))
         ExampleHud(modifier = Modifier.align(Alignment.TopStart))
@@ -153,8 +153,8 @@ private fun HudPreviewBox() {
                 .border(
                     width = 1.dp,
                     color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(10.dp)
-                )
+                    shape = RoundedCornerShape(10.dp),
+                ),
         ) {
             val red = SimAnalyzerTheme.extended.red
             val teal = SimAnalyzerTheme.extended.teal
@@ -192,9 +192,9 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
             .border(
                 width = 1.dp,
                 color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
             )
-            .padding(10.dp)
+            .padding(10.dp),
     ) {
         Column {
             Box(
@@ -202,7 +202,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                     .height(14.dp)
                     .fillMaxWidth(0.75f)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.12f))
+                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.12f)),
             )
             Spacer(Modifier.height(6.dp))
             Box(
@@ -210,7 +210,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                     .height(10.dp)
                     .fillMaxWidth(0.65f)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f))
+                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f)),
             )
             Spacer(Modifier.height(6.dp))
             Box(
@@ -218,7 +218,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                     .height(10.dp)
                     .fillMaxWidth(0.55f)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f))
+                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f)),
             )
             Spacer(Modifier.height(10.dp))
             Box(
@@ -226,7 +226,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                     .height(34.dp)
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(8.dp))
-                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.08f))
+                    .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.08f)),
             )
         }
     }

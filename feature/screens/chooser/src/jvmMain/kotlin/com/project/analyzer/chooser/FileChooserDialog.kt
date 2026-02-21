@@ -11,14 +11,12 @@ import androidx.compose.ui.window.rememberDialogState
 import com.project.analyzer.chooser.presentation.FileChooserContent
 
 @Composable
-fun FileChooserDialog(
-    state: FileChooserState,
-) {
+fun FileChooserDialog(state: FileChooserState) {
     if (!state.isVisible) return
 
     val dialogState = rememberDialogState(
         width = 920.dp,
-        height = 720.dp
+        height = 720.dp,
     )
 
     DialogWindow(
@@ -35,14 +33,14 @@ fun FileChooserDialog(
             } else {
                 false
             }
-        }
+        },
     ) {
         FileChooserContent(
             initialPath = state.initialPath,
             selectionMode = state.selectionMode,
             onConfirm = { path ->
                 state.confirm(path)
-            }
+            },
         )
     }
 }

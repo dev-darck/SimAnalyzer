@@ -26,7 +26,5 @@ interface FileChooserBindings {
     @Binds
     @IntoMap
     @ViewModelKey(FileChooserViewModel::class)
-    fun bindFileChooserViewModel(
-        impl: FileChooserViewModel,
-    ): ViewModel
+    fun bindFileChooserViewModel(impl: FileChooserViewModel): ViewModel
 }

@@ -13,9 +13,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 
 @Inject
-internal class LiveViewModel(
-    private val useCase: LiveTelemetryUseCase
-) : ViewModel() {
+internal class LiveViewModel(private val useCase: LiveTelemetryUseCase) : ViewModel() {
 
     private val _state = MutableStateFlow(LiveScreenState())
     val state: StateFlow<LiveScreenState> = _state.asStateFlow()

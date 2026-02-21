@@ -20,7 +20,7 @@ internal class LmuTelemetryMapper {
             car = mapCar(telemetry),
             wheels = mapWheels(telemetry),
             extras = mapExtras(telemetry, scoring),
-            timestampNs = snapshot.timestampNs
+            timestampNs = snapshot.timestampNs,
         )
     }
 }

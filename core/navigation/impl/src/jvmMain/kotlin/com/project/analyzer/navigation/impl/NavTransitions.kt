@@ -8,18 +8,16 @@ import androidx.compose.animation.togetherWith
 import androidx.navigation3.scene.Scene
 import com.project.analyzer.navigation.api.Route
 
-internal fun fadeForward(): AnimatedContentTransitionScope<Scene<Route>>.() -> ContentTransform =
-    {
-        val enter = fadeIn()
-        val exit = fadeOut()
+internal fun fadeForward(): AnimatedContentTransitionScope<Scene<Route>>.() -> ContentTransform = {
+    val enter = fadeIn()
+    val exit = fadeOut()
 
-        (enter togetherWith exit)
-    }
+    (enter togetherWith exit)
+}
 
-internal fun fadeBackward(): AnimatedContentTransitionScope<Scene<Route>>.() -> ContentTransform =
-    {
-        val enter = fadeIn()
-        val exit = fadeOut()
+internal fun fadeBackward(): AnimatedContentTransitionScope<Scene<Route>>.() -> ContentTransform = {
+    val enter = fadeIn()
+    val exit = fadeOut()
 
-        (enter togetherWith exit)
-    }
+    (enter togetherWith exit)
+}

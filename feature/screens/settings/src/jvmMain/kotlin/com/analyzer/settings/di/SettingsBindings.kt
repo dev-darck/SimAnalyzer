@@ -27,10 +27,10 @@ interface SettingsBindings {
         @ViewModelKey(SettingsViewModel::class)
         private fun provideSettingsViewModel(
             themeRepository: ThemeRepository,
-            telemetrySettingsRepository: SettingsRepository
+            telemetrySettingsRepository: SettingsRepository,
         ): ViewModel = SettingsViewModel(
             themeRepository = themeRepository,
-            telemetrySettingsRepository = telemetrySettingsRepository
+            telemetrySettingsRepository = telemetrySettingsRepository,
         )
     }
 }

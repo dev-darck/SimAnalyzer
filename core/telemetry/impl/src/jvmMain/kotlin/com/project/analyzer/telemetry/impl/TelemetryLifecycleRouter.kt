@@ -49,26 +49,26 @@ class TelemetryLifecycleRouter(
     private val scope = CoroutineScope(
         SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
             logger.error(e) { "[telemetry] router uncaught exception" }
-        }
+        },
     )
 
     private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
         replay = 1,
-        extraBufferCapacity = 32
+        extraBufferCapacity = 32,
     )
     override val events: Flow<TelemetryLifecycleEvent> = _events.asSharedFlow()
 
     private val _frames = MutableSharedFlow<TelemetryFrame>(
         replay = 1,
         extraBufferCapacity = 16,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
 
     private val autoDetector = GameDetector(
         configs = GameProfiles.detectorConfigs(),
         requireForeground = false,
-        coroutineDispatcher = ioDispatcher
+        coroutineDispatcher = ioDispatcher,
     )
 
     private val stateMutex = Mutex()
@@ -81,11 +81,7 @@ class TelemetryLifecycleRouter(
     @Volatile
     private var currentGameId: GameId? = null
 
-    private data class CleanupAction(
-        val lifecycle: TelemetryLifecycle?,
-        val forwardJob: Job?,
-        val sessionId: Long?,
-    )
+    private data class CleanupAction(val lifecycle: TelemetryLifecycle?, val forwardJob: Job?, val sessionId: Long?)
 
     override suspend fun launchTelemetry() {
         stateMutex.withLock {
@@ -133,10 +129,9 @@ class TelemetryLifecycleRouter(
         scope.cancel()
     }
 
-    private fun autoGameIdFlow(): Flow<GameId?> =
-        autoDetector.observeGameWindow().map { info ->
-            info?.let { GameProfiles.match(it)?.id }
-        }
+    private fun autoGameIdFlow(): Flow<GameId?> = autoDetector.observeGameWindow().map { info ->
+        info?.let { GameProfiles.match(it)?.id }
+    }
 
     private suspend fun switchTo(gameId: GameId?) {
         val cleanup = stateMutex.withLock {
@@ -177,7 +172,7 @@ class TelemetryLifecycleRouter(
         return CleanupAction(
             lifecycle = lifecycle,
             forwardJob = forwarder,
-            sessionId = sessionId
+            sessionId = sessionId,
         )
     }
 
@@ -222,7 +217,8 @@ class TelemetryLifecycleRouter(
                 }
 
                 is SessionEnded,
-                TelemetryLifecycleEvent.SimDisconnected -> {
+                TelemetryLifecycleEvent.SimDisconnected,
+                    -> {
                     activeSessionId = null
                 }
 

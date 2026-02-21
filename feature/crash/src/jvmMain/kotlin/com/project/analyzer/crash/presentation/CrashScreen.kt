@@ -62,10 +62,7 @@ import kotlinx.coroutines.flow.onEach
 
 private const val DEFAULT_GITHUB_REPO = "dev-darck/SimAnalyzer"
 
-private data class CrashTabSpec(
-    val title: String,
-    val icon: ImageVector,
-)
+private data class CrashTabSpec(val title: String, val icon: ImageVector)
 
 private val crashTabs = listOf(
     CrashTabSpec("Overview", Icons.Outlined.Warning),
@@ -74,10 +71,7 @@ private val crashTabs = listOf(
 )
 
 @Composable
-internal fun CrashScreen(
-    crashReport: CrashReport,
-    onExit: () -> Unit,
-) {
+internal fun CrashScreen(crashReport: CrashReport, onExit: () -> Unit) {
     val graph = remember { createGraph<CrashGraph>() }
     val viewModel = graph.crashViewModel
     val state by viewModel.state.collectAsState()
@@ -97,7 +91,7 @@ internal fun CrashScreen(
             report = state.report,
             snackbarHostState = snackbar,
             onEvent = viewModel::dispatch,
-            onExit = onExit
+            onExit = onExit,
         )
     }
 }
@@ -122,7 +116,7 @@ internal fun CrashScreenContent(
                         Text(
                             text = "A crash report is ready. You can review and share it.",
                             style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 },
@@ -133,26 +127,26 @@ internal fun CrashScreenContent(
                         modifier = Modifier
                             .padding(start = 12.dp, end = 8.dp)
                             .size(28.dp),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.error,
                     )
                 },
                 actions = {
                     Button(
                         onClick = onExit,
-                        modifier = Modifier.padding(end = 12.dp)
+                        modifier = Modifier.padding(end = 12.dp),
                     ) {
                         Text("Exit")
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             PrimaryTabRow(selectedTabIndex = selectedTab) {
                 crashTabs.forEachIndexed { index, tab ->
@@ -162,16 +156,16 @@ internal fun CrashScreenContent(
                         text = {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Icon(
                                     imageVector = tab.icon,
                                     contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(16.dp),
                                 )
                                 Text(tab.title)
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -181,7 +175,7 @@ internal fun CrashScreenContent(
                 shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.surface,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                tonalElevation = 1.dp
+                tonalElevation = 1.dp,
             ) {
                 when (selectedTab) {
                     0 -> OverviewPanel(report, onEvent)
@@ -200,35 +194,35 @@ private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> 
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.32f)
+                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.32f),
             ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f))
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(14.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Top,
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Warning,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error
+                    tint = MaterialTheme.colorScheme.error,
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
                         text = "The app encountered an unexpected error.",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = "Crash report was saved locally. Please share it to help fix the issue faster.",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
             }
@@ -243,15 +237,15 @@ private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> 
 private fun CrashMetadata(report: CrashReport) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text("Crash Metadata", style = MaterialTheme.typography.titleMedium)
             MetadataEntry("Time", report.time)
@@ -271,13 +265,13 @@ private fun MetadataEntry(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 3,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -286,54 +280,49 @@ private fun MetadataEntry(label: String, value: String) {
 private fun CrashActions(onEvent: (CrashScreenUiEvent) -> Unit) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f),
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f))
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f)),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text("Actions", style = MaterialTheme.typography.titleMedium)
             CrashActionButton(
                 text = "Report on GitHub",
                 icon = Icons.Default.Share,
                 emphasized = true,
-                onClick = { onEvent(CrashScreenUiEvent.ReportOnGitHub(DEFAULT_GITHUB_REPO)) }
+                onClick = { onEvent(CrashScreenUiEvent.ReportOnGitHub(DEFAULT_GITHUB_REPO)) },
             )
             CrashActionButton(
                 text = "Copy report",
                 icon = Icons.Default.Edit,
-                onClick = { onEvent(CrashScreenUiEvent.CopyReport) }
+                onClick = { onEvent(CrashScreenUiEvent.CopyReport) },
             )
             CrashActionButton(
                 text = "Copy stacktrace",
                 icon = Icons.Default.Edit,
-                onClick = { onEvent(CrashScreenUiEvent.CopyStacktrace) }
+                onClick = { onEvent(CrashScreenUiEvent.CopyStacktrace) },
             )
             CrashActionButton(
                 text = "Open logs folder",
                 icon = Icons.Default.Info,
-                onClick = { onEvent(CrashScreenUiEvent.OpenLogsFolder) }
+                onClick = { onEvent(CrashScreenUiEvent.OpenLogsFolder) },
             )
             CrashActionButton(
                 text = "Open crash file",
                 icon = Icons.Default.Info,
-                onClick = { onEvent(CrashScreenUiEvent.OpenCrashFile) }
+                onClick = { onEvent(CrashScreenUiEvent.OpenCrashFile) },
             )
         }
     }
 }
 
 @Composable
-private fun CrashActionButton(
-    text: String,
-    icon: ImageVector,
-    emphasized: Boolean = false,
-    onClick: () -> Unit
-) {
+private fun CrashActionButton(text: String, icon: ImageVector, emphasized: Boolean = false, onClick: () -> Unit) {
     if (emphasized) {
         Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
             Icon(icon, contentDescription = text, modifier = Modifier.size(18.dp))
@@ -350,10 +339,7 @@ private fun CrashActionButton(
 }
 
 @Composable
-private fun CodePanel(
-    text: String,
-    title: String,
-) {
+private fun CodePanel(text: String, title: String) {
     val vScroll = rememberScrollState()
     val hScroll = rememberScrollState()
     val lineCount = remember(text) {
@@ -371,18 +357,18 @@ private fun CodePanel(
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f))
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
                 text = "$title • $lineCount lines",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -404,7 +390,7 @@ private fun CodePanel(
                     fontSize = 12.sp,
                     lineHeight = 18.sp,
                     color = MaterialTheme.colorScheme.onSurface,
-                    softWrap = false
+                    softWrap = false,
                 )
             }
         }
@@ -422,14 +408,14 @@ private fun CrashScreenPreview() {
         fullText = "Full crash report text...",
         appVersion = "1.0.0",
         os = "Windows 11",
-        java = "17.0.1"
+        java = "17.0.1",
     )
     SimAnalyzerTheme {
         CrashScreenContent(
             report = report,
             snackbarHostState = remember { SnackbarHostState() },
             onEvent = {},
-            onExit = {}
+            onExit = {},
         )
     }
 }

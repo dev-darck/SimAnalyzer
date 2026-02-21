@@ -34,7 +34,7 @@ class TrackMapStatsCalculator {
             minX = minX,
             minY = minY,
             maxX = maxX,
-            maxY = maxY
+            maxY = maxY,
         )
     }
 

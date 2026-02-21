@@ -41,7 +41,7 @@ class CalibrationVerifyViewModel(
     private val sampleProvider: TelemetrySampleProvider,
     private val lapAnalyzer: FallbackLapAnalyzer,
     gateCrossingDetector: GateCrossingDetector,
-    overlayDebugBus: OverlayDebugBus
+    overlayDebugBus: OverlayDebugBus,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(CalibrationVerifyState())
@@ -51,7 +51,7 @@ class CalibrationVerifyViewModel(
         state = _state,
         overlayDebugBus = overlayDebugBus,
         lapAnalyzer = lapAnalyzer,
-        gateDetector = gateCrossingDetector
+        gateDetector = gateCrossingDetector,
     )
 
     private var job: Job? = null
@@ -87,7 +87,7 @@ class CalibrationVerifyViewModel(
                     it.copy(
                         calibration = null,
                         isRunning = false,
-                        message = "No calibration found for $trackId"
+                        message = "No calibration found for $trackId",
                     )
                 }
                 return@launch
@@ -102,7 +102,7 @@ class CalibrationVerifyViewModel(
                     trackId = trackId,
                     calibration = cal,
                     isRunning = true,
-                    message = "Loaded. Drive and cross SF/sectors to verify."
+                    message = "Loaded. Drive and cross SF/sectors to verify.",
                 )
             }
 
@@ -126,7 +126,7 @@ class CalibrationVerifyViewModel(
                         velocityDir = velocityDir,
                         headingDir = headingDir,
                         speedKmh = sample.speedKmh,
-                        isMovingForward = isMovingForward
+                        isMovingForward = isMovingForward,
                     )
 
                     lapAnalyzer.processPose(nowNs, carPose, calNow)
@@ -140,7 +140,7 @@ class CalibrationVerifyViewModel(
                             calNow,
                             snapshot.currentSectorIndex,
                             snapshot.isLapRunning,
-                            nowMs
+                            nowMs,
                         )
                     }
                     prevPoseForUiCrossing = carPose
@@ -149,7 +149,7 @@ class CalibrationVerifyViewModel(
                         nowNs = nowNs,
                         carPose = carPose,
                         calibration = calNow,
-                        speedKmh = sample.speedKmh
+                        speedKmh = sample.speedKmh,
                     )
                 }
             }
@@ -186,7 +186,7 @@ class CalibrationVerifyViewModel(
                 bestS2Ms = null,
                 bestS3Ms = null,
                 lastEvent = "Reset session",
-                message = "Session reset"
+                message = "Session reset",
             )
         }
     }
@@ -217,7 +217,7 @@ class CalibrationVerifyViewModel(
                                 3 -> sector.copy(finish = flipped)
                                 else -> sector
                             }
-                        }
+                        },
                     )
                 }
 
@@ -231,7 +231,7 @@ class CalibrationVerifyViewModel(
                                 2 -> sector.copy(start = flipped)
                                 else -> sector
                             }
-                        }
+                        },
                     )
                 }
 
@@ -245,7 +245,7 @@ class CalibrationVerifyViewModel(
                                 3 -> sector.copy(start = flipped)
                                 else -> sector
                             }
-                        }
+                        },
                     )
                 }
             }
@@ -257,7 +257,7 @@ class CalibrationVerifyViewModel(
             _state.update {
                 it.copy(
                     calibration = updatedCalibration,
-                    message = "✓ ${gate.name} direction flipped and saved"
+                    message = "✓ ${gate.name} direction flipped and saved",
                 )
             }
         }
@@ -283,7 +283,7 @@ class CalibrationVerifyViewModel(
                                 3 -> sector.copy(finish = newGate)
                                 else -> sector
                             }
-                        }
+                        },
                     )
 
                     EditingGate.SECTOR_1_FINISH -> cal.copy(
@@ -293,7 +293,7 @@ class CalibrationVerifyViewModel(
                                 2 -> sector.copy(start = newGate)
                                 else -> sector
                             }
-                        }
+                        },
                     )
 
                     EditingGate.SECTOR_2_FINISH -> cal.copy(
@@ -303,7 +303,7 @@ class CalibrationVerifyViewModel(
                                 3 -> sector.copy(start = newGate)
                                 else -> sector
                             }
-                        }
+                        },
                     )
                 }
 
@@ -319,7 +319,7 @@ class CalibrationVerifyViewModel(
                         calibration = updatedCalibration,
                         editingGate = null,
                         isCapturing = false,
-                        message = "✓ ${editingGate.name} updated: $posInfo"
+                        message = "✓ ${editingGate.name} updated: $posInfo",
                     )
                 }
             } catch (e: GateCaptureException) {
@@ -368,6 +368,6 @@ class CalibrationVerifyViewModel(
             
             FL: ${fmt(w?.fl)}   FR: ${fmt(w?.fr)}
             RL: ${fmt(w?.rl)}   RR: ${fmt(w?.rr)}
-        """.trimIndent()
+            """.trimIndent()
     }
 }

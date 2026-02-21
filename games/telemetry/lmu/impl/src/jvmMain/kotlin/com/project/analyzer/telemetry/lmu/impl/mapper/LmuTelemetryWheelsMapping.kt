@@ -11,7 +11,7 @@ internal fun mapWheels(telemetry: LmuVehicleTelemetry): WheelsFrame {
         fl = wheels.getOrNull(0)?.let { readWheel(it) },
         fr = wheels.getOrNull(1)?.let { readWheel(it) },
         rl = wheels.getOrNull(2)?.let { readWheel(it) },
-        rr = wheels.getOrNull(3)?.let { readWheel(it) }
+        rr = wheels.getOrNull(3)?.let { readWheel(it) },
     )
 }
 
@@ -36,7 +36,7 @@ private fun readWheel(w: LmuWheel): WheelFrame {
         suspensionTravel = w.suspensionDeflection.toFloat(),
         camberRad = w.camber.toFloat(),
         longitudinalForce = w.longitudinalForce.toFloat(),
-        lateralForce = w.lateralForce.toFloat()
+        lateralForce = w.lateralForce.toFloat(),
     )
 }
 

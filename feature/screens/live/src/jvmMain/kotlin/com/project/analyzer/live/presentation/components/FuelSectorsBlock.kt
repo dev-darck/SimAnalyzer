@@ -29,11 +29,7 @@ import com.project.analyzer.feature.screens.live.Res.fuel
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.painterResource
 
-internal data class Sector(
-    val index: Int,
-    val value: String,
-    val status: ValueStatus
-)
+internal data class Sector(val index: Int, val value: String, val status: ValueStatus)
 
 @Composable
 internal fun FuelSectorsBlock(
@@ -51,20 +47,20 @@ internal fun FuelSectorsBlock(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
-            .padding(22.dp)
+            .padding(22.dp),
     ) {
         Text(
             text = "Race Info",
             color = titleColor,
             fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
 
         Spacer(Modifier.height(16.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Image(
                 painter = painterResource(Res.drawable.fuel),
@@ -78,14 +74,14 @@ internal fun FuelSectorsBlock(
                     text = "Fuel",
                     color = mutedColor,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 Text(
                     text = String.format("%.1f L", fuelLiters),
                     color = titleColor,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
                 )
             }
 
@@ -97,14 +93,14 @@ internal fun FuelSectorsBlock(
                         text = "L/lap",
                         color = mutedColor,
                         fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
                     )
                     Text(
                         text = String.format("%.2f", fuelPerLap),
                         color = titleColor,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = FontFamily.Monospace,
                     )
                 }
 
@@ -116,14 +112,14 @@ internal fun FuelSectorsBlock(
                     text = "Est. laps",
                     color = mutedColor,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
                 )
                 Text(
                     text = String.format("%.1f", estLaps),
                     color = titleColor,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
                 )
             }
         }
@@ -131,19 +127,19 @@ internal fun FuelSectorsBlock(
         Spacer(Modifier.height(12.dp))
 
         HorizontalDivider(
-            color = SimAnalyzerTheme.material.outlineVariant
+            color = SimAnalyzerTheme.material.outlineVariant,
         )
 
         Spacer(Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             sectors.forEach { sector ->
                 SectorItem(
                     sector = sector,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -151,10 +147,7 @@ internal fun FuelSectorsBlock(
 }
 
 @Composable
-private fun SectorItem(
-    sector: Sector,
-    modifier: Modifier = Modifier
-) {
+private fun SectorItem(sector: Sector, modifier: Modifier = Modifier) {
     val tileShape = RoundedCornerShape(16.dp)
     val tileBg = SimAnalyzerTheme.material.surfaceVariant
     val mutedColor = SimAnalyzerTheme.material.onSurfaceVariant
@@ -164,13 +157,13 @@ private fun SectorItem(
             .clip(tileShape)
             .background(tileBg)
             .padding(vertical = 10.dp, horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = "S${sector.index}",
             color = mutedColor,
             fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
 
         Spacer(Modifier.height(2.dp))
@@ -180,7 +173,7 @@ private fun SectorItem(
             color = sector.status.statusColor(),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.Monospace
+            fontFamily = FontFamily.Monospace,
         )
     }
 }
@@ -194,7 +187,7 @@ private fun FuelSectorsBlockPreview() {
                 .fillMaxSize()
                 .background(SimAnalyzerTheme.material.background)
                 .padding(24.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             FuelSectorsBlock(
                 fuelLiters = 42.5f,
@@ -205,7 +198,7 @@ private fun FuelSectorsBlockPreview() {
                     Sector(2, "28.12", ValueStatus.COMPLETED),
                     Sector(3, "--.--", ValueStatus.NORMAL),
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

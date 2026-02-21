@@ -102,7 +102,7 @@ internal class DevSettingsViewModel(
                 id = panel.id,
                 title = formatPanelTitle(panel.id),
                 description = panel.description,
-                enabled = panel.id in lastVisibleIds
+                enabled = panel.id in lastVisibleIds,
             )
         }
 
@@ -169,7 +169,7 @@ internal class DevSettingsViewModel(
                                 carLabel = carLabel,
                                 frameId = frame.frameId,
                                 lastUpdatedLabel = updatedAt,
-                            )
+                            ),
                         )
                     }
                 }
@@ -197,16 +197,13 @@ internal class DevSettingsViewModel(
         }
     }
 
-    private fun formatTimestamp(epochMs: Long): String =
-        timeFormatter.format(Instant.ofEpochMilli(epochMs))
+    private fun formatTimestamp(epochMs: Long): String = timeFormatter.format(Instant.ofEpochMilli(epochMs))
 
-    private fun formatPanelTitle(id: String): String {
-        return id.split('_', '-')
-            .filter { it.isNotBlank() }
-            .joinToString(" ") { part ->
-                part.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-            }
-    }
+    private fun formatPanelTitle(id: String): String = id.split('_', '-')
+        .filter { it.isNotBlank() }
+        .joinToString(" ") { part ->
+            part.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+        }
 
     private companion object {
 

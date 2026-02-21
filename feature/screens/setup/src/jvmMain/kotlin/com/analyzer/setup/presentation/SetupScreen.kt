@@ -8,11 +8,9 @@ import com.project.analyzer.ui.adaptive.ResponsiveScreen
 
 @Composable
 internal fun SetupScreen() {
-
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        backgroundColor = SimAnalyzerTheme.material.background
+        backgroundColor = SimAnalyzerTheme.material.background,
     ) {
-
     }
 }

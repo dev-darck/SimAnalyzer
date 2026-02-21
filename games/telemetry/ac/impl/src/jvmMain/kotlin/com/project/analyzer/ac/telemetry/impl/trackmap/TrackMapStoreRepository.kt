@@ -15,13 +15,11 @@ import kotlinx.coroutines.flow.first
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<TrackMapRepository>())
-class TrackMapStoreRepository(
-    appDirectories: AppDirectories,
-) : TrackMapRepository {
+class TrackMapStoreRepository(appDirectories: AppDirectories) : TrackMapRepository {
 
     private val store = createTrackMapStoreDataStore(
         directory = appDirectories.preferencesDir,
-        fileName = FILE_NAME
+        fileName = FILE_NAME,
     )
 
     override suspend fun save(trackMap: TrackMap) {
@@ -76,7 +74,7 @@ class TrackMapStoreRepository(
             pitPoints = normalizedPitPoints,
             bounds = normalizedBounds,
             pitEntryIndex = pitEntry,
-            pitExitIndex = pitExit
+            pitExitIndex = pitExit,
         )
     }
 
@@ -92,7 +90,7 @@ class TrackMapStoreRepository(
         }
         return point.copy(
             leftWidthMeters = safeLeft,
-            rightWidthMeters = safeRight
+            rightWidthMeters = safeRight,
         )
     }
 
@@ -112,7 +110,7 @@ class TrackMapStoreRepository(
             minX = minX,
             minY = minY,
             maxX = maxX,
-            maxY = maxY
+            maxY = maxY,
         )
     }
 }

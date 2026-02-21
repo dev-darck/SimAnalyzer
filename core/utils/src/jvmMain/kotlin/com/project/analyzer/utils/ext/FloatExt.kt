@@ -10,8 +10,7 @@ import kotlin.math.roundToInt
  */
 public fun Float.toDegrees(): Float = (this * (180f / PI.toFloat()))
 
-public fun Float.fmt(decimals: Int = 3): String =
-    String.format(Locale.US, "%.${decimals}f", this)
+public fun Float.fmt(decimals: Int = 3): String = String.format(Locale.US, "%.${decimals}f", this)
 
 public fun Float?.orZero(): Float = this ?: 0f
 
@@ -36,7 +35,7 @@ public fun Float.toSteerDegrees(
     return if (abs(clamped) < deadZoneDeg) 0f else clamped
 }
 
-public fun Float.ratioToPercent0_100(): Float {
+public fun Float.ratioToPercent0To100(): Float {
     if (!this.isFinite()) return 0f
     return when {
         this <= 1.5f -> (this * 100f).coerceIn(0f, 100f)

@@ -121,7 +121,7 @@ class AcEvoLogLocator {
             "ACE",
             "Assetto Corsa Evo",
             "Assetto Corsa EVO",
-            "logs"
+            "logs",
         )
 
         for (dir in startDirs) {
@@ -132,14 +132,16 @@ class AcEvoLogLocator {
                 .firstOrNull {
                     it.isFile &&
                         it.name.equals("log.txt", ignoreCase = true) &&
-                        (it.parentFile?.name?.let { p ->
-                            allowedParents.any { a ->
-                                a.equals(
-                                    p,
-                                    ignoreCase = true
-                                )
-                            }
-                        } == true)
+                        (
+                            it.parentFile?.name?.let { p ->
+                                allowedParents.any { a ->
+                                    a.equals(
+                                        p,
+                                        ignoreCase = true,
+                                    )
+                                }
+                            } == true
+                            )
                 }
                 ?.let { return it }
         }

@@ -45,7 +45,7 @@ internal fun HudHost(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .onSizeChanged { containerSize = it }
+            .onSizeChanged { containerSize = it },
     ) {
         state.visiblePanels
             .mapNotNull { (id, version) ->
@@ -60,19 +60,19 @@ internal fun HudHost(
                             anchor = panel.defaultAnchor,
                             margin = panel.defaultMarginPx,
                             container = containerSize,
-                            panel = panelSizes[id]
+                            panel = panelSizes[id],
                         ),
                         onIntent = dispatch,
                         inputLocked = state.inputLocked,
                         onToggleInputLock = viewModel::toggleInputLock,
                         hitRegions = hitRegions,
                         overlayController = overlayController,
-                        modifier = Modifier.zIndex(panel.zIndex.toFloat())
+                        modifier = Modifier.zIndex(panel.zIndex.toFloat()),
                     ) {
                         panel.Content(
                             modifier = Modifier
                                 .padding(6.dp)
-                                .onSizeChanged { panelSizes[id] = it }
+                                .onSizeChanged { panelSizes[id] = it },
                         )
                     }
                 }
@@ -84,22 +84,25 @@ private fun computeDefaultOffset(
     anchor: HudAnchor,
     margin: IntOffset,
     container: IntSize,
-    panel: IntSize?
+    panel: IntSize?,
 ): IntOffset {
     if (panel == null || container.width <= 0 || container.height <= 0) return IntOffset.Zero
 
     val raw = when (anchor) {
         HudAnchor.TopLeft -> IntOffset(margin.x, margin.y)
+
         HudAnchor.TopRight -> IntOffset(container.width - panel.width - margin.x, margin.y)
+
         HudAnchor.BottomLeft -> IntOffset(margin.x, container.height - panel.height - margin.y)
+
         HudAnchor.BottomRight -> IntOffset(
             container.width - panel.width - margin.x,
-            container.height - panel.height - margin.y
+            container.height - panel.height - margin.y,
         )
 
         HudAnchor.Center -> IntOffset(
             (container.width - panel.width) / 2,
-            (container.height - panel.height) / 2
+            (container.height - panel.height) / 2,
         )
     }
 
@@ -108,6 +111,6 @@ private fun computeDefaultOffset(
 
     return IntOffset(
         x = raw.x.coerceIn(0, maxX),
-        y = raw.y.coerceIn(0, maxY)
+        y = raw.y.coerceIn(0, maxY),
     )
 }

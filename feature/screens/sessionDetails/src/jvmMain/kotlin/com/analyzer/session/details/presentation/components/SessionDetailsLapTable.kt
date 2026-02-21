@@ -47,8 +47,8 @@ internal fun SessionDetailsLapTable(
             .border(
                 1.dp,
                 SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.25f),
-                SimAnalyzerTheme.shapes.large
-            )
+                SimAnalyzerTheme.shapes.large,
+            ),
     ) {
         SessionDetailsTableHeader()
         HorizontalDivider(color = dividerColor)
@@ -59,12 +59,12 @@ internal fun SessionDetailsLapTable(
                     .fillMaxWidth()
                     .height(220.dp)
                     .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
+                contentAlignment = Alignment.CenterStart,
             ) {
                 Text(
                     text = "Loading laps...",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
             }
         } else if (state.visibleLaps.isEmpty()) {
@@ -73,12 +73,12 @@ internal fun SessionDetailsLapTable(
                     .fillMaxWidth()
                     .height(220.dp)
                     .padding(16.dp),
-                contentAlignment = Alignment.CenterStart
+                contentAlignment = Alignment.CenterStart,
             ) {
                 Text(
                     text = state.error ?: "No laps recorded yet.",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
                 )
             }
         } else {
@@ -96,12 +96,12 @@ internal fun SessionDetailsLapTable(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.End,
         ) {
             Pagination(
                 page = state.page,
                 pageCount = state.pageCount,
-                onPageChange = onPageChange
+                onPageChange = onPageChange,
             )
         }
     }
@@ -115,7 +115,7 @@ private fun SessionDetailsTableHeader() {
             .background(SimAnalyzerTheme.material.secondary)
             .height(44.dp)
             .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         TableHeaderCell(text = "Lap", weight = 0.08f)
         TableHeaderCell(text = "Total Time", weight = 0.16f)
@@ -136,15 +136,12 @@ private fun RowScope.TableHeaderCell(text: String, weight: Float) {
         fontSize = 11.sp,
         fontWeight = FontWeight.SemiBold,
         letterSpacing = 0.4.sp,
-        modifier = Modifier.weight(weight)
+        modifier = Modifier.weight(weight),
     )
 }
 
 @Composable
-private fun SessionDetailsTableRow(
-    lap: SessionLapRowUi,
-    isEven: Boolean,
-) {
+private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
     val baseColor = if (isEven) {
         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f)
     } else {
@@ -162,47 +159,77 @@ private fun SessionDetailsTableRow(
             .height(56.dp)
             .background(rowColor)
             .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         TableCell(
             text = lap.lapLabel,
             weight = 0.08f,
-            color = SimAnalyzerTheme.material.onSurfaceVariant
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         TableCell(
             text = lap.totalTime,
             weight = 0.16f,
-            color = if (lap.status == LapStatus.BestLap) SimAnalyzerTheme.extended.purple else SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.SemiBold
+            color = if (lap.status ==
+                LapStatus.BestLap
+            ) {
+                SimAnalyzerTheme.extended.purple
+            } else {
+                SimAnalyzerTheme.material.onSurface
+            },
+            fontWeight = FontWeight.SemiBold,
         )
         TableCell(
             text = lap.s1,
             weight = 0.1f,
-            color = if (lap.status == LapStatus.BestLap) SimAnalyzerTheme.extended.purple else SimAnalyzerTheme.material.onSurface
+            color = if (lap.status ==
+                LapStatus.BestLap
+            ) {
+                SimAnalyzerTheme.extended.purple
+            } else {
+                SimAnalyzerTheme.material.onSurface
+            },
         )
         TableCell(
             text = lap.s2,
             weight = 0.1f,
-            color = if (lap.status == LapStatus.BestLap) SimAnalyzerTheme.extended.purple else SimAnalyzerTheme.material.onSurface
+            color = if (lap.status ==
+                LapStatus.BestLap
+            ) {
+                SimAnalyzerTheme.extended.purple
+            } else {
+                SimAnalyzerTheme.material.onSurface
+            },
         )
         TableCell(
             text = lap.s3,
             weight = 0.1f,
-            color = if (lap.status == LapStatus.BestLap) SimAnalyzerTheme.extended.purple else SimAnalyzerTheme.material.onSurface
+            color = if (lap.status ==
+                LapStatus.BestLap
+            ) {
+                SimAnalyzerTheme.extended.purple
+            } else {
+                SimAnalyzerTheme.material.onSurface
+            },
         )
         TableCell(
             text = lap.incidents,
             weight = 0.12f,
-            color = if (lap.status == LapStatus.Invalid) SimAnalyzerTheme.extended.red else SimAnalyzerTheme.material.onSurfaceVariant
+            color = if (lap.status ==
+                LapStatus.Invalid
+            ) {
+                SimAnalyzerTheme.extended.red
+            } else {
+                SimAnalyzerTheme.material.onSurfaceVariant
+            },
         )
         TableCell(
             text = lap.delta,
             weight = 0.14f,
-            color = deltaColor(delta = lap.delta, isPositive = lap.deltaIsPositive)
+            color = deltaColor(delta = lap.delta, isPositive = lap.deltaIsPositive),
         )
         Box(
             modifier = Modifier.weight(0.2f),
-            contentAlignment = Alignment.CenterStart
+            contentAlignment = Alignment.CenterStart,
         ) {
             StatusChip(status = lap.status)
         }
@@ -221,7 +248,7 @@ private fun RowScope.TableCell(
         color = color,
         fontSize = 12.sp,
         fontWeight = fontWeight,
-        modifier = Modifier.weight(weight)
+        modifier = Modifier.weight(weight),
     )
 }
 
@@ -243,13 +270,13 @@ private fun SessionDetailsLapTablePreview() {
                     label = "Sort by",
                     selectedId = "lap",
                     selectedLabel = "Lap",
-                    options = listOf(DropdownOptionUi("lap", "Lap"))
+                    options = listOf(DropdownOptionUi("lap", "Lap")),
                 ),
                 showFilter = DropdownFilterUi(
                     label = "Show",
                     selectedId = "all",
                     selectedLabel = "All laps",
-                    options = listOf(DropdownOptionUi("all", "All laps"))
+                    options = listOf(DropdownOptionUi("all", "All laps")),
                 ),
                 page = 1,
                 pageCount = 4,
@@ -265,7 +292,7 @@ private fun SessionDetailsLapTablePreview() {
                         incidents = "0",
                         delta = "-0.000",
                         deltaIsPositive = false,
-                        status = LapStatus.BestLap
+                        status = LapStatus.BestLap,
                     ),
                     SessionLapRowUi(
                         lapNumber = 2,
@@ -278,12 +305,12 @@ private fun SessionDetailsLapTablePreview() {
                         incidents = "1",
                         delta = "+1.665",
                         deltaIsPositive = true,
-                        status = LapStatus.Dirty
-                    )
-                )
+                        status = LapStatus.Dirty,
+                    ),
+                ),
             ),
             onPageChange = {},
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

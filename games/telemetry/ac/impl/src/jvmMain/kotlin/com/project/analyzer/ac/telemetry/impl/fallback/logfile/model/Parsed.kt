@@ -20,5 +20,5 @@ internal data class Parsed(
     val driverName: String? = null,
     val driverSteamId: String? = null,
     val penalty: Penalty? = null,
-    val sessionType: EvoSessionType? = null
+    val sessionType: EvoSessionType? = null,
 )

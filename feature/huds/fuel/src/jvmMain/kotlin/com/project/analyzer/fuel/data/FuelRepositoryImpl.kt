@@ -18,14 +18,14 @@ import kotlinx.serialization.json.Json
 internal class FuelRepositoryImpl(
     @param:SessionPref
     private val preference: Preference,
-    private val json: Json
+    private val json: Json,
 ) : FuelRepository {
 
     override suspend fun updateIfBetter(
         carModel: String,
         trackId: String,
         peakLitersPerLap: Double?,
-        bestValidLapTimeMs: Int?
+        bestValidLapTimeMs: Int?,
     ) {
         if (peakLitersPerLap == null && bestValidLapTimeMs == null) return
         if (peakLitersPerLap?.isFinite() == false) return
@@ -55,7 +55,7 @@ internal class FuelRepositoryImpl(
         val dto = FuelDataDto(
             peakLitersPerLap = newPeak,
             bestValidLapTimeMs = newBestLapTime,
-            savedAtEpochMs = System.currentTimeMillis()
+            savedAtEpochMs = System.currentTimeMillis(),
         )
 
         val key = buildKey(carModel, trackId) ?: return
@@ -72,7 +72,7 @@ internal class FuelRepositoryImpl(
             SavedFuelData(
                 peakLitersPerLap = dto.peakLitersPerLap,
                 bestValidLapTimeMs = dto.bestValidLapTimeMs,
-                savedAtEpochMs = dto.savedAtEpochMs
+                savedAtEpochMs = dto.savedAtEpochMs,
             )
         } catch (e: Exception) {
             preference.remove(key)
@@ -88,7 +88,7 @@ internal class FuelRepositoryImpl(
     private fun buildKey(carModel: String, trackId: String): StringPrefKey? {
         val identity = FuelIdentityKey.from(
             carModel = carModel,
-            trackId = trackId
+            trackId = trackId,
         ) ?: return null
         return StringPrefKey("${KEY_PREFIX}${identity.carModel}_${identity.trackId}")
     }
@@ -97,7 +97,7 @@ internal class FuelRepositoryImpl(
     private data class FuelDataDto(
         val peakLitersPerLap: Double?,
         val bestValidLapTimeMs: Int?,
-        val savedAtEpochMs: Long
+        val savedAtEpochMs: Long,
     )
 
     private companion object {

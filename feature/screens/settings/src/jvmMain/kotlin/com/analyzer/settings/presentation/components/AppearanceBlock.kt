@@ -32,13 +32,13 @@ import com.project.analyzer.ui.icons.System
 internal fun AppearanceBlock(
     selectedTheme: ThemeMode,
     onThemeSelected: (ThemeMode) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .clip(shape = SimAnalyzerTheme.shapes.large)
             .background(color = SimAnalyzerTheme.material.surface)
-            .padding(all = 16.dp)
+            .padding(all = 16.dp),
     ) {
         Text(
             text = "Appearance",
@@ -56,28 +56,28 @@ internal fun AppearanceBlock(
         Spacer(modifier = Modifier.height(12.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ThemeOption(
                 icon = Icons.Filled.Light,
                 label = "Light",
                 isSelected = selectedTheme == ThemeMode.Light,
                 onClick = { onThemeSelected(ThemeMode.Light) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             ThemeOption(
                 icon = Icons.Filled.Dark,
                 label = "Dark",
                 isSelected = selectedTheme == ThemeMode.Dark,
                 onClick = { onThemeSelected(ThemeMode.Dark) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             ThemeOption(
                 icon = Icons.Filled.System,
                 label = "System",
                 isSelected = selectedTheme == ThemeMode.System,
                 onClick = { onThemeSelected(ThemeMode.System) },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -89,7 +89,7 @@ private fun ThemeOption(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val backgroundColor = if (isSelected) {
         SimAnalyzerTheme.material.primary
@@ -110,20 +110,20 @@ private fun ThemeOption(
             .clickable(onClick = onClick)
             .padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Center,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             tint = contentColor,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(20.dp),
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
             color = contentColor,
             fontSize = 12.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -134,7 +134,7 @@ private fun AppearanceBlockPreview() {
     SimAnalyzerTheme {
         AppearanceBlock(
             selectedTheme = ThemeMode.Dark,
-            onThemeSelected = {}
+            onThemeSelected = {},
         )
     }
 }

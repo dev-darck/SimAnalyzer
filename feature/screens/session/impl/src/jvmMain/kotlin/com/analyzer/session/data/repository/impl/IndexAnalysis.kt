@@ -4,10 +4,7 @@ import com.analyzer.session.data.model.LapSummary
 import com.project.analyzer.telemetry.recording.api.index.TelemetryFrameIndexFlags
 import kotlin.math.absoluteValue
 
-internal data class IndexAnalysis(
-    val laps: List<LapSummary>,
-    val distanceKm: Double,
-)
+internal data class IndexAnalysis(val laps: List<LapSummary>, val distanceKm: Double)
 
 internal data class IndexRecord(
     val timestampNs: Long,
@@ -124,7 +121,9 @@ internal class LapBuilder(
         val complete = start != null && end != null
         val totalMs = if (complete) {
             ((end - start) / 1_000_000L).toInt()
-        } else null
+        } else {
+            null
+        }
 
         val sectorTimesMs = (0..2).map { index ->
             sectorTimes[index]?.let { (it / 1_000_000L).toInt() }

@@ -9,5 +9,5 @@ enum class DataSourceType {
     NATIVE,
 
     /** Using fallback data (AC Evo mode - reconstructed from physics + logs) */
-    FALLBACK
+    FALLBACK,
 }

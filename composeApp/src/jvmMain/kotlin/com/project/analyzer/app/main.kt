@@ -71,7 +71,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
     val navigationState = rememberNavigationState()
 
     val appState = rememberWindowState(
-        position = WindowPosition(Alignment.Center)
+        position = WindowPosition(Alignment.Center),
     )
 
     CustomTray(
@@ -82,7 +82,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
         onOpenSession = {
             showAppWindow = true
             navigationState.switchTopLevel(Root.Session)
-        }
+        },
     )
 
     Window(
@@ -104,7 +104,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
                 providerFactory = appGraph.entryProviderFactory,
                 navigationState = navigationState,
                 decorator = decorator,
-                onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() }
+                onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
             )
         }
     }
@@ -113,6 +113,6 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
         visible = showHud && showOverlay,
         onCloseRequest = { showOverlay = false },
         panels = appGraph.hudPanels,
-        state = rememberWindowState()
+        state = rememberWindowState(),
     )
 }

@@ -69,7 +69,7 @@ internal fun TelemetryAcquisitionBlock(
         modifier = modifier
             .clip(shape = SimAnalyzerTheme.shapes.large)
             .background(color = SimAnalyzerTheme.material.surface)
-            .padding(all = 16.dp)
+            .padding(all = 16.dp),
     ) {
         Text(
             text = "Telemetry acquisition",
@@ -82,21 +82,21 @@ internal fun TelemetryAcquisitionBlock(
 
         RecordingEnabledSection(
             enabled = recordingEnabled,
-            onEnabledChange = onRecordingEnabledChange
+            onEnabledChange = onRecordingEnabledChange,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         SamplingRateSection(
             samplingRateHz = samplingRateHz,
-            onSamplingRateChange = onSamplingRateChange
+            onSamplingRateChange = onSamplingRateChange,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         MaxRecordedLapsSection(
             maxRecordedLaps = maxRecordedLaps,
-            onMaxRecordedLapsChange = onMaxRecordedLapsChange
+            onMaxRecordedLapsChange = onMaxRecordedLapsChange,
         )
 
         val warning = recordingWarning
@@ -116,20 +116,17 @@ internal fun TelemetryAcquisitionBlock(
             error = storageLocationError,
             storageSizeLabel = storageSizeLabel,
             onStorageLocationChange = onStorageLocationChange,
-            onBrowseClick = onBrowseClick
+            onBrowseClick = onBrowseClick,
         )
     }
 }
 
 @Composable
-private fun RecordingEnabledSection(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit
-) {
+private fun RecordingEnabledSection(enabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = "Recording enabled",
@@ -145,17 +142,14 @@ private fun RecordingEnabledSection(
                 checkedThumbColor = SimAnalyzerTheme.material.onPrimary,
                 checkedTrackColor = SimAnalyzerTheme.material.primary,
                 uncheckedThumbColor = SimAnalyzerTheme.material.onSurfaceVariant,
-                uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f)
-            )
+                uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f),
+            ),
         )
     }
 }
 
 @Composable
-private fun SamplingRateSection(
-    samplingRateHz: Int,
-    onSamplingRateChange: (Int) -> Unit
-) {
+private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int) -> Unit) {
     var sliderPosition by remember(samplingRateHz) {
         mutableFloatStateOf(samplingRateHz.toFloat())
     }
@@ -164,7 +158,7 @@ private fun SamplingRateSection(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Sampling rate (Hz)",
@@ -177,7 +171,7 @@ private fun SamplingRateSection(
                 modifier = Modifier
                     .clip(SimAnalyzerTheme.shapes.small)
                     .background(SimAnalyzerTheme.material.primary.copy(alpha = 0.15f))
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
                 Text(
                     text = "${sliderPosition.roundToInt()} Hz",
@@ -197,7 +191,7 @@ private fun SamplingRateSection(
                 onSamplingRateChange(sliderPosition.roundToInt())
             },
             valueRange = MIN_RATE.toFloat()..MAX_RATE.toFloat(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -206,7 +200,7 @@ private fun SamplingRateSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = THUMB_RADIUS),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "$MIN_RATE Hz",
@@ -228,10 +222,7 @@ private fun SamplingRateSection(
 }
 
 @Composable
-private fun MaxRecordedLapsSection(
-    maxRecordedLaps: Int,
-    onMaxRecordedLapsChange: (Int) -> Unit
-) {
+private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange: (Int) -> Unit) {
     var sliderPosition by remember(maxRecordedLaps) {
         mutableFloatStateOf(maxRecordedLaps.toFloat())
     }
@@ -240,7 +231,7 @@ private fun MaxRecordedLapsSection(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = "Max recorded laps",
@@ -255,7 +246,7 @@ private fun MaxRecordedLapsSection(
                 modifier = Modifier
                     .clip(SimAnalyzerTheme.shapes.small)
                     .background(SimAnalyzerTheme.material.primary.copy(alpha = 0.15f))
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
                 Text(
                     text = label,
@@ -275,7 +266,7 @@ private fun MaxRecordedLapsSection(
                 onMaxRecordedLapsChange(sliderPosition.roundToInt())
             },
             valueRange = MIN_LAPS.toFloat()..MAX_LAPS.toFloat(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -284,7 +275,7 @@ private fun MaxRecordedLapsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = THUMB_RADIUS),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "$MIN_LAPS",
@@ -311,7 +302,7 @@ private fun StorageLocationSection(
     error: String?,
     storageSizeLabel: String,
     onStorageLocationChange: (String) -> Unit,
-    onBrowseClick: () -> Unit
+    onBrowseClick: () -> Unit,
 ) {
     Column {
         Text(
@@ -326,19 +317,19 @@ private fun StorageLocationSection(
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(18.dp)
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             StoragePathField(
                 value = storageLocation,
                 placeholder = "Select folder...",
                 onValueChange = onStorageLocationChange,
                 onClick = onBrowseClick,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             BrowseButton(
                 onClick = onBrowseClick,
-                modifier = Modifier.height(STORAGE_FIELD_HEIGHT)
+                modifier = Modifier.height(STORAGE_FIELD_HEIGHT),
             )
         }
 
@@ -386,15 +377,12 @@ private fun StoragePathField(
             color = textColor,
             fontSize = 12.sp,
         ),
-        modifier = modifier.onClick(onClick = onClick)
+        modifier = modifier.onClick(onClick = onClick),
     )
 }
 
 @Composable
-private fun BrowseButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun BrowseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .height(STORAGE_FIELD_HEIGHT)
@@ -402,15 +390,15 @@ private fun BrowseButton(
             .onClick(onClick = onClick)
             .background(
                 color = SimAnalyzerTheme.material.primary.copy(alpha = 0.7f),
-                shape = RoundedCornerShape(STORAGE_FIELD_RADIUS)
+                shape = RoundedCornerShape(STORAGE_FIELD_RADIUS),
             ),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = "Browse",
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
-            color = SimAnalyzerTheme.material.onSurface
+            color = SimAnalyzerTheme.material.onSurface,
         )
     }
 }

@@ -75,7 +75,7 @@ class CalibrationViewModel(
                         sessionTrackId = trackId,
                         sessionCarModel = carModel,
                         trackName = resolvedTrackName,
-                        trackId = resolvedTrackId
+                        trackId = resolvedTrackId,
                     )
                 }
 
@@ -166,7 +166,7 @@ class CalibrationViewModel(
                 val nextIndex = s.sectorCount + 1
                 s.copy(
                     sectorStartMarks = s.sectorStartMarks + gate,
-                    message = "✓ Sector S$nextIndex START recorded"
+                    message = "✓ Sector S$nextIndex START recorded",
                 )
             }
         }
@@ -210,18 +210,18 @@ class CalibrationViewModel(
             _state.update {
                 it.copy(
                     isBusy = true,
-                    message = "⏳ Stop on the line and wait (~2 sec)..."
+                    message = "⏳ Stop on the line and wait (~2 sec)...",
                 )
             }
             try {
                 val result = captureGate.captureWithDetails(
-                    halfWidthMeters = s.halfWidthMeters
+                    halfWidthMeters = s.halfWidthMeters,
                 )
 
                 lastCapturePoint = CapturePoint(
                     position = result.capturedPosition,
                     forward = result.capturedForward,
-                    label = label
+                    label = label,
                 )
 
                 val posInfo = "pos=(%.2f, %.2f)".format(result.capturedPosition.x, result.capturedPosition.y)
@@ -232,7 +232,7 @@ class CalibrationViewModel(
 
                 _state.update {
                     it.copy(
-                        message = "✓ Captured: $posInfo | $fwdInfo | $qualityInfo"
+                        message = "✓ Captured: $posInfo | $fwdInfo | $qualityInfo",
                     )
                 }
             } catch (e: GateCaptureException) {
@@ -269,7 +269,7 @@ class CalibrationViewModel(
                     createdAtEpochMs = System.currentTimeMillis(),
                     referencePoint = s.referencePoint,
                     startFinish = requireNotNull(s.startFinish),
-                    sectors = sectors
+                    sectors = sectors,
                 )
 
                 saveUseCase.save(calibration)
@@ -278,7 +278,7 @@ class CalibrationViewModel(
                     current.copy(
                         startFinish = null,
                         lastSavedTrackId = current.trackId,
-                        message = "✓ Saved: ${current.trackId}"
+                        message = "✓ Saved: ${current.trackId}",
                     )
                 }
             } catch (e: Exception) {
@@ -306,17 +306,14 @@ class CalibrationViewModel(
             
             FL: ${fmt(w?.fl)}   FR: ${fmt(w?.fr)}
             RL: ${fmt(w?.rl)}   RR: ${fmt(w?.rr)}
-        """.trimIndent()
+            """.trimIndent()
     }
 
-    private fun slugify(text: String): String {
-        return text
-            .lowercase()
-            .trim()
-            .replace(Regex("""\s+"""), "_")
-            .replace(Regex("""[^a-z0-9_]+"""), "_")
-            .replace(Regex("""_+"""), "_")
-            .trim('_')
-    }
-
+    private fun slugify(text: String): String = text
+        .lowercase()
+        .trim()
+        .replace(Regex("""\s+"""), "_")
+        .replace(Regex("""[^a-z0-9_]+"""), "_")
+        .replace(Regex("""_+"""), "_")
+        .trim('_')
 }

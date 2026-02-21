@@ -62,7 +62,7 @@ public fun SettingsIntSliderRow(
         },
         onCommit = onCommit,
         modifier = modifier,
-        enabled = enabled
+        enabled = enabled,
     )
 }
 
@@ -80,11 +80,10 @@ public fun SettingsSliderRow(
     enabled: Boolean = true,
 ) {
     Column(modifier = modifier) {
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             if (tooltip != null) {
                 Tooltip(tooltip = tooltip) {
@@ -96,7 +95,7 @@ public fun SettingsSliderRow(
 
             Text(
                 text = valueText(value),
-                color = SimAnalyzerTheme.material.onSurfaceVariant
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
         }
 
@@ -109,7 +108,7 @@ public fun SettingsSliderRow(
             valueRange = valueRange,
             snapStep = snapStep,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -152,7 +151,9 @@ public fun CustomSlider(
 
         val snapped = if (snapStep > 0f) {
             (raw / snapStep).roundToInt() * snapStep
-        } else raw
+        } else {
+            raw
+        }
 
         return snapped.coerceIn(start, end)
     }
@@ -176,7 +177,9 @@ public fun CustomSlider(
                             onFinishedState.value()
                         }
                     }
-                } else Modifier
+                } else {
+                    Modifier
+                },
             )
             .drawWithCache {
                 val start = valueRange.start
@@ -193,21 +196,21 @@ public fun CustomSlider(
                         color = trackColor,
                         topLeft = Offset(thumbRadiusPx, cy - trackHeightPx / 2f),
                         size = Size(trackWidth, trackHeightPx),
-                        cornerRadius = CornerRadius(trackHeightPx / 2f, trackHeightPx / 2f)
+                        cornerRadius = CornerRadius(trackHeightPx / 2f, trackHeightPx / 2f),
                     )
 
                     drawCircle(
                         color = thumbRingColor,
                         radius = thumbRadiusPx,
-                        center = Offset(thumbCx, cy)
+                        center = Offset(thumbCx, cy),
                     )
 
                     drawCircle(
                         color = thumbColor,
                         radius = (thumbRadiusPx - ringPx).coerceAtLeast(1f),
-                        center = Offset(thumbCx, cy)
+                        center = Offset(thumbCx, cy),
                     )
                 }
-            }
+            },
     )
 }

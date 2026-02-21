@@ -25,23 +25,14 @@ class FallbackFuelAnalyzer {
         snapshot = FuelSnapshot()
     }
 
-    fun resetLapTracking(
-        fuelLiters: Float,
-        completedLaps: Int,
-        startFinishSyncId: Int,
-    ) {
+    fun resetLapTracking(fuelLiters: Float, completedLaps: Int, startFinishSyncId: Int) {
         lastFuelLiters = fuelLiters
         lapStartFuelLiters = fuelLiters
         lastCompletedLaps = completedLaps
         lastStartFinishSyncId = startFinishSyncId
     }
 
-    fun processFrame(
-        fuelLiters: Float,
-        completedLaps: Int,
-        lastLapTimeMs: Int,
-        startFinishSyncId: Int,
-    ) {
+    fun processFrame(fuelLiters: Float, completedLaps: Int, lastLapTimeMs: Int, startFinishSyncId: Int) {
         val prevSyncId = lastStartFinishSyncId
         if (prevSyncId == null) {
             lastStartFinishSyncId = startFinishSyncId

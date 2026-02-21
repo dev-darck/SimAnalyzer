@@ -122,10 +122,7 @@ class FileTelemetryRecorder(
         }
     }
 
-    private fun handleCommand(
-        command: RecordCommand,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handleCommand(command: RecordCommand, sessions: MutableMap<SessionKey, ActiveSession>) {
         when (command) {
             is RecordCommand.Start -> handleStart(command, sessions)
             is RecordCommand.Update -> handleUpdate(command, sessions)
@@ -137,10 +134,7 @@ class FileTelemetryRecorder(
         }
     }
 
-    private fun handleStart(
-        command: RecordCommand.Start,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handleStart(command: RecordCommand.Start, sessions: MutableMap<SessionKey, ActiveSession>) {
         val key = sessionKey(command.descriptor.gameId, command.descriptor.sessionId)
         val existing = sessions
             .filterKeys { it.gameId == key.gameId }
@@ -156,19 +150,13 @@ class FileTelemetryRecorder(
         }
     }
 
-    private fun handleUpdate(
-        command: RecordCommand.Update,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handleUpdate(command: RecordCommand.Update, sessions: MutableMap<SessionKey, ActiveSession>) {
         val key = sessionKey(command.update.gameId, command.update.sessionId)
         val session = sessions[key] ?: return
         applyUpdate(session, command.update)
     }
 
-    private fun handleFrame(
-        command: RecordCommand.Frame,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handleFrame(command: RecordCommand.Frame, sessions: MutableMap<SessionKey, ActiveSession>) {
         val key = sessionKey(command.payload.gameId, command.payload.sessionId)
         val session = sessions[key] ?: return
         writeFrame(session, command.payload)
@@ -178,10 +166,7 @@ class FileTelemetryRecorder(
         }
     }
 
-    private fun handlePause(
-        command: RecordCommand.Pause,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handlePause(command: RecordCommand.Pause, sessions: MutableMap<SessionKey, ActiveSession>) {
         val key = sessionKey(command.gameId, command.sessionId)
         val session = sessions[key] ?: return
 
@@ -192,15 +177,12 @@ class FileTelemetryRecorder(
                 type = EVENT_PAUSED,
                 atMs = System.currentTimeMillis(),
                 sessionId = command.sessionId,
-                reason = command.reason
-            )
+                reason = command.reason,
+            ),
         )
     }
 
-    private fun handleResume(
-        command: RecordCommand.Resume,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handleResume(command: RecordCommand.Resume, sessions: MutableMap<SessionKey, ActiveSession>) {
         val key = sessionKey(command.gameId, command.sessionId)
         val session = sessions[key] ?: return
 
@@ -210,15 +192,12 @@ class FileTelemetryRecorder(
             SessionEvent(
                 type = EVENT_RESUMED,
                 atMs = System.currentTimeMillis(),
-                sessionId = command.sessionId
-            )
+                sessionId = command.sessionId,
+            ),
         )
     }
 
-    private fun handleEnd(
-        command: RecordCommand.End,
-        sessions: MutableMap<SessionKey, ActiveSession>,
-    ) {
+    private fun handleEnd(command: RecordCommand.End, sessions: MutableMap<SessionKey, ActiveSession>) {
         val key = sessionKey(command.gameId, command.sessionId)
         sessions.remove(key)?.let { session ->
             closeSession(session, endReason = command.reason)
@@ -246,7 +225,7 @@ class FileTelemetryRecorder(
             dataOut = DataOutputStream(BufferedOutputStream(FileOutputStream(framesFile)))
             indexOut = DataOutputStream(BufferedOutputStream(FileOutputStream(indexFile)))
             eventsWriter = BufferedWriter(
-                OutputStreamWriter(FileOutputStream(eventsFile), Charsets.UTF_8)
+                OutputStreamWriter(FileOutputStream(eventsFile), Charsets.UTF_8),
             )
         } catch (error: IOException) {
             logger.warn(error) { "[recording] failed to create writers for session ${descriptor.sessionId}" }
@@ -310,8 +289,8 @@ class FileTelemetryRecorder(
                     carModel = descriptor.carModel,
                     trackId = descriptor.trackId,
                     payloadType = descriptor.payloadType,
-                    payloadSize = descriptor.payloadSize
-                )
+                    payloadSize = descriptor.payloadSize,
+                ),
             )
 
             logger.info { "[recording] session started id=${descriptor.sessionId} dir=${dir.absolutePath}" }
@@ -386,7 +365,7 @@ class FileTelemetryRecorder(
 
             session.markWritten(
                 timestampNs = payload.timestampNs,
-                bytesWritten = FRAME_RECORD_HEADER_SIZE + payloadSize.toLong()
+                bytesWritten = FRAME_RECORD_HEADER_SIZE + payloadSize.toLong(),
             )
 
             writeIndexRecord(
@@ -394,7 +373,7 @@ class FileTelemetryRecorder(
                 payload = payload,
                 payloadOffset = payloadOffset,
                 payloadSize = payloadSize,
-                index = payload.index
+                index = payload.index,
             )
 
             if (session.shouldFlush(System.nanoTime())) {
@@ -431,7 +410,7 @@ class FileTelemetryRecorder(
                 sessionType = update.sessionType,
                 carModel = update.carModel,
                 trackId = update.trackId,
-            )
+            ),
         )
     }
 
@@ -454,8 +433,8 @@ class FileTelemetryRecorder(
                     type = EVENT_ENDED,
                     atMs = System.currentTimeMillis(),
                     sessionId = session.metadata.sessionId,
-                    reason = endReason
-                )
+                    reason = endReason,
+                ),
             )
             writeMetadataFile(session.metaFile, session.metadata)
             flushSessionOutputs(session)
@@ -535,10 +514,7 @@ class FileTelemetryRecorder(
         }
     }
 
-    private fun writeEvent(
-        session: ActiveSession,
-        event: SessionEvent,
-    ) {
+    private fun writeEvent(session: ActiveSession, event: SessionEvent) {
         runCatching {
             with(session.eventsWriter) {
                 append(json.encodeToString(event))
@@ -585,8 +561,8 @@ class FileTelemetryRecorder(
         val result = compressionQueue.trySend(
             SessionCompressionTask(
                 metaFile = session.metaFile,
-                metadata = session.metadata
-            )
+                metadata = session.metadata,
+            ),
         )
         if (result.isFailure) {
             logger.warn { "[recording] compression task dropped for session ${session.metadata.sessionId}" }
@@ -637,11 +613,9 @@ class FileTelemetryRecorder(
         return "${safeGame}_${descriptor.startedAtMs}_${descriptor.sessionId}"
     }
 
-    private fun sessionKey(gameId: String, sessionId: Long): SessionKey =
-        SessionKey(normalizeGameId(gameId), sessionId)
+    private fun sessionKey(gameId: String, sessionId: Long): SessionKey = SessionKey(normalizeGameId(gameId), sessionId)
 
-    private fun normalizeGameId(gameId: String): String =
-        gameId.trim().lowercase().ifBlank { "unknown" }
+    private fun normalizeGameId(gameId: String): String = gameId.trim().lowercase().ifBlank { "unknown" }
 
     private fun closeQuietly(closeable: Closeable?) {
         runCatching { closeable?.close() }

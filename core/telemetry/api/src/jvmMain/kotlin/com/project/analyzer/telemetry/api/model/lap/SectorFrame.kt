@@ -15,13 +15,13 @@ public enum class SectorStatus {
     UNKNOWN,
     NOT_STARTED,
     IN_PROGRESS,
-    COMPLETED
+    COMPLETED,
 }
 
 public enum class SectorValidity {
     UNKNOWN,
     VALID,
-    INVALID
+    INVALID,
 }
 
 public enum class SectorInvalidReason {
@@ -30,5 +30,5 @@ public enum class SectorInvalidReason {
     PENALTY,
     CRASH,
     CONTACT,
-    UNKNOWN
+    UNKNOWN,
 }

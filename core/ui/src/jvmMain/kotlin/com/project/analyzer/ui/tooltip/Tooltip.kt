@@ -26,20 +26,19 @@ public fun Tooltip(
     tooltip: String,
     isShowTooltip: Boolean = true,
     cursor: CursorPoint = CursorPoint(offset = DpOffset(0.dp, 16.dp)),
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     if (isShowTooltip) {
         TooltipArea(
             tooltip = { TooltipContent(tooltip) },
             delayMillis = TOOLTIP_DELAY_MS,
-            tooltipPlacement = cursor
+            tooltipPlacement = cursor,
         ) {
             content()
         }
     } else {
         content()
     }
-
 }
 
 @Composable
@@ -48,7 +47,7 @@ private fun TooltipContent(text: String) {
         modifier = Modifier.shadow(4.dp, RoundedCornerShape(8.dp)),
         shape = RoundedCornerShape(8.dp),
         color = SimAnalyzerTheme.material.inverseSurface,
-        tonalElevation = 4.dp
+        tonalElevation = 4.dp,
     ) {
         Text(
             text = text,
@@ -56,7 +55,7 @@ private fun TooltipContent(text: String) {
             color = SimAnalyzerTheme.material.inverseOnSurface,
             fontSize = 12.sp,
             fontWeight = FontWeight.Medium,
-            lineHeight = 16.sp
+            lineHeight = 16.sp,
         )
     }
 }

@@ -9,13 +9,13 @@ data class SessionDetailState(
         label = "Sort by",
         selectedId = "lap",
         selectedLabel = "Lap",
-        options = listOf(DropdownOptionUi("lap", "Lap"))
+        options = listOf(DropdownOptionUi("lap", "Lap")),
     ),
     val showFilter: DropdownFilterUi = DropdownFilterUi(
         label = "Show",
         selectedId = "all",
         selectedLabel = "All laps",
-        options = listOf(DropdownOptionUi("all", "All laps"))
+        options = listOf(DropdownOptionUi("all", "All laps")),
     ),
     val page: Int = 1,
     val pageCount: Int = 1,

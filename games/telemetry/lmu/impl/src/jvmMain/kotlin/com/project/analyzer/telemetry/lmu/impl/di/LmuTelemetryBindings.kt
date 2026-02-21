@@ -21,17 +21,11 @@ object LmuTelemetryBindings {
     @Provides
     @IntoMap
     @StringKey(LMU_KEY)
-    private fun provideLmuTelemetryLifecycle(
-        impl: LmuTelemetryLifecycle
-    ): TelemetryLifecycle = impl
+    private fun provideLmuTelemetryLifecycle(impl: LmuTelemetryLifecycle): TelemetryLifecycle = impl
 
     @Provides
-    private fun provideLmuSharedMemory(
-        impl: DefaultLmuSharedMemory
-    ): LmuSharedMemory = impl
+    private fun provideLmuSharedMemory(impl: DefaultLmuSharedMemory): LmuSharedMemory = impl
 
     @Provides
-    private fun provideLmuTelemetryFeed(
-        impl: LmuSharedMemoryTelemetryFeed
-    ): LmuTelemetryFeed = impl
+    private fun provideLmuTelemetryFeed(impl: LmuSharedMemoryTelemetryFeed): LmuTelemetryFeed = impl
 }

@@ -11,5 +11,5 @@ public data class TelemetrySessionDescriptor(
     val startedAtMs: Long,
     val dataSource: String? = null,
     val payloadType: String = "",
-    val payloadSize: Int = 0
+    val payloadSize: Int = 0,
 )

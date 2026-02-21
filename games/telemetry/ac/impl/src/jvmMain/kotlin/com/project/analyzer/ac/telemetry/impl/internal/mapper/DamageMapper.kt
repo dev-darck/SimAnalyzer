@@ -13,29 +13,27 @@ import dev.zacsweers.metro.SingleIn
 @SingleIn(SessionScope::class)
 class DamageMapper {
 
-    fun map(physics: SPageFilePhysics): DamageFrame {
-        return DamageFrame(
-            rawDamage5 = physics.carDamage.copyOf(),
+    fun map(physics: SPageFilePhysics): DamageFrame = DamageFrame(
+        rawDamage5 = physics.carDamage.copyOf(),
 
-            aero = AeroDamageFrame(
-                frontWing = physics.carDamage[DAMAGE_FRONT],
-                rearWing = physics.carDamage[DAMAGE_REAR],
-            ),
-            suspension = SuspensionDamageFrame(
-                fl = physics.suspensionDamage[0],
-                fr = physics.suspensionDamage[1],
-                rl = physics.suspensionDamage[2],
-                rr = physics.suspensionDamage[3],
-            ),
-            body = BodyDamageFrame(
-                left = physics.carDamage[DAMAGE_LEFT],
-                right = physics.carDamage[DAMAGE_RIGHT],
-                centre = physics.carDamage[DAMAGE_CENTRE],
-            ),
+        aero = AeroDamageFrame(
+            frontWing = physics.carDamage[DAMAGE_FRONT],
+            rearWing = physics.carDamage[DAMAGE_REAR],
+        ),
+        suspension = SuspensionDamageFrame(
+            fl = physics.suspensionDamage[0],
+            fr = physics.suspensionDamage[1],
+            rl = physics.suspensionDamage[2],
+            rr = physics.suspensionDamage[3],
+        ),
+        body = BodyDamageFrame(
+            left = physics.carDamage[DAMAGE_LEFT],
+            right = physics.carDamage[DAMAGE_RIGHT],
+            centre = physics.carDamage[DAMAGE_CENTRE],
+        ),
 
-            numberOfTyresOut = physics.numberOfTyresOut,
-        )
-    }
+        numberOfTyresOut = physics.numberOfTyresOut,
+    )
 
     private companion object {
 

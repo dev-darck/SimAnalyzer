@@ -76,7 +76,9 @@ class TreeManager {
 
         val scrollIndex = if (focusPath != null) {
             result.indexOfFirst { it.path == focusPath }.coerceAtLeast(-1)
-        } else -1
+        } else {
+            -1
+        }
 
         return TreeResult(nodes = result, scrollToIndex = scrollIndex)
     }

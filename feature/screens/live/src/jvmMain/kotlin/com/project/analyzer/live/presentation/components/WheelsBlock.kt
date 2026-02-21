@@ -73,12 +73,7 @@ private object WheelTooltips {
 }
 
 @Composable
-fun WheelsBlock(
-    wheels: List<WheelUi>,
-    modifier: Modifier = Modifier,
-    tileHeight: Dp = 108.dp,
-    gap: Dp = 22.dp,
-) {
+fun WheelsBlock(wheels: List<WheelUi>, modifier: Modifier = Modifier, tileHeight: Dp = 108.dp, gap: Dp = 22.dp) {
     val tileShape = RoundedCornerShape(26.dp)
     val badgeShape = RoundedCornerShape(18.dp)
 
@@ -90,21 +85,20 @@ fun WheelsBlock(
     val labelColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f)
     val subLineColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.65f)
 
-    fun wheel(pos: WheelPos): WheelUi =
-        wheels.firstOrNull { it.pos == pos }
-            ?: WheelUi(pos = pos)
+    fun wheel(pos: WheelPos): WheelUi = wheels.firstOrNull { it.pos == pos }
+        ?: WheelUi(pos = pos)
 
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(surface)
-            .padding(22.dp)
+            .padding(22.dp),
     ) {
         Text(
             text = "Wheels",
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
-            color = titleColor
+            color = titleColor,
         )
 
         Spacer(Modifier.height(gap))
@@ -112,7 +106,7 @@ fun WheelsBlock(
         Column(verticalArrangement = Arrangement.spacedBy(gap)) {
             Row(
                 modifier = Modifier.fillMaxWidth().height(tileHeight),
-                horizontalArrangement = Arrangement.spacedBy(gap)
+                horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
                 WheelWideTile(
                     wheel = wheel(WheelPos.FL),
@@ -122,7 +116,7 @@ fun WheelsBlock(
                     badgeBg = badgeBg,
                     labelColor = labelColor,
                     subLineColor = subLineColor,
-                    modifier = Modifier.weight(1f).fillMaxHeight()
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 WheelWideTile(
                     wheel = wheel(WheelPos.FR),
@@ -132,13 +126,13 @@ fun WheelsBlock(
                     badgeBg = badgeBg,
                     labelColor = labelColor,
                     subLineColor = subLineColor,
-                    modifier = Modifier.weight(1f).fillMaxHeight()
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth().height(tileHeight),
-                horizontalArrangement = Arrangement.spacedBy(gap)
+                horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
                 WheelWideTile(
                     wheel = wheel(WheelPos.RL),
@@ -148,7 +142,7 @@ fun WheelsBlock(
                     badgeBg = badgeBg,
                     labelColor = labelColor,
                     subLineColor = subLineColor,
-                    modifier = Modifier.weight(1f).fillMaxHeight()
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
                 WheelWideTile(
                     wheel = wheel(WheelPos.RR),
@@ -158,7 +152,7 @@ fun WheelsBlock(
                     badgeBg = badgeBg,
                     labelColor = labelColor,
                     subLineColor = subLineColor,
-                    modifier = Modifier.weight(1f).fillMaxHeight()
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                 )
             }
         }
@@ -203,7 +197,7 @@ private fun WheelWideTile(
             .background(tileBg)
             .padding(start = 16.dp, end = 32.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Box(
             modifier = Modifier
@@ -216,7 +210,7 @@ private fun WheelWideTile(
                 text = wheel.pos.badge,
                 color = valueColor,
                 fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
         }
 
@@ -225,7 +219,7 @@ private fun WheelWideTile(
             value = psiText,
             labelColor = labelColor,
             valueColor = psiColor,
-            tooltip = WheelTooltips.PSI
+            tooltip = WheelTooltips.PSI,
         )
 
         InfoBlock(
@@ -233,7 +227,7 @@ private fun WheelWideTile(
             value = slipText,
             labelColor = labelColor,
             valueColor = slipColor,
-            tooltip = WheelTooltips.SLIP
+            tooltip = WheelTooltips.SLIP,
         )
 
         InfoBlock(
@@ -241,51 +235,45 @@ private fun WheelWideTile(
             value = "${wheel.susMm}mm",
             labelColor = labelColor,
             valueColor = subLineColor,
-            tooltip = WheelTooltips.SUS
+            tooltip = WheelTooltips.SUS,
         )
 
         InfoBlock(
             label = "BRK",
-            value = "${brakeText}°",
+            value = "$brakeText°",
             labelColor = labelColor,
             valueColor = brakeColor,
-            tooltip = WheelTooltips.BRK
+            tooltip = WheelTooltips.BRK,
         )
 
         InfoBlock(
             label = "TY",
-            value = "${tyText}°",
+            value = "$tyText°",
             labelColor = labelColor,
             valueColor = valueColor,
-            tooltip = WheelTooltips.TY
+            tooltip = WheelTooltips.TY,
         )
     }
 }
 
 @Composable
-private fun InfoBlock(
-    label: String,
-    value: String,
-    labelColor: Color,
-    valueColor: Color,
-    tooltip: String,
-) {
+private fun InfoBlock(label: String, value: String, labelColor: Color, valueColor: Color, tooltip: String) {
     Tooltip(
-        tooltip = tooltip
+        tooltip = tooltip,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = label,
                 color = labelColor,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold,
             )
             Text(
                 text = value,
                 color = valueColor,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.Monospace
+                fontFamily = FontFamily.Monospace,
             )
         }
     }
@@ -300,7 +288,7 @@ private fun WheelsBlockPreview() {
                 .fillMaxSize()
                 .background(SimAnalyzerTheme.material.background)
                 .padding(24.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             WheelsBlock(
                 wheels = listOf(
@@ -311,7 +299,7 @@ private fun WheelsBlockPreview() {
                         susMm = 12,
                         psiOk = true,
                         slip = 0.03f,
-                        brakeTempC = 238f
+                        brakeTempC = 238f,
                     ),
                     WheelUi(
                         pos = WheelPos.FR,
@@ -320,7 +308,7 @@ private fun WheelsBlockPreview() {
                         susMm = 12,
                         psiOk = true,
                         slip = 0.02f,
-                        brakeTempC = 236f
+                        brakeTempC = 236f,
                     ),
                     WheelUi(
                         pos = WheelPos.RL,
@@ -329,7 +317,7 @@ private fun WheelsBlockPreview() {
                         susMm = 15,
                         psiOk = false,
                         slip = 0.07f,
-                        brakeTempC = 133f
+                        brakeTempC = 133f,
                     ),
                     WheelUi(
                         pos = WheelPos.RR,
@@ -338,11 +326,11 @@ private fun WheelsBlockPreview() {
                         susMm = 15,
                         psiOk = false,
                         slip = 0.08f,
-                        brakeTempC = 133f
+                        brakeTempC = 133f,
                     ),
                 ),
                 modifier = Modifier.fillMaxWidth(),
-                tileHeight = 108.dp
+                tileHeight = 108.dp,
             )
         }
     }

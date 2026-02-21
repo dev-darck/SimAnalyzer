@@ -33,21 +33,21 @@ fun WindowScope.App(
     providerFactory: EntryFactory,
     navigationState: NavigationState<Route>,
     decorator: FrameDecoratorState,
-    onCloseRequest: () -> Unit = {}
+    onCloseRequest: () -> Unit = {},
 ) {
     val items = remember {
         listOf(
             NavItem(Root.Live, "Live", Icons.Filled.Live),
             NavItem(Root.Session, "Session", Icons.Filled.Session),
 //            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
-            NavItem(Root.Settings, "Settings", Icons.Filled.Settings)
+            NavItem(Root.Settings, "Settings", Icons.Filled.Settings),
         )
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background)
+            .background(SimAnalyzerTheme.material.background),
     ) {
         AppTitleBar(
             canGoBack = navigationState.backStack.size > 1,
@@ -56,23 +56,23 @@ fun WindowScope.App(
             onForward = { navigationState.handleForward() },
             onCloseRequest = onCloseRequest,
             appName = BuildConfig.APP_NAME,
-            decorator = decorator
+            decorator = decorator,
         )
 
         Row(
             modifier = Modifier
                 .background(SimAnalyzerTheme.material.background)
-                .fillMaxSize()
+                .fillMaxSize(),
         ) {
             AnimatedVisibility(
-                visible = navigationState.isCurrentRouteRoot
+                visible = navigationState.isCurrentRouteRoot,
             ) {
                 Sidebar(
                     modifier = Modifier.clipToBounds(),
                     topIcon = {
                         Icon(
                             painter = painterResource(Res.drawable.logo),
-                            contentDescription = "App logo"
+                            contentDescription = "App logo",
                         )
                     },
                     items = items,
@@ -80,7 +80,7 @@ fun WindowScope.App(
                     selectedKey = navigationState.currentTopLevel,
                     onSelect = {
                         navigationState.switchTopLevel(it.key)
-                    }
+                    },
                 )
             }
 
@@ -89,11 +89,11 @@ fun WindowScope.App(
                     .background(SimAnalyzerTheme.material.background)
                     .weight(1f)
                     .fillMaxHeight(),
-                contentAlignment = Alignment.TopStart
+                contentAlignment = Alignment.TopStart,
             ) {
                 AppNavGraph(
                     navigationState = navigationState,
-                    providerFactory = providerFactory
+                    providerFactory = providerFactory,
                 )
             }
         }

@@ -39,23 +39,23 @@ class TrackMapRecorder(
     private val runtime = TrackMapRecorderRuntime()
     private val widthProfiler = TrackMapWidthProfiler(
         stats = stats,
-        minPointsToSave = MIN_POINTS_TO_SAVE
+        minPointsToSave = MIN_POINTS_TO_SAVE,
     )
     private val merger = TrackMapMerger(
         insertDistanceMeters = MERGE_INSERT_DISTANCE_METERS,
         minInsertSpacingMeters = MERGE_MIN_INSERT_SPACING_METERS,
-        searchWindow = MERGE_SEARCH_WINDOW
+        searchWindow = MERGE_SEARCH_WINDOW,
     )
     private val pointFilter = TrackMapPointFilter(
         stats = stats,
         teleportDistanceMeters = TELEPORT_DISTANCE_METERS,
         refinementSpacingMultiplier = REFINEMENT_SPACING_MULTIPLIER,
-        minRefinedSpacingMeters = MIN_REFINED_SPACING_METERS
+        minRefinedSpacingMeters = MIN_REFINED_SPACING_METERS,
     )
     private val lapTracker = TrackMapLapTracker(
         merger = merger,
         stats = stats,
-        minPointsToSave = MIN_POINTS_TO_SAVE
+        minPointsToSave = MIN_POINTS_TO_SAVE,
     )
 
     private var poseExtractor = PoseExtractor(ReferencePoint.FRONT_AXLE)
@@ -73,7 +73,7 @@ class TrackMapRecorder(
                             _state.update {
                                 it.copy(
                                     recording = false,
-                                    message = "Track map error: ${error.message ?: "unknown"}"
+                                    message = "Track map error: ${error.message ?: "unknown"}",
                                 )
                             }
                         }
@@ -96,7 +96,7 @@ class TrackMapRecorder(
                         recording = true,
                         gameId = gameId,
                         gameLabel = gameLabel,
-                        message = "Recording started"
+                        message = "Recording started",
                     )
                 }
             }
@@ -129,7 +129,7 @@ class TrackMapRecorder(
                 _state.update {
                     it.copy(
                         referencePoint = point,
-                        message = "Reference point set to ${point.name.lowercase()}"
+                        message = "Reference point set to ${point.name.lowercase()}",
                     )
                 }
             }
@@ -141,12 +141,12 @@ class TrackMapRecorder(
             mutex.withLock {
                 val clamped = value.coerceIn(
                     TrackMapWidthProfiler.MIN_SIDE_WIDTH_METERS,
-                    TrackMapWidthProfiler.MAX_SIDE_WIDTH_METERS
+                    TrackMapWidthProfiler.MAX_SIDE_WIDTH_METERS,
                 )
                 _state.update {
                     it.copy(
                         fallbackHalfWidthMeters = clamped,
-                        message = "Fallback half-width set to ${"%.1f".format(clamped)}m"
+                        message = "Fallback half-width set to ${"%.1f".format(clamped)}m",
                     )
                 }
                 publishPoints(timestampNs = System.nanoTime(), force = true)
@@ -185,7 +185,7 @@ class TrackMapRecorder(
             val widths = widthProfiler.resolvePointWidths(
                 runtime = runtime,
                 points = points,
-                fallbackHalfWidthMeters = snapshot.fallbackHalfWidthMeters
+                fallbackHalfWidthMeters = snapshot.fallbackHalfWidthMeters,
             )
 
             _state.update { it.copy(isSaving = true, message = "Saving track map...") }
@@ -202,7 +202,7 @@ class TrackMapRecorder(
                 pitPoints = runtime.pitPoints.toList(),
                 bounds = runtime.bounds,
                 pitEntryPoint = runtime.pitEntryPoint,
-                pitExitPoint = runtime.pitExitPoint
+                pitExitPoint = runtime.pitExitPoint,
             )
         } ?: return
 
@@ -214,14 +214,14 @@ class TrackMapRecorder(
                     isSaving = false,
                     lastSavedTrackId = payload.trackId,
                     lastSavedAtEpochMs = System.currentTimeMillis(),
-                    message = "Saved track map: ${payload.trackId}"
+                    message = "Saved track map: ${payload.trackId}",
                 )
             }
         } catch (e: Exception) {
             _state.update {
                 it.copy(
                     isSaving = false,
-                    message = "Save failed: ${e.message}"
+                    message = "Save failed: ${e.message}",
                 )
             }
         }
@@ -260,7 +260,7 @@ class TrackMapRecorder(
                     trackId = trackId,
                     trackName = trackName,
                     layoutId = layoutId,
-                    infoUpdateIntervalNs = INFO_UPDATE_INTERVAL_NS
+                    infoUpdateIntervalNs = INFO_UPDATE_INTERVAL_NS,
                 )
             ) {
                 runtime.lastInfoUpdateNs = timestampNs
@@ -271,7 +271,7 @@ class TrackMapRecorder(
                         trackName = trackName,
                         layoutId = layoutId,
                         speed = safeSpeed,
-                        position = currentPos
+                        position = currentPos,
                     )
                 }
             }
@@ -306,7 +306,7 @@ class TrackMapRecorder(
 
             val lapResult = lapTracker.handleLapTransition(
                 lapIndex = lapIndex,
-                runtime = runtime
+                runtime = runtime,
             )
 
             if (lapResult.message != null) {
@@ -315,7 +315,7 @@ class TrackMapRecorder(
             if (lapResult.lapAccepted) {
                 val guidanceMessage = widthProfiler.onLapAccepted(
                     runtime = runtime,
-                    completedLapPoints = lapResult.completedLapPoints
+                    completedLapPoints = lapResult.completedLapPoints,
                 )
                 if (guidanceMessage != null) {
                     _state.update { it.copy(message = guidanceMessage) }
@@ -363,7 +363,7 @@ class TrackMapRecorder(
         val widths = widthProfiler.resolvePointWidths(
             runtime = runtime,
             points = displayPoints,
-            fallbackHalfWidthMeters = _state.value.fallbackHalfWidthMeters
+            fallbackHalfWidthMeters = _state.value.fallbackHalfWidthMeters,
         )
         val averageTrackWidth = widths.averageTrackWidthMeters
 
@@ -396,8 +396,8 @@ class TrackMapRecorder(
                     currentPosition = it.currentPosition,
                     points = displayPoints,
                     leftWidthsMeters = widths.leftWidthsMeters,
-                    rightWidthsMeters = widths.rightWidthsMeters
-                )
+                    rightWidthsMeters = widths.rightWidthsMeters,
+                ),
             )
         }
     }
@@ -421,7 +421,7 @@ class TrackMapRecorder(
                 lapIndex = lapIndex,
                 lapsRecorded = runtime.lapsRecorded,
                 isInPitLane = inPitLane,
-                pitOverrideActive = pitOverrideActive
+                pitOverrideActive = pitOverrideActive,
             )
         }
     }
@@ -451,7 +451,7 @@ class TrackMapRecorder(
                 rightCoverageRatio = 0f,
                 guidanceText = null,
                 averageTrackWidthMeters = TrackMapRecorderState.DEFAULT_AVERAGE_TRACK_WIDTH_METERS,
-                message = if (clearMessage) null else it.message
+                message = if (clearMessage) null else it.message,
             )
         }
     }
@@ -477,7 +477,7 @@ class TrackMapRecorder(
                         pitPointCount = runtime.pitPoints.size,
                         pitEntryPoint = runtime.pitEntryPoint,
                         pitExitPoint = runtime.pitExitPoint,
-                        message = message
+                        message = message,
                     )
                 }
             }

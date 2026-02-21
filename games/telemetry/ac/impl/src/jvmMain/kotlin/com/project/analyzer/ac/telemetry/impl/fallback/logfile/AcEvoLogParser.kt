@@ -234,7 +234,7 @@ internal class AcEvoLogParser {
             driverName = driverName,
             driverSteamId = driverSteamId,
             penalty = penalty,
-            sessionType = sessionType
+            sessionType = sessionType,
         )
     }
 
@@ -272,48 +272,50 @@ internal class AcEvoLogParser {
         val slugCandidate = buildTrackCandidate(
             base = baseFromSlug,
             preferredLayout = layoutFromSlug,
-            fallbackLayout = layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile
+            fallbackLayout = layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile,
         )
         val containerCandidate = buildTrackCandidate(
             base = baseFromContainer ?: baseFromDynamic,
             preferredLayout = layoutFromContainer ?: layoutFromDynamic,
-            fallbackLayout = layoutFromSlug ?: layoutFromLayoutFile
+            fallbackLayout = layoutFromSlug ?: layoutFromLayoutFile,
         )
         val layoutFileCandidate = buildTrackCandidate(
             base = baseFromLayoutFile,
             preferredLayout = layoutFromLayoutFile,
-            fallbackLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic
+            fallbackLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic,
         )
         val gameStartedCandidate = buildTrackCandidate(
             base = baseFromGameStarted,
-            preferredLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile
+            preferredLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile,
         )
         val physicsCandidate = buildTrackCandidate(
             base = baseFromPhysics,
-            preferredLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile
+            preferredLayout = layoutFromSlug ?: layoutFromContainer ?: layoutFromDynamic ?: layoutFromLayoutFile,
         )
 
         val (candidateId, candidateLayout, candidateSource) = when {
             slugCandidate.id != null -> Triple(slugCandidate.id, slugCandidate.layout, TrackIdSource.SLUG)
+
             containerCandidate.id != null -> Triple(
                 containerCandidate.id,
                 containerCandidate.layout,
-                TrackIdSource.CONTAINER
+                TrackIdSource.CONTAINER,
             )
 
             layoutFileCandidate.id != null -> Triple(
                 layoutFileCandidate.id,
                 layoutFileCandidate.layout,
-                TrackIdSource.CONTAINER
+                TrackIdSource.CONTAINER,
             )
 
             gameStartedCandidate.id != null -> Triple(
                 gameStartedCandidate.id,
                 gameStartedCandidate.layout,
-                TrackIdSource.GAME_STARTED
+                TrackIdSource.GAME_STARTED,
             )
 
             physicsCandidate.id != null -> Triple(physicsCandidate.id, physicsCandidate.layout, TrackIdSource.NONE)
+
             else -> Triple(null, null, TrackIdSource.NONE)
         }
 
@@ -325,7 +327,7 @@ internal class AcEvoLogParser {
             return ResolvedTrack(
                 trackId = stableId,
                 layout = stableLayout,
-                source = trackIdSource
+                source = trackIdSource,
             )
         }
 
@@ -348,7 +350,7 @@ internal class AcEvoLogParser {
         return ResolvedTrack(
             trackId = effectiveId,
             layout = if (effectiveId == candidateId) candidateLayout else lastInfo.layoutId,
-            source = effectiveSource
+            source = effectiveSource,
         )
     }
 
@@ -361,7 +363,7 @@ internal class AcEvoLogParser {
     private fun buildTrackCandidate(
         base: String?,
         preferredLayout: String?,
-        fallbackLayout: String? = null
+        fallbackLayout: String? = null,
     ): CandidateTrack {
         val normalizedBase = base?.takeIf { it.isNotBlank() } ?: return CandidateTrack()
         val effectiveLayout = preferredLayout?.takeIf { it.isNotBlank() } ?: fallbackLayout?.takeIf { it.isNotBlank() }
@@ -369,7 +371,7 @@ internal class AcEvoLogParser {
             .takeIf { it.isNotBlank() } ?: return CandidateTrack()
         return CandidateTrack(
             id = normalizedId,
-            layout = effectiveLayout
+            layout = effectiveLayout,
         )
     }
 
@@ -397,9 +399,7 @@ internal class AcEvoLogParser {
         return null
     }
 
-    private fun normalizeUuid(raw: String): String {
-        return raw.replace("-", "").lowercase().trim()
-    }
+    private fun normalizeUuid(raw: String): String = raw.replace("-", "").lowercase().trim()
 
     private fun cleanCarId(raw: String): String {
         val s = raw.trim()
@@ -412,20 +412,17 @@ internal class AcEvoLogParser {
         return s
     }
 
-    private fun mapContainerLayout(raw: String): String {
-        return when (normalizeToken(raw)) {
-            "gp_circuit" -> "gp"
-            "gp_circuit_shortcut", "gp_circuit_short", "gp_shortcut" -> "gp_short"
-            else -> raw
-        }
+    private fun mapContainerLayout(raw: String): String = when (normalizeToken(raw)) {
+        "gp_circuit" -> "gp"
+        "gp_circuit_shortcut", "gp_circuit_short", "gp_shortcut" -> "gp_short"
+        else -> raw
     }
 
-    private fun normalizeToken(raw: String): String =
-        raw.lowercase().trim()
-            .replace(Regex("\\s+"), "_")
-            .replace(Regex("[^a-z0-9_]"), "_")
-            .replace(Regex("_+"), "_")
-            .trim('_')
+    private fun normalizeToken(raw: String): String = raw.lowercase().trim()
+        .replace(Regex("\\s+"), "_")
+        .replace(Regex("[^a-z0-9_]"), "_")
+        .replace(Regex("_+"), "_")
+        .trim('_')
 
     private fun cleanGameStartedTrack(raw: String): String {
         val noDate = raw.substringBefore("@").trim()
@@ -506,8 +503,7 @@ internal class AcEvoLogParser {
         penaltyGroupMs = tsMs ?: 0L
     }
 
-    private fun parseTimestamp(line: String): String? =
-        RE_TIMESTAMP.find(line)?.groupValues?.get(1)
+    private fun parseTimestamp(line: String): String? = RE_TIMESTAMP.find(line)?.groupValues?.get(1)
 
     private fun parseTimestampMs(ts: String): Long? = runCatching {
         LocalDateTime.parse(ts, TS_FORMAT)
@@ -517,10 +513,7 @@ internal class AcEvoLogParser {
     }.getOrNull()
 
     private companion object {
-        data class CandidateTrack(
-            val id: String? = null,
-            val layout: String? = null
-        )
+        data class CandidateTrack(val id: String? = null, val layout: String? = null)
 
         val PENALTY_GROUP_WINDOW_MS = 3.seconds.inWholeMilliseconds
 

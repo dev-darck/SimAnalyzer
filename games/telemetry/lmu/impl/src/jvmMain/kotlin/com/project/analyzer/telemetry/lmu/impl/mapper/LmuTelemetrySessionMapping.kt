@@ -17,14 +17,14 @@ internal fun mapSession(telemetry: LmuVehicleTelemetry, scoring: LmuVehicleScori
         position = scoring?.place?.takeIf { it > 0 },
         track = trackName?.let { TrackInfo(trackId = it, trackName = it) },
         pit = PitState(
-            isInPit = scoring?.inPits ?: false
+            isInPit = scoring?.inPits ?: false,
         ),
         car = CarInfo(
             carModel = carModel,
             carId = telemetry.id,
             maxRpm = telemetry.engineMaxRpm.toInt().takeIf { it > 0 },
-            maxFuelLiters = telemetry.fuelCapacity.toFloat().takeIf { it > 0f }
+            maxFuelLiters = telemetry.fuelCapacity.toFloat().takeIf { it > 0f },
         ),
-        sessionTimeElapsedSec = telemetry.elapsedTime.toFloat().takeIf { it > 0 }
+        sessionTimeElapsedSec = telemetry.elapsedTime.toFloat().takeIf { it > 0 },
     )
 }

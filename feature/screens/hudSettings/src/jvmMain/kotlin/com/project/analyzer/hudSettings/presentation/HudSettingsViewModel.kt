@@ -26,8 +26,9 @@ internal class HudSettingsViewModel(
             _state.update {
                 it.copy(
                     panels = panels.invoke()
-                    .filter { panel -> !panel.isDevOnly }
-                    .sortedBy { panel -> panel.id })
+                        .filter { panel -> !panel.isDevOnly }
+                        .sortedBy { panel -> panel.id },
+                )
             }
         }
 

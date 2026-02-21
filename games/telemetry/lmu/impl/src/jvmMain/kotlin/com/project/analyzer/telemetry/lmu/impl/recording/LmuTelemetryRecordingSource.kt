@@ -29,7 +29,8 @@ internal class LmuTelemetryRecordingSource(
     private val encoder: LmuRawFrameEncoder,
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
-) : TelemetryRecordingSource, LmuTelemetryRecordingEmitter {
+) : TelemetryRecordingSource,
+    LmuTelemetryRecordingEmitter {
 
     private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private val gate = TelemetrySamplingGate(TelemetryAcquisitionDefaults.DEFAULT_SAMPLING_RATE_HZ)
@@ -41,7 +42,7 @@ internal class LmuTelemetryRecordingSource(
     private val _samples = MutableSharedFlow<TelemetryRecordingSample>(
         replay = 0,
         extraBufferCapacity = SAMPLE_BUFFER_CAPACITY,
-        onBufferOverflow = BufferOverflow.SUSPEND
+        onBufferOverflow = BufferOverflow.SUSPEND,
     )
     override val samples: SharedFlow<TelemetryRecordingSample> = _samples.asSharedFlow()
 
@@ -50,7 +51,7 @@ internal class LmuTelemetryRecordingSource(
             settings.observeConfig().collect { config ->
                 val rate = config.samplingRateHz.coerceIn(
                     TelemetryAcquisitionDefaults.MIN_SAMPLING_RATE_HZ,
-                    TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ
+                    TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ,
                 )
                 recordingEnabled = config.recordingEnabled
                 if (rate != lastSamplingRateHz) {
@@ -62,11 +63,7 @@ internal class LmuTelemetryRecordingSource(
         }
     }
 
-    override suspend fun emitSample(
-        sessionId: Long,
-        snapshot: LmuTelemetrySnapshot,
-        frame: TelemetryFrame,
-    ) {
+    override suspend fun emitSample(sessionId: Long, snapshot: LmuTelemetrySnapshot, frame: TelemetryFrame) {
         if (sessionId <= 0L) return
         if (!recordingEnabled) return
         if (_samples.subscriptionCount.value == 0) return
@@ -83,8 +80,8 @@ internal class LmuTelemetryRecordingSource(
                 dataSource = DATA_SOURCE,
                 payloadType = encoder.payloadType,
                 payload = payload,
-                frame = frame
-            )
+                frame = frame,
+            ),
         )
     }
 

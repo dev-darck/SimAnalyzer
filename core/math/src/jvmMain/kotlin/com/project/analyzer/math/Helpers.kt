@@ -2,11 +2,9 @@ package com.project.analyzer.math
 
 import com.project.analyzer.math.MathEps.EPS_6_DOUBLE
 
-public fun Double?.finiteOrNull(): Double? =
-    this?.takeIf { it.isFinite() }
+public fun Double?.finiteOrNull(): Double? = this?.takeIf { it.isFinite() }
 
-public fun Double?.finiteNonNegativeOrNull(): Double? =
-    this?.takeIf { it.isFinite() && it >= 0.0 }
+public fun Double?.finiteNonNegativeOrNull(): Double? = this?.takeIf { it.isFinite() && it >= 0.0 }
 
 public fun Double?.finitePositiveOrNull(min: Double = EPS_6_DOUBLE): Double? =
     this?.takeIf { it.isFinite() && it > min }

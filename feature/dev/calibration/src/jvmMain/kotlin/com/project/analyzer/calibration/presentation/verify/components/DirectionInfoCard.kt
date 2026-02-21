@@ -23,31 +23,31 @@ fun DirectionInfoCard(forward: Vec2?, headingDegrees: Float) {
             .clip(SimAnalyzerTheme.shapes.medium)
             .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.2f))
             .padding(12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
             Text(
                 "Car direction",
                 style = MaterialTheme.typography.titleSmall,
-                color = SimAnalyzerTheme.material.onSurface
+                color = SimAnalyzerTheme.material.onSurface,
             )
             forward?.let {
                 Text(
                     "Forward: (${"%.2f".format(it.x)}, ${"%.2f".format(it.y)})",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
             Text(
                 "Heading: ${"%.1f".format(headingDegrees)} deg",
                 style = MaterialTheme.typography.bodySmall,
-                color = SimAnalyzerTheme.material.onSurfaceVariant
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
         }
         Text(
             text = getDirectionArrow(headingDegrees),
             style = MaterialTheme.typography.headlineLarge,
-            color = SimAnalyzerTheme.material.primary
+            color = SimAnalyzerTheme.material.primary,
         )
     }
 }

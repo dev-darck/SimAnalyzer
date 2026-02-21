@@ -13,10 +13,10 @@ object GameProfiles {
                 processNames = listOf(
                     "AC2-Win64-Shipping.exe",
                     "acc.exe",
-                    "AssettoCorsaCompetizione.exe"
+                    "AssettoCorsaCompetizione.exe",
                 ),
-                titlePatterns = listOf("Competizione")
-            )
+                titlePatterns = listOf("Competizione"),
+            ),
         ),
         GameProfile(
             id = GameId.ACE,
@@ -26,17 +26,17 @@ object GameProfiles {
                     "AssettoCorsaEVO.exe",
                     "acevo.exe",
                     "acevo",
-                    "evo"
+                    "evo",
                 ),
-                titlePatterns = listOf("Evo")
-            )
+                titlePatterns = listOf("Evo"),
+            ),
         ),
         GameProfile(
             id = GameId.AC,
             config = GameConfig(
                 processNames = listOf("acs.exe", "AssettoCorsa.exe"),
-                titlePatterns = listOf("Assetto Corsa")
-            )
+                titlePatterns = listOf("Assetto Corsa"),
+            ),
         ),
 //        GameProfile(
 //            id = GameId.LMU,
@@ -55,8 +55,8 @@ object GameProfiles {
                     add(
                         GameConfig(
                             processNames = config.processNames,
-                            windowClassNames = config.windowClassNames
-                        )
+                            windowClassNames = config.windowClassNames,
+                        ),
                     )
                 }
 

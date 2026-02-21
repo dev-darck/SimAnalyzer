@@ -45,9 +45,9 @@ internal fun SessionScreenHeader(
             .border(
                 width = 1.dp,
                 color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.25f),
-                shape = SimAnalyzerTheme.shapes.large
+                shape = SimAnalyzerTheme.shapes.large,
             )
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
         if (maxWidth < 1080.dp) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -55,32 +55,32 @@ internal fun SessionScreenHeader(
                     state = state,
                     dividerColor = dividerColor,
                     onIntent = onIntent,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 SearchField(
                     value = state.searchQuery,
                     placeholder = "Search sessions...",
                     onValueChange = { onIntent(SessionListIntent.ChangeSearch(it)) },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         } else {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 SessionFiltersStrip(
                     state = state,
                     dividerColor = dividerColor,
                     onIntent = onIntent,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 Spacer(modifier = Modifier.width(12.dp))
                 SearchField(
                     value = state.searchQuery,
                     placeholder = "Search sessions...",
                     onValueChange = { onIntent(SessionListIntent.ChangeSearch(it)) },
-                    modifier = Modifier.widthIn(min = 220.dp, max = 320.dp)
+                    modifier = Modifier.widthIn(min = 220.dp, max = 320.dp),
                 )
             }
         }
@@ -97,33 +97,33 @@ private fun SessionFiltersStrip(
     Row(
         modifier = modifier.horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         FilterDropdown(
             filter = state.gameFilter,
-            onSelect = { onIntent(SessionListIntent.ChangeGame(it)) }
+            onSelect = { onIntent(SessionListIntent.ChangeGame(it)) },
         )
         FilterDropdown(
             filter = state.trackFilter,
-            onSelect = { onIntent(SessionListIntent.ChangeTrack(it)) }
+            onSelect = { onIntent(SessionListIntent.ChangeTrack(it)) },
         )
         FilterDropdown(
             filter = state.carFilter,
-            onSelect = { onIntent(SessionListIntent.ChangeCar(it)) }
+            onSelect = { onIntent(SessionListIntent.ChangeCar(it)) },
         )
         FilterDropdown(
             filter = state.dateFilter,
-            onSelect = { onIntent(SessionListIntent.ChangeDate(it)) }
+            onSelect = { onIntent(SessionListIntent.ChangeDate(it)) },
         )
         Box(
             modifier = Modifier
                 .height(28.dp)
                 .width(1.dp)
-                .background(dividerColor)
+                .background(dividerColor),
         )
         FilterDropdown(
             filter = state.sortFilter,
-            onSelect = { onIntent(SessionListIntent.ChangeSort(it)) }
+            onSelect = { onIntent(SessionListIntent.ChangeSort(it)) },
         )
     }
 }
@@ -140,11 +140,11 @@ private fun SessionScreenHeaderPreview() {
                     selectedLabel = "All",
                     options = listOf(
                         DropdownOptionUi(FILTER_ALL_ID, "All"),
-                        DropdownOptionUi("acc", "ACC")
-                    )
-                )
+                        DropdownOptionUi("acc", "ACC"),
+                    ),
+                ),
             ),
-            onIntent = {}
+            onIntent = {},
         )
     }
 }

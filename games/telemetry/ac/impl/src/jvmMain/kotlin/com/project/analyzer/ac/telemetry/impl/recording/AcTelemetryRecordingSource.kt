@@ -43,7 +43,7 @@ class AcTelemetryRecordingSource(
     private val _samples = MutableSharedFlow<TelemetryRecordingSample>(
         replay = 0,
         extraBufferCapacity = SAMPLE_BUFFER_CAPACITY,
-        onBufferOverflow = BufferOverflow.SUSPEND
+        onBufferOverflow = BufferOverflow.SUSPEND,
     )
     override val samples: SharedFlow<TelemetryRecordingSample> = _samples.asSharedFlow()
 
@@ -52,7 +52,7 @@ class AcTelemetryRecordingSource(
             settings.observeConfig().collect { config ->
                 val rate = config.samplingRateHz.coerceIn(
                     TelemetryAcquisitionDefaults.MIN_SAMPLING_RATE_HZ,
-                    TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ
+                    TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ,
                 )
                 recordingEnabled = config.recordingEnabled
                 if (rate != lastSamplingRateHz) {
@@ -86,8 +86,8 @@ class AcTelemetryRecordingSource(
                 dataSource = dataSource.name,
                 payloadType = encoder.payloadType,
                 payload = payload,
-                frame = frame
-            )
+                frame = frame,
+            ),
         )
     }
 
@@ -95,11 +95,9 @@ class AcTelemetryRecordingSource(
         scope.cancel()
     }
 
-    private fun dataSourceId(source: DataSourceType): Int =
-        if (source == DataSourceType.FALLBACK) 1 else 0
+    private fun dataSourceId(source: DataSourceType): Int = if (source == DataSourceType.FALLBACK) 1 else 0
 
-    private fun gameIdForSource(source: DataSourceType): String =
-        if (source == DataSourceType.FALLBACK) "ace" else "ac"
+    private fun gameIdForSource(source: DataSourceType): String = if (source == DataSourceType.FALLBACK) "ace" else "ac"
 
     private companion object {
 

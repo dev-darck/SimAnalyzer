@@ -39,36 +39,33 @@ fun TrackMapPreview(
         modifier = modifier
             .background(background, SimAnalyzerTheme.shapes.large)
             .border(1.dp, borderColor, SimAnalyzerTheme.shapes.large)
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
         if (state.points.size < 2) {
             Text(
                 text = "Start recording to build the map",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
             )
         } else {
             TrackMapCanvas(
                 state = state,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier.matchParentSize(),
             )
         }
 
         if (showStatus) {
             TrackMapStatus(
                 state = state,
-                modifier = Modifier.align(Alignment.TopStart)
+                modifier = Modifier.align(Alignment.TopStart),
             )
         }
     }
 }
 
 @Composable
-private fun TrackMapStatus(
-    state: TrackMapRecorderState,
-    modifier: Modifier = Modifier,
-) {
+private fun TrackMapStatus(state: TrackMapRecorderState, modifier: Modifier = Modifier) {
     val statusColor = if (state.recording) {
         SimAnalyzerTheme.extended.teal
     } else {
@@ -79,43 +76,40 @@ private fun TrackMapStatus(
     Column(
         modifier = modifier
             .background(background, SimAnalyzerTheme.shapes.medium)
-            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp),
     ) {
         Text(
             text = if (state.recording) "Recording" else "Idle",
             color = statusColor,
-            style = MaterialTheme.typography.labelMedium
+            style = MaterialTheme.typography.labelMedium,
         )
         Text(
             text = "Points: ${state.pointCount}",
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
         )
         Text(
             text = "Distance: %.1f m".format(state.totalDistanceMeters),
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
         )
         Text(
             text = "Width: %.1f m".format(state.averageTrackWidthMeters),
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
         )
         state.guidanceText?.let { hint ->
             Text(
                 text = hint,
                 color = SimAnalyzerTheme.extended.amber,
-                style = MaterialTheme.typography.labelSmall
+                style = MaterialTheme.typography.labelSmall,
             )
         }
     }
 }
 
 @Composable
-private fun TrackMapCanvas(
-    state: TrackMapRecorderState,
-    modifier: Modifier = Modifier,
-) {
+private fun TrackMapCanvas(state: TrackMapRecorderState, modifier: Modifier = Modifier) {
     val points = state.points
     if (points.size < 2) return
 
@@ -135,13 +129,13 @@ private fun TrackMapCanvas(
         width = 2.2f,
         cap = StrokeCap.Round,
         join = StrokeJoin.Round,
-        pathEffect = dashEffect
+        pathEffect = dashEffect,
     )
     val glowStroke = Stroke(
         width = 6f,
         cap = StrokeCap.Round,
         join = StrokeJoin.Round,
-        pathEffect = dashEffect
+        pathEffect = dashEffect,
     )
 
     Canvas(modifier = modifier) {
@@ -152,7 +146,7 @@ private fun TrackMapCanvas(
         val padPx = 16f
         val scale = min(
             (size.width - padPx * 2f) / widthMeters,
-            (size.height - padPx * 2f) / heightMeters
+            (size.height - padPx * 2f) / heightMeters,
         )
 
         val offsetX = (size.width - widthMeters * scale) * 0.5f - bounds.minX * scale
@@ -160,7 +154,7 @@ private fun TrackMapCanvas(
 
         fun toScreen(p: Vec2): Offset = Offset(
             x = p.x * scale + offsetX,
-            y = p.y * scale + offsetY
+            y = p.y * scale + offsetY,
         )
 
         val path = Path()
@@ -193,7 +187,7 @@ private fun TrackMapCanvas(
             corridorPath.close()
             drawPath(
                 path = corridorPath,
-                color = corridorColor.copy(alpha = 0.08f)
+                color = corridorColor.copy(alpha = 0.08f),
             )
 
             val leftPath = buildPath(leftWorld, ::toScreen)
@@ -201,12 +195,12 @@ private fun TrackMapCanvas(
             drawPath(
                 path = leftPath,
                 color = boundaryColor,
-                style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
             drawPath(
                 path = rightPath,
                 color = boundaryColor,
-                style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
         }
 
@@ -222,8 +216,8 @@ private fun TrackMapCanvas(
                     width = 4f,
                     cap = StrokeCap.Round,
                     join = StrokeJoin.Round,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f)
-                )
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f), 0f),
+                ),
             )
             drawPath(
                 path = pitPath,
@@ -231,8 +225,8 @@ private fun TrackMapCanvas(
                 style = Stroke(
                     width = 2.2f,
                     cap = StrokeCap.Round,
-                    join = StrokeJoin.Round
-                )
+                    join = StrokeJoin.Round,
+                ),
             )
         }
 
@@ -247,12 +241,12 @@ private fun TrackMapCanvas(
             drawPath(
                 path = highlightPath,
                 color = highlightGlow.copy(alpha = 0.6f),
-                style = Stroke(width = 10f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                style = Stroke(width = 10f, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
             drawPath(
                 path = highlightPath,
                 color = highlightColor,
-                style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                style = Stroke(width = 6f, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
 
             val start = toScreen(highlightPoints.first())
@@ -328,6 +322,6 @@ private fun computeBounds(points: List<Vec2>): TrackMapBounds? {
         minX = minX,
         minY = minY,
         maxX = maxX,
-        maxY = maxY
+        maxY = maxY,
     )
 }

@@ -8,11 +8,7 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 
 class PhysicsPoseExtractor {
 
-    fun extract(
-        physics: SPageFilePhysics,
-        referencePoint: ReferencePoint
-    ): CarPose? {
-
+    fun extract(physics: SPageFilePhysics, referencePoint: ReferencePoint): CarPose? {
         val tcp = physics.tyreContactPoint
         if (tcp.size < 12) return null
 
@@ -48,7 +44,7 @@ class PhysicsPoseExtractor {
 
         val headingDir = Heading2D.resolveBidirectional(
             a = headingDirA,
-            prefer = axleForward
+            prefer = axleForward,
         )
 
         val isMovingForward = if (worldVel.len() > 0.2f) {

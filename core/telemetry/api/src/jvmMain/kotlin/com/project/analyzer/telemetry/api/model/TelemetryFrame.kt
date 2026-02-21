@@ -21,5 +21,5 @@ public data class TelemetryFrame(
     val opponents: List<OpponentFrame> = emptyList(),
 
     val extras: Map<String, TelemetryValue> = emptyMap(),
-    var timestampNs: Long = 0L
+    var timestampNs: Long = 0L,
 )

@@ -18,6 +18,7 @@ internal fun Project.configureComposeKmp() {
     }
 
     extensions.configure<KotlinMultiplatformExtension> {
+        jvmToolchain(21)
         jvm()
 
         val compose = extensions.getByName("compose") as ComposePlugin.Dependencies

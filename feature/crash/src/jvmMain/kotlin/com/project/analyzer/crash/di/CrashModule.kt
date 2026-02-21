@@ -12,7 +12,7 @@ import dev.zacsweers.metro.SingleIn
 
 @ContributesTo(CrashScope::class)
 @BindingContainer
-object CrashBindings {
+object CrashModule {
 
     @Provides
     @SingleIn(CrashScope::class)
@@ -42,7 +42,6 @@ object CrashBindings {
 
     @Provides
     @SingleIn(CrashScope::class)
-    fun provideReportOnGitHubUseCase(
-        copyReportUseCase: CopyReportUseCase,
-    ): ReportOnGitHubUseCase = ReportOnGitHubUseCase(copyReportUseCase)
+    fun provideReportOnGitHubUseCase(copyReportUseCase: CopyReportUseCase): ReportOnGitHubUseCase =
+        ReportOnGitHubUseCase(copyReportUseCase)
 }

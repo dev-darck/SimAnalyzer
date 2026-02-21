@@ -32,5 +32,5 @@ public data class LmuScoringInfo(
     val serverName: String,
     val startEt: Float,
     val avgPathWetness: Double,
-    val expansion: ByteArray
+    val expansion: ByteArray,
 )

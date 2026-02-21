@@ -40,7 +40,7 @@ internal fun SessionScreen() {
         onIntent = viewModel::dispatch,
         onOpenDetails = { sessionId ->
             navigator.navigate(Route.SessionRoot.SessionDetails(sessionId))
-        }
+        },
     )
 }
 
@@ -57,22 +57,22 @@ internal fun SessionListContent(
             .background(SimAnalyzerTheme.material.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         SessionScreenStatsRow(
             stats = state.stats,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
         SessionScreenHeader(
             state = state,
             modifier = Modifier.fillMaxWidth(),
-            onIntent = onIntent
+            onIntent = onIntent,
         )
         SessionScreenTable(
             state = state,
             modifier = Modifier.fillMaxWidth(),
             onOpenDetails = onOpenDetails,
-            onIntent = onIntent
+            onIntent = onIntent,
         )
     }
 }
@@ -83,84 +83,80 @@ private fun SessionListContentPreview() {
     SimAnalyzerTheme {
         SessionListContent(
             state = previewState(),
-            onIntent = {}
+            onIntent = {},
         )
     }
 }
 
-private fun previewState(): SessionListState {
-    return SessionListState(
-        isLoading = false,
-        stats = SessionStatsUi(
-            totalDistanceLabel = "0.000",
-            sessionsCount = 8,
-            incidentsCount = 0,
-            favoriteCar = "Car Name"
+private fun previewState(): SessionListState = SessionListState(
+    isLoading = false,
+    stats = SessionStatsUi(
+        totalDistanceLabel = "0.000",
+        sessionsCount = 8,
+        incidentsCount = 0,
+        favoriteCar = "Car Name",
+    ),
+    gameFilter = DropdownFilterUi(
+        label = "Game",
+        selectedId = FILTER_ALL_ID,
+        selectedLabel = "All",
+        options = listOf(
+            DropdownOptionUi(FILTER_ALL_ID, "All"),
+            DropdownOptionUi("acc", "ACC"),
         ),
-        gameFilter = DropdownFilterUi(
-            label = "Game",
-            selectedId = FILTER_ALL_ID,
-            selectedLabel = "All",
-            options = listOf(
-                DropdownOptionUi(FILTER_ALL_ID, "All"),
-                DropdownOptionUi("acc", "ACC")
-            )
+    ),
+    trackFilter = DropdownFilterUi(
+        label = "Track",
+        selectedId = FILTER_ALL_ID,
+        selectedLabel = "All",
+        options = listOf(
+            DropdownOptionUi(FILTER_ALL_ID, "All"),
+            DropdownOptionUi("spa", "Spa"),
         ),
-        trackFilter = DropdownFilterUi(
-            label = "Track",
-            selectedId = FILTER_ALL_ID,
-            selectedLabel = "All",
-            options = listOf(
-                DropdownOptionUi(FILTER_ALL_ID, "All"),
-                DropdownOptionUi("spa", "Spa")
-            )
+    ),
+    carFilter = DropdownFilterUi(
+        label = "Car",
+        selectedId = FILTER_ALL_ID,
+        selectedLabel = "All",
+        options = listOf(
+            DropdownOptionUi(FILTER_ALL_ID, "All"),
+            DropdownOptionUi("car_name", "Car Name"),
         ),
-        carFilter = DropdownFilterUi(
-            label = "Car",
-            selectedId = FILTER_ALL_ID,
-            selectedLabel = "All",
-            options = listOf(
-                DropdownOptionUi(FILTER_ALL_ID, "All"),
-                DropdownOptionUi("car_name", "Car Name")
-            )
+    ),
+    dateFilter = DropdownFilterUi(
+        label = "Date",
+        selectedId = FILTER_ALL_ID,
+        selectedLabel = "All",
+        options = listOf(
+            DropdownOptionUi(FILTER_ALL_ID, "All"),
+            DropdownOptionUi("oct_2025", "Oct 2025"),
         ),
-        dateFilter = DropdownFilterUi(
-            label = "Date",
-            selectedId = FILTER_ALL_ID,
-            selectedLabel = "All",
-            options = listOf(
-                DropdownOptionUi(FILTER_ALL_ID, "All"),
-                DropdownOptionUi("oct_2025", "Oct 2025")
-            )
+    ),
+    sortFilter = DropdownFilterUi(
+        label = "Sort by",
+        selectedId = "best",
+        selectedLabel = "Best lap",
+        options = listOf(
+            DropdownOptionUi("best", "Best lap"),
+            DropdownOptionUi("latest", "Latest"),
         ),
-        sortFilter = DropdownFilterUi(
-            label = "Sort by",
-            selectedId = "best",
-            selectedLabel = "Best lap",
-            options = listOf(
-                DropdownOptionUi("best", "Best lap"),
-                DropdownOptionUi("latest", "Latest")
-            )
-        ),
-        page = 1,
-        pageCount = 9,
-        sessions = previewSessions(),
-        visibleSessions = previewSessions()
+    ),
+    page = 1,
+    pageCount = 9,
+    sessions = previewSessions(),
+    visibleSessions = previewSessions(),
+)
+
+private fun previewSessions(): List<SessionRowUi> = List(size = 8) { index ->
+    SessionRowUi(
+        sessionId = (index + 1).toLong(),
+        dateLabel = "Oct 24, 2025",
+        timeLabel = "20:40",
+        gameLabel = "ACC",
+        trackLabel = "Location",
+        carLabel = "Car Name",
+        lapsLabel = "0",
+        bestLapLabel = "0:00.000",
+        isSaved = index % 3 == 0,
     )
-}
-
-private fun previewSessions(): List<SessionRowUi> {
-    return List(size = 8) { index ->
-        SessionRowUi(
-            sessionId = (index + 1).toLong(),
-            dateLabel = "Oct 24, 2025",
-            timeLabel = "20:40",
-            gameLabel = "ACC",
-            trackLabel = "Location",
-            carLabel = "Car Name",
-            lapsLabel = "0",
-            bestLapLabel = "0:00.000",
-            isSaved = index % 3 == 0
-        )
-    }
 }

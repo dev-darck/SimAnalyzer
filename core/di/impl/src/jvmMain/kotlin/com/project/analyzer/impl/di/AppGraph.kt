@@ -10,6 +10,6 @@ import dev.zacsweers.metro.DependencyGraph
 
 @DependencyGraph(
     AppScope::class,
-    additionalScopes = [SessionScope::class, ScreenScope::class, HudScope::class, NavigationScope::class]
+    additionalScopes = [SessionScope::class, ScreenScope::class, HudScope::class, NavigationScope::class],
 )
 interface AppGraph : AppComponent, PreferenceGraph

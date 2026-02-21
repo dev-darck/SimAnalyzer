@@ -3,7 +3,6 @@ package com.project.analyzer.navigation.api
 import kotlin.reflect.KClass
 
 public interface NavigationState<T : Route> {
-
     public val currentTopLevel: Root
     public val backStack: List<T>
     public val canGoForward: Boolean

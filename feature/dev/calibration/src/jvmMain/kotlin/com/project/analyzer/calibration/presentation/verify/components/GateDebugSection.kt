@@ -58,7 +58,7 @@ fun GateDebugSection(
                 onCapture = onCaptureGate,
                 onCancel = onCancelEdit,
                 onFlip = { correspondingEditGate?.let { onFlipGate(it) } },
-                onRadius = onRadius
+                onRadius = onRadius,
             )
         }
     }
@@ -90,12 +90,12 @@ private fun GateInfoRow(
             .clip(shape)
             .background(containerColor)
             .border(1.dp, borderColor, shape)
-            .padding(12.dp)
+            .padding(12.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             GateHeader(gate = gate)
             GateActions(
@@ -107,7 +107,7 @@ private fun GateInfoRow(
                 onCapture = onCapture,
                 onCancel = onCancel,
                 onFlip = onFlip,
-                onRadius = onRadius
+                onRadius = onRadius,
             )
         }
 
@@ -121,20 +121,20 @@ private fun GateHeader(gate: GateDebugInfo) {
     val statusColor = if (gate.isCrossed) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.extended.red
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Spacer(
             modifier = Modifier
                 .size(10.dp)
                 .clip(androidx.compose.foundation.shape.CircleShape)
-                .background(statusColor)
+                .background(statusColor),
         )
 
         Column {
             Text(
                 gate.name,
                 style = MaterialTheme.typography.bodyLarge,
-                color = SimAnalyzerTheme.material.onSurface
+                color = SimAnalyzerTheme.material.onSurface,
             )
             Text(
                 "Distance: ${"%.1f".format(gate.distanceMeters)}m",
@@ -143,7 +143,7 @@ private fun GateHeader(gate: GateDebugInfo) {
                     gate.distanceMeters < 5f -> SimAnalyzerTheme.extended.teal
                     gate.distanceMeters < 15f -> SimAnalyzerTheme.extended.amber
                     else -> SimAnalyzerTheme.material.onSurfaceVariant
-                }
+                },
             )
         }
     }
@@ -159,13 +159,13 @@ private fun GateActions(
     onCapture: () -> Unit,
     onCancel: () -> Unit,
     onFlip: () -> Unit,
-    onRadius: (Float) -> Unit
+    onRadius: (Float) -> Unit,
 ) {
     val showFlipButton = gate.directionDot != null && gate.directionDot < -0.3f
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showFlipButton && !isEditing) {
             OutlinedButton(onClick = onFlip) {
@@ -176,7 +176,7 @@ private fun GateActions(
         if (isEditing) {
             Button(
                 onClick = onCapture,
-                enabled = !isCapturing
+                enabled = !isCapturing,
             ) {
                 Text(if (isCapturing) "Capturing..." else "Capture")
             }
@@ -185,7 +185,7 @@ private fun GateActions(
                 onValueChange = { onRadius(it.toFloatOrNull() ?: halfWidthMeters) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.width(86.dp)
+                modifier = Modifier.width(86.dp),
             )
             OutlinedButton(onClick = onCancel) {
                 Text("Cancel")
@@ -213,26 +213,30 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
         Column(modifier = Modifier.padding(top = 4.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
                     "Gate fwd: (${"%.2f".format(gate.gateForward.x)}, ${"%.2f".format(gate.gateForward.y)})",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
                 Text(
                     "Dot: ${"%.2f".format(gate.directionDot)}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
 
             Spacer(Modifier.height(2.dp))
 
             Text(
-                "isInside: ${gate.isInside}; margin: ${"%.2f".format(gate.margin)}, dParallel: ${"%.2f".format(gate.dParallel)}",
+                "isInside: ${gate.isInside}; margin: ${
+                    "%.2f".format(
+                        gate.margin,
+                    )
+                }, dParallel: ${"%.2f".format(gate.dParallel)}",
                 style = MaterialTheme.typography.bodySmall,
-                color = SimAnalyzerTheme.material.onSurfaceVariant
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
 
             gate.signedDistanceFromPlane?.let { signedDist ->
@@ -244,7 +248,7 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
                 Text(
                     positionText,
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
 
@@ -252,7 +256,7 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
                 Text(
                     text,
                     style = MaterialTheme.typography.bodySmall,
-                    color = color
+                    color = color,
                 )
             }
         }
@@ -265,7 +269,7 @@ private fun GateCrossedStatus(gate: GateDebugInfo) {
         Text(
             "Crossed",
             style = MaterialTheme.typography.bodySmall,
-            color = SimAnalyzerTheme.extended.teal
+            color = SimAnalyzerTheme.extended.teal,
         )
     }
 }

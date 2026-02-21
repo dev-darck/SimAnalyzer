@@ -26,23 +26,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
 
-internal data class ElectronicItemUi(
-    val title: String,
-    val value: String,
-    val highlighted: Boolean = false
-)
+internal data class ElectronicItemUi(val title: String, val value: String, val highlighted: Boolean = false)
 
 internal data class ElectronicsBlockUi(
     val title: String = "Electronics",
-    val items: List<ElectronicItemUi> = emptyList()
+    val items: List<ElectronicItemUi> = emptyList(),
 )
 
 @Composable
-internal fun ElectronicsBlock(
-    data: ElectronicsBlockUi,
-    modifier: Modifier = Modifier,
-    gap: Dp = 12.dp,
-) {
+internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Modifier, gap: Dp = 12.dp) {
     val tileShape = RoundedCornerShape(16.dp)
 
     val cardBg = SimAnalyzerTheme.material.surface
@@ -60,7 +52,7 @@ internal fun ElectronicsBlock(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
-            .padding(22.dp)
+            .padding(22.dp),
     ) {
         Text(
             text = data.title,
@@ -73,11 +65,11 @@ internal fun ElectronicsBlock(
 
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(gap)
+            verticalArrangement = Arrangement.spacedBy(gap),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(gap)
+                horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
                 ElectronicsTile(
                     item = data.items.getOrNull(0) ?: ElectronicItemUi("TC", "0"),
@@ -86,7 +78,7 @@ internal fun ElectronicsBlock(
                     highlightBg = highlightBg,
                     titleColor = muted,
                     valueColor = valueColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 ElectronicsTile(
                     item = data.items.getOrNull(1) ?: ElectronicItemUi("ABS", "0"),
@@ -95,13 +87,13 @@ internal fun ElectronicsBlock(
                     highlightBg = highlightBg,
                     titleColor = muted,
                     valueColor = valueColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(gap)
+                horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
                 ElectronicsTile(
                     item = data.items.getOrNull(2) ?: ElectronicItemUi("MAP", "0"),
@@ -110,7 +102,7 @@ internal fun ElectronicsBlock(
                     highlightBg = highlightBg,
                     titleColor = muted,
                     valueColor = valueColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 ElectronicsTile(
                     item = data.items.getOrNull(3) ?: ElectronicItemUi("BB", "0%"),
@@ -119,7 +111,7 @@ internal fun ElectronicsBlock(
                     highlightBg = highlightBg,
                     titleColor = muted,
                     valueColor = valueColor,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
             }
         }
@@ -134,7 +126,7 @@ private fun ElectronicsTile(
     highlightBg: Color,
     titleColor: Color,
     valueColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val bg = if (item.highlighted) highlightBg else tileBg
     val value = if (item.highlighted) SimAnalyzerTheme.material.onPrimary else valueColor
@@ -145,7 +137,7 @@ private fun ElectronicsTile(
             .clip(tileShape)
             .background(bg)
             .padding(vertical = 10.dp, horizontal = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = item.title,
@@ -153,7 +145,7 @@ private fun ElectronicsTile(
             fontSize = 12.sp,
             fontWeight = FontWeight.SemiBold,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
 
         Spacer(Modifier.height(2.dp))
@@ -165,7 +157,7 @@ private fun ElectronicsTile(
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Monospace,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -179,7 +171,7 @@ private fun ElectronicsBlockPreview() {
                 .fillMaxSize()
                 .background(SimAnalyzerTheme.material.background)
                 .padding(24.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             ElectronicsBlock(
                 data = ElectronicsBlockUi(
@@ -188,10 +180,10 @@ private fun ElectronicsBlockPreview() {
                         ElectronicItemUi("TC", "5", highlighted = true),
                         ElectronicItemUi("ABS", "3"),
                         ElectronicItemUi("MAP", "2"),
-                        ElectronicItemUi("BB", "66.6%")
-                    )
+                        ElectronicItemUi("BB", "66.6%"),
+                    ),
                 ),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

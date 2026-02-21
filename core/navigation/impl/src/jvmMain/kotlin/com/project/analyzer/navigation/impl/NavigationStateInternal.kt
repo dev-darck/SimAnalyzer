@@ -181,11 +181,7 @@ class NavigationStateInternal<T : Route>(
         if (forwardActions.isNotEmpty()) forwardActions.clear()
     }
 
-    private fun setRoot(
-        root: T,
-        resetStack: Boolean = true,
-        switchToTopLevel: Boolean = true,
-    ) {
+    private fun setRoot(root: T, resetStack: Boolean = true, switchToTopLevel: Boolean = true) {
         require(root.isRoot) { "setRoot expects a root route, got=$root" }
 
         val tl = root.topLevel
@@ -202,13 +198,11 @@ class NavigationStateInternal<T : Route>(
             currentTopLevelState.value = tl
         }
     }
-
 }
 
-private class StartPlusStack<T>(
-    private val startRoot: T,
-    private val tail: List<T>,
-) : AbstractList<T>(), RandomAccess {
+private class StartPlusStack<T>(private val startRoot: T, private val tail: List<T>) :
+    AbstractList<T>(),
+    RandomAccess {
 
     override val size: Int get() = 1 + tail.size
     override fun get(index: Int): T = if (index == 0) startRoot else tail[index - 1]

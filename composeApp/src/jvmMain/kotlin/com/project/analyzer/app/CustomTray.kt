@@ -88,7 +88,7 @@ fun ApplicationScope.CustomTray(
     overlayVisible: Boolean,
     onMainAction: () -> Unit,
     onOverlayToggle: () -> Unit,
-    onOpenSession: () -> Unit
+    onOpenSession: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var menuPosition by remember { mutableStateOf(Pair(0, 0)) }
@@ -146,7 +146,7 @@ fun ApplicationScope.CustomTray(
                 onOpenSession()
                 showMenu = false
             },
-            onExit = ::exitApplication
+            onExit = ::exitApplication,
         )
     }
 }
@@ -160,7 +160,7 @@ private fun TrayMenuWindow(
     onOverlayToggle: () -> Unit,
     onOpenApp: () -> Unit,
     onOpenSession: () -> Unit,
-    onExit: () -> Unit
+    onExit: () -> Unit,
 ) {
     val density = LocalDensity.current
 
@@ -187,7 +187,7 @@ private fun TrayMenuWindow(
 
     val state = rememberDialogState(
         size = DpSize(MENU_WIDTH_DP, MENU_HEIGHT_DP),
-        position = WindowPosition.Absolute(x = xDp, y = yDp)
+        position = WindowPosition.Absolute(x = xDp, y = yDp),
     )
 
     DialogWindow(
@@ -196,7 +196,7 @@ private fun TrayMenuWindow(
         undecorated = true,
         transparent = true,
         resizable = false,
-        focusable = true
+        focusable = true,
     ) {
         DisposableEffect(window) {
             window.background = java.awt.Color(0, 0, 0, 0)
@@ -229,7 +229,7 @@ private fun TrayMenuWindow(
                     } else {
                         false
                     }
-                }
+                },
         ) {
             TrayMenuContent(
                 brandName = brandName,
@@ -237,7 +237,7 @@ private fun TrayMenuWindow(
                 onOverlayToggle = onOverlayToggle,
                 onOpenApp = onOpenApp,
                 onOpenSession = onOpenSession,
-                onExit = onExit
+                onExit = onExit,
             )
         }
     }
@@ -250,7 +250,7 @@ private fun TrayMenuContent(
     onOverlayToggle: () -> Unit = {},
     onOpenApp: () -> Unit = {},
     onOpenSession: () -> Unit = {},
-    onExit: () -> Unit = {}
+    onExit: () -> Unit = {},
 ) {
     val surface = SimAnalyzerTheme.material.surface
     val outline = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.75f)
@@ -272,19 +272,21 @@ private fun TrayMenuContent(
         border = BorderStroke(1.dp, outline),
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(8.dp),
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 6.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
                     modifier = Modifier
                         .size(8.dp)
                         .clip(CircleShape)
-                        .background(if (overlayVisible) SimAnalyzerTheme.material.primary else textSecondary.copy(alpha = 0.6f))
+                        .background(
+                            if (overlayVisible) SimAnalyzerTheme.material.primary else textSecondary.copy(alpha = 0.6f),
+                        ),
                 )
 
                 Spacer(Modifier.width(8.dp))
@@ -294,25 +296,27 @@ private fun TrayMenuContent(
                         text = brandName,
                         color = textPrimary,
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
                     )
                     Text(
                         text = "Tray actions",
                         color = textSecondary,
-                        style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 }
 
                 StatusPill(
                     text = if (overlayVisible) "ON" else "OFF",
-                    background = if (overlayVisible)
+                    background = if (overlayVisible) {
                         SimAnalyzerTheme.material.secondaryContainer
-                    else
-                        SimAnalyzerTheme.material.surfaceVariant,
-                    foreground = if (overlayVisible)
+                    } else {
+                        SimAnalyzerTheme.material.surfaceVariant
+                    },
+                    foreground = if (overlayVisible) {
                         SimAnalyzerTheme.material.onSecondaryContainer
-                    else
+                    } else {
                         textSecondary
+                    },
                 )
             }
 
@@ -325,7 +329,7 @@ private fun TrayMenuContent(
                 onClick = onOpenApp,
                 hoverColor = hoverPill,
                 textColor = textPrimary,
-                iconTint = accent
+                iconTint = accent,
             )
 
             TrayMenuItem(
@@ -334,7 +338,7 @@ private fun TrayMenuContent(
                 onClick = onOpenSession,
                 hoverColor = hoverPill,
                 textColor = textPrimary,
-                iconTint = accent
+                iconTint = accent,
             )
 
             TrayMenuItem(
@@ -347,16 +351,18 @@ private fun TrayMenuContent(
                 trailing = {
                     StatusPill(
                         text = if (overlayVisible) "ON" else "OFF",
-                        background = if (overlayVisible)
+                        background = if (overlayVisible) {
                             SimAnalyzerTheme.material.primaryContainer
-                        else
-                            SimAnalyzerTheme.material.surfaceVariant,
-                        foreground = if (overlayVisible)
+                        } else {
+                            SimAnalyzerTheme.material.surfaceVariant
+                        },
+                        foreground = if (overlayVisible) {
                             SimAnalyzerTheme.material.onPrimaryContainer
-                        else
+                        } else {
                             textSecondary
+                        },
                     )
-                }
+                },
             )
 
             Spacer(Modifier.height(4.dp))
@@ -369,7 +375,7 @@ private fun TrayMenuContent(
                 onClick = onExit,
                 hoverColor = destructiveHover,
                 textColor = destructive,
-                iconTint = destructive
+                iconTint = destructive,
             )
         }
     }
@@ -390,7 +396,7 @@ private fun TrayMenuItem(
 
     val bg by animateColorAsState(
         targetValue = if (hovered) hoverColor.copy(alpha = 0.28f) else Color.Transparent,
-        animationSpec = tween(120)
+        animationSpec = tween(120),
     )
 
     Row(
@@ -401,16 +407,16 @@ private fun TrayMenuItem(
             .hoverable(interaction)
             .clickable(
                 interactionSource = interaction,
-                indication = null
+                indication = null,
             ) { onClick() }
             .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             tint = iconTint,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(16.dp),
         )
 
         Spacer(Modifier.width(8.dp))
@@ -420,7 +426,7 @@ private fun TrayMenuItem(
             color = textColor,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
         )
 
         if (trailing != null) {
@@ -431,23 +437,19 @@ private fun TrayMenuItem(
 }
 
 @Composable
-private fun StatusPill(
-    text: String,
-    background: Color,
-    foreground: Color
-) {
+private fun StatusPill(text: String, background: Color, foreground: Color) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(999.dp))
             .background(background)
             .padding(horizontal = 8.dp, vertical = 3.dp),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
             color = foreground,
             style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
@@ -458,7 +460,7 @@ private fun TrayMenuPreview() {
     SimAnalyzerTheme {
         TrayMenuContent(
             brandName = "SimAnalyzer",
-            overlayVisible = true
+            overlayVisible = true,
         )
     }
 }

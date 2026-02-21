@@ -11,18 +11,12 @@ import androidx.compose.ui.unit.Dp
 
 public interface ResponsiveScope {
 
-    public fun item(
-        key: Any? = null,
-        isContentFull: Boolean = false,
-        content: @Composable (isLinear: Boolean) -> Unit
-    )
+    public fun item(key: Any? = null, isContentFull: Boolean = false, content: @Composable (isLinear: Boolean) -> Unit)
 
     public fun spacer(height: Dp)
 }
 
-internal class ListScopeAdapter(
-    private val scope: LazyListScope
-) : ResponsiveScope {
+internal class ListScopeAdapter(private val scope: LazyListScope) : ResponsiveScope {
 
     override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
         if (key != null) scope.item(key = key) { content(true) } else scope.item { content(true) }
@@ -33,9 +27,7 @@ internal class ListScopeAdapter(
     }
 }
 
-internal class GridScopeAdapter(
-    private val scope: LazyStaggeredGridScope,
-) : ResponsiveScope {
+internal class GridScopeAdapter(private val scope: LazyStaggeredGridScope) : ResponsiveScope {
 
     override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
         val span = if (isContentFull) StaggeredGridItemSpan.FullLine else StaggeredGridItemSpan.SingleLane

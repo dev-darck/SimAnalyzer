@@ -19,11 +19,9 @@ object HudSettingsBindings {
     @Provides
     @IntoMap
     @ViewModelKey(HudSettingsViewModel::class)
-    private fun provideHudSettingsViewModel(
-        preferences: HudPreferences,
-        panels: Provider<Set<HudPanel>>,
-    ): ViewModel = HudSettingsViewModel(
-        preferences = preferences,
-        panels = panels
-    )
+    private fun provideHudSettingsViewModel(preferences: HudPreferences, panels: Provider<Set<HudPanel>>): ViewModel =
+        HudSettingsViewModel(
+            preferences = preferences,
+            panels = panels,
+        )
 }

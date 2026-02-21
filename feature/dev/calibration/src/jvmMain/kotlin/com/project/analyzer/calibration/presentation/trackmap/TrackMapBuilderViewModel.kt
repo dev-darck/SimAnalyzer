@@ -15,9 +15,7 @@ import kotlinx.coroutines.launch
 @Inject
 @ViewModelKey(TrackMapBuilderViewModel::class)
 @ContributesIntoMap(ScreenScope::class)
-class TrackMapBuilderViewModel(
-    private val recorder: TrackMapRecorder,
-) : ViewModel() {
+class TrackMapBuilderViewModel(private val recorder: TrackMapRecorder) : ViewModel() {
 
     val state: StateFlow<TrackMapRecorderState> = recorder.state
 

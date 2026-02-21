@@ -16,14 +16,10 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 interface SessionBindings {
 
     @Binds
-    fun bindRecordedSessionRepository(
-        impl: RecordedSessionRepositoryImpl,
-    ): RecordedSessionRepository
+    fun bindRecordedSessionRepository(impl: RecordedSessionRepositoryImpl): RecordedSessionRepository
 
     @Binds
     @IntoMap
     @ViewModelKey(SessionListViewModel::class)
-    fun bindSessionListViewModel(
-        impl: SessionListViewModel,
-    ): ViewModel
+    fun bindSessionListViewModel(impl: SessionListViewModel): ViewModel
 }

@@ -8,7 +8,6 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class LapAnalyzerState {
-
     var isActive = false
     var currentTrackId: String? = null
     var calibration: TrackCalibration? = null
@@ -127,7 +126,7 @@ class LapAnalyzerState {
         tyreDirtyLevel: FloatArray?,
         carDamage: FloatArray?,
         numberOfTyresOut: Int,
-        hasPenalty: Boolean
+        hasPenalty: Boolean,
     ) {
         tyreDirtyLevel?.let { dirty ->
             if (dirty.size >= 4) {
@@ -272,16 +271,22 @@ class LapAnalyzerState {
         val currentLapMs = if (isLapRunning) {
             val startTime = if (isSyncedToStartFinish) lapStartTimeNs else unsyncedLapStartTimeNs
             ((currentTimeNs - startTime) / NS_PER_MS).toInt()
-        } else 0
+        } else {
+            0
+        }
 
         val currentSectorMs = if (isLapRunning) {
             val startTime = if (isSyncedToStartFinish) sectorStartTimeNs else unsyncedLapStartTimeNs
             ((currentTimeNs - startTime) / NS_PER_MS).toInt()
-        } else 0
+        } else {
+            0
+        }
 
         val sectorIndex0Based = if (isLapRunning && isSyncedToStartFinish) {
             (currentSectorIndex - 1).coerceIn(0, sectorCount - 1)
-        } else 0
+        } else {
+            0
+        }
 
         val (deltaMs, isPositive) = calculateDelta(currentLapMs)
 
@@ -301,7 +306,7 @@ class LapAnalyzerState {
             currentLapValid = currentLapValid,
             deltaLapTimeMs = deltaMs,
             isDeltaPositive = isPositive,
-            startFinishSyncId = startFinishSyncId
+            startFinishSyncId = startFinishSyncId,
         )
     }
 
@@ -377,7 +382,6 @@ class LapAnalyzerState {
     }
 
     private companion object {
-
         val NS_PER_MS = 1.milliseconds.inWholeNanoseconds
         val MAX_REASONABLE_FRAME_NS = 1.seconds.inWholeNanoseconds
         const val DIRTY_THRESHOLD = 0.2f

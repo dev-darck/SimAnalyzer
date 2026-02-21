@@ -7,13 +7,13 @@ class TrackMapPointFilter(
     private val stats: TrackMapStatsCalculator,
     private val teleportDistanceMeters: Float,
     private val refinementSpacingMultiplier: Float,
-    private val minRefinedSpacingMeters: Float
+    private val minRefinedSpacingMeters: Float,
 ) {
 
     fun evaluate(
         point: Vec2,
         snapshot: TrackMapRecorderState,
-        runtime: TrackMapRecorderRuntime
+        runtime: TrackMapRecorderRuntime,
     ): TrackMapPointDecision {
         if (!point.isFinite()) return TrackMapPointDecision.REJECTED
 
@@ -44,7 +44,7 @@ class TrackMapPointFilter(
 
     private fun effectiveSpacing(
         snapshot: TrackMapRecorderState,
-        runtime: TrackMapRecorderRuntime
+        runtime: TrackMapRecorderRuntime,
     ): Pair<Float, Float> {
         val factor = if (runtime.lapsRecorded <= 0) 1f else refinementSpacingMultiplier
         val minSpacing = (snapshot.minSpacingMeters * factor).coerceAtLeast(minRefinedSpacingMeters)

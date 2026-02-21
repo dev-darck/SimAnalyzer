@@ -9,17 +9,5 @@ plugins {
     alias(libs.plugins.convention.project.dsl) apply false
     alias(libs.plugins.metro) apply false
     alias(libs.plugins.ksp) apply false
-}
-
-subprojects {
-    pluginManager.apply("convention-project-dsl")
-}
-
-tasks.register("ciJvmTest") {
-    group = "verification"
-    description = "Runs all jvmTest tasks across all subprojects."
-
-    subprojects.forEach { p ->
-        dependsOn(p.tasks.matching { it.name == "jvmTest" })
-    }
+    id("convention-build")
 }

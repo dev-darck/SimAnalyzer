@@ -78,7 +78,7 @@ class CreateCrashReportUseCase {
             append(
                 System.getProperty("java.runtime.version")
                     ?: System.getProperty("java.version")
-                    ?: "?"
+                    ?: "?",
             )
         }
 

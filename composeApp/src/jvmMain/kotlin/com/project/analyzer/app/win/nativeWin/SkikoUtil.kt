@@ -12,7 +12,6 @@ private fun <T : JComponent> findComponent(container: Container, klass: Class<T>
     }.map { klass.cast(it) }.firstOrNull()
 }
 
-private inline fun <reified T : JComponent> Container.findComponent(): T? =
-    findComponent(this, T::class.java)
+private inline fun <reified T : JComponent> Container.findComponent(): T? = findComponent(this, T::class.java)
 
 internal fun ComposeWindow.findSkiaLayer(): SkiaLayer? = findComponent<SkiaLayer>()

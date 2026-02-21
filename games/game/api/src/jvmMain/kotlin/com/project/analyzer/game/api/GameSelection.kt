@@ -1,7 +1,6 @@
 package com.project.analyzer.game.api
 
 public sealed interface GameSelection {
-
     public data object Auto : GameSelection
 
     public data class Manual(val game: GameId) : GameSelection

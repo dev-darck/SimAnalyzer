@@ -4,5 +4,5 @@ internal enum class TrackIdSource {
     NONE,
     GAME_STARTED,
     CONTAINER,
-    SLUG
+    SLUG,
 }

@@ -14,10 +14,7 @@ import java.util.zip.GZIPOutputStream
 
 @Inject
 @SingleIn(SessionScope::class)
-class TelemetrySessionCompressor(
-    private val json: Json,
-) {
-
+class TelemetrySessionCompressor(private val json: Json) {
     internal fun compress(task: SessionCompressionTask) {
         val metaFile = task.metaFile
         val dir = metaFile.parentFile ?: return
@@ -35,7 +32,7 @@ class TelemetrySessionCompressor(
             framesFile = framesName ?: metadata.framesFile,
             indexFile = indexName ?: metadata.indexFile,
             eventsFile = eventsName ?: metadata.eventsFile,
-            compression = COMPRESSION_GZIP
+            compression = COMPRESSION_GZIP,
         )
         writeMetadata(metaFile, updated)
     }

@@ -7,9 +7,7 @@ import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(SessionScope::class)
-internal class LmuRawFrameEncoder(
-    private val shm: LmuSharedMemory,
-) {
+internal class LmuRawFrameEncoder(private val shm: LmuSharedMemory) {
 
     val payloadType: String = "lmu_shm_v1"
     val payloadSize: Int = LmuSharedMemory.TELEMETRY_BUFFER_SIZE + LmuSharedMemory.SCORING_BUFFER_SIZE

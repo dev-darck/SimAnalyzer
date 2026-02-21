@@ -51,29 +51,26 @@ internal fun HudSettingsScreen() {
 }
 
 @Composable
-private fun Screen(
-    state: HudUiState = HudUiState(panels = emptyList()),
-    dispatch: (HudSettingsIntent) -> Unit = {}
-) {
+private fun Screen(state: HudUiState = HudUiState(panels = emptyList()), dispatch: (HudSettingsIntent) -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxSize()
             .background(color = SimAnalyzerTheme.material.background)
             .padding(all = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         HudSettingsPanel(
             panel = state.panel,
             modifier = Modifier
                 .widthIn(min = 280.dp, max = 360.dp)
-                .fillMaxHeight()
+                .fillMaxHeight(),
         )
 
         HudMonitorPanel(
             panel = state.panel,
             modifier = Modifier
                 .weight(1f)
-                .fillMaxHeight()
+                .fillMaxHeight(),
         )
 
         HudListPanel(
@@ -87,28 +84,25 @@ private fun Screen(
             },
             modifier = Modifier
                 .widthIn(min = 280.dp, max = 360.dp)
-                .fillMaxHeight()
+                .fillMaxHeight(),
         )
     }
 }
 
 @Composable
-private fun HudSettingsPanel(
-    panel: HudPanel?,
-    modifier: Modifier = Modifier
-) {
+private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
             .verticalScroll(rememberScrollState())
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = "Settings",
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -117,7 +111,7 @@ private fun HudSettingsPanel(
             Text(
                 text = "Select a HUD from the list to edit its settings.",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
             return
         }
@@ -132,7 +126,7 @@ private fun HudSettingsPanel(
             Text(
                 text = "This HUD has no configurable settings.",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
             return
         }
@@ -153,13 +147,13 @@ private fun HudListPanel(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = "HUDs",
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -172,7 +166,7 @@ private fun HudListPanel(
                     description = panel.description,
                     enabled = enabled,
                     onClick = onClick,
-                    onToggle = { onToggle(panel.id, !enabled) }
+                    onToggle = { onToggle(panel.id, !enabled) },
                 )
             }
         }
@@ -185,7 +179,7 @@ private fun HudListItem(
     description: String,
     enabled: Boolean,
     onClick: (id: String) -> Unit = {},
-    onToggle: () -> Unit = {}
+    onToggle: () -> Unit = {},
 ) {
     Row(
         modifier = Modifier
@@ -194,22 +188,22 @@ private fun HudListItem(
             .clickable(
                 onClick = {
                     onClick(id)
-                }
+                },
             )
             .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(
                 text = id,
                 color = SimAnalyzerTheme.material.onSurface,
-                fontSize = 14.sp
+                fontSize = 14.sp,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = description,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp
+                fontSize = 12.sp,
             )
         }
         Switch(
@@ -219,27 +213,24 @@ private fun HudListItem(
                 checkedThumbColor = Color.White,
                 checkedTrackColor = SimAnalyzerTheme.material.primary,
                 uncheckedThumbColor = Color.LightGray,
-                uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f)
-            )
+                uncheckedTrackColor = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f),
+            ),
         )
     }
 }
 
 @Composable
-private fun HudMonitorPanel(
-    panel: HudPanel? = null,
-    modifier: Modifier = Modifier,
-) {
+private fun HudMonitorPanel(panel: HudPanel? = null, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(color = SimAnalyzerTheme.material.surface, shape = SimAnalyzerTheme.shapes.large)
-            .padding(all = 16.dp)
+            .padding(all = 16.dp),
     ) {
         Text(
             text = "Preview",
             color = SimAnalyzerTheme.material.onSurface,
             fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium
+            style = MaterialTheme.typography.titleMedium,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -253,9 +244,9 @@ private fun HudMonitorPanel(
                 .border(
                     width = 1.dp,
                     color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(16.dp),
                 ),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             val gridColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.05f)
 
@@ -317,7 +308,7 @@ private fun HudSettingsScreenPreview() {
             state = HudUiState(
                 panels = demoPanels,
                 visiblePanels = mapOf("fuel" to 0, "timing" to 0, "electronics" to 0),
-            )
+            ),
         )
     }
 }

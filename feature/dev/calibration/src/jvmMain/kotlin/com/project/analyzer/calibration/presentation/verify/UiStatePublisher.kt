@@ -18,17 +18,12 @@ class UiStatePublisher(
     private val state: MutableStateFlow<CalibrationVerifyState>,
     private val overlayDebugBus: OverlayDebugBus,
     private val lapAnalyzer: FallbackLapAnalyzer,
-    private val gateDetector: GateCrossingDetector
+    private val gateDetector: GateCrossingDetector,
 ) {
 
     private val gateCrossedTimes = mutableMapOf<String, Long>()
 
-    fun publish(
-        nowNs: Long,
-        carPose: CarPose,
-        calibration: TrackCalibration,
-        speedKmh: Float
-    ) {
+    fun publish(nowNs: Long, carPose: CarPose, calibration: TrackCalibration, speedKmh: Float) {
         val snapshot = lapAnalyzer.getSnapshot(nowNs)
 
         val headingDeg = if (carPose.headingDir.len() > 0.01f) {
@@ -57,7 +52,7 @@ class UiStatePublisher(
                 gateDebugInfo = gateInfoList,
                 currentPosition = carPose.position,
                 currentForward = carPose.headingDir,
-                headingDegrees = headingDeg
+                headingDegrees = headingDeg,
             )
         }
 
@@ -94,7 +89,7 @@ class UiStatePublisher(
         cal: TrackCalibration,
         currentSectorIndex: Int,
         isLapRunning: Boolean,
-        nowMs: Long
+        nowMs: Long,
     ) {
         fun mark(key: String, gate: Gate, allowed: Boolean) {
             if (!allowed) return
@@ -116,8 +111,8 @@ class UiStatePublisher(
         }
     }
 
-    private fun buildGateInfo(carPose: CarPose, cal: TrackCalibration): List<GateDebugInfo> {
-        return cal.gates.map { (key, gate) ->
+    private fun buildGateInfo(carPose: CarPose, cal: TrackCalibration): List<GateDebugInfo> =
+        cal.gates.map { (key, gate) ->
             val (inside, margin, dParallel) = calculateOutOfWidth(carPose.position, gate)
             buildGateDebugInfo(
                 name = keyToName(key),
@@ -127,10 +122,9 @@ class UiStatePublisher(
                 gateKey = key,
                 isInside = inside,
                 margin = margin,
-                dParallel = dParallel
+                dParallel = dParallel,
             )
         }
-    }
 
     private fun keyToName(key: String): String = when (key) {
         "SF" -> "Start/Finish"
@@ -147,7 +141,7 @@ class UiStatePublisher(
         gateKey: String,
         isInside: Boolean,
         margin: Float,
-        dParallel: Float
+        dParallel: Float,
     ): GateDebugInfo {
         val gateCenter = gate.centerV2()
         val gateForward = gate.forwardV2().normalized()
@@ -171,7 +165,7 @@ class UiStatePublisher(
             isInside = isInside,
             margin = margin,
             dParallel = dParallel,
-            gate = gate
+            gate = gate,
         )
     }
 

@@ -397,11 +397,9 @@ internal object TelemetryInspectorMapper {
 
     private fun fmtFloat(v: Float): String = String.format(Locale.US, "%.3f", v)
 
-    private fun fmtVec3(v: Vec3): String =
-        "[${fmtFloat(v.x)}, ${fmtFloat(v.y)}, ${fmtFloat(v.z)}]"
+    private fun fmtVec3(v: Vec3): String = "[${fmtFloat(v.x)}, ${fmtFloat(v.y)}, ${fmtFloat(v.z)}]"
 
-    private fun fmtFloats(arr: FloatArray): String =
-        arr.joinToString(", ", "[", "]") { fmtFloat(it) }
+    private fun fmtFloats(arr: FloatArray): String = arr.joinToString(", ", "[", "]") { fmtFloat(it) }
 
     private fun fmtTelemetryValue(value: TelemetryValue): String = when (value) {
         is TelemetryValue.BoolVal -> value.value.toString()

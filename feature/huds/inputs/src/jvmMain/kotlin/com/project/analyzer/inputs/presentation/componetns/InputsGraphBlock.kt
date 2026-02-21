@@ -29,22 +29,18 @@ import kotlin.math.roundToInt
 private val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
 
 @Composable
-internal fun InputsGraphBlock(
-    state: InputsHudUiState,
-    modifier: Modifier = Modifier
-) {
+internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modifier) {
     val throttlePath = remember { Path() }
     val brakePath = remember { Path() }
     val clutchPath = remember { Path() }
     val steerPath = remember { Path() }
 
     Row(modifier = modifier) {
-
         if (state.settings.showLegend) {
             Column(
                 modifier = Modifier
                     .fillMaxHeight(),
-                horizontalAlignment = Alignment.End
+                horizontalAlignment = Alignment.End,
             ) {
                 Text(text = "100", color = SimAnalyzerTheme.material.onSurfaceVariant)
                 Spacer(modifier = Modifier.weight(1f))
@@ -67,10 +63,10 @@ internal fun InputsGraphBlock(
             val w = size.width
             val h = size.height
 
-            //space
+            // space
             val pad = 4.dp.toPx()
 
-            //area of graphics
+            // area of graphics
             val left = 0f + pad
             val right = w - pad
             val top = 0f + pad
@@ -91,7 +87,7 @@ internal fun InputsGraphBlock(
                     start = Offset(left, y),
                     end = Offset(right, y),
                     strokeWidth = 1.dp.toPx(),
-                    pathEffect = dash
+                    pathEffect = dash,
                 )
             }
 
@@ -99,7 +95,7 @@ internal fun InputsGraphBlock(
                 color = steerColor,
                 start = Offset(left, midY),
                 end = Offset(right, midY),
-                strokeWidth = 1.dp.toPx()
+                strokeWidth = 1.dp.toPx(),
             )
 
             for (k in 0..6) {
@@ -109,7 +105,7 @@ internal fun InputsGraphBlock(
                     start = Offset(x, top),
                     end = Offset(x, bottom),
                     strokeWidth = 1.dp.toPx(),
-                    pathEffect = dash
+                    pathEffect = dash,
                 )
             }
 
@@ -121,7 +117,7 @@ internal fun InputsGraphBlock(
                     yMap = ::yPedal,
                     pick = { t, _, _, _ -> t },
                     color = tColor,
-                    path = throttlePath
+                    path = throttlePath,
                 )
             }
             if (state.settings.showBrake) {
@@ -132,7 +128,7 @@ internal fun InputsGraphBlock(
                     yMap = ::yPedal,
                     pick = { _, b, _, _ -> b },
                     color = bColor,
-                    path = brakePath
+                    path = brakePath,
                 )
             }
             if (state.settings.showClutch) {
@@ -143,7 +139,7 @@ internal fun InputsGraphBlock(
                     yMap = ::yPedal,
                     pick = { _, _, c, _ -> c },
                     color = cColor,
-                    path = clutchPath
+                    path = clutchPath,
                 )
             }
             if (state.settings.showSteer) {
@@ -154,7 +150,7 @@ internal fun InputsGraphBlock(
                     yMap = ::ySteer,
                     pick = { _, _, _, s -> s },
                     color = sColor,
-                    path = steerPath
+                    path = steerPath,
                 )
             }
         }
@@ -168,7 +164,7 @@ private fun DrawScope.drawSeries(
     yMap: (Float) -> Float,
     pick: (t: Float, b: Float, c: Float, s: Float) -> Float,
     color: Color,
-    path: Path
+    path: Path,
 ) {
     val n = series.size
     if (n < 2) return
@@ -197,7 +193,7 @@ private fun DrawScope.drawSeries(
         style = Stroke(
             width = 2.dp.toPx(),
             cap = StrokeCap.Round,
-            join = StrokeJoin.Round
-        )
+            join = StrokeJoin.Round,
+        ),
     )
 }

@@ -46,16 +46,18 @@ internal object AppPaths {
     }
 
     private fun detectAppRootDirWindows(): File {
-        val codeSourceFile = runCatching {
-            val uri: URI = AppPaths::class.java.protectionDomain.codeSource.location.toURI()
-            File(uri)
-        }.getOrNull()
+        val codeSourceFile =
+            runCatching {
+                val uri: URI = AppPaths::class.java.protectionDomain.codeSource.location.toURI()
+                File(uri)
+            }.getOrNull()
 
-        val dir = when {
-            codeSourceFile == null -> File(System.getProperty("user.dir"))
-            codeSourceFile.isFile -> codeSourceFile.parentFile ?: File(System.getProperty("user.dir"))
-            else -> codeSourceFile
-        }
+        val dir =
+            when {
+                codeSourceFile == null -> File(System.getProperty("user.dir"))
+                codeSourceFile.isFile -> codeSourceFile.parentFile ?: File(System.getProperty("user.dir"))
+                else -> codeSourceFile
+            }
 
         if (dir.name.equals("app", ignoreCase = true) && dir.parentFile != null) {
             return dir.parentFile

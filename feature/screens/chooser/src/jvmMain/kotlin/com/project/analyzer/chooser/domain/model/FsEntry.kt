@@ -7,4 +7,3 @@ data class FsEntry(
     val size: Long = 0L,
     val lastModified: Long = 0L,
 )
-

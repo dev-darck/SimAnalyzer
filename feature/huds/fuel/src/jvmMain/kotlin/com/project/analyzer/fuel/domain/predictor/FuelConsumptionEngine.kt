@@ -13,7 +13,6 @@ import kotlin.math.min
 
 @Inject
 internal class FuelConsumptionEngine {
-
     private val tuning: FuelConsumptionTuning
         get() = FuelConsumptionConfig.tuning
 
@@ -44,10 +43,7 @@ internal class FuelConsumptionEngine {
     private var cachedTrackId: String? = null
     private var cachedTrackLengthM: Double? = null
 
-    fun onFrame(
-        frame: TelemetryFrame,
-        savedFuelData: SavedFuelData? = null
-    ): FuelEstimate? {
+    fun onFrame(frame: TelemetryFrame, savedFuelData: SavedFuelData? = null): FuelEstimate? {
         val fuelNow = frame.car?.fuel?.fuelLiters?.toDouble()
             ?.takeIf { it.isValidFuelLevel() }
             ?: return null
@@ -180,12 +176,7 @@ internal class FuelConsumptionEngine {
         }
     }
 
-    private fun updateMovingMetrics(
-        speedKmh: Double,
-        fuelConsumed: Double,
-        dtSecRaw: Double,
-        dtSecForEwma: Double
-    ) {
+    private fun updateMovingMetrics(speedKmh: Double, fuelConsumed: Double, dtSecRaw: Double, dtSecForEwma: Double) {
         speedKmhEwma.update(dtSecForEwma, speedKmh)
 
         val distanceM = (speedKmh / KMH_PER_MPS) * dtSecRaw
@@ -266,7 +257,9 @@ internal class FuelConsumptionEngine {
         val litersPerSecond = fuelRateLpsEwma.value.takeIf { it > 0.0 }
 
         val lapsRemaining = calculateLapsRemaining(
-            currentFuel, litersPerLap, gameFuelEstimatedLaps
+            currentFuel,
+            litersPerLap,
+            gameFuelEstimatedLaps,
         )
 
         return FuelEstimate(
@@ -295,12 +288,13 @@ internal class FuelConsumptionEngine {
     private fun calculateLapsRemaining(
         currentFuel: Double,
         litersPerLap: Double?,
-        gameFuelEstimatedLaps: Float?
+        gameFuelEstimatedLaps: Float?,
     ): Double? = when {
         phase == FuelPhase.PER_LAP && gameFuelEstimatedLaps != null && gameFuelEstimatedLaps > 0 ->
             gameFuelEstimatedLaps.toDouble()
 
         litersPerLap != null && litersPerLap > 0 -> currentFuel / litersPerLap
+
         else -> null
     }
 
@@ -378,8 +372,12 @@ internal class FuelConsumptionEngine {
         val ewmaRateLps = fuelRateLpsEwma.value
 
         val blendedRate = when {
-            avgRateLps > 0.0 && ewmaRateLps > 0.0 -> BLEND_RATE_WEIGHT * avgRateLps + (1.0 - BLEND_RATE_WEIGHT) * ewmaRateLps
+            avgRateLps > 0.0 && ewmaRateLps > 0.0 ->
+                BLEND_RATE_WEIGHT * avgRateLps +
+                    (1.0 - BLEND_RATE_WEIGHT) * ewmaRateLps
+
             avgRateLps > 0.0 -> avgRateLps
+
             else -> ewmaRateLps
         }
         if (blendedRate <= 0.0) return null
@@ -411,13 +409,15 @@ internal class FuelConsumptionEngine {
         }
 
         FuelPhase.PER_LAP -> {
-            if (gameFuelPerLap != null && gameFuelPerLap > 0) tuning.perLapConf2Plus
-            else tuning.predictiveConfMax
+            if (gameFuelPerLap != null && gameFuelPerLap > 0) {
+                tuning.perLapConf2Plus
+            } else {
+                tuning.predictiveConfMax
+            }
         }
     }
 
     private companion object {
-
         const val KMH_PER_MPS = 3.6
         const val MS_PER_SECOND = 1_000.0
         const val MIN_POSITIVE_WINDOW_SEC = 1e-6

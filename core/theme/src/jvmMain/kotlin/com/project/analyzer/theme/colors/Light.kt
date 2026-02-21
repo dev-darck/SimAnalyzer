@@ -118,7 +118,7 @@ public val LightColorScheme: ColorScheme = lightColorScheme(
 
 internal val LightExtendedColors = ExtendedColors(
     material = LightColorScheme,
-    
+
     shadow = Shadow,
     shadowSecondary = ShadowSecondary,
     errorOutline = ErrorOutline,

@@ -106,7 +106,13 @@ internal object TrackIdNormalizer {
         while (start < end && sb[start] == '_') start++
         while (end > start && sb[end - 1] == '_') end--
 
-        return if (start >= end) "" else if (start == 0 && end == sb.length) sb.toString() else sb.substring(start, end)
+        return if (start >= end) {
+            ""
+        } else if (start == 0 && end == sb.length) {
+            sb.toString()
+        } else {
+            sb.substring(start, end)
+        }
     }
 
     private val LAYOUT_ALIASES: Map<String, String> = mapOf(
@@ -132,12 +138,12 @@ internal object TrackIdNormalizer {
         "interns",
         "car_dealership",
         "showroom",
-        "main_menu"
+        "main_menu",
     )
 
     private val TRACK_FOLDER_IN_PATH = Regex(
         pattern = """content[\\/]+tracks[\\/]+([^\\/]+)""",
-        option = RegexOption.IGNORE_CASE
+        option = RegexOption.IGNORE_CASE,
     )
 
     private val TRAILING_YEAR_SUFFIX = Regex("_(19|20)\\d{2}$")

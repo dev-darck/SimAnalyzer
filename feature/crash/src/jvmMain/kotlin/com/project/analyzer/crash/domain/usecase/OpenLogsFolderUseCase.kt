@@ -4,7 +4,6 @@ import java.awt.Desktop
 import java.io.File
 
 class OpenLogsFolderUseCase {
-
     operator fun invoke(path: String): Result<Unit> = runCatching {
         val dir = File(path)
         dir.mkdirs()

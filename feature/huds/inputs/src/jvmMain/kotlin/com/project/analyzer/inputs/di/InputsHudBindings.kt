@@ -29,8 +29,7 @@ interface InputsHudBindings {
         @Provides
         @IntoMap
         @ViewModelKey(InputsHudViewModel::class)
-        private fun provideInputsHudViewModel(
-            inputHudUseCase: InputsUseCase
-        ): ViewModel = InputsHudViewModel(inputHudUseCase)
+        private fun provideInputsHudViewModel(inputHudUseCase: InputsUseCase): ViewModel =
+            InputsHudViewModel(inputHudUseCase)
     }
 }

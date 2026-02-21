@@ -14,13 +14,9 @@ import dev.zacsweers.metro.Provides
 object LmuRecordingBindings {
 
     @Provides
-    private fun provideRecordingEmitter(
-        impl: LmuTelemetryRecordingSource
-    ): LmuTelemetryRecordingEmitter = impl
+    private fun provideRecordingEmitter(impl: LmuTelemetryRecordingSource): LmuTelemetryRecordingEmitter = impl
 
     @Provides
     @IntoSet
-    private fun provideRecordingSource(
-        impl: LmuTelemetryRecordingSource
-    ): TelemetryRecordingSource = impl
+    private fun provideRecordingSource(impl: LmuTelemetryRecordingSource): TelemetryRecordingSource = impl
 }

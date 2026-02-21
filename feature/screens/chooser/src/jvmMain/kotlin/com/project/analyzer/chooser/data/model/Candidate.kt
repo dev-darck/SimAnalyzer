@@ -5,5 +5,5 @@ data class Candidate(
     val description: String,
     val isDrive: Boolean,
     val isFileSystem: Boolean,
-    val path: String
+    val path: String,
 )

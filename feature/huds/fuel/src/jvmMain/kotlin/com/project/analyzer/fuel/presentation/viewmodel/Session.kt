@@ -1,8 +1,8 @@
 package com.project.analyzer.fuel.presentation.viewmodel
 
-internal data class PeakState(
+internal data class Session(
     var peakLitersPerLap: Double? = null,
-    val peakPlanFuelLiters: MutableList<Double?> = mutableListOf()
+    val peakPlanFuelLiters: MutableList<Double?> = mutableListOf(),
 ) {
 
     fun updatePeakLitersPerLap(value: Double?, maxValue: Double = 200.0) {

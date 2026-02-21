@@ -2,10 +2,7 @@ package com.project.analyzer.crash.presentation
 
 import com.project.analyzer.crash.domain.CrashReport
 
-data class CrashScreenState(
-    val report: CrashReport,
-    val selectedTab: Int = 0,
-)
+data class CrashScreenState(val report: CrashReport, val selectedTab: Int = 0)
 
 sealed interface CrashScreenUiEvent {
     data class Init(val report: CrashReport) : CrashScreenUiEvent

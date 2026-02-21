@@ -64,8 +64,8 @@ internal fun SessionScreenTable(
             .border(
                 width = 1.dp,
                 color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.25f),
-                shape = SimAnalyzerTheme.shapes.large
-            )
+                shape = SimAnalyzerTheme.shapes.large,
+            ),
     ) {
         SessionTableHeader(weights = weights, showGame = showGame)
         HorizontalDivider(color = dividerColor)
@@ -84,7 +84,7 @@ internal fun SessionScreenTable(
                         onDelete = { onIntent(SessionListIntent.DeleteSession(it)) },
                         weights = weights,
                         showGame = showGame,
-                        isEven = index % 2 == 0
+                        isEven = index % 2 == 0,
                     )
                     if (index != state.visibleSessions.lastIndex) {
                         HorizontalDivider(color = dividerColor)
@@ -98,12 +98,12 @@ internal fun SessionScreenTable(
                 .fillMaxWidth()
                 .background(SimAnalyzerTheme.material.secondaryContainer)
                 .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.End,
         ) {
             Pagination(
                 page = state.page,
                 pageCount = state.pageCount,
-                onPageChange = { onIntent(SessionListIntent.ChangePage(it)) }
+                onPageChange = { onIntent(SessionListIntent.ChangePage(it)) },
             )
         }
     }
@@ -116,28 +116,25 @@ private fun EmptyStateMessage(text: String) {
             .fillMaxWidth()
             .height(220.dp)
             .padding(16.dp),
-        contentAlignment = Alignment.CenterStart
+        contentAlignment = Alignment.CenterStart,
     ) {
         Text(
             text = text,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp
+            fontSize = 12.sp,
         )
     }
 }
 
 @Composable
-private fun SessionTableHeader(
-    weights: SessionTableWeights,
-    showGame: Boolean,
-) {
+private fun SessionTableHeader(weights: SessionTableWeights, showGame: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(SimAnalyzerTheme.material.secondary)
             .height(44.dp)
             .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         HeaderCell(text = "Date", weight = weights.date, align = TableCellAlign.Start)
         if (showGame) {
@@ -152,11 +149,7 @@ private fun SessionTableHeader(
 }
 
 @Composable
-private fun RowScope.HeaderCell(
-    text: String,
-    weight: Float,
-    align: TableCellAlign,
-) {
+private fun RowScope.HeaderCell(text: String, weight: Float, align: TableCellAlign) {
     val contentAlignment = when (align) {
         TableCellAlign.Start -> Alignment.CenterStart
         TableCellAlign.Center -> Alignment.Center
@@ -170,7 +163,7 @@ private fun RowScope.HeaderCell(
 
     Box(
         modifier = Modifier.weight(weight),
-        contentAlignment = contentAlignment
+        contentAlignment = contentAlignment,
     ) {
         Text(
             text = text.uppercase(),
@@ -180,7 +173,7 @@ private fun RowScope.HeaderCell(
             letterSpacing = 0.4.sp,
             textAlign = textAlign,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -208,19 +201,19 @@ private fun SessionTableRow(
             .background(rowColor)
             .onClick { onOpenDetails(session.sessionId) }
             .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(weights.date)) {
             Text(
                 text = session.dateLabel,
                 color = SimAnalyzerTheme.material.onSurface,
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Text(
                 text = session.timeLabel,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 10.sp
+                fontSize = 10.sp,
             )
         }
 
@@ -228,61 +221,61 @@ private fun SessionTableRow(
             TableTextCell(
                 text = session.gameLabel,
                 weight = weights.game,
-                align = TableCellAlign.Start
+                align = TableCellAlign.Start,
             )
         }
         TableTextCell(
             text = session.trackLabel,
             weight = weights.track,
-            align = TableCellAlign.Start
+            align = TableCellAlign.Start,
         )
         TableTextCell(
             text = session.carLabel,
             weight = weights.car,
-            align = TableCellAlign.Start
+            align = TableCellAlign.Start,
         )
         TableTextCell(
             text = session.lapsLabel,
             weight = weights.laps,
-            align = TableCellAlign.Center
+            align = TableCellAlign.Center,
         )
         TableTextCell(
             text = session.bestLapLabel,
             weight = weights.best,
             align = TableCellAlign.Center,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
         )
 
         Row(
             modifier = Modifier.weight(weights.actions),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             if (session.isSaved) {
                 SessionActionButton(
                     icon = Icons.Filled.Bookmark,
                     tint = SimAnalyzerTheme.extended.lightGreen,
-                    tooltip = "Saved"
+                    tooltip = "Saved",
                 )
             } else {
                 SessionActionButton(
                     icon = Icons.Outlined.BookmarkBorder,
                     tint = SimAnalyzerTheme.material.primary,
                     tooltip = "Save session",
-                    onClick = { onSave(session.sessionId) }
+                    onClick = { onSave(session.sessionId) },
                 )
             }
             SessionActionButton(
                 icon = Icons.Outlined.Delete,
                 tint = SimAnalyzerTheme.material.error,
                 tooltip = "Delete session",
-                onClick = { onDelete(session.sessionId) }
+                onClick = { onDelete(session.sessionId) },
             )
             SessionActionButton(
                 icon = Icons.Filled.ChevronRight,
                 tint = SimAnalyzerTheme.material.primary,
                 tooltip = "Open details",
-                onClick = { onOpenDetails(session.sessionId) }
+                onClick = { onOpenDetails(session.sessionId) },
             )
         }
     }
@@ -308,7 +301,7 @@ private fun RowScope.TableTextCell(
 
     Box(
         modifier = Modifier.weight(weight),
-        contentAlignment = contentAlignment
+        contentAlignment = contentAlignment,
     ) {
         Text(
             text = text,
@@ -317,18 +310,13 @@ private fun RowScope.TableTextCell(
             fontWeight = fontWeight,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = textAlign
+            textAlign = textAlign,
         )
     }
 }
 
 @Composable
-private fun SessionActionButton(
-    icon: ImageVector,
-    tint: Color,
-    tooltip: String,
-    onClick: (() -> Unit)? = null,
-) {
+private fun SessionActionButton(icon: ImageVector, tint: Color, tooltip: String, onClick: (() -> Unit)? = null) {
     Tooltip(tooltip = tooltip) {
         val clickAction = onClick
         val clickable = clickAction != null
@@ -342,23 +330,25 @@ private fun SessionActionButton(
                 .border(
                     width = 1.dp,
                     color = tint.copy(alpha = if (clickable) 0.45f else 0.2f),
-                    shape = SimAnalyzerTheme.shapes.small
+                    shape = SimAnalyzerTheme.shapes.small,
                 )
                 .then(if (clickable) Modifier.onClick { clickAction.invoke() } else Modifier),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(16.dp),
             )
         }
     }
 }
 
 private enum class TableCellAlign {
-    Start, Center, End
+    Start,
+    Center,
+    End,
 }
 
 private data class SessionTableWeights(
@@ -371,28 +361,26 @@ private data class SessionTableWeights(
     val actions: Float,
 )
 
-private fun sessionTableWeights(showGame: Boolean): SessionTableWeights {
-    return if (showGame) {
-        SessionTableWeights(
-            date = 0.18f,
-            game = 0.11f,
-            track = 0.17f,
-            car = 0.18f,
-            laps = 0.08f,
-            best = 0.1f,
-            actions = 0.18f
-        )
-    } else {
-        SessionTableWeights(
-            date = 0.22f,
-            game = 0f,
-            track = 0.21f,
-            car = 0.21f,
-            laps = 0.08f,
-            best = 0.12f,
-            actions = 0.16f
-        )
-    }
+private fun sessionTableWeights(showGame: Boolean): SessionTableWeights = if (showGame) {
+    SessionTableWeights(
+        date = 0.18f,
+        game = 0.11f,
+        track = 0.17f,
+        car = 0.18f,
+        laps = 0.08f,
+        best = 0.1f,
+        actions = 0.18f,
+    )
+} else {
+    SessionTableWeights(
+        date = 0.22f,
+        game = 0f,
+        track = 0.21f,
+        car = 0.21f,
+        laps = 0.08f,
+        best = 0.12f,
+        actions = 0.16f,
+    )
 }
 
 @Preview
@@ -408,7 +396,7 @@ private fun SessionScreenTablePreview() {
             carLabel = "Car Name",
             lapsLabel = "0",
             bestLapLabel = "0:00.000",
-            isSaved = true
+            isSaved = true,
         ),
         SessionRowUi(
             sessionId = 2L,
@@ -419,8 +407,8 @@ private fun SessionScreenTablePreview() {
             carLabel = "Car Name",
             lapsLabel = "0",
             bestLapLabel = "0:00.000",
-            isSaved = false
-        )
+            isSaved = false,
+        ),
     )
 
     SimAnalyzerTheme {
@@ -433,16 +421,16 @@ private fun SessionScreenTablePreview() {
                     selectedLabel = "All",
                     options = listOf(
                         DropdownOptionUi(FILTER_ALL_ID, "All"),
-                        DropdownOptionUi("acc", "ACC")
-                    )
+                        DropdownOptionUi("acc", "ACC"),
+                    ),
                 ),
                 page = 1,
                 pageCount = 9,
                 sessions = sessions,
-                visibleSessions = sessions
+                visibleSessions = sessions,
             ),
             onOpenDetails = {},
-            onIntent = {}
+            onIntent = {},
         )
     }
 }

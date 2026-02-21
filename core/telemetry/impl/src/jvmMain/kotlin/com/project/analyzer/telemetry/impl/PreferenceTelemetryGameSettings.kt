@@ -22,18 +22,17 @@ class PreferenceTelemetryGameSettings(
     private val preferences: Preference,
 ) : TelemetryGameSettings {
 
-    override fun observeSelection(): Flow<GameSelection> =
-        preferences.observe(
-            TelemetryGameDefaults.KEY_GAME_SELECTION,
-            TelemetryGameDefaults.DEFAULT_GAME_SELECTION
-        )
-            .map { GameSelection.fromPreference(it) }
-            .distinctUntilChanged()
+    override fun observeSelection(): Flow<GameSelection> = preferences.observe(
+        TelemetryGameDefaults.KEY_GAME_SELECTION,
+        TelemetryGameDefaults.DEFAULT_GAME_SELECTION,
+    )
+        .map { GameSelection.fromPreference(it) }
+        .distinctUntilChanged()
 
     override suspend fun currentSelection(): GameSelection {
         val raw = preferences.get(
             TelemetryGameDefaults.KEY_GAME_SELECTION,
-            TelemetryGameDefaults.DEFAULT_GAME_SELECTION
+            TelemetryGameDefaults.DEFAULT_GAME_SELECTION,
         )
         return GameSelection.fromPreference(raw)
     }

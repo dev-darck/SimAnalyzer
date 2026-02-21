@@ -14,6 +14,7 @@ internal fun Project.configureKmpLibrary() {
     }
 
     extensions.configure<KotlinMultiplatformExtension> {
+        jvmToolchain(21)
         jvm()
 
         sourceSets {

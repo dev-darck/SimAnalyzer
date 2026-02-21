@@ -15,11 +15,10 @@ import kotlinx.coroutines.flow.Flow
 @SingleIn(AppScope::class)
 class HudPreferences(
     @param:UserPref
-    private val preference: Preference
+    private val preference: Preference,
 ) {
 
-    fun observeVisiblePanels(): Flow<Set<String>> =
-        preference.observe(KEY_VISIBLE_PANELS.strSet, emptySet())
+    fun observeVisiblePanels(): Flow<Set<String>> = preference.observe(KEY_VISIBLE_PANELS.strSet, emptySet())
 
     fun observeHudEnabled(): Flow<Boolean> = preference.observe(TELEMETRY_HUD_ENABLED.bool, true)
     fun observeInputLocked(): Flow<Boolean> = preference.observe(KEY_INPUT_LOCKED.bool, false)
@@ -37,8 +36,7 @@ class HudPreferences(
         preference.put(KEY_VISIBLE_PANELS.strSet to ids)
     }
 
-    suspend fun getVisiblePanelsBackup(): Set<String> =
-        preference.get(KEY_VISIBLE_PANELS_BACKUP.strSet, emptySet())
+    suspend fun getVisiblePanelsBackup(): Set<String> = preference.get(KEY_VISIBLE_PANELS_BACKUP.strSet, emptySet())
 
     suspend fun saveVisiblePanelsBackup(ids: Set<String>) {
         preference.put(KEY_VISIBLE_PANELS_BACKUP.strSet to ids)
@@ -60,7 +58,6 @@ class HudPreferences(
     }
 
     private companion object {
-
         const val TELEMETRY_HUD_ENABLED = "telemetry_hud_enabled"
         const val KEY_VISIBLE_PANELS = "hud_visible_panels"
         const val KEY_VISIBLE_PANELS_BACKUP = "hud_visible_panels_backup"

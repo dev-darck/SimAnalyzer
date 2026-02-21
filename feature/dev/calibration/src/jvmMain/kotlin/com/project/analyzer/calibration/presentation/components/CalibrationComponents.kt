@@ -56,7 +56,7 @@ fun CalibrationSectionCard(
             .fillMaxWidth()
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .padding(16.dp)
+            .padding(16.dp),
     ) {
         Text(
             text = title,
@@ -77,15 +77,12 @@ fun CalibrationSectionCard(
 }
 
 @Composable
-fun SectorsBlock(
-    state: CalibrationState,
-    dispatch: (CalibrationIntent) -> Unit,
-) {
+fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
                 Text(
@@ -102,7 +99,7 @@ fun SectorsBlock(
 
             Button(
                 enabled = !state.isBusy,
-                onClick = { dispatch(CalibrationIntent.AddSector) }
+                onClick = { dispatch(CalibrationIntent.AddSector) },
             ) { Text("Add sector") }
         }
 
@@ -118,12 +115,12 @@ fun SectorsBlock(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text("Sector S$i", style = MaterialTheme.typography.bodyLarge)
                     IconButton(
                         enabled = !state.isBusy,
-                        onClick = { dispatch(CalibrationIntent.RemoveSector(i)) }
+                        onClick = { dispatch(CalibrationIntent.RemoveSector(i)) },
                     ) {
                         Icon(Icons.Filled.Close, contentDescription = "Remove sector S$i")
                     }
@@ -134,7 +131,7 @@ fun SectorsBlock(
                     gate = state.sectorStart(i),
                     enabled = !state.isBusy,
                     onClick = { dispatch(CalibrationIntent.CaptureSectorStart(i)) },
-                    onFlip = { dispatch(CalibrationIntent.FlipSectorStartDirection(i)) }
+                    onFlip = { dispatch(CalibrationIntent.FlipSectorStartDirection(i)) },
                 )
 
                 Text(
@@ -148,20 +145,16 @@ fun SectorsBlock(
 }
 
 @Composable
-internal fun ActionsBlock(
-    state: CalibrationState,
-    onSave: () -> Unit,
-    onReset: () -> Unit
-) {
+internal fun ActionsBlock(state: CalibrationState, onSave: () -> Unit, onReset: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Button(
             enabled = !state.isBusy && state.isReadyToSave(),
-            onClick = onSave
+            onClick = onSave,
         ) { Text("Save calibration") }
 
         OutlinedButton(
             enabled = !state.isBusy,
-            onClick = onReset
+            onClick = onReset,
         ) { Text("Reset") }
     }
 }
@@ -174,7 +167,7 @@ internal fun TrackNameBlock(state: CalibrationState, onName: (String) -> Unit) {
             onValueChange = onName,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Track name") },
-            singleLine = true
+            singleLine = true,
         )
 
         val detectedTrack = listOfNotNull(state.sessionTrackName, state.sessionTrackId)
@@ -192,11 +185,7 @@ internal fun TrackNameBlock(state: CalibrationState, onName: (String) -> Unit) {
 }
 
 @Composable
-internal fun SettingsBlock(
-    state: CalibrationState,
-    onRp: (ReferencePoint) -> Unit,
-    onRadius: (Float) -> Unit,
-) {
+internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Unit, onRadius: (Float) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
@@ -219,7 +208,7 @@ internal fun SettingsBlock(
                     onValueChange = { onRadius(it.toFloatOrNull() ?: state.halfWidthMeters) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.width(140.dp)
+                    modifier = Modifier.width(140.dp),
                 )
                 Text(
                     text = "Keep the car centered on the line when capturing.",
@@ -239,12 +228,12 @@ internal fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (Refer
             Text(
                 text = selected.displayName(),
                 style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
             )
             Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = "Select reference point"
+                contentDescription = "Select reference point",
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -254,7 +243,7 @@ internal fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (Refer
                     onClick = {
                         expanded = false
                         onSelected(rp)
-                    }
+                    },
                 )
             }
         }
@@ -262,13 +251,7 @@ internal fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (Refer
 }
 
 @Composable
-fun GateRow(
-    title: String,
-    gate: Gate?,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    onFlip: (() -> Unit)? = null
-) {
+fun GateRow(title: String, gate: Gate?, enabled: Boolean, onClick: () -> Unit, onFlip: (() -> Unit)? = null) {
     val shape = SimAnalyzerTheme.shapes.medium
     val background = SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.22f)
     val border = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f)
@@ -281,7 +264,7 @@ fun GateRow(
             .border(1.dp, border, shape)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
@@ -291,13 +274,13 @@ fun GateRow(
                 Text(
                     "pos=(%.1f, %.1f) fwd=%s deg".format(gate.center.x, gate.center.y, "%.0f".format(angle)),
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             } else {
                 Text(
                     "Not captured",
                     style = MaterialTheme.typography.bodySmall,
-                    color = SimAnalyzerTheme.material.onSurfaceVariant
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
         }
@@ -320,7 +303,7 @@ private fun InfoRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = label,

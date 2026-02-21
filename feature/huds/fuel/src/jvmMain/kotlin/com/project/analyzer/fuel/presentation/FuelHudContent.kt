@@ -56,10 +56,10 @@ fun FuelDemoContent(modifier: Modifier = Modifier) {
                 PlanRowUi("10 laps", "≈14:45", "15 L", "16 L"),
                 PlanRowUi("15 laps", "≈22:07", "22 L", "23 L"),
             ),
-            confidence = 0.55
+            confidence = 0.55,
         ),
         isToolTipEnabled = true,
-        modifier = modifier.padding(16.dp)
+        modifier = modifier.padding(16.dp),
     )
 }
 
@@ -73,7 +73,7 @@ internal fun FuelHudContent(
     AnimatedVisibility(
         enter = fadeIn(),
         exit = fadeOut(),
-        visible = state.isShow
+        visible = state.isShow,
     ) {
         val shape = RoundedCornerShape(14.dp)
         Box(
@@ -81,13 +81,13 @@ internal fun FuelHudContent(
                 .width(300.dp)
                 .background(
                     color = SimAnalyzerTheme.material.surface.copy(alpha = 0.35f),
-                    shape = shape
-                )
+                    shape = shape,
+                ),
         ) {
             Column(
                 modifier = Modifier
                     .padding(12.dp)
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) {
                 HeaderBlock(
                     title = state.title,
@@ -97,7 +97,7 @@ internal fun FuelHudContent(
                     isSessionActive = state.isSessionActive,
                     phase = state.phase,
                     onResetAll = onResetAll,
-                    isToolTipEnabled = isToolTipEnabled
+                    isToolTipEnabled = isToolTipEnabled,
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -109,7 +109,7 @@ internal fun FuelHudContent(
                     lapsRemainingText = state.lapsRemainingText,
                     lastLapTimeText = state.lastLapTimeText,
                     lapBasisText = state.lapBasisText,
-                    isCurrentLapValid = state.isCurrentLapValid
+                    isCurrentLapValid = state.isCurrentLapValid,
                 )
 
                 Spacer(Modifier.height(12.dp))
@@ -122,11 +122,11 @@ internal fun FuelHudContent(
                     modifier = Modifier
                         .matchParentSize()
                         .background(SimAnalyzerTheme.material.surface.copy(alpha = 0.7f), shape),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = "Waiting in pits…",
-                        color = SimAnalyzerTheme.material.onSurface
+                        color = SimAnalyzerTheme.material.onSurface,
                     )
                 }
             }
@@ -148,14 +148,14 @@ private fun HeaderBlock(
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = title,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
 
             Spacer(Modifier.width(8.dp))
@@ -172,8 +172,8 @@ private fun HeaderBlock(
                     .size(size = 8.dp)
                     .background(
                         color = indicatorColor,
-                        shape = androidx.compose.foundation.shape.CircleShape
-                    )
+                        shape = androidx.compose.foundation.shape.CircleShape,
+                    ),
             )
 
             Spacer(Modifier.width(8.dp))
@@ -192,7 +192,7 @@ private fun HeaderBlock(
                         .clickable {
                             onResetAll()
                         }
-                        .padding(2.dp)
+                        .padding(2.dp),
                 )
             }
         }
@@ -201,14 +201,14 @@ private fun HeaderBlock(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.Bottom
+            verticalAlignment = Alignment.Bottom,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = subtitle,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
 
@@ -219,13 +219,13 @@ private fun HeaderBlock(
                     text = mainValue,
                     color = SimAnalyzerTheme.material.onSurface,
                     fontFamily = FontFamily.Monospace,
-                    maxLines = 1
+                    maxLines = 1,
                 )
                 Text(
                     text = "max: $peakValue",
                     color = SimAnalyzerTheme.material.primary,
                     fontFamily = FontFamily.Monospace,
-                    maxLines = 1
+                    maxLines = 1,
                 )
             }
         }
@@ -253,7 +253,7 @@ private fun MetaBlock(
                 SimAnalyzerTheme.material.onSurface
             } else {
                 SimAnalyzerTheme.material.error
-            }
+            },
         )
         Spacer(Modifier.height(4.dp))
     }
@@ -266,7 +266,7 @@ private fun PlanBlock(planRows: List<PlanRowUi>) {
     Text(
         text = "Fuel plan",
         color = SimAnalyzerTheme.material.onSurfaceVariant,
-        maxLines = 1
+        maxLines = 1,
     )
     Spacer(Modifier.height(6.dp))
 
@@ -275,20 +275,20 @@ private fun PlanBlock(planRows: List<PlanRowUi>) {
             Text(
                 text = "Horizon • Time",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             Text(
                 text = "Now",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                 modifier = Modifier.width(50.dp),
-                textAlign = TextAlign.End
+                textAlign = TextAlign.End,
             )
             Spacer(Modifier.width(8.dp))
             Text(
                 text = "Max",
                 color = SimAnalyzerTheme.material.primary,
                 modifier = Modifier.width(50.dp),
-                textAlign = TextAlign.End
+                textAlign = TextAlign.End,
             )
         }
 
@@ -308,14 +308,14 @@ private fun PlanBlock(planRows: List<PlanRowUi>) {
                     .fillMaxWidth()
                     .background(bg, rowShape)
                     .padding(horizontal = 10.dp, vertical = 7.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = "${row.label} • ${row.timeText}",
                     color = SimAnalyzerTheme.material.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 Text(
                     text = row.fuelText,
@@ -323,7 +323,7 @@ private fun PlanBlock(planRows: List<PlanRowUi>) {
                     fontFamily = FontFamily.Monospace,
                     maxLines = 1,
                     modifier = Modifier.width(50.dp),
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.End,
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
@@ -332,7 +332,7 @@ private fun PlanBlock(planRows: List<PlanRowUi>) {
                     fontFamily = FontFamily.Monospace,
                     maxLines = 1,
                     modifier = Modifier.width(50.dp),
-                    textAlign = TextAlign.End
+                    textAlign = TextAlign.End,
                 )
             }
             Spacer(Modifier.height(4.dp))
@@ -341,27 +341,23 @@ private fun PlanBlock(planRows: List<PlanRowUi>) {
 }
 
 @Composable
-private fun KeyValueRow(
-    key: String,
-    value: String,
-    valueColor: Color = SimAnalyzerTheme.material.onSurface,
-) {
+private fun KeyValueRow(key: String, value: String, valueColor: Color = SimAnalyzerTheme.material.onSurface) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = key,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.weight(1f))
         Text(
             text = value,
             color = valueColor,
             fontFamily = FontFamily.Monospace,
-            maxLines = 1
+            maxLines = 1,
         )
     }
 }
@@ -387,9 +383,9 @@ private fun FuelHudContentPreviewPredictive() {
                     PlanRowUi("10 laps", "≈14:45", "15 L", "16 L"),
                     PlanRowUi("15 laps", "≈22:07", "22 L", "23 L"),
                 ),
-                confidence = 0.55
+                confidence = 0.55,
             ),
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(16.dp),
         )
     }
 }

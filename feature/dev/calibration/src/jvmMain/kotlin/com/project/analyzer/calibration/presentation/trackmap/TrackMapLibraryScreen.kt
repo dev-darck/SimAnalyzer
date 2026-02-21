@@ -42,16 +42,16 @@ fun TrackMapLibraryScreen() {
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background)
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CalibrationSectionCard(
             title = "Saved track maps",
-            subtitle = "Browse stored layouts and verify distances."
+            subtitle = "Browse stored layouts and verify distances.",
         ) {
             Text(
                 text = "Total maps: ${items.size}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
         }
 
@@ -65,7 +65,7 @@ fun TrackMapLibraryScreen() {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
+                    .weight(1f),
             ) {
                 items(items, key = { it.map.gameId + it.map.trackId + it.map.layoutId.orEmpty() }) { item ->
                     TrackMapLibraryCard(item)
@@ -94,10 +94,10 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             pitPointCount = item.pitPoints.size,
             averageTrackWidthMeters = averageWidth(
                 leftWidths = item.leftWidthsMeters,
-                rightWidths = item.rightWidthsMeters
+                rightWidths = item.rightWidthsMeters,
             ),
             pitEntryPoint = item.pitEntryPoint,
-            pitExitPoint = item.pitExitPoint
+            pitExitPoint = item.pitExitPoint,
         )
     }
 
@@ -108,29 +108,29 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             .background(SimAnalyzerTheme.material.surface)
             .border(1.dp, SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f), SimAnalyzerTheme.shapes.large)
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 text = item.map.trackName.ifBlank { item.map.trackId },
                 color = SimAnalyzerTheme.material.onSurface,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium,
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 val gameLabel = item.map.gameId.ifBlank { "unknown" }
                 Text(
                     text = "$gameLabel · ${item.map.trackId}",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodySmall,
                 )
                 item.map.layoutId?.takeIf { it.isNotBlank() }?.let { layoutId ->
                     Text(
                         text = layoutId,
                         color = SimAnalyzerTheme.material.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
             }
@@ -141,42 +141,42 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(220.dp),
-            showStatus = false
+            showStatus = false,
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
                 text = "Points: ${item.points.size}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
             Text(
                 text = "Distance: ${formatDistance(item.distanceMeters)}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
             Text(
                 text = "Width: %.1f m".format(
                     averageWidth(
                         leftWidths = item.leftWidthsMeters,
-                        rightWidths = item.rightWidthsMeters
-                    )
+                        rightWidths = item.rightWidthsMeters,
+                    ),
                 ),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
             Text(
                 text = "Pit: ${item.pitPoints.size}",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
             Text(
                 text = formatEpoch(item.map.createdAtEpochMs),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
             )
         }
 
@@ -206,20 +206,18 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
                     .fillMaxWidth()
                     .background(
                         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.25f),
-                        SimAnalyzerTheme.shapes.medium
+                        SimAnalyzerTheme.shapes.medium,
                     )
-                    .padding(10.dp)
+                    .padding(10.dp),
             )
         }
     }
 }
 
-private fun formatDistance(distanceMeters: Float): String {
-    return if (distanceMeters >= 1000f) {
-        "%.2f km".format(distanceMeters / 1000f)
-    } else {
-        "%.1f m".format(distanceMeters)
-    }
+private fun formatDistance(distanceMeters: Float): String = if (distanceMeters >= 1000f) {
+    "%.2f km".format(distanceMeters / 1000f)
+} else {
+    "%.1f m".format(distanceMeters)
 }
 
 private fun formatEpoch(epochMs: Long): String {

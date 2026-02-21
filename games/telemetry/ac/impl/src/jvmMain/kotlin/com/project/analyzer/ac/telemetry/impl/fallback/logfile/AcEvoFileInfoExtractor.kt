@@ -17,9 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Inject
 @SingleIn(SessionScope::class)
-class AcEvoFileInfoExtractor(
-    private val locator: AcEvoLogLocator,
-) : EvoFileInfoSource {
+class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfoSource {
 
     private val parser = AcEvoLogParser()
 
@@ -59,7 +57,7 @@ class AcEvoFileInfoExtractor(
             hasPenalty = false,
             penaltyReason = null,
             penaltyId = null,
-            penaltyTimestamp = null
+            penaltyTimestamp = null,
         )
     }
 
@@ -101,12 +99,13 @@ class AcEvoFileInfoExtractor(
 
         if (raf == null || openedFile == null || !samePath || keyChanged || lmWentBack) {
             reopen(
-                file, reason = when {
+                file,
+                reason = when {
                     !samePath -> "pathChanged"
                     keyChanged -> "fileKeyChanged"
                     lmWentBack -> "lastModifiedWentBack"
                     else -> "init"
-                }
+                },
             )
         }
     }
@@ -248,7 +247,7 @@ class AcEvoFileInfoExtractor(
             hasPenalty = false,
             penaltyId = null,
             penaltyReason = null,
-            penaltyTimestamp = null
+            penaltyTimestamp = null,
         )
         parser.resetForEpoch()
         logger.info { "EvoFileInfo epoch++ -> $sessionEpoch ($reason)" }
@@ -267,7 +266,7 @@ class AcEvoFileInfoExtractor(
         val name = trackName?.trim()?.takeIf { it.isNotBlank() } ?: return null
         return TrackIdNormalizer.normalize(
             track = name,
-            layout = layout
+            layout = layout,
         ).takeIf { it.isNotBlank() }
     }
 
@@ -278,7 +277,7 @@ class AcEvoFileInfoExtractor(
         val rawTrackName = resolveTrackName(
             parsed = parsed,
             effectiveTrackId = resolved.trackId ?: lastInfo.trackId,
-            effectiveLayout = effectiveLayout
+            effectiveLayout = effectiveLayout,
         )
         val trackName = rawTrackName?.trim()?.takeIf { it.isNotBlank() }
 
@@ -307,21 +306,25 @@ class AcEvoFileInfoExtractor(
             driverSteamId = parsed.driverSteamId ?: lastInfo.driverSteamId,
             hasPenalty = hasPenalty,
             penaltyId = if (includePenalties) parsed.penalty?.id ?: lastInfo.penaltyId else lastInfo.penaltyId,
-            penaltyReason = if (includePenalties) parsed.penalty?.reason
-                ?: lastInfo.penaltyReason else lastInfo.penaltyReason,
-            penaltyTimestamp = if (includePenalties) parsed.penalty?.timestamp
-                ?: lastInfo.penaltyTimestamp else lastInfo.penaltyTimestamp,
+            penaltyReason = if (includePenalties) {
+                parsed.penalty?.reason
+                    ?: lastInfo.penaltyReason
+            } else {
+                lastInfo.penaltyReason
+            },
+            penaltyTimestamp = if (includePenalties) {
+                parsed.penalty?.timestamp
+                    ?: lastInfo.penaltyTimestamp
+            } else {
+                lastInfo.penaltyTimestamp
+            },
             sessionEpoch = sessionEpoch,
             sessionType = effectiveSessionType,
-            playerCarUuid = parser.currentPlayerCarUuid ?: lastInfo.playerCarUuid
+            playerCarUuid = parser.currentPlayerCarUuid ?: lastInfo.playerCarUuid,
         )
     }
 
-    private fun resolveTrackName(
-        parsed: Parsed,
-        effectiveTrackId: String?,
-        effectiveLayout: String?
-    ): String? {
+    private fun resolveTrackName(parsed: Parsed, effectiveTrackId: String?, effectiveLayout: String?): String? {
         parser.buildDisplayName(parsed.physicsTrackName, effectiveLayout)?.let { return it }
         parser.buildDisplayName(parsed.gameStartedTrackName, effectiveLayout)?.let { return it }
 

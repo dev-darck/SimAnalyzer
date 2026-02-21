@@ -19,7 +19,9 @@ public data class DamageFrame(
         if (rawDamage5 != null) {
             if (other.rawDamage5 == null) return false
             if (!rawDamage5.contentEquals(other.rawDamage5)) return false
-        } else if (other.rawDamage5 != null) return false
+        } else if (other.rawDamage5 != null) {
+            return false
+        }
         return aero == other.aero &&
             suspension == other.suspension &&
             body == other.body &&

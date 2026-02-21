@@ -24,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -33,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,13 +41,6 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
-
-@Immutable
-data class NavItem(
-    val key: Root,
-    val title: String,
-    val icon: ImageVector
-)
 
 @Composable
 fun Sidebar(
@@ -78,13 +69,13 @@ fun Sidebar(
         modifier = modifier
             .width(88.dp)
             .fillMaxHeight(),
-        color = sidebarBg
+        color = sidebarBg,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (topIcon != null) {
                 Box(
@@ -92,7 +83,7 @@ fun Sidebar(
                         .size(56.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(SimAnalyzerTheme.material.secondaryContainer),
-                    contentAlignment = Alignment.Center
+                    contentAlignment = Alignment.Center,
                 ) { topIcon() }
 
                 Spacer(Modifier.height(18.dp))
@@ -106,7 +97,7 @@ fun Sidebar(
                 selectedColor = selectedColor,
                 normalText = normalText,
                 normalIcon = normalIcon,
-                onSelect = onSelect
+                onSelect = onSelect,
             )
 
             if (trailingItems.isNotEmpty()) {
@@ -121,7 +112,7 @@ fun Sidebar(
                 selectedColor = selectedColor,
                 normalText = normalText,
                 normalIcon = normalIcon,
-                onSelect = onSelect
+                onSelect = onSelect,
             )
         }
     }
@@ -136,7 +127,7 @@ private fun SidebarItemsGroup(
     selectedColor: Color,
     normalText: Color,
     normalIcon: Color,
-    onSelect: (NavItem) -> Unit
+    onSelect: (NavItem) -> Unit,
 ) {
     items.forEachIndexed { index, item ->
         key(item.key) {
@@ -148,7 +139,7 @@ private fun SidebarItemsGroup(
                 selectedColor = selectedColor,
                 normalText = normalText,
                 normalIcon = normalIcon,
-                onClick = { onSelect(item) }
+                onClick = { onSelect(item) },
             )
 
             if (index != items.lastIndex) {
@@ -167,7 +158,7 @@ private fun SidebarItem(
     selectedColor: Color,
     normalText: Color,
     normalIcon: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -178,17 +169,17 @@ private fun SidebarItem(
             hovered -> hoverPill
             else -> Color.Transparent
         },
-        animationSpec = tween(120)
+        animationSpec = tween(durationMillis = 120),
     )
 
     val textColor by animateColorAsState(
         targetValue = if (selected) selectedColor else normalText,
-        animationSpec = tween(120)
+        animationSpec = tween(durationMillis = 120),
     )
 
     val iconColor by animateColorAsState(
         targetValue = if (selected) selectedColor else normalIcon,
-        animationSpec = tween(120)
+        animationSpec = tween(durationMillis = 120),
     )
     val itemScale by animateScale(selected = selected, hovered = hovered)
 
@@ -202,21 +193,21 @@ private fun SidebarItem(
                 enabled = !selected,
                 role = Role.Tab,
                 interactionSource = interaction,
-                indication = null
+                indication = null,
             ) { onClick() },
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
             modifier = Modifier
                 .size(width = 56.dp, height = 32.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .background(pillColor),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = item.icon,
                 contentDescription = item.title,
-                tint = iconColor
+                tint = iconColor,
             )
         }
 
@@ -226,7 +217,7 @@ private fun SidebarItem(
             text = item.title,
             color = textColor,
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
         )
     }
 }
@@ -241,7 +232,7 @@ private fun animateScale(selected: Boolean, hovered: Boolean): androidx.compose.
     return androidx.compose.animation.core.animateFloatAsState(
         targetValue = target,
         animationSpec = tween(durationMillis = 160, easing = FastOutSlowInEasing),
-        label = "sidebarItemScale"
+        label = "sidebarItemScale",
     )
 }
 
@@ -249,19 +240,18 @@ private fun animateScale(selected: Boolean, hovered: Boolean): androidx.compose.
 @Composable
 private fun SidebarItemPreview() {
     SimAnalyzerTheme {
-
         val items = remember {
             listOf(
                 NavItem(Root.Live, "Live", Icons.Filled.Live),
                 NavItem(Root.Session, "Session", Icons.Filled.Session),
 //            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
-                NavItem(Root.Settings, "Settings", Icons.Filled.Settings)
+                NavItem(Root.Settings, "Settings", Icons.Filled.Settings),
             )
         }
 
         Sidebar(
             selectedKey = Root.Live,
-            items = items
+            items = items,
         )
     }
 }

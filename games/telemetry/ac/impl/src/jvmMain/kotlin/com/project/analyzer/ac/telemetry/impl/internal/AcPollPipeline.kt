@@ -17,10 +17,7 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
 import kotlin.time.Duration.Companion.seconds
 
-internal class AcPollPipeline(
-    private val pollLoop: AcPollLoop,
-    private val fallback: AcEvoFallbackShmPatcher,
-) {
+internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fallback: AcEvoFallbackShmPatcher) {
 
     private val dropLogLimiter = NsRateLimiter(DROP_LOG_INTERVAL_NS)
 
@@ -144,7 +141,7 @@ internal class AcPollPipeline(
             fallback.patchIfNeeded(
                 shm = boundSnapshotMemory,
                 loopStartNanos = snapshot.timestampNs.takeIf { it > 0L } ?: System.nanoTime(),
-                gameState = currentState
+                gameState = currentState,
             )
         } finally {
             boundSnapshot = null
@@ -177,12 +174,11 @@ internal class AcPollPipeline(
         }
     }
 
-    private fun newSnapshot(): AcRawSnapshot =
-        AcRawSnapshot(
-            physics = SPageFilePhysics(),
-            graphics = SPageFileGraphics(),
-            statics = SPageFileStatic(),
-        )
+    private fun newSnapshot(): AcRawSnapshot = AcRawSnapshot(
+        physics = SPageFilePhysics(),
+        graphics = SPageFileGraphics(),
+        statics = SPageFileStatic(),
+    )
 
     private fun copySnapshot(source: AcRawSnapshot, target: AcRawSnapshot) {
         copyPhysics(source.physics, target.physics)
@@ -214,8 +210,7 @@ internal class AcPollPipeline(
         target.pointer.write(0, staticsBuffer, 0, staticsSize)
     }
 
-    private fun requireBoundSnapshot(): AcRawSnapshot =
-        requireNotNull(boundSnapshot) { "Snapshot is not bound" }
+    private fun requireBoundSnapshot(): AcRawSnapshot = requireNotNull(boundSnapshot) { "Snapshot is not bound" }
 
     private fun ensurePollDispatcher(): ExecutorCoroutineDispatcher {
         val existing = pollDispatcher

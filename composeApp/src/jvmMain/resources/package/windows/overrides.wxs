@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <!-- Binary for cleanup VBScript -->
+        <Binary Id="UninstallCleanupVBS" SourceFile="uninstall-cleanup.vbs" />
+        
+        <!-- Custom action to execute the VBScript -->
+        <CustomAction Id="CA_UninstallCleanup" 
+                      BinaryKey="UninstallCleanupVBS" 
+                      VBScriptCall="Main" 
+                      Execute="immediate" 
+                      Return="ignore" />
+        
+        <!-- Execute the action during uninstallation -->
+        <InstallExecuteSequence>
+            <Custom Action="CA_UninstallCleanup" After="InstallInitialize">
+                REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE
+            </Custom>
+        </InstallExecuteSequence>
+    </Fragment>
+</Wix>

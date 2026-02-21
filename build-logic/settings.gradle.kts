@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "build-logic"
 include(":builder")
 include(":conventions")
+include(":build-convention")

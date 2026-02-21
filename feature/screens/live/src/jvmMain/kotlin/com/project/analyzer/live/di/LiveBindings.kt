@@ -22,14 +22,12 @@ object LiveBindings {
     @SingleIn(ScreenScope::class)
     private fun provideLiveTelemetryUseCase(
         telemetryLifecycle: TelemetryLifecycle,
-        liveScreenStateMapper: LiveScreenStateMapper
-    ): LiveTelemetryUseCase =
-        LiveTelemetryUseCaseImpl(telemetryLifecycle, liveScreenStateMapper)
+        liveScreenStateMapper: LiveScreenStateMapper,
+    ): LiveTelemetryUseCase = LiveTelemetryUseCaseImpl(telemetryLifecycle, liveScreenStateMapper)
 
     @Provides
     @IntoMap
     @ViewModelKey(LiveViewModel::class)
-    private fun provideLiveViewModel(
-        liveTelemetryUseCase: LiveTelemetryUseCase
-    ): ViewModel = LiveViewModel(liveTelemetryUseCase)
+    private fun provideLiveViewModel(liveTelemetryUseCase: LiveTelemetryUseCase): ViewModel =
+        LiveViewModel(liveTelemetryUseCase)
 }

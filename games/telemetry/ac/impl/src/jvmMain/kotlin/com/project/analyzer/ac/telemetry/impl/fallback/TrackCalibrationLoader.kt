@@ -12,10 +12,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import java.io.File
 
 @Inject
-class TrackCalibrationLoader(
-    private val json: Json,
-    private val appDirectories: AppDirectories,
-) {
+class TrackCalibrationLoader(private val json: Json, private val appDirectories: AppDirectories) {
 
     @OptIn(ExperimentalSerializationApi::class)
     fun load(trackId: String): TrackCalibration? {

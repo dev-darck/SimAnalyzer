@@ -4,11 +4,7 @@ import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
 import java.util.Locale
 
-internal data class GameSelectionOptionUi(
-    val selection: GameSelection,
-    val label: String,
-    val subtitle: String,
-)
+internal data class GameSelectionOptionUi(val selection: GameSelection, val label: String, val subtitle: String)
 
 internal data class GameSelectionUi(
     val selection: GameSelection,
@@ -23,22 +19,22 @@ internal fun defaultGameSelectionOptions(): List<GameSelectionOptionUi> = listOf
     GameSelectionOptionUi(
         selection = GameSelection.Auto,
         label = "Auto detect",
-        subtitle = "Waits for a supported game window"
+        subtitle = "Waits for a supported game window",
     ),
     GameSelectionOptionUi(
         selection = GameSelection.Manual(GameId.AC),
         label = GameId.AC.displayName,
-        subtitle = "Manual selection enabled"
+        subtitle = "Manual selection enabled",
     ),
     GameSelectionOptionUi(
         selection = GameSelection.Manual(GameId.ACC),
         label = GameId.ACC.displayName,
-        subtitle = "Manual selection enabled"
+        subtitle = "Manual selection enabled",
     ),
     GameSelectionOptionUi(
         selection = GameSelection.Manual(GameId.ACE),
         label = GameId.ACE.displayName,
-        subtitle = "Manual selection enabled"
+        subtitle = "Manual selection enabled",
     ),
 //    GameSelectionOptionUi(
 //        selection = GameSelection.Manual(GameId.LMU),
@@ -71,7 +67,7 @@ internal fun buildGameSelectionUi(
         subtitle = selected.subtitle,
         tag = if (isAuto) "AUTO" else "MANUAL",
         isAuto = isAuto,
-        options = options
+        options = options,
     )
 }
 
@@ -80,11 +76,7 @@ private fun GameId.isAcFamily(): Boolean = when (this) {
 //    GameId.LMU -> false
 }
 
-internal fun buildRecordingWarning(
-    recordingEnabled: Boolean,
-    samplingRateHz: Int,
-    maxRecordedLaps: Int
-): String? {
+internal fun buildRecordingWarning(recordingEnabled: Boolean, samplingRateHz: Int, maxRecordedLaps: Int): String? {
     if (!recordingEnabled) return null
 
     val highRate = samplingRateHz >= 80

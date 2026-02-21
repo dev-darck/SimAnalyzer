@@ -28,9 +28,7 @@ import java.util.Locale
 import kotlin.math.ceil
 
 @Inject
-class SessionDetailViewModel(
-    private val repository: RecordedSessionRepository,
-) : ViewModel() {
+class SessionDetailViewModel(private val repository: RecordedSessionRepository) : ViewModel() {
 
     private val _state = MutableStateFlow(SessionDetailState())
     val state: StateFlow<SessionDetailState> = _state.asStateFlow()
@@ -51,8 +49,19 @@ class SessionDetailViewModel(
     fun dispatch(intent: SessionDetailIntent) {
         when (intent) {
             SessionDetailIntent.Refresh -> reload()
-            is SessionDetailIntent.ChangeSort -> updateFilter { copy(sortFilter = sortFilter.updateSelection(intent.optionId)) }
-            is SessionDetailIntent.ChangeFilter -> updateFilter { copy(showFilter = showFilter.updateSelection(intent.optionId)) }
+
+            is SessionDetailIntent.ChangeSort -> updateFilter {
+                copy(
+                    sortFilter = sortFilter.updateSelection(intent.optionId),
+                )
+            }
+
+            is SessionDetailIntent.ChangeFilter -> updateFilter {
+                copy(
+                    showFilter = showFilter.updateSelection(intent.optionId),
+                )
+            }
+
             is SessionDetailIntent.ChangePage -> updateFilter { copy(page = intent.page) }
         }
     }
@@ -97,7 +106,7 @@ class SessionDetailViewModel(
         val stats = SessionDetailStatsUi(
             bestLapLabel = bestLapMs?.fromMsToLapTime() ?: "0:00.000",
             averageLapLabel = averageLapMs?.fromMsToLapTime() ?: "0:00.000",
-            incidentsCount = details.laps.count { it.invalid }
+            incidentsCount = details.laps.count { it.invalid },
         )
 
         baseLaps = buildLapRows(details.laps, bestLapMs)
@@ -113,7 +122,7 @@ class SessionDetailViewModel(
                 options = listOf(
                     DropdownOptionUi("lap", "Lap"),
                     DropdownOptionUi("best", "Best lap"),
-                )
+                ),
             ),
             showFilter = buildFilter(
                 label = "Show",
@@ -123,7 +132,7 @@ class SessionDetailViewModel(
                     DropdownOptionUi("valid", "Valid laps"),
                     DropdownOptionUi("invalid", "Invalid laps"),
                     DropdownOptionUi("pit", "Pit laps"),
-                )
+                ),
             ),
             page = 1,
             pageCount = 1,
@@ -155,7 +164,7 @@ class SessionDetailViewModel(
             page = page,
             pageCount = pageCount,
             laps = sorted,
-            visibleLaps = visible
+            visibleLaps = visible,
         )
     }
 
@@ -218,22 +227,18 @@ class SessionDetailViewModel(
         return SessionDetailHeaderUi(
             title = "Session",
             subtitle = "$dateLabel, $timeLabel",
-            chips = chips
+            chips = chips,
         )
     }
 
-    private fun buildFilter(
-        label: String,
-        selectedId: String,
-        options: List<DropdownOptionUi>,
-    ): DropdownFilterUi {
+    private fun buildFilter(label: String, selectedId: String, options: List<DropdownOptionUi>): DropdownFilterUi {
         val resolved = if (options.any { it.id == selectedId }) selectedId else options.first().id
         val selectedLabel = options.firstOrNull { it.id == resolved }?.label ?: options.first().label
         return DropdownFilterUi(
             label = label,
             selectedId = resolved,
             selectedLabel = selectedLabel,
-            options = options
+            options = options,
         )
     }
 

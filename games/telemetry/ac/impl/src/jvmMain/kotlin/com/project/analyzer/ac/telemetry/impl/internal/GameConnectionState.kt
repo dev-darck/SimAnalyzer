@@ -12,5 +12,5 @@ enum class GameConnectionState {
     IN_MENU,
 
     /** Game is running with active session (practice/race/etc) */
-    IN_SESSION
+    IN_SESSION,
 }

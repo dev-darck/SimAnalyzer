@@ -10,5 +10,5 @@ public data class TelemetryFramePayload(
     val payloadType: String,
     val dataSourceId: Int,
     val payload: ByteArray,
-    val index: TelemetryFrameIndex? = null
+    val index: TelemetryFrameIndex? = null,
 )

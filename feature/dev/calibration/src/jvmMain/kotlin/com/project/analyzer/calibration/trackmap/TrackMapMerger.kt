@@ -5,7 +5,7 @@ import com.project.analyzer.math.Vec2
 class TrackMapMerger(
     private val insertDistanceMeters: Float,
     private val minInsertSpacingMeters: Float,
-    private val searchWindow: Int
+    private val searchWindow: Int,
 ) {
 
     fun merge(mapPoints: MutableList<Vec2>, lap: List<Vec2>) {

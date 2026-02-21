@@ -19,10 +19,7 @@ class BuildGateUseCase {
      * - [Pose2D.forward] becomes the gate forward direction (normalized, with fallback).
      * - Gate normal is derived as a strict left-perpendicular to forward.
      */
-    fun fromPose(
-        pose: Pose2D,
-        halfWidthMeters: Float = 10f,
-    ): Gate {
+    fun fromPose(pose: Pose2D, halfWidthMeters: Float = 10f): Gate {
         val forward = pose.forward.safeNormalized(Vec2.Up)
         val normal = forward.perpLeft()
 
@@ -30,7 +27,7 @@ class BuildGateUseCase {
             center = pose.pos,
             forward = forward,
             normal = normal,
-            halfWidthMeters = halfWidthMeters
+            halfWidthMeters = halfWidthMeters,
         )
     }
 }
@@ -42,6 +39,6 @@ fun Gate.flipDirection(): Gate {
 
     return copy(
         forward = Vec2Dto.from(f),
-        normal = Vec2Dto.from(n)
+        normal = Vec2Dto.from(n),
     )
 }

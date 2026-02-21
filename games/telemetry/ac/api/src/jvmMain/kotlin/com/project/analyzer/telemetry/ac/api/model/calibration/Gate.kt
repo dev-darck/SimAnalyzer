@@ -27,7 +27,7 @@ public data class Gate(
     val center: Vec2Dto,
     val forward: Vec2Dto,
     val normal: Vec2Dto,
-    val halfWidthMeters: Float = 8f
+    val halfWidthMeters: Float = 8f,
 ) {
 
     public fun centerV2(): Vec2 = center.toVec2()
@@ -36,16 +36,11 @@ public data class Gate(
 
     public companion object {
 
-        public fun create(
-            center: Vec2,
-            forward: Vec2,
-            normal: Vec2,
-            halfWidthMeters: Float = 8f
-        ): Gate = Gate(
+        public fun create(center: Vec2, forward: Vec2, normal: Vec2, halfWidthMeters: Float = 8f): Gate = Gate(
             center = Vec2Dto.from(center),
             forward = Vec2Dto.from(forward),
             normal = Vec2Dto.from(normal),
-            halfWidthMeters = halfWidthMeters
+            halfWidthMeters = halfWidthMeters,
         )
     }
 }

@@ -17,30 +17,25 @@ import kotlinx.coroutines.flow.map
 @ContributesBinding(AppScope::class, binding = binding<ThemeRepository>())
 class ThemeRepositoryImpl(
     @param:UserPref
-    private val preference: Preference
+    private val preference: Preference,
 ) : ThemeRepository {
-
     override suspend fun loadTheme(): ThemeMode {
         val themeName = preference.get(THEME_MODE.str, ThemeMode.System.name)
         return ThemeMode.entries.find { theme -> themeName == theme.name } ?: ThemeMode.System
-
     }
 
-    override fun observeThemeMode(): Flow<ThemeMode> {
-        return preference.observe(THEME_MODE.str, ThemeMode.System.name)
-            .map { name ->
-                ThemeMode.entries.find {
-                    it.name == name
-                } ?: ThemeMode.System
-            }
-    }
+    override fun observeThemeMode(): Flow<ThemeMode> = preference.observe(THEME_MODE.str, ThemeMode.System.name)
+        .map { name ->
+            ThemeMode.entries.find {
+                it.name == name
+            } ?: ThemeMode.System
+        }
 
     override suspend fun setThemeMode(mode: ThemeMode) {
         preference.put(THEME_MODE.str to mode.name)
     }
 
     private companion object {
-
         const val THEME_MODE = "theme_mode"
     }
 }

@@ -36,7 +36,7 @@ fun OverlayWindow(
         resizable = false,
         alwaysOnTop = true,
         focusable = false,
-        state = state
+        state = state,
     ) {
         val scope = rememberCoroutineScope()
         val hitRegions: HitRegions = remember { InMemoryHitRegions() }
@@ -52,7 +52,7 @@ fun OverlayWindow(
             GameDetector(
                 configs = configs,
                 requireForeground = true,
-                coroutineDispatcher = winApiDispatcher
+                coroutineDispatcher = winApiDispatcher,
             )
         }
 
@@ -60,7 +60,7 @@ fun OverlayWindow(
             OverlayController(
                 gameDetector = gameDetector,
                 hitRegions = hitRegions,
-                coroutineDispatcher = winApiDispatcher
+                coroutineDispatcher = winApiDispatcher,
             )
         }
 

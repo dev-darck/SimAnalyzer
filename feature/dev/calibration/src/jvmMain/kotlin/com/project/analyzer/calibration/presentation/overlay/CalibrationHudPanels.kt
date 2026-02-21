@@ -24,9 +24,7 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
-class CalibrationDebugHudPanel(
-    private val overlayDebugBus: OverlayDebugBus
-) : HudPanel {
+class CalibrationDebugHudPanel(private val overlayDebugBus: OverlayDebugBus) : HudPanel {
 
     override val id: String = "calibration_debug"
     override val description: String = "Calibration debug telemetry"
@@ -40,7 +38,7 @@ class CalibrationDebugHudPanel(
         val state by overlayDebugBus.state.collectAsStateWithLifecycle()
         DebugInfoPanel(
             state = state,
-            modifier = modifier
+            modifier = modifier,
         )
     }
 }
@@ -48,9 +46,7 @@ class CalibrationDebugHudPanel(
 @Inject
 @SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
-class CalibrationMiniMapHudPanel(
-    private val overlayDebugBus: OverlayDebugBus
-) : HudPanel {
+class CalibrationMiniMapHudPanel(private val overlayDebugBus: OverlayDebugBus) : HudPanel {
 
     override val id: String = "calibration_minimap"
     override val description: String = "Calibration minimap view"
@@ -70,12 +66,12 @@ class CalibrationMiniMapHudPanel(
                 modifier = modifier
                     .background(Color(0x66000000))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Waiting for telemetry",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White
+                    color = Color.White,
                 )
             }
             return
@@ -87,7 +83,7 @@ class CalibrationMiniMapHudPanel(
             gates = state.gates,
             lastCapturePoint = state.lastCapturePoint,
             pendingCapturePosition = state.pendingCapturePosition,
-            modifier = modifier
+            modifier = modifier,
         )
     }
 }

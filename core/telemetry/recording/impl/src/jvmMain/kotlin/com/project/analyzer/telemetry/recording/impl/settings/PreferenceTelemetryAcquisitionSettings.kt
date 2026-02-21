@@ -23,55 +23,54 @@ class PreferenceTelemetryAcquisitionSettings(
     private val appDirectories: AppDirectories,
 ) : TelemetryAcquisitionSettings {
 
-    override fun observeConfig(): Flow<TelemetryAcquisitionConfig> =
-        combine(
-            preferences.observe(
-                TelemetryAcquisitionDefaults.KEY_SAMPLING_RATE,
-                TelemetryAcquisitionDefaults.DEFAULT_SAMPLING_RATE_HZ
-            ),
-            preferences.observe(
-                TelemetryAcquisitionDefaults.KEY_STORAGE_LOCATION,
-                defaultStorageLocation()
-            ),
-            preferences.observe(
-                TelemetryAcquisitionDefaults.KEY_RECORDING_ENABLED,
-                TelemetryAcquisitionDefaults.DEFAULT_RECORDING_ENABLED
-            ),
-            preferences.observe(
-                TelemetryAcquisitionDefaults.KEY_MAX_RECORDED_LAPS,
-                TelemetryAcquisitionDefaults.DEFAULT_MAX_RECORDED_LAPS
-            )
-        ) { rate, location, enabled, maxLaps ->
-            TelemetryAcquisitionConfig(
-                samplingRateHz = clampRate(rate),
-                storageLocation = location,
-                recordingEnabled = enabled,
-                maxRecordedLaps = clampMaxLaps(maxLaps)
-            )
-        }
+    override fun observeConfig(): Flow<TelemetryAcquisitionConfig> = combine(
+        preferences.observe(
+            TelemetryAcquisitionDefaults.KEY_SAMPLING_RATE,
+            TelemetryAcquisitionDefaults.DEFAULT_SAMPLING_RATE_HZ,
+        ),
+        preferences.observe(
+            TelemetryAcquisitionDefaults.KEY_STORAGE_LOCATION,
+            defaultStorageLocation(),
+        ),
+        preferences.observe(
+            TelemetryAcquisitionDefaults.KEY_RECORDING_ENABLED,
+            TelemetryAcquisitionDefaults.DEFAULT_RECORDING_ENABLED,
+        ),
+        preferences.observe(
+            TelemetryAcquisitionDefaults.KEY_MAX_RECORDED_LAPS,
+            TelemetryAcquisitionDefaults.DEFAULT_MAX_RECORDED_LAPS,
+        ),
+    ) { rate, location, enabled, maxLaps ->
+        TelemetryAcquisitionConfig(
+            samplingRateHz = clampRate(rate),
+            storageLocation = location,
+            recordingEnabled = enabled,
+            maxRecordedLaps = clampMaxLaps(maxLaps),
+        )
+    }
 
     override suspend fun currentConfig(): TelemetryAcquisitionConfig {
         val rate = preferences.get(
             TelemetryAcquisitionDefaults.KEY_SAMPLING_RATE,
-            TelemetryAcquisitionDefaults.DEFAULT_SAMPLING_RATE_HZ
+            TelemetryAcquisitionDefaults.DEFAULT_SAMPLING_RATE_HZ,
         )
         val location = preferences.get(
             TelemetryAcquisitionDefaults.KEY_STORAGE_LOCATION,
-            defaultStorageLocation()
+            defaultStorageLocation(),
         )
         val recordingEnabled = preferences.get(
             TelemetryAcquisitionDefaults.KEY_RECORDING_ENABLED,
-            TelemetryAcquisitionDefaults.DEFAULT_RECORDING_ENABLED
+            TelemetryAcquisitionDefaults.DEFAULT_RECORDING_ENABLED,
         )
         val maxRecordedLaps = preferences.get(
             TelemetryAcquisitionDefaults.KEY_MAX_RECORDED_LAPS,
-            TelemetryAcquisitionDefaults.DEFAULT_MAX_RECORDED_LAPS
+            TelemetryAcquisitionDefaults.DEFAULT_MAX_RECORDED_LAPS,
         )
         return TelemetryAcquisitionConfig(
             samplingRateHz = clampRate(rate),
             storageLocation = location,
             recordingEnabled = recordingEnabled,
-            maxRecordedLaps = clampMaxLaps(maxRecordedLaps)
+            maxRecordedLaps = clampMaxLaps(maxRecordedLaps),
         )
     }
 
@@ -79,11 +78,11 @@ class PreferenceTelemetryAcquisitionSettings(
 
     private fun clampRate(hz: Int): Int = hz.coerceIn(
         TelemetryAcquisitionDefaults.MIN_SAMPLING_RATE_HZ,
-        TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ
+        TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ,
     )
 
     private fun clampMaxLaps(value: Int): Int = value.coerceIn(
         TelemetryAcquisitionDefaults.MIN_MAX_RECORDED_LAPS,
-        TelemetryAcquisitionDefaults.MAX_MAX_RECORDED_LAPS
+        TelemetryAcquisitionDefaults.MAX_MAX_RECORDED_LAPS,
     )
 }

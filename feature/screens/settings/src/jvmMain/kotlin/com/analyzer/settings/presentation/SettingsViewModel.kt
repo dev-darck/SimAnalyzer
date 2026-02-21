@@ -73,28 +73,28 @@ internal class SettingsViewModel(
         viewModelScope.launch {
             combine(
                 telemetrySettingsRepository.observeSettings(),
-                telemetrySettingsRepository.observeGameSelectionVariant()
+                telemetrySettingsRepository.observeGameSelectionVariant(),
             ) { settings, variant -> settings to variant }
                 .collect { (settings, variant) ->
                     val warning = buildRecordingWarning(
                         recordingEnabled = settings.recordingEnabled,
                         samplingRateHz = settings.samplingRateHz,
-                        maxRecordedLaps = settings.maxRecordedLaps
+                        maxRecordedLaps = settings.maxRecordedLaps,
                     )
                     val selectionUi = buildGameSelectionUi(settings.gameSelection, variant)
-                _state.update {
-                    it.copy(
-                        samplingRateHz = settings.samplingRateHz,
-                        storageLocation = settings.storageLocation,
-                        recordingEnabled = settings.recordingEnabled,
-                        maxRecordedLaps = settings.maxRecordedLaps,
-                        gameSelection = settings.gameSelection,
-                        gameSelectionUi = selectionUi,
-                        recordingWarning = warning
-                    )
-                }
+                    _state.update {
+                        it.copy(
+                            samplingRateHz = settings.samplingRateHz,
+                            storageLocation = settings.storageLocation,
+                            recordingEnabled = settings.recordingEnabled,
+                            maxRecordedLaps = settings.maxRecordedLaps,
+                            gameSelection = settings.gameSelection,
+                            gameSelectionUi = selectionUi,
+                            recordingWarning = warning,
+                        )
+                    }
                     updateStorageSize(settings.storageLocation)
-            }
+                }
         }
     }
 
@@ -147,7 +147,7 @@ internal class SettingsViewModel(
             _state.update {
                 it.copy(
                     storageSizeBytes = null,
-                    storageSizeLabel = formatStorageSizeLabel(null)
+                    storageSizeLabel = formatStorageSizeLabel(null),
                 )
             }
             return
@@ -159,7 +159,7 @@ internal class SettingsViewModel(
             _state.update {
                 it.copy(
                     storageSizeBytes = size,
-                    storageSizeLabel = formatStorageSizeLabel(size)
+                    storageSizeLabel = formatStorageSizeLabel(size),
                 )
             }
         }

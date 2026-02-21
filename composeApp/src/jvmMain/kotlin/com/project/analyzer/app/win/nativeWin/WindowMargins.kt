@@ -6,7 +6,7 @@ import com.sun.jna.Structure
     "leftBorderWidth",
     "rightBorderWidth",
     "topBorderHeight",
-    "bottomBorderHeight"
+    "bottomBorderHeight",
 )
 data class WindowMargins(
     @JvmField
@@ -16,5 +16,5 @@ data class WindowMargins(
     @JvmField
     var topBorderHeight: Int,
     @JvmField
-    var bottomBorderHeight: Int
+    var bottomBorderHeight: Int,
 ) : Structure(), Structure.ByReference

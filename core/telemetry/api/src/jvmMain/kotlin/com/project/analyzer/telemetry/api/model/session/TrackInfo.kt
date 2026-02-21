@@ -22,7 +22,9 @@ public data class TrackInfo(
         if (worldXyz != null) {
             if (other.worldXyz == null) return false
             if (!worldXyz.contentEquals(other.worldXyz)) return false
-        } else if (other.worldXyz != null) return false
+        } else if (other.worldXyz != null) {
+            return false
+        }
         return trackId == other.trackId &&
             trackName == other.trackName &&
             layoutId == other.layoutId &&

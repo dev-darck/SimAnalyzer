@@ -9,5 +9,5 @@ public data class ControlsFrame(
     val brakePressureFL: Float? = null,
     val brakePressureFR: Float? = null,
     val brakePressureRL: Float? = null,
-    val brakePressureRR: Float? = null
+    val brakePressureRR: Float? = null,
 )

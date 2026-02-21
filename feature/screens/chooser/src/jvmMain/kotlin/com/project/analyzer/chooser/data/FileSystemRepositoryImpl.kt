@@ -31,19 +31,17 @@ class FileSystemRepositoryImpl(
         )
     }
 
-    override suspend fun listSubdirectories(
-        dir: Path,
-        showHidden: Boolean,
-    ): List<Path> = withContext(coroutineDispatcher) {
-        runCatching {
-            Files.list(dir).use { stream ->
-                stream.toList()
-                    .filter { it.isDirectory() }
-                    .filter { showHidden || !isHidden(it) }
-                    .sortedBy { it.name.lowercase() }
-            }
-        }.getOrDefault(emptyList())
-    }
+    override suspend fun listSubdirectories(dir: Path, showHidden: Boolean): List<Path> =
+        withContext(coroutineDispatcher) {
+            runCatching {
+                Files.list(dir).use { stream ->
+                    stream.toList()
+                        .filter { it.isDirectory() }
+                        .filter { showHidden || !isHidden(it) }
+                        .sortedBy { it.name.lowercase() }
+                }
+            }.getOrDefault(emptyList())
+        }
 
     override suspend fun resolvePath(text: String): Path? = withContext(coroutineDispatcher) {
         runCatching {
@@ -52,8 +50,7 @@ class FileSystemRepositoryImpl(
         }.getOrNull()
     }
 
-    private fun isHidden(path: Path): Boolean =
-        runCatching { path.isHidden() }.getOrDefault(false)
+    private fun isHidden(path: Path): Boolean = runCatching { path.isHidden() }.getOrDefault(false)
 
     private fun buildCandidates(fsv: FileSystemView): List<Candidate> {
         val seen = mutableSetOf<String>()

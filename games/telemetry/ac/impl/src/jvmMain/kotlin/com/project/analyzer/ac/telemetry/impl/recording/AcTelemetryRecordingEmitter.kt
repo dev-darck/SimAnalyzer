@@ -6,10 +6,5 @@ import com.project.analyzer.telemetry.api.model.TelemetryFrame
 
 interface AcTelemetryRecordingEmitter {
 
-    suspend fun emitSample(
-        sessionId: Long,
-        snapshot: AcRawSnapshot,
-        frame: TelemetryFrame,
-        dataSource: DataSourceType,
-    )
+    suspend fun emitSample(sessionId: Long, snapshot: AcRawSnapshot, frame: TelemetryFrame, dataSource: DataSourceType)
 }

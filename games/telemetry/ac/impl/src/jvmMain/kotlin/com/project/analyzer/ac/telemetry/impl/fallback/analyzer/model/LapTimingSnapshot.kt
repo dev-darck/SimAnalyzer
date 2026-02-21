@@ -25,5 +25,5 @@ data class LapTimingSnapshot(
     val deltaLapTimeMs: Int? = null,
     val isDeltaPositive: Boolean = true,
 
-    val startFinishSyncId: Int
+    val startFinishSyncId: Int,
 )

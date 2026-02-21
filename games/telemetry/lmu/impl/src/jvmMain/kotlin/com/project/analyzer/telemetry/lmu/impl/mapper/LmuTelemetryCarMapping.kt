@@ -22,7 +22,7 @@ internal fun mapCar(telemetry: LmuVehicleTelemetry): CarFrame {
             brake = telemetry.filteredBrake.toFloat(),
             clutch = telemetry.filteredClutch.toFloat(),
             steerAngle = telemetry.filteredSteering.toFloat(),
-            brakeBias = telemetry.rearBrakeBias.toFloat()
+            brakeBias = telemetry.rearBrakeBias.toFloat(),
         ),
         engine = EngineFrame(
             gear = telemetry.gear,
@@ -31,11 +31,11 @@ internal fun mapCar(telemetry: LmuVehicleTelemetry): CarFrame {
             turboBoost = telemetry.turboBoostPressure.toFloat(),
             waterTempC = telemetry.engineWaterTemp.toFloat(),
             kersCharge = telemetry.batteryChargeFraction.toFloat().takeIf { it >= 0f },
-            isEngineRunning = telemetry.engineRpm > 100.0
+            isEngineRunning = telemetry.engineRpm > 100.0,
         ),
         fuel = FuelFrame(
             fuelLiters = telemetry.fuel.toFloat(),
-            maxFuelLiters = telemetry.fuelCapacity.toFloat()
+            maxFuelLiters = telemetry.fuelCapacity.toFloat(),
         ),
         speedKmh = speedKmh(localVel),
         localVelocity = localVel,
@@ -43,7 +43,7 @@ internal fun mapCar(telemetry: LmuVehicleTelemetry): CarFrame {
         accelerationG = telemetry.localAccel,
         localAngularVelocity = telemetry.localRot,
         rideHeightFront = frontRideHeight,
-        rideHeightRear = rearRideHeight
+        rideHeightRear = rearRideHeight,
     )
 }
 
@@ -51,7 +51,7 @@ private fun speedKmh(velocity: Vec3): Float {
     val speedMs = sqrt(
         velocity.x * velocity.x +
             velocity.y * velocity.y +
-            velocity.z * velocity.z
+            velocity.z * velocity.z,
     )
     return speedMs * MS_TO_KMH
 }

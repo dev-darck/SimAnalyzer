@@ -66,7 +66,7 @@ class FileInfoExtractorStabilizer(
                     hasPenalty = false,
                     penaltyId = null,
                     penaltyReason = null,
-                    penaltyTimestamp = null
+                    penaltyTimestamp = null,
                 )
             }
         }
@@ -77,7 +77,7 @@ class FileInfoExtractorStabilizer(
             stable = stable.sessionType,
             raw = raw.sessionType,
             nowMs = now,
-            tuning = tuning
+            tuning = tuning,
         )
 
         val stTrackId = trackId.update(stable.trackId, raw.trackId, now, tuning.confirmCount, tuning.promoteMs)
@@ -94,7 +94,7 @@ class FileInfoExtractorStabilizer(
             raw.playerCarUuid,
             now,
             tuning.uuidConfirmCount,
-            tuning.uuidPromoteMs
+            tuning.uuidPromoteMs,
         )
 
         stable = stable.copy(
@@ -106,7 +106,7 @@ class FileInfoExtractorStabilizer(
             carModel = stCarModel,
             driverName = stDriverName,
             driverSteamId = stDriverSteamId,
-            playerCarUuid = stUuid
+            playerCarUuid = stUuid,
         )
 
         return stable
@@ -118,7 +118,7 @@ class FileInfoExtractorStabilizer(
             hasPenalty = false,
             penaltyId = null,
             penaltyReason = null,
-            penaltyTimestamp = null
+            penaltyTimestamp = null,
         )
     }
 
@@ -165,7 +165,7 @@ class FileInfoExtractorStabilizer(
                 hasPenalty = true,
                 penaltyId = raw.penaltyId,
                 penaltyReason = raw.penaltyReason ?: stable.penaltyReason,
-                penaltyTimestamp = raw.penaltyTimestamp ?: stable.penaltyTimestamp
+                penaltyTimestamp = raw.penaltyTimestamp ?: stable.penaltyTimestamp,
             )
         }
 
@@ -174,7 +174,7 @@ class FileInfoExtractorStabilizer(
                 hasPenalty = false,
                 penaltyId = null,
                 penaltyReason = null,
-                penaltyTimestamp = null
+                penaltyTimestamp = null,
             )
         }
 
@@ -199,13 +199,7 @@ class FileInfoExtractorStabilizer(
             pendingCount = 0
         }
 
-        fun update(
-            stable: String?,
-            raw: String?,
-            nowMs: Long,
-            confirmCount: Int,
-            promoteMs: Long
-        ): String? {
+        fun update(stable: String?, raw: String?, nowMs: Long, confirmCount: Int, promoteMs: Long): String? {
             val s = stable?.trim()?.takeIf { it.isNotBlank() }
             val r = raw?.trim()?.takeIf { it.isNotBlank() }
 
@@ -256,12 +250,7 @@ class FileInfoExtractorStabilizer(
             pendingCount = 0
         }
 
-        fun update(
-            stable: EvoSessionType,
-            raw: EvoSessionType,
-            nowMs: Long,
-            tuning: Tuning
-        ): EvoSessionType {
+        fun update(stable: EvoSessionType, raw: EvoSessionType, nowMs: Long, tuning: Tuning): EvoSessionType {
             if (raw == EvoSessionType.UNKNOWN) return stable
 
             if (raw == stable) {

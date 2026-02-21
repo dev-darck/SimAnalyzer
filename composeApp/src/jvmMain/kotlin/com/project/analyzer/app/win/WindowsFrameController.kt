@@ -5,10 +5,7 @@ import com.project.analyzer.app.win.hittest.WindowsHitTestRegistry
 import com.project.analyzer.app.win.nativeWin.ComposeWindowProcedure
 import java.awt.Window
 
-class WindowsFrameController(
-    private val window: Window,
-    private val onWindowInsetUpdate: (WindowInsets) -> Unit,
-) {
+class WindowsFrameController(private val window: Window, private val onWindowInsetUpdate: (WindowInsets) -> Unit) {
 
     val hitTestRegistry: WindowsHitTestRegistry = WindowsHitTestRegistry()
 
@@ -20,7 +17,7 @@ class WindowsFrameController(
         procedure = ComposeWindowProcedure(
             window = window,
             hitTest = { x, y -> hitTestRegistry.hitTest(x, y) },
-            onWindowInsetUpdate = onWindowInsetUpdate
+            onWindowInsetUpdate = onWindowInsetUpdate,
         )
     }
 
