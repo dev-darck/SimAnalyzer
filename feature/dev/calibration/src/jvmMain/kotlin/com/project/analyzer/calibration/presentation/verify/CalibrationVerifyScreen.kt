@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalFoundationApi::class, ExperimentalComposeUiApi::class)
+@file:Suppress("WildcardImport", "NoWildcardImports")
 
 package com.project.analyzer.calibration.presentation.verify
 
@@ -18,7 +19,6 @@ import androidx.compose.foundation.onClick
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,8 +28,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.components.CalibrationSectionCard
@@ -37,8 +35,10 @@ import com.project.analyzer.calibration.presentation.components.copyToClipboard
 import com.project.analyzer.calibration.presentation.components.formatMs
 import com.project.analyzer.calibration.presentation.verify.components.DirectionInfoCard
 import com.project.analyzer.calibration.presentation.verify.components.GateDebugSection
+import com.project.analyzer.feature.dev.calibration.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
@@ -58,24 +58,53 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CalibrationSectionCard(
-            title = "Verify calibration",
+            title = stringResource(Res.string.calibration_verify_title),
             subtitle = state.calibration?.trackName ?: trackId,
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onBack) { Text("Back") }
-                Button(onClick = { if (state.isRunning) viewModel.stop() else viewModel.start(trackId) }) {
-                    Text(if (state.isRunning) "Stop" else "Start")
+                Button(onClick = onBack) {
+                    Text(
+                        text = stringResource(Res.string.calibration_verify_back),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
-                OutlinedButton(onClick = { viewModel.resetSession() }) { Text("Reset session") }
+                Button(onClick = { if (state.isRunning) viewModel.stop() else viewModel.start(trackId) }) {
+                    Text(
+                        text = stringResource(
+                            if (state.isRunning) Res.string.calibration_verify_stop else Res.string.calibration_verify_start,
+                        ),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
+                }
+                OutlinedButton(onClick = { viewModel.resetSession() }) {
+                    Text(
+                        text = stringResource(Res.string.calibration_verify_reset_session),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            StatusRow(label = "Track ID", value = state.calibration?.trackId ?: trackId)
-            StatusRow(label = "Status", value = if (state.isRunning) "Running" else "Stopped")
-            StatusRow(label = "Lap", value = state.lapIndex.toString())
-            StatusRow(label = "Sector", value = state.currentSectorIndex.toString())
-            StatusRow(label = "Speed", value = "%.1f km/h".format(state.speedKmh))
+            StatusRow(
+                label = stringResource(Res.string.calibration_header_track_id),
+                value = state.calibration?.trackId ?: trackId,
+            )
+            StatusRow(
+                label = stringResource(Res.string.calibration_verify_status),
+                value = stringResource(
+                    if (state.isRunning) Res.string.calibration_verify_running else Res.string.calibration_verify_stopped,
+                ),
+            )
+            StatusRow(label = stringResource(Res.string.calibration_verify_lap), value = state.lapIndex.toString())
+            StatusRow(
+                label = stringResource(Res.string.calibration_verify_sector),
+                value = state.currentSectorIndex.toString(),
+            )
+            StatusRow(
+                label = stringResource(Res.string.calibration_verify_speed),
+                value = "%.1f km/h".format(state.speedKmh),
+            )
 
             state.message?.let { message ->
                 Spacer(modifier = Modifier.height(10.dp))
@@ -84,10 +113,15 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         }
 
         CalibrationSectionCard(
-            title = "Lap timing",
-            subtitle = "Live lap and sector splits.",
+            title = stringResource(Res.string.calibration_verify_lap_timing_title),
+            subtitle = stringResource(Res.string.calibration_verify_lap_timing_subtitle),
         ) {
-            TimingRow("Lap", state.currentLapMs, state.lastLapMs, state.bestLapMs)
+            TimingRow(
+                stringResource(Res.string.calibration_verify_lap),
+                state.currentLapMs,
+                state.lastLapMs,
+                state.bestLapMs,
+            )
             TimingRow(
                 "S1",
                 state.currentSectorMs.takeIf { state.currentSectorIndex == 1 },
@@ -109,8 +143,8 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         }
 
         CalibrationSectionCard(
-            title = "Direction and gates",
-            subtitle = "Verify alignment and crossings.",
+            title = stringResource(Res.string.calibration_verify_direction_title),
+            subtitle = stringResource(Res.string.calibration_verify_direction_subtitle),
         ) {
             DirectionInfoCard(
                 forward = state.currentForward,
@@ -132,8 +166,8 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
 
         state.debugTelemetry?.let { debugText ->
             CalibrationSectionCard(
-                title = "Telemetry snapshot",
-                subtitle = "Click to copy the raw payload.",
+                title = stringResource(Res.string.calibration_verify_snapshot_title),
+                subtitle = stringResource(Res.string.calibration_verify_snapshot_subtitle),
             ) {
                 Column(
                     modifier = Modifier
@@ -150,8 +184,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                 ) {
                     Text(
                         text = debugText,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
+                        style = SimAnalyzerTheme.typography.bodySmall,
                         color = SimAnalyzerTheme.material.onSurface,
                     )
                 }
@@ -159,19 +192,19 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         }
 
         CalibrationSectionCard(
-            title = "Recent events",
-            subtitle = "Latest gate crossings and sync changes.",
+            title = stringResource(Res.string.calibration_verify_recent_events_title),
+            subtitle = stringResource(Res.string.calibration_verify_recent_events_subtitle),
         ) {
             Text(
-                text = "Last event: ${state.lastEvent ?: "-"}",
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(Res.string.calibration_verify_last_event, state.lastEvent ?: "-"),
+                style = SimAnalyzerTheme.typography.bodySmall,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
             Spacer(modifier = Modifier.height(8.dp))
             if (state.events.isEmpty()) {
                 Text(
-                    text = "No events yet.",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(Res.string.calibration_verify_no_events),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             } else {
@@ -188,7 +221,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     state.events.forEach { event ->
                         Text(
                             text = event,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = SimAnalyzerTheme.typography.bodySmall,
                             color = SimAnalyzerTheme.material.onSurface,
                         )
                     }
@@ -206,14 +239,13 @@ private fun TimingRow(name: String, current: Long?, last: Long?, best: Long?) {
     ) {
         Text(
             text = name,
-            style = MaterialTheme.typography.bodyMedium,
+            style = SimAnalyzerTheme.typography.bodyMedium,
             color = SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.Medium,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            TimingCell("Cur", current)
-            TimingCell("Last", last)
-            TimingCell("Best", best)
+            TimingCell(stringResource(Res.string.calibration_verify_cur), current)
+            TimingCell(stringResource(Res.string.calibration_verify_last), last)
+            TimingCell(stringResource(Res.string.calibration_verify_best), best)
         }
     }
 }
@@ -222,13 +254,13 @@ private fun TimingRow(name: String, current: Long?, last: Long?, best: Long?) {
 private fun TimingCell(label: String, value: Long?) {
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(
-            text = "$label:",
-            style = MaterialTheme.typography.bodySmall,
+            text = stringResource(Res.string.calibration_verify_label_suffix, label),
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = formatMs(value),
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurface,
         )
     }
@@ -243,14 +275,13 @@ private fun StatusRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -276,7 +307,7 @@ private fun MessageBanner(message: String) {
     ) {
         Text(
             text = message,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = accent,
         )
     }

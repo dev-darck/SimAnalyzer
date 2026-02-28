@@ -20,7 +20,7 @@ import java.util.zip.GZIPInputStream
 
 @Inject
 @SingleIn(ScreenScope::class)
-class RecordedSessionRepositoryImpl(
+internal class RecordedSessionRepositoryImpl(
     private val settings: TelemetryAcquisitionSettings,
     private val json: Json,
     @param:IO
@@ -28,7 +28,7 @@ class RecordedSessionRepositoryImpl(
 ) : RecordedSessionRepository {
 
     private val logger = logger()
-    private val sessionIndex = mutableMapOf<Long, SessionLocation>()
+    private val sessionIndex = mutableMapOf<Long, SessionBundleLocation>()
 
     override suspend fun loadSessions(): List<RecordedSessionSummary> = withContext(ioDispatcher) {
         val root = resolveRoot() ?: return@withContext emptyList()
@@ -38,75 +38,83 @@ class RecordedSessionRepositoryImpl(
     }
 
     override suspend fun loadSessionDetails(sessionId: Long): RecordedSessionDetail? = withContext(ioDispatcher) {
-        val location = findLocation(sessionId) ?: return@withContext null
-        val analysis = location.analysis ?: readAnalysis(location.metadata, location.dir)
-        RecordedSessionDetail(
-            summary = location.summary,
-            laps = analysis?.laps.orEmpty(),
-        )
+        val bundle = findBundle(sessionId) ?: return@withContext null
+        loadBundleDetails(bundle)
     }
 
     override suspend fun saveSession(sessionId: Long): Boolean = withContext(ioDispatcher) {
-        val location = findLocation(sessionId) ?: return@withContext false
-        if (location.metadata.isSaved) return@withContext true
+        val bundle = findBundle(sessionId) ?: return@withContext false
+        if (bundle.summary.isSaved) return@withContext true
 
-        val updatedMetadata = location.metadata.copy(isSaved = true)
-        val metaFile = File(location.dir, META_FILE_NAME)
-        if (!writeMetadata(metaFile, updatedMetadata)) return@withContext false
-
-        val updatedSummary = location.summary.copy(isSaved = true)
-        sessionIndex[sessionId] = location.copy(
-            summary = updatedSummary,
-            metadata = updatedMetadata,
-        )
-        true
+        val saved = bundle.locations.all { location ->
+            if (location.metadata.isSaved) {
+                true
+            } else {
+                val updatedMetadata = location.metadata.copy(isSaved = true)
+                writeMetadata(File(location.dir, META_FILE_NAME), updatedMetadata)
+            }
+        }
+        if (saved) {
+            resolveRoot()?.let(::rebuildIndex)
+        }
+        saved
     }
 
     override suspend fun deleteSession(sessionId: Long): Boolean = withContext(ioDispatcher) {
-        val location = findLocation(sessionId) ?: return@withContext false
-        val deleted = runCatching {
-            location.dir.deleteRecursively()
-        }.getOrElse { error ->
-            logger.error(error) { "failed to delete session dir: ${location.dir.absolutePath}" }
-            false
+        val bundle = findBundle(sessionId) ?: return@withContext false
+        val deleted = bundle.locations.all { location ->
+            runCatching {
+                location.dir.deleteRecursively()
+            }.getOrElse { error ->
+                logger.error(error) { "failed to delete session dir: ${location.dir.absolutePath}" }
+                false
+            }
         }
 
         if (deleted) {
             sessionIndex.remove(sessionId)
-            logger.info { "deleted session $sessionId at ${location.dir.absolutePath}" }
+            logger.info {
+                "deleted session bundle $sessionId (${bundle.locations.size} dirs)"
+            }
+            resolveRoot()?.let(::rebuildIndex)
         }
 
         deleted
     }
 
-    private suspend fun findLocation(sessionId: Long): SessionLocation? {
+    private suspend fun findBundle(sessionId: Long): SessionBundleLocation? {
         sessionIndex[sessionId]?.let { return it }
         val root = resolveRoot() ?: return null
         rebuildIndex(root)
         return sessionIndex[sessionId]
     }
 
-    private fun rebuildIndex(root: File): List<SessionLocation> {
+    private fun rebuildIndex(root: File): List<SessionBundleLocation> {
         sessionIndex.clear()
 
-        val deduped = loadLocations(root)
-            .groupBy { it.summary.sessionId }
-            .map { (sessionId, collisions) ->
-                val selected = collisions.maxByOrNull { it.summary.startedAtMs }!!
-                if (collisions.size > 1) {
-                    logger.warn {
-                        "duplicate sessionId=$sessionId detected (${collisions.size} entries), " +
-                            "using latest at ${selected.dir.absolutePath}"
-                    }
-                }
-                selected
-            }
+        val locations = loadLocations(root)
+        val duplicatedRuntimeSessionIds = locations
+            .groupBy { it.metadata.sessionId }
+            .filterValues { it.size > 1 }
 
-        deduped.forEach { location ->
-            sessionIndex[location.summary.sessionId] = location
+        duplicatedRuntimeSessionIds.forEach { (runtimeSessionId, collisions) ->
+            logger.debug {
+                "duplicate runtime sessionId=$runtimeSessionId detected (${collisions.size} entries), " +
+                    "keeping all entries via stable persisted IDs"
+            }
         }
 
-        return deduped
+        val bundles = buildSessionBundles(locations)
+        bundles.forEach { bundle ->
+            val previous = sessionIndex.put(bundle.summary.sessionId, bundle)
+            if (previous != null) {
+                logger.warn {
+                    "stable session bundle id collision for ${bundle.summary.sessionId}; replacing previous bundle"
+                }
+            }
+        }
+
+        return bundles
     }
 
     private fun loadLocations(root: File): List<SessionLocation> = root.listFiles()
@@ -122,13 +130,144 @@ class RecordedSessionRepositoryImpl(
 
         val metadata = readMetadata(metaFile) ?: return null
         val analysis = readAnalysis(metadata, dir)
-        val summary = buildSummary(metadata, analysis)
+        val summary = buildSummary(
+            metadata = metadata,
+            analysis = analysis,
+            persistedSessionId = stablePersistedSessionId(metadata, dir),
+        )
 
         return SessionLocation(
             summary = summary,
             dir = dir,
             metadata = metadata,
             analysis = analysis,
+        )
+    }
+
+    private fun buildSessionBundles(locations: List<SessionLocation>): List<SessionBundleLocation> {
+        if (locations.isEmpty()) return emptyList()
+
+        val sorted = locations.sortedBy { it.summary.startedAtMs }
+        val explicitByGroupId = linkedMapOf<String, MutableList<SessionLocation>>()
+        val legacyLocations = mutableListOf<SessionLocation>()
+
+        sorted.forEach { location ->
+            val groupId = location.metadata.sessionGroupId
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+            if (groupId == null) {
+                legacyLocations += location
+            } else {
+                explicitByGroupId.getOrPut(groupId) { mutableListOf() } += location
+            }
+        }
+
+        val explicitBundles = explicitByGroupId.values.map(::buildSessionBundle)
+        val legacyBundles = buildLegacySessionBundles(legacyLocations)
+        return mergeSplitWeekendBundles(explicitBundles + legacyBundles)
+            .sortedByDescending { it.summary.startedAtMs }
+    }
+
+    private fun mergeSplitWeekendBundles(bundles: List<SessionBundleLocation>): List<SessionBundleLocation> {
+        if (bundles.isEmpty()) return emptyList()
+        val merged = mutableListOf<MutableList<SessionLocation>>()
+        bundles.sortedBy { it.summary.startedAtMs }.forEach { bundle ->
+            val current = merged.lastOrNull()
+            if (current == null || !shouldMergeSplitWeekend(current.last(), bundle)) {
+                merged += bundle.locations.toMutableList()
+            } else {
+                current += bundle.locations
+            }
+        }
+        return merged.map(::buildSessionBundle)
+    }
+
+    private fun buildLegacySessionBundles(locations: List<SessionLocation>): List<SessionBundleLocation> {
+        if (locations.isEmpty()) return emptyList()
+        val grouped = mutableListOf<MutableList<SessionLocation>>()
+        locations.sortedBy { it.summary.startedAtMs }.forEach { location ->
+            val current = grouped.lastOrNull()
+            if (current == null || !canMergeIntoSameBundle(current.last(), location)) {
+                grouped += mutableListOf(location)
+            } else {
+                current += location
+            }
+        }
+        return grouped.map(::buildSessionBundle)
+    }
+
+    private fun buildSessionBundle(locations: List<SessionLocation>): SessionBundleLocation {
+        val ordered = locations.sortedBy { it.summary.startedAtMs }
+        val summary = buildBundleSummary(ordered)
+        return SessionBundleLocation(
+            summary = summary,
+            locations = ordered,
+        )
+    }
+
+    private fun canMergeIntoSameBundle(previous: SessionLocation, next: SessionLocation): Boolean {
+        if (!sameBundleIdentity(previous, next)) return false
+
+        val previousEnd = previous.summary.endedAtMs ?: previous.summary.startedAtMs
+        val gapMs = next.summary.startedAtMs - previousEnd
+        return gapMs in 0..SESSION_BUNDLE_GAP_MAX_MS
+    }
+
+    private fun sameBundleIdentity(a: SessionLocation, b: SessionLocation): Boolean =
+        normalizeGameId(a.summary.gameId) == normalizeGameId(b.summary.gameId) &&
+            normalizeBundleLabel(a.summary.trackId) == normalizeBundleLabel(b.summary.trackId) &&
+            normalizeBundleCarId(a.summary.carId, a.summary.carModel) ==
+            normalizeBundleCarId(b.summary.carId, b.summary.carModel)
+
+    private fun buildBundleSummary(locations: List<SessionLocation>): RecordedSessionSummary {
+        val first = locations.first()
+        val latest = locations.maxByOrNull { it.summary.startedAtMs } ?: first
+        val bundleId = stableBundleSessionId(locations)
+        val bestLap = locations.asSequence().mapNotNull { it.summary.bestLapTimeMs }.minOrNull()
+        val endedAt = locations.asSequence().mapNotNull { it.summary.endedAtMs }.maxOrNull()
+        val carName = locations.asSequence()
+            .mapNotNull { it.summary.carName?.takeIf { name -> name.isNotBlank() } }
+            .lastOrNull()
+        val trackName = locations.asSequence()
+            .mapNotNull { it.summary.trackName?.takeIf { name -> name.isNotBlank() } }
+            .lastOrNull()
+
+        return RecordedSessionSummary(
+            sessionId = bundleId,
+            startedAtMs = first.summary.startedAtMs,
+            endedAtMs = endedAt ?: latest.summary.endedAtMs,
+            gameId = latest.summary.gameId,
+            sessionType = latest.summary.sessionType,
+            carModel = latest.summary.carModel,
+            carName = carName,
+            carId = latest.summary.carId,
+            trackId = latest.summary.trackId,
+            trackName = trackName,
+            lapCount = locations.sumOf { it.summary.lapCount },
+            bestLapTimeMs = bestLap,
+            totalIncidents = locations.sumOf { it.summary.totalIncidents },
+            distanceKm = locations.sumOf { it.summary.distanceKm },
+            isSaved = locations.all { it.summary.isSaved },
+            airTempC = latest.summary.airTempC,
+            trackTempC = latest.summary.trackTempC,
+        )
+    }
+
+    private fun loadBundleDetails(bundle: SessionBundleLocation): RecordedSessionDetail {
+        val mergedLaps = bundle.locations.flatMap { location ->
+            val analysis = location.analysis ?: readAnalysis(location.metadata, location.dir)
+            if (shouldSkipPlaceholderLocation(bundle, location, analysis)) {
+                return@flatMap emptyList()
+            }
+            val sessionType = location.metadata.sessionType
+            analysis
+                ?.laps
+                .orEmpty()
+                .map { lap -> lap.copy(sessionType = sessionType) }
+        }
+        return RecordedSessionDetail(
+            summary = bundle.summary,
+            laps = mergedLaps,
         )
     }
 
@@ -157,24 +296,31 @@ class RecordedSessionRepositoryImpl(
         false
     }
 
-    private fun buildSummary(metadata: RecordedSessionMetadata, analysis: IndexAnalysis?): RecordedSessionSummary {
+    private fun buildSummary(
+        metadata: RecordedSessionMetadata,
+        analysis: IndexAnalysis?,
+        persistedSessionId: Long,
+    ): RecordedSessionSummary {
         val laps = analysis?.laps.orEmpty()
         val completedLaps = laps.count { it.complete }
         val bestLapMs = laps
             .asSequence()
-            .filter { it.complete && !it.invalid }
+            .filter { it.complete && !it.invalid && !it.inPit }
             .mapNotNull { it.totalTimeMs }
             .minOrNull()
         val incidents = laps.count { it.invalid }
 
         return RecordedSessionSummary(
-            sessionId = metadata.sessionId,
+            sessionId = persistedSessionId,
             startedAtMs = metadata.startedAtMs,
             endedAtMs = metadata.endedAtMs,
             gameId = metadata.gameId,
             sessionType = metadata.sessionType,
             carModel = metadata.carModel,
+            carName = metadata.carName,
+            carId = metadata.carId,
             trackId = metadata.trackId,
+            trackName = metadata.trackName,
             lapCount = completedLaps,
             bestLapTimeMs = bestLapMs,
             totalIncidents = incidents,
@@ -299,6 +445,90 @@ class RecordedSessionRepositoryImpl(
         return dir.takeIf { it.exists() && it.isDirectory }
     }
 
+    private fun stablePersistedSessionId(metadata: RecordedSessionMetadata, dir: File): Long {
+        val source = buildString(96) {
+            append(normalizeGameId(metadata.gameId))
+            append('|')
+            append(metadata.startedAtMs)
+            append('|')
+            append(metadata.sessionId)
+            append('|')
+            append(dir.absolutePath)
+        }
+        val hash = fnv1a64(source)
+        return (hash and Long.MAX_VALUE).let { if (it == 0L) 1L else it }
+    }
+
+    private fun stableBundleSessionId(locations: List<SessionLocation>): Long {
+        val source = buildString(locations.size * 64) {
+            locations.forEach { location ->
+                append(location.summary.sessionId)
+                append('|')
+                append(location.summary.startedAtMs)
+                append('|')
+                append(location.dir.absolutePath)
+                append('\n')
+            }
+        }
+        val hash = fnv1a64(source)
+        return (hash and Long.MAX_VALUE).let { if (it == 0L) 1L else it }
+    }
+
+    private fun normalizeGameId(gameId: String?): String = gameId.orEmpty().trim().lowercase()
+
+    private fun normalizeBundleLabel(value: String?): String = value.orEmpty().trim().lowercase()
+
+    private fun normalizeSessionType(value: String?): String = value.orEmpty().trim().uppercase()
+
+    private fun normalizeBundleCarId(carId: Int?, carModel: String?): String = carId
+        ?.takeIf { it > 0 }
+        ?.toString()
+        ?: normalizeBundleLabel(carModel)
+
+    private fun shouldMergeSplitWeekend(
+        previous: SessionLocation,
+        nextBundle: SessionBundleLocation,
+    ): Boolean {
+        val next = nextBundle.locations.firstOrNull() ?: return false
+        if (!sameBundleIdentity(previous, next)) return false
+
+        val previousEnd = previous.summary.endedAtMs ?: previous.summary.startedAtMs
+        val gapMs = next.summary.startedAtMs - previousEnd
+        if (gapMs !in 0..SESSION_BUNDLE_GAP_MAX_MS) return false
+
+        val previousType = normalizeSessionType(previous.metadata.sessionType)
+        val nextType = normalizeSessionType(next.metadata.sessionType)
+        if (previousType.isBlank() || previousType != nextType) return false
+
+        return isBoundaryPlaceholder(next, next.analysis)
+    }
+
+    private fun shouldSkipPlaceholderLocation(
+        bundle: SessionBundleLocation,
+        location: SessionLocation,
+        analysis: IndexAnalysis?,
+    ): Boolean {
+        if (bundle.locations.size <= 1) return false
+        return isBoundaryPlaceholder(location, analysis)
+    }
+
+    private fun isBoundaryPlaceholder(location: SessionLocation, analysis: IndexAnalysis?): Boolean {
+        if (location.metadata.frameCount > DETAIL_PLACEHOLDER_MAX_FRAMES) return false
+        val laps = analysis?.laps.orEmpty()
+        if (laps.isEmpty()) return true
+        return laps.none { it.complete } &&
+            laps.all { lap -> lap.lap == 1 && !lap.complete && lap.totalTimeMs == null }
+    }
+
+    private fun fnv1a64(value: String): Long {
+        var hash = -0x340d631b7bdddcdbL // 1469598103934665603UL as signed long
+        value.forEach { ch ->
+            hash = hash xor ch.code.toLong()
+            hash *= 0x100000001b3L
+        }
+        return hash
+    }
+
     private data class ParsedIndexHeader(val version: Int, val recordSize: Int)
 
     private companion object {
@@ -308,5 +538,7 @@ class RecordedSessionRepositoryImpl(
         const val COMPRESSION_GZIP = "gzip"
         const val INDEX_MAGIC = 0x53414958
         const val INDEX_RECORD_SIZE = 64
+        const val SESSION_BUNDLE_GAP_MAX_MS = 20 * 60 * 1000L
+        const val DETAIL_PLACEHOLDER_MAX_FRAMES = 5L
     }
 }

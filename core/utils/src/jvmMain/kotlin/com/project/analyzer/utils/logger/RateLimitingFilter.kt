@@ -24,7 +24,7 @@ public class RateLimitingFilter : TurboFilter() {
         level: Level?,
         format: String?,
         params: Array<out Any>?,
-        t: Throwable?
+        t: Throwable?,
     ): FilterReply {
         if (marker == null || !marker.contains(markerName)) {
             return FilterReply.NEUTRAL

@@ -25,17 +25,22 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
 
             nativeDistributions {
                 targetFormats(
-                    TargetFormat.Msi, TargetFormat.Exe, TargetFormat.AppImage
+                    TargetFormat.Msi,
+                    TargetFormat.Exe,
+                    TargetFormat.AppImage,
                 )
                 packageName = "SimAnalyzer"
-                packageVersion = "0.0.1"
+                packageVersion = rootProject.appVersionBase()
 
                 windows {
                     iconFile.set(rootProject.file("app-icons/app.ico"))
+                    dirChooser = true
                 }
 
                 modules(
-                    "java.instrument", "java.naming", "jdk.unsupported"
+                    "java.instrument",
+                    "java.naming",
+                    "jdk.unsupported",
                 )
             }
 
@@ -50,3 +55,7 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
         }
     }
 }
+
+private fun Project.appVersionBase(): String =
+    rootProject.extensions.extraProperties["appVersionBase"] as? String
+        ?: error("appVersionBase is not configured")

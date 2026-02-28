@@ -1,28 +1,18 @@
 package com.analyzer.settings.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.analyzer.settings.data.telemetry.SettingsRepository
-import com.analyzer.settings.data.telemetry.SettingsRepositoryImpl.StorageValidationResult
-import com.analyzer.settings.data.theme.ThemeRepository
+import com.analyzer.settings.domain.interactor.SettingsUseCase
 import com.project.analyzer.game.api.GameSelection
-import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Inject
-internal class SettingsViewModel(
-    private val themeRepository: ThemeRepository,
-    private val telemetrySettingsRepository: SettingsRepository,
-) : LeakAwareViewModel() {
+internal class SettingsViewModel(private val useCase: SettingsUseCase) :
+    LeakAwareMviViewModel<SettingsIntent, SettingsState>(SettingsState()) {
 
-    private val _state = MutableStateFlow(SettingsState())
-    val state: StateFlow<SettingsState> = _state.asStateFlow()
     private var storageSizeJob: Job? = null
     private var lastStorageLocation: String? = null
 
@@ -31,17 +21,18 @@ internal class SettingsViewModel(
         observeTelemetrySettings()
         observeHudEnabled()
         viewModelScope.launch {
-            telemetrySettingsRepository.loadSettings()
+            useCase.warmUp()
         }
     }
 
-    fun dispatch(intent: SettingsIntent) {
+    override suspend fun handleIntent(intent: SettingsIntent) {
         when (intent) {
             is SettingsIntent.ChangeTheme -> handleChangeTheme(intent.mode)
             is SettingsIntent.ChangeSamplingRate -> handleChangeSamplingRate(intent.hz)
             is SettingsIntent.ChangeStorageLocation -> handleChangeStorageLocation(intent.path)
             is SettingsIntent.ChangeHudEnabled -> handleChangeHudEnabled(intent.enabled)
             is SettingsIntent.ChangeRecordingEnabled -> handleChangeRecordingEnabled(intent.enabled)
+            SettingsIntent.DismissRecordingEnabledNotice -> handleDismissRecordingEnabledNotice()
             is SettingsIntent.ChangeMaxRecordedLaps -> handleChangeMaxRecordedLaps(intent.laps)
             is SettingsIntent.ChangeGameSelection -> handleChangeGameSelection(intent.selection)
         }
@@ -49,22 +40,22 @@ internal class SettingsViewModel(
 
     private fun handleChangeHudEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            telemetrySettingsRepository.updateHudEnabled(enabled)
+            useCase.updateHudEnabled(enabled)
         }
     }
 
     private fun observeTheme() {
         viewModelScope.launch {
-            themeRepository.observeThemeMode().collect { mode ->
-                _state.update { it.copy(themeMode = mode) }
+            useCase.observeThemeMode().collect { mode ->
+                updateState { copy(themeMode = mode) }
             }
         }
     }
 
     private fun observeHudEnabled() {
         viewModelScope.launch {
-            telemetrySettingsRepository.observeHudEnabled().collect { enabled ->
-                _state.update { it.copy(hudEnabled = enabled) }
+            useCase.observeHudEnabled().collect { enabled ->
+                updateState { copy(hudEnabled = enabled) }
             }
         }
     }
@@ -72,71 +63,79 @@ internal class SettingsViewModel(
     private fun observeTelemetrySettings() {
         viewModelScope.launch {
             combine(
-                telemetrySettingsRepository.observeSettings(),
-                telemetrySettingsRepository.observeGameSelectionVariant(),
-            ) { settings, variant -> settings to variant }
-                .collect { (settings, variant) ->
-                    val warning = buildRecordingWarning(
-                        recordingEnabled = settings.recordingEnabled,
+                useCase.observeTelemetrySettings(),
+                useCase.observeRecordingNoticeShown(),
+            ) { telemetry, recordingNoticeShown ->
+                telemetry to recordingNoticeShown
+            }.collect { (telemetry, recordingNoticeShown) ->
+                val (settings, variant) = telemetry
+                val warning = buildRecordingWarning(
+                    recordingEnabled = settings.recordingEnabled,
+                    samplingRateHz = settings.samplingRateHz,
+                    maxRecordedLaps = settings.maxRecordedLaps,
+                )
+                val selectionUi = buildGameSelectionUi(settings.gameSelection, variant)
+                var shouldPersistNoticeShown = false
+                updateState {
+                    val shouldShowRecordingNotice =
+                        !recordingNoticeShown && !recordingEnabled && settings.recordingEnabled
+                    shouldPersistNoticeShown = shouldShowRecordingNotice
+                    copy(
                         samplingRateHz = settings.samplingRateHz,
+                        storageLocation = settings.storageLocation,
+                        recordingEnabled = settings.recordingEnabled,
                         maxRecordedLaps = settings.maxRecordedLaps,
+                        gameSelection = settings.gameSelection,
+                        gameSelectionUi = selectionUi,
+                        recordingWarning = warning,
+                        showRecordingEnabledNotice = shouldShowRecordingNotice,
                     )
-                    val selectionUi = buildGameSelectionUi(settings.gameSelection, variant)
-                    _state.update {
-                        it.copy(
-                            samplingRateHz = settings.samplingRateHz,
-                            storageLocation = settings.storageLocation,
-                            recordingEnabled = settings.recordingEnabled,
-                            maxRecordedLaps = settings.maxRecordedLaps,
-                            gameSelection = settings.gameSelection,
-                            gameSelectionUi = selectionUi,
-                            recordingWarning = warning,
-                        )
-                    }
-                    updateStorageSize(settings.storageLocation)
                 }
+                if (shouldPersistNoticeShown) {
+                    useCase.markRecordingNoticeShown()
+                }
+                updateStorageSize(settings.storageLocation)
+            }
         }
     }
 
     private fun handleChangeTheme(mode: com.project.analyzer.theme.ThemeMode) {
         viewModelScope.launch {
-            themeRepository.setThemeMode(mode)
+            useCase.setThemeMode(mode)
         }
     }
 
     private fun handleChangeSamplingRate(hz: Int) {
         viewModelScope.launch {
-            telemetrySettingsRepository.updateSamplingRate(hz)
+            useCase.updateSamplingRate(hz)
         }
     }
 
     private fun handleChangeRecordingEnabled(enabled: Boolean) {
         viewModelScope.launch {
-            telemetrySettingsRepository.updateRecordingEnabled(enabled)
+            useCase.updateRecordingEnabled(enabled)
         }
+    }
+
+    private fun handleDismissRecordingEnabledNotice() {
+        updateState { copy(showRecordingEnabledNotice = false) }
     }
 
     private fun handleChangeMaxRecordedLaps(laps: Int) {
         viewModelScope.launch {
-            telemetrySettingsRepository.updateMaxRecordedLaps(laps)
+            useCase.updateMaxRecordedLaps(laps)
         }
     }
 
     private fun handleChangeGameSelection(selection: GameSelection) {
         viewModelScope.launch {
-            telemetrySettingsRepository.updateGameSelection(selection)
-            val variant = (selection as? GameSelection.Manual)?.game
-            telemetrySettingsRepository.updateGameSelectionVariant(variant)
+            useCase.updateGameSelection(selection)
         }
     }
 
     private fun handleChangeStorageLocation(path: String) {
         viewModelScope.launch {
-            val validationResult = telemetrySettingsRepository.validateStorageLocation(path)
-
-            if (validationResult == StorageValidationResult.Valid) {
-                telemetrySettingsRepository.updateStorageLocation(path)
-            }
+            useCase.updateStorageLocationIfValid(path)
         }
     }
 
@@ -144,10 +143,9 @@ internal class SettingsViewModel(
         if (path == lastStorageLocation) return
         lastStorageLocation = path
         if (path.isBlank()) {
-            _state.update {
-                it.copy(
+            updateState {
+                copy(
                     storageSizeBytes = null,
-                    storageSizeLabel = formatStorageSizeLabel(null),
                 )
             }
             return
@@ -155,11 +153,10 @@ internal class SettingsViewModel(
 
         storageSizeJob?.cancel()
         storageSizeJob = viewModelScope.launch {
-            val size = telemetrySettingsRepository.getStorageSizeBytes(path)
-            _state.update {
-                it.copy(
+            val size = useCase.getStorageSizeBytes(path)
+            updateState {
+                copy(
                     storageSizeBytes = size,
-                    storageSizeLabel = formatStorageSizeLabel(size),
                 )
             }
         }

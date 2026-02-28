@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Button
@@ -31,16 +30,25 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.chooser.SelectionMode
 import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectPath
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleExpand
 import com.project.analyzer.chooser.presentation.components.FileTree
 import com.project.analyzer.chooser.presentation.components.Sidebar
+import com.project.analyzer.feature.screens.chooser.Res.Res
+import com.project.analyzer.feature.screens.chooser.Res.chooser_confirm_file
+import com.project.analyzer.feature.screens.chooser.Res.chooser_confirm_folder
+import com.project.analyzer.feature.screens.chooser.Res.chooser_header_directory
+import com.project.analyzer.feature.screens.chooser.Res.chooser_header_file
+import com.project.analyzer.feature.screens.chooser.Res.chooser_hidden_off
+import com.project.analyzer.feature.screens.chooser.Res.chooser_hidden_on
+import com.project.analyzer.feature.screens.chooser.Res.chooser_no_folder_selected
+import com.project.analyzer.feature.screens.chooser.Res.chooser_no_selection
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.textField.TextField
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun FileChooserContent(
@@ -121,8 +129,8 @@ private fun Content(
             selectedPath = uiState.displaySelectedPath,
             canConfirm = uiState.canConfirm,
             confirmLabel = when (uiState.selectionMode) {
-                SelectionMode.FILE -> "Select file"
-                SelectionMode.DIRECTORY -> "Select folder"
+                SelectionMode.FILE -> stringResource(Res.string.chooser_confirm_file)
+                SelectionMode.DIRECTORY -> stringResource(Res.string.chooser_confirm_folder)
             },
             onConfirm = { onConfirm(uiState.confirmPath) },
             modifier = Modifier.fillMaxWidth(),
@@ -133,8 +141,8 @@ private fun Content(
 @Composable
 private fun Header(selectionMode: SelectionMode, modifier: Modifier = Modifier) {
     val title = when (selectionMode) {
-        SelectionMode.FILE -> "Select a file"
-        SelectionMode.DIRECTORY -> "Select a directory"
+        SelectionMode.FILE -> stringResource(Res.string.chooser_header_file)
+        SelectionMode.DIRECTORY -> stringResource(Res.string.chooser_header_directory)
     }
 
     Row(
@@ -147,8 +155,8 @@ private fun Header(selectionMode: SelectionMode, modifier: Modifier = Modifier) 
     ) {
         Text(
             text = title,
-            fontSize = 14.sp,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f),
+            style = SimAnalyzerTheme.typography.labelLarge,
         )
     }
 }
@@ -176,13 +184,13 @@ private fun ViewerPanel(
                 modifier = Modifier
                     .weight(1f)
                     .horizontalScroll(scrollState),
-                text = currentDir.ifEmpty { "No folder selected" },
-                fontSize = 12.sp,
+                text = currentDir.ifEmpty { stringResource(Res.string.chooser_no_folder_selected) },
                 color = if (currentDir.isNotEmpty()) {
                     SimAnalyzerTheme.material.primary.copy(alpha = 0.95f)
                 } else {
                     SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.5f)
                 },
+                style = SimAnalyzerTheme.typography.bodySmall,
                 maxLines = 1,
             )
 
@@ -190,8 +198,12 @@ private fun ViewerPanel(
 
             TextButton(onClick = onToggleHidden) {
                 Text(
-                    text = if (showHidden) "Hidden: ON" else "Hidden: OFF",
-                    fontSize = 12.sp,
+                    text = if (showHidden) {
+                        stringResource(Res.string.chooser_hidden_on)
+                    } else {
+                        stringResource(Res.string.chooser_hidden_off)
+                    },
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
             }
         }
@@ -219,7 +231,7 @@ private fun BottomSection(
     ) {
         BaseTextField(
             value = selectedPath,
-            placeholder = "No selection",
+            placeholder = stringResource(Res.string.chooser_no_selection),
             leadingIcon = Icons.Filled.Folder,
             readOnly = true,
             modifier = Modifier.weight(1f),
@@ -229,13 +241,13 @@ private fun BottomSection(
             onClick = onConfirm,
             enabled = canConfirm,
             modifier = Modifier.height(36.dp),
-            shape = RoundedCornerShape(10.dp),
+            shape = SimAnalyzerTheme.corners.item,
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = SimAnalyzerTheme.material.primary,
             ),
         ) {
-            Text(confirmLabel, fontSize = 12.sp)
+            Text(text = confirmLabel, style = SimAnalyzerTheme.typography.labelMedium)
         }
     }
 }
@@ -249,7 +261,7 @@ private fun BaseTextField(
     leadingIcon: ImageVector? = null,
     readOnly: Boolean = false,
     enabled: Boolean = true,
-    textStyle: TextStyle = TextStyle(fontSize = 12.sp),
+    textStyle: TextStyle = SimAnalyzerTheme.typography.labelMedium,
 ) {
     TextField(
         value = value,

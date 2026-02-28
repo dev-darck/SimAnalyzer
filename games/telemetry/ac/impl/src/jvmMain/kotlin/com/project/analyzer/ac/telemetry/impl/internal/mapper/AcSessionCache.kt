@@ -9,6 +9,7 @@ import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.api.model.session.CarInfo
 import com.project.analyzer.telemetry.api.model.session.DriverInfo
 import com.project.analyzer.telemetry.api.model.session.TrackInfo
+import com.project.analyzer.utils.TelemetryIdentityFormatter
 import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
@@ -120,10 +121,11 @@ class AcSessionCache {
 
         trackInfo = TrackInfo(
             trackId = lastTrackId,
-            trackName = listOf(rawTrack, rawLayout)
-                .filter { it.isNotBlank() }
-                .joinToString(" ")
-                .ifBlank { rawTrack },
+            trackName = TelemetryIdentityFormatter.formatTrackName(
+                trackName = rawTrack,
+                trackId = lastTrackId,
+                layoutId = rawLayout,
+            ),
             layoutId = rawLayout.takeIf { it.isNotBlank() },
             sectorCount = sectorCount,
             lengthMeters = trackLength,
@@ -131,6 +133,7 @@ class AcSessionCache {
 
         carInfo = CarInfo(
             carModel = lastCarModel,
+            carName = TelemetryIdentityFormatter.formatCarName(carModel = lastCarModel),
             carSkin = statics.carSkin.toKString().takeIf { it.isNotBlank() },
             maxTorqueNm = maxTorque,
             maxPowerW = maxPower,
@@ -185,8 +188,7 @@ class AcSessionCache {
         const val MAX_TURBO_BOOST = 10f
         const val MAX_TRACK_LENGTH_M = 100_000f // 100km — longest circuits are ~25km
 
-        fun Int.sanitizeOrNull(min: Int, max: Int): Int? =
-            if (this in min..max) this else null
+        fun Int.sanitizeOrNull(min: Int, max: Int): Int? = if (this in min..max) this else null
 
         fun Float.sanitizeOrNull(min: Float, max: Float): Float? =
             if (this.isFinite() && this in min..max) this else null

@@ -1,3 +1,7 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.inputs.presentation.componetns
 
 import androidx.compose.foundation.background
@@ -11,31 +15,69 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.feature.huds.inputs.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.tooltip.Tooltip
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun LegendRow() {
+internal fun LegendRow(isToolTipEnabled: Boolean = false) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        LegendItem(label = "T", color = SimAnalyzerTheme.extended.lightGreen)
+        LegendItem(
+            label = stringResource(Res.string.inputs_legend_t),
+            color = SimAnalyzerTheme.extended.lightGreen,
+            tooltip = stringResource(Res.string.inputs_legend_tooltip_throttle),
+            isToolTipEnabled = isToolTipEnabled,
+        )
         Spacer(modifier = Modifier.width(10.dp))
-        LegendItem(label = "B", color = SimAnalyzerTheme.extended.red)
+        LegendItem(
+            label = stringResource(Res.string.inputs_legend_b),
+            color = SimAnalyzerTheme.extended.red,
+            tooltip = stringResource(Res.string.inputs_legend_tooltip_brake),
+            isToolTipEnabled = isToolTipEnabled,
+        )
         Spacer(modifier = Modifier.width(10.dp))
-        LegendItem(label = "C", color = SimAnalyzerTheme.extended.amber)
+        LegendItem(
+            label = stringResource(Res.string.inputs_legend_c),
+            color = SimAnalyzerTheme.extended.amber,
+            tooltip = stringResource(Res.string.inputs_legend_tooltip_clutch),
+            isToolTipEnabled = isToolTipEnabled,
+        )
         Spacer(modifier = Modifier.width(10.dp))
-        LegendItem(label = "S", color = SimAnalyzerTheme.extended.cyan)
+        LegendItem(
+            label = stringResource(Res.string.inputs_legend_s),
+            color = SimAnalyzerTheme.extended.cyan,
+            tooltip = stringResource(Res.string.inputs_legend_tooltip_steering),
+            isToolTipEnabled = isToolTipEnabled,
+        )
     }
 }
 
 @Composable
-private fun LegendItem(label: String, color: androidx.compose.ui.graphics.Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(size = 8.dp)
-                .background(color = color, shape = CircleShape),
-        )
-        Spacer(modifier = Modifier.width(6.dp))
-        Text(text = label, color = SimAnalyzerTheme.material.onSurfaceVariant)
+private fun LegendItem(label: String, color: Color, tooltip: String, isToolTipEnabled: Boolean) {
+    val content: @Composable () -> Unit = {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(size = 8.dp)
+                    .background(color = color, shape = CircleShape),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = label,
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
+                style = SimAnalyzerTheme.typography.labelSmall,
+            )
+        }
+    }
+
+    if (isToolTipEnabled) {
+        Tooltip(tooltip = tooltip) {
+            content()
+        }
+    } else {
+        content()
     }
 }

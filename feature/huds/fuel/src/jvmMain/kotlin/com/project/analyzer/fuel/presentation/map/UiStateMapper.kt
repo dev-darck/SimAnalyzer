@@ -7,6 +7,7 @@ import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.PlanRowUi
 import com.project.analyzer.utils.ext.fromMsToLapTime
 import java.util.Locale
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 internal fun FuelEstimate.toUiState(safetyFactor: Double): FuelHudUiState {
@@ -17,15 +18,15 @@ internal fun FuelEstimate.toUiState(safetyFactor: Double): FuelHudUiState {
         isShow = true,
         isSessionActive = true,
         phase = phase,
-        title = "Fuel / lap",
         mainValue = lpl?.formatLiters(2) ?: "—",
         peakValue = "—",
-        subtitle = buildSubtitle(),
         fuelLeftText = currentFuelLiters.formatLiters(2),
-        lapsRemainingText = formatLapsRemaining(),
+        lapsRemainingCount = displayLapsRemainingCount(),
+        lapsRemainingIsApprox = !isLapTimeFromCompletedLap,
         lastLapTimeText = lastLapTimeMs?.fromMsToLapTime().orEmpty(),
         lapBasisText = formatLapBasis(lapTimeSec),
         planRows = buildPlanRows(lpl, lapTimeSec, safetyFactor),
+        displayLapNumber = displayLapNumber(),
         lapBasisIsApprox = !isLapTimeFromCompletedLap,
         fuelLeftLitersRaw = currentFuelLiters,
         litersPerLapRaw = lpl,
@@ -37,17 +38,19 @@ internal fun FuelEstimate.toUiState(safetyFactor: Double): FuelHudUiState {
     )
 }
 
-private fun FuelEstimate.buildSubtitle(): String = when (phase) {
-    FuelPhase.PIT_WAITING -> "Waiting in pits…"
-    FuelPhase.WARMUP -> "Collecting data…"
-    FuelPhase.PREDICTIVE -> "Predictive • ${(confidence * 100).roundToInt()}%"
-    FuelPhase.PER_LAP -> "Per-lap ($completedLaps) • ${(confidence * 100).roundToInt()}%"
-}
+private fun FuelEstimate.displayLapNumber(): Int =
+    maxOf(
+        currentLapIndex?.takeIf { it > 0 } ?: 0,
+        (completedLaps + 1).coerceAtLeast(1),
+    )
 
-private fun FuelEstimate.formatLapsRemaining(): String {
-    val remaining = lapsRemaining ?: return "—"
-    val prefix = if (isLapTimeFromCompletedLap) "~" else "≈"
-    return "$prefix${remaining.roundToInt()} laps"
+private fun FuelEstimate.displayLapsRemainingCount(): Int? {
+    val laps = lapsRemaining?.takeIf { it.isFinite() }?.coerceAtLeast(0.0) ?: return null
+    return if (phase == FuelPhase.PER_LAP && gameFuelEstimatedLaps != null) {
+        ceil(laps).toInt()
+    } else {
+        laps.roundToInt()
+    }
 }
 
 private fun FuelEstimate.formatLapBasis(lapTimeSec: Double): String {
@@ -61,7 +64,7 @@ private fun buildPlanRows(litersPerLap: Double?, lapTimeSec: Double, safetyFacto
         val fuelNeeded = litersPerLap?.let { it * laps * safetyFactor }
 
         PlanRowUi(
-            label = "$laps laps",
+            laps = laps,
             timeText = formatDuration(totalTimeSec),
             fuelText = fuelNeeded?.let { "${it.roundToInt()} L" } ?: "—",
             peakFuelText = "—",

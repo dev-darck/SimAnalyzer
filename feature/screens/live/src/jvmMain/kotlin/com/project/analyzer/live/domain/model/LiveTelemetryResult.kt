@@ -1,6 +1,6 @@
 package com.project.analyzer.live.domain.model
 
-import com.project.analyzer.live.presentation.LiveScreenState
+import com.project.analyzer.telemetry.api.model.TelemetryFrame
 
 internal sealed interface LiveTelemetryResult {
 
@@ -8,5 +8,5 @@ internal sealed interface LiveTelemetryResult {
 
     data object SessionReset : LiveTelemetryResult
 
-    data class Data(val state: LiveScreenState) : LiveTelemetryResult
+    data class Data(val frame: TelemetryFrame) : LiveTelemetryResult
 }

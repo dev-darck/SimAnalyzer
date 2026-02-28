@@ -1,6 +1,7 @@
 package com.project.analyzer.impl.di
 
 import com.project.analyzer.api.di.AppEnvironment
+import com.project.analyzer.api.di.AppLifecycle
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -9,15 +10,20 @@ import kotlinx.serialization.json.Json
 
 @ContributesTo(AppScope::class)
 @BindingContainer
-object AppBindings {
+interface AppBindings {
+    companion object {
 
-    @Provides
-    fun provideEnv(): AppEnvironment = JvmAppEnvironment()
+        @Provides
+        fun provideEnv(): AppEnvironment = JvmAppEnvironment()
 
-    @Provides
-    fun provideJson(): Json = Json {
-        prettyPrint = true
-        encodeDefaults = true
-        ignoreUnknownKeys = true
+        @Provides
+        private fun provideAppLifecycle(impl: AppLifecycleImpl): AppLifecycle = impl
+
+        @Provides
+        fun provideJson(): Json = Json {
+            prettyPrint = true
+            encodeDefaults = true
+            ignoreUnknownKeys = true
+        }
     }
 }

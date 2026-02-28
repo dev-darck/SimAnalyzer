@@ -1,3 +1,4 @@
 moduleApi {
     compose()
+    resources()
 }

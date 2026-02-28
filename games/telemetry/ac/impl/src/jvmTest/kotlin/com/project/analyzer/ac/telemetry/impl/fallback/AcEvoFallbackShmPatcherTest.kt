@@ -6,11 +6,15 @@ import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.FuelSnapsh
 import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.LapTimingSnapshot
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.AcEvoFileInfoExtractor
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
+import com.project.analyzer.ac.telemetry.impl.internal.AcSessionRestartHint
 import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
+import com.project.analyzer.utils.TelemetryIdentityIds
+import com.project.analyzer.utils.shm.writeWString
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -144,6 +148,8 @@ class AcEvoFallbackShmPatcherTest {
         assertEquals("car", readWString(statics.carModel))
         assertEquals("John", readWString(statics.playerName))
         assertEquals("Doe", readWString(statics.playerSurname))
+        assertEquals(TelemetryIdentityIds.stableCarId("car"), graphics.playerCarID)
+        assertEquals(TelemetryIdentityIds.stableCarId("car"), graphics.carID[0])
     }
 
     @Test
@@ -183,5 +189,418 @@ class AcEvoFallbackShmPatcherTest {
         patcher.patchIfNeeded(shm, 3_100_000_000L, GameConnectionState.IN_SESSION)
 
         verify(exactly = 2) { lapAnalyzer.processPhysicsFrame(any(), physics) }
+    }
+
+    @Test
+    fun `session type is patched on graphics-only tick before physics packet gate`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returnsMany listOf(
+            EvoFileInfo(
+                trackId = "spa_gp",
+                trackName = "Spa",
+                carModel = "car",
+                driverName = "John Doe",
+                sessionEpoch = 1L,
+                sessionType = EvoSessionType.QUALIFYING,
+            ),
+            EvoFileInfo(
+                trackId = "spa_gp",
+                trackName = "Spa",
+                carModel = "car",
+                driverName = "John Doe",
+                sessionEpoch = 1L,
+                sessionType = EvoSessionType.QUALIFYING,
+            ),
+        )
+
+        val physics = SPageFilePhysics().apply { packetId = 10 }
+        val graphics = SPageFileGraphics().apply {
+            session = EvoSessionType.PRACTICE.shmValue
+        }
+        val statics = SPageFileStatic()
+        forceNativeEmpty(graphics, statics)
+        graphics.session = EvoSessionType.PRACTICE.shmValue
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+        every { lapAnalyzer.getSnapshot(any()) } returns sampleLapSnapshot()
+        every { fuelAnalyzer.getSnapshot(any()) } returns FuelSnapshot()
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+
+        patcher.patchIfNeeded(shm, 1_000_000_000L, GameConnectionState.IN_SESSION)
+        assertEquals(EvoSessionType.QUALIFYING.shmValue, graphics.session)
+
+        // Simulate native graphics-only drift/flap while physics packet stays unchanged.
+        graphics.session = EvoSessionType.PRACTICE.shmValue
+
+        // Same physics packet: fallback runtime processing is skipped, but session type in graphics
+        // must still be patched to keep lifecycle stable on graphics-only ticks.
+        patcher.patchIfNeeded(shm, 1_100_000_000L, GameConnectionState.IN_SESSION)
+
+        assertEquals(EvoSessionType.QUALIFYING.shmValue, graphics.session)
+        verify(exactly = 1) { lapAnalyzer.processPhysicsFrame(any(), physics) }
+    }
+
+    @Test
+    fun `fallback patch does not overwrite populated graphics timing and fuel fields`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returns EvoFileInfo(
+            trackId = "spa_gp",
+            trackName = "Spa",
+            carModel = "car",
+            driverName = "John Doe",
+            sessionEpoch = 1L,
+            sessionType = EvoSessionType.PRACTICE,
+        )
+
+        val physics = SPageFilePhysics().apply { packetId = 1 }
+        val graphics = SPageFileGraphics().apply {
+            session = EvoSessionType.PRACTICE.shmValue
+            completedLaps = 5
+            iCurrentTime = 1_111
+            iLastTime = 2_222
+            iBestTime = 3_333
+            currentSectorIndex = 2
+            lastSectorTime = 444
+            iSplit = 555
+            isValidLap = 1
+            iDeltaLapTime = 666
+            isDeltaPositive = 0
+            fuelXLap = 2.5f
+            fuelEstimatedLaps = 12.5f
+        }
+        val statics = SPageFileStatic()
+        forceNativeEmpty(graphics, statics)
+        graphics.session = EvoSessionType.PRACTICE.shmValue
+        graphics.completedLaps = 5
+        graphics.iCurrentTime = 1_111
+        graphics.iLastTime = 2_222
+        graphics.iBestTime = 3_333
+        graphics.currentSectorIndex = 2
+        graphics.lastSectorTime = 444
+        graphics.iSplit = 555
+        graphics.isValidLap = 1
+        graphics.iDeltaLapTime = 666
+        graphics.isDeltaPositive = 0
+        graphics.fuelXLap = 2.5f
+        graphics.fuelEstimatedLaps = 12.5f
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+        every { lapAnalyzer.getSnapshot(any()) } returns sampleLapSnapshot().copy(
+            completedLapsCount = 99,
+            currentLapTimeMs = 9_999,
+            currentSectorIndex = 3,
+            currentSectorTimeMs = 888,
+            lastSectorTimeMs = 777,
+            lastLapTimeMs = 6_666,
+            bestLapTimeMs = 5_555,
+            currentLapValid = true,
+            deltaLapTimeMs = 123,
+            isDeltaPositive = true,
+        )
+        every { fuelAnalyzer.getSnapshot(any()) } returns FuelSnapshot(
+            fuelPerLapLiters = 4.2f,
+            fuelEstimatedLaps = 99f,
+        )
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+        patcher.patchIfNeeded(shm, 2_000_000_000L, GameConnectionState.IN_SESSION)
+
+        assertEquals(5, graphics.completedLaps)
+        assertEquals(1_111, graphics.iCurrentTime)
+        assertEquals(2_222, graphics.iLastTime)
+        assertEquals(3_333, graphics.iBestTime)
+        assertEquals(2, graphics.currentSectorIndex)
+        assertEquals(444, graphics.lastSectorTime)
+        assertEquals(555, graphics.iSplit)
+        assertEquals(1, graphics.isValidLap)
+        assertEquals(666, graphics.iDeltaLapTime)
+        assertEquals(0, graphics.isDeltaPositive)
+        assertEquals(2.5f, graphics.fuelXLap)
+        assertEquals(12.5f, graphics.fuelEstimatedLaps)
+    }
+
+    @Test
+    fun `fallback patch does not overwrite populated statics identity fields`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returns EvoFileInfo(
+            trackId = "fallback_track",
+            trackName = "Fallback Track",
+            carModel = "fallback_car",
+            driverName = "Fallback Driver",
+            sessionEpoch = 1L,
+            sessionType = EvoSessionType.PRACTICE,
+        )
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics().apply { session = -1 }
+        val statics = SPageFileStatic().apply {
+            numCars = 12
+            numberOfSessions = 4
+            sectorCount = 3
+            track.writeWString("native_track")
+            carModel.writeWString("native_car")
+            playerName.writeWString("Native")
+            playerSurname.writeWString("Driver")
+        }
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+        patcher.patchIfNeeded(shm, 3_000_000_000L, GameConnectionState.IN_MENU)
+
+        assertEquals("native_track", readWString(statics.track))
+        assertEquals("native_car", readWString(statics.carModel))
+        assertEquals("Native", readWString(statics.playerName))
+        assertEquals("Driver", readWString(statics.playerSurname))
+        assertEquals(12, statics.numCars)
+        assertEquals(4, statics.numberOfSessions)
+        assertEquals(3, statics.sectorCount)
+    }
+
+    @Test
+    fun `fallback patch does not overwrite populated graphics car id`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returns EvoFileInfo(
+            trackId = "brands_hatch_indy",
+            trackName = "Brands Hatch Indy",
+            carModel = "ks_bmw_m4_gt3",
+            driverName = "John Doe",
+            sessionEpoch = 1L,
+            sessionType = EvoSessionType.PRACTICE,
+        )
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics().apply {
+            playerCarID = 77
+            carID[0] = 77
+        }
+        val statics = SPageFileStatic()
+        forceNativeEmpty(graphics, statics)
+        graphics.playerCarID = 77
+        graphics.carID[0] = 77
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+        patcher.patchIfNeeded(shm, 3_000_000_000L, GameConnectionState.IN_MENU)
+
+        assertEquals(77, graphics.playerCarID)
+        assertEquals(77, graphics.carID[0])
+    }
+
+    @Test
+    fun `session epoch does not force graphics sessionIndex when native index is absent`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returns EvoFileInfo(
+            trackId = "spa_gp",
+            trackName = "Spa",
+            carModel = "car",
+            driverName = "John Doe",
+            sessionEpoch = 5L,
+            sessionType = EvoSessionType.PRACTICE,
+        )
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics().apply { sessionIndex = 0 }
+        val statics = SPageFileStatic()
+        forceNativeEmpty(graphics, statics)
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+        patcher.patchIfNeeded(shm, 4_000_000_000L, GameConnectionState.IN_MENU)
+
+        assertEquals(0, graphics.sessionIndex)
+    }
+
+    @Test
+    fun `log sessionType boundary bumps synthetic session index and resets fallback runtime`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returnsMany listOf(
+            EvoFileInfo(
+                trackId = "brands_hatch_indy",
+                trackName = "Brands Hatch Indy",
+                carModel = "ks_bmw_m4_gt3",
+                driverName = "John Doe",
+                sessionEpoch = 1L,
+                sessionType = EvoSessionType.PRACTICE,
+            ),
+            EvoFileInfo(
+                trackId = "brands_hatch_indy",
+                trackName = "Brands Hatch Indy",
+                carModel = "ks_bmw_m4_gt3",
+                driverName = "John Doe",
+                sessionEpoch = 1L,
+                sessionType = EvoSessionType.QUALIFYING,
+            ),
+        )
+
+        val physics = SPageFilePhysics().apply { packetId = 1 }
+        val graphics = SPageFileGraphics().apply {
+            sessionIndex = 0
+            session = EvoSessionType.PRACTICE.shmValue
+        }
+        val statics = SPageFileStatic().apply { isTimedRace = 1 }
+        forceNativeEmpty(graphics, statics)
+        graphics.session = EvoSessionType.PRACTICE.shmValue
+        statics.isTimedRace = 1
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+        every { lapAnalyzer.getSnapshot(any()) } returns sampleLapSnapshot()
+        every { fuelAnalyzer.getSnapshot(any()) } returns FuelSnapshot()
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+
+        patcher.patchIfNeeded(shm, 1_000_000_000L, GameConnectionState.IN_SESSION)
+        assertEquals(0, graphics.sessionIndex)
+        assertEquals(EvoSessionType.PRACTICE.shmValue, graphics.session)
+
+        physics.packetId = 2
+
+        patcher.patchIfNeeded(shm, 1_200_000_000L, GameConnectionState.IN_SESSION)
+
+        assertEquals(1, graphics.sessionIndex)
+        assertEquals(EvoSessionType.QUALIFYING.shmValue, graphics.session)
+        verify(atLeast = 2) { lapAnalyzer.resetSession() }
+        verify(atLeast = 2) { fuelAnalyzer.reset() }
+    }
+
+    @Test
+    fun `main menu restart hint is emitted only after session re-entry`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returnsMany listOf(
+            EvoFileInfo(sessionEpoch = 1L),
+            EvoFileInfo(sessionEpoch = 2L, sessionEpochStartedFromMainMenu = true),
+            EvoFileInfo(sessionEpoch = 2L, sessionEpochStartedFromMainMenu = true),
+            EvoFileInfo(sessionEpoch = 2L, sessionEpochStartedFromMainMenu = true),
+            EvoFileInfo(sessionEpoch = 2L, sessionEpochStartedFromMainMenu = true),
+        )
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics()
+        val statics = SPageFileStatic()
+        forceNativeEmpty(graphics, statics)
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+        every { lapAnalyzer.getSnapshot(any()) } returns sampleLapSnapshot()
+        every { fuelAnalyzer.getSnapshot(any()) } returns FuelSnapshot()
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+
+        assertEquals(
+            AcSessionRestartHint.NONE,
+            patcher.patchIfNeeded(shm, 1_000_000_000L, GameConnectionState.IN_SESSION),
+        )
+        assertEquals(
+            AcSessionRestartHint.NONE,
+            patcher.patchIfNeeded(shm, 1_200_000_000L, GameConnectionState.IN_SESSION),
+        )
+        assertEquals(
+            AcSessionRestartHint.NONE,
+            patcher.patchIfNeeded(shm, 1_400_000_000L, GameConnectionState.IN_MENU),
+        )
+        assertEquals(
+            AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU,
+            patcher.patchIfNeeded(shm, 1_600_000_000L, GameConnectionState.IN_SESSION),
+        )
+        assertEquals(
+            AcSessionRestartHint.NONE,
+            patcher.patchIfNeeded(shm, 1_800_000_000L, GameConnectionState.IN_SESSION),
+        )
+    }
+
+    @Test
+    fun `same group restart hint is emitted immediately in session`() {
+        val extractor = mockk<AcEvoFileInfoExtractor>(relaxUnitFun = true)
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+        val fuelAnalyzer = mockk<FallbackFuelAnalyzer>(relaxUnitFun = true)
+
+        every { extractor.poll() } returnsMany listOf(
+            EvoFileInfo(sessionEpoch = 1L),
+            EvoFileInfo(sessionEpoch = 2L),
+            EvoFileInfo(sessionEpoch = 2L),
+        )
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics()
+        val statics = SPageFileStatic()
+        forceNativeEmpty(graphics, statics)
+
+        val shm = mockk<AcSharedMemory>()
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+        every { lapAnalyzer.getSnapshot(any()) } returns sampleLapSnapshot()
+        every { fuelAnalyzer.getSnapshot(any()) } returns FuelSnapshot()
+
+        val patcher = AcEvoFallbackShmPatcher(extractor, lapAnalyzer, fuelAnalyzer)
+
+        assertEquals(
+            AcSessionRestartHint.NONE,
+            patcher.patchIfNeeded(shm, 1_000_000_000L, GameConnectionState.IN_SESSION),
+        )
+        assertEquals(
+            AcSessionRestartHint.PRESERVE_GROUP,
+            patcher.patchIfNeeded(shm, 1_200_000_000L, GameConnectionState.IN_SESSION),
+        )
+        assertEquals(
+            AcSessionRestartHint.NONE,
+            patcher.patchIfNeeded(shm, 1_400_000_000L, GameConnectionState.IN_SESSION),
+        )
     }
 }

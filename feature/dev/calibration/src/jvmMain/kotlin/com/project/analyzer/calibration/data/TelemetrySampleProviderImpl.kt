@@ -8,10 +8,8 @@ import com.project.analyzer.math.MIN_LEN
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
-import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import dev.zacsweers.metro.binding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -22,8 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 
 @Inject
 @SingleIn(ScreenScope::class)
-@ContributesBinding(ScreenScope::class, binding = binding<TelemetrySampleProvider>())
-class TelemetrySampleProviderImpl(telemetry: TelemetryLifecycle) : TelemetrySampleProvider {
+internal class TelemetrySampleProviderImpl(telemetry: TelemetryLifecycle) : TelemetrySampleProvider {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -69,7 +66,7 @@ class TelemetrySampleProviderImpl(telemetry: TelemetryLifecycle) : TelemetrySamp
                 axleForward = axleForward,
                 trackId = track?.trackId,
                 trackName = track?.trackName,
-                carModel = car?.carModel,
+                carModel = car?.carName ?: car?.carModel,
             )
         }
         .stateIn(

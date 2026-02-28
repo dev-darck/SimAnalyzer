@@ -9,6 +9,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.EvoFileInfoSource
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.PhysicsPoseExtractor
+import com.project.analyzer.ac.telemetry.impl.internal.AcSessionRestartHint
 import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
@@ -16,6 +17,7 @@ import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
+import com.project.analyzer.utils.TelemetryIdentityIds
 import com.project.analyzer.utils.logger.logger
 import com.project.analyzer.utils.shm.toKString
 import com.project.analyzer.utils.shm.writeWString
@@ -43,8 +45,13 @@ class AcEvoFallbackShmPatcher(
     private var lastPatchedIdentityLog: String = ""
     private var lastPatchedIdentityLogMs: Long = 0L
     private var lastPatchedSessionType: EvoSessionType = EvoSessionType.UNKNOWN
+    private var pendingSessionTypeOverrideFromShm: Int? = null
+    private var pendingSessionTypeOverrideToShm: Int? = null
     private var lastFilePollNs: Long = 0L
     private var cachedInfo: EvoFileInfo = EvoFileInfo()
+    private var syntheticSessionIndex: Int = 0
+    private var pendingSessionRestartHint: AcSessionRestartHint = AcSessionRestartHint.NONE
+    private var mainMenuRestartReadyForResume: Boolean = false
 
     private var lastGameState: GameConnectionState = GameConnectionState.DISCONNECTED
     private var lastProcessedPhysicsPacketId: Int = -1
@@ -66,20 +73,38 @@ class AcEvoFallbackShmPatcher(
         lastPatchedIdentityLog = ""
         lastPatchedIdentityLogMs = 0L
         lastPatchedSessionType = EvoSessionType.UNKNOWN
+        pendingSessionTypeOverrideFromShm = null
+        pendingSessionTypeOverrideToShm = null
         lastFilePollNs = 0L
         cachedInfo = EvoFileInfo()
+        syntheticSessionIndex = 0
+        pendingSessionRestartHint = AcSessionRestartHint.NONE
+        mainMenuRestartReadyForResume = false
 
         lastGameState = GameConnectionState.DISCONNECTED
         lastProcessedPhysicsPacketId = -1
         respawnDetector.reset()
     }
 
-    fun patchIfNeeded(shm: AcSharedMemory, loopStartNanos: Long, gameState: GameConnectionState) {
+    internal fun patchIfNeeded(
+        shm: AcSharedMemory,
+        loopStartNanos: Long,
+        gameState: GameConnectionState,
+    ): AcSessionRestartHint {
         val info = pollFileInfo(loopStartNanos)
-        if (!hasSignal(info)) return
+        if (!hasSignal(info)) return AcSessionRestartHint.NONE
 
         if (info.sessionEpoch != lastSessionEpoch) {
+            val restartHint = when {
+                lastSessionEpoch < 0L -> AcSessionRestartHint.NONE
+                info.sessionEpochStartedFromMainMenu -> AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU
+                else -> AcSessionRestartHint.PRESERVE_GROUP
+            }
             lastSessionEpoch = info.sessionEpoch
+            pendingSessionRestartHint = mergeRestartHints(pendingSessionRestartHint, restartHint)
+            if (restartHint == AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU) {
+                mainMenuRestartReadyForResume = gameState != GameConnectionState.IN_SESSION
+            }
 
             resetAll(reason = "sessionEpoch changed", clearTrack = false, clearCar = false)
 
@@ -100,6 +125,12 @@ class AcEvoFallbackShmPatcher(
                 respawnDetector.onResumed(loopStartNanos, shm.physics.packetId)
                 lastProcessedPhysicsPacketId = -1
             }
+            if (lastGameState == GameConnectionState.IN_SESSION &&
+                gameState != GameConnectionState.IN_SESSION &&
+                pendingSessionRestartHint == AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU
+            ) {
+                mainMenuRestartReadyForResume = true
+            }
             lastGameState = gameState
         }
 
@@ -116,15 +147,23 @@ class AcEvoFallbackShmPatcher(
             .normalize(track = info.trackId ?: info.trackName.orEmpty(), layout = info.layoutId)
             .takeIf { it.isNotBlank() }
         val calibration = lapAnalyzer.loadCalibration(normalizedTrackId)
-        patchStatics(shm.statics, info, calibration)
+        patchStatics(shm.graphics, shm.statics, info, calibration)
 
+        val sessionTypeBoundary = handleSessionTypeBoundary(info.sessionType)
         patchGraphicsBase(shm.graphics, info, gameState)
+        if (sessionTypeBoundary) {
+            bumpSyntheticSessionIndexForBoundary(shm.graphics)
+        }
 
-        if (gameState != GameConnectionState.IN_SESSION) return
+        if (gameState != GameConnectionState.IN_SESSION) return AcSessionRestartHint.NONE
+
+        applySessionToGraphics(shm.graphics, info.sessionType)
+
+        val restartHint = consumeRestartHintIfReady(gameState)
 
         val physicsPacketId = shm.physics.packetId
-        if (physicsPacketId <= 0) return
-        if (physicsPacketId == lastProcessedPhysicsPacketId) return
+        if (physicsPacketId <= 0) return restartHint
+        if (physicsPacketId == lastProcessedPhysicsPacketId) return restartHint
         lastProcessedPhysicsPacketId = physicsPacketId
 
         if (calibration != null && lapAnalyzer.isSyncedToStartFinish()) {
@@ -138,7 +177,7 @@ class AcEvoFallbackShmPatcher(
                     position = pose.position,
                 )
                 if (shouldSoftReset) {
-                    logger.info { "FallbackSHM soft reset: respawn detected (synced session)" }
+                    logger.debug { "FallbackSHM soft reset: respawn detected (synced session)" }
 
                     fuelAnalyzer.resetLapTracking(
                         fuelLiters = shm.physics.fuel,
@@ -163,7 +202,48 @@ class AcEvoFallbackShmPatcher(
         )
         val fuelSnapshot = fuelAnalyzer.getSnapshot(currentFuelLiters = shm.physics.fuel)
 
-        patchGraphics(shm.graphics, info, lapSnapshot, fuelSnapshot)
+        patchGraphics(shm.graphics, lapSnapshot, fuelSnapshot)
+        return restartHint
+    }
+
+    private fun handleSessionTypeBoundary(newSessionType: EvoSessionType): Boolean {
+        if (!shouldResetForSessionTypeChange(lastPatchedSessionType, newSessionType)) {
+            if (newSessionType != lastPatchedSessionType) {
+                logger.debug {
+                    "FallbackSHM sessionType: ${lastPatchedSessionType.name} ->" +
+                        " ${newSessionType.name} (shmValue=${newSessionType.shmValue})"
+                }
+                lastPatchedSessionType = newSessionType
+            }
+            return false
+        }
+
+        logger.debug {
+            "FallbackSHM sessionType boundary: ${lastPatchedSessionType.name} -> ${newSessionType.name}," +
+                " resetting fallback lap/fuel runtime"
+        }
+
+        pendingSessionTypeOverrideFromShm = lastPatchedSessionType.shmValue
+        pendingSessionTypeOverrideToShm = newSessionType.shmValue
+
+        resetRuntimeForBoundary()
+
+        lastPatchedSessionType = newSessionType
+        return true
+    }
+
+    private fun bumpSyntheticSessionIndexForBoundary(graphics: SPageFileGraphics) {
+        syntheticSessionIndex = maxOf(syntheticSessionIndex, graphics.sessionIndex)
+        syntheticSessionIndex += 1
+        graphics.sessionIndex = syntheticSessionIndex
+    }
+
+    private fun resetRuntimeForBoundary() {
+        lapAnalyzer.resetSession()
+        fuelAnalyzer.reset()
+        clearPenaltyDedup()
+        respawnDetector.reset()
+        lastProcessedPhysicsPacketId = -1
     }
 
     private fun pollFileInfo(nowNs: Long): EvoFileInfo {
@@ -175,7 +255,7 @@ class AcEvoFallbackShmPatcher(
     }
 
     private fun resetAll(reason: String, clearTrack: Boolean, clearCar: Boolean) {
-        logger.info { "FallbackSHM reset: $reason" }
+        logger.debug { "FallbackSHM reset: $reason" }
 
         lapAnalyzer.resetSession()
         fuelAnalyzer.reset()
@@ -186,6 +266,29 @@ class AcEvoFallbackShmPatcher(
 
         lastPatchedIdentityLog = ""
         lastPatchedIdentityLogMs = 0L
+        syntheticSessionIndex = 0
+        pendingSessionTypeOverrideFromShm = null
+        pendingSessionTypeOverrideToShm = null
+    }
+
+    private fun consumeRestartHintIfReady(gameState: GameConnectionState): AcSessionRestartHint {
+        if (gameState != GameConnectionState.IN_SESSION) return AcSessionRestartHint.NONE
+
+        return when (pendingSessionRestartHint) {
+            AcSessionRestartHint.NONE -> AcSessionRestartHint.NONE
+
+            AcSessionRestartHint.PRESERVE_GROUP -> {
+                pendingSessionRestartHint = AcSessionRestartHint.NONE
+                AcSessionRestartHint.PRESERVE_GROUP
+            }
+
+            AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU -> {
+                if (!mainMenuRestartReadyForResume) return AcSessionRestartHint.NONE
+                pendingSessionRestartHint = AcSessionRestartHint.NONE
+                mainMenuRestartReadyForResume = false
+                AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU
+            }
+        }
     }
 
     private fun markPenaltySeen(id: String) {
@@ -203,7 +306,12 @@ class AcEvoFallbackShmPatcher(
         seenPenaltySet.clear()
     }
 
-    private fun patchStatics(statics: SPageFileStatic, info: EvoFileInfo, calibration: TrackCalibration? = null) {
+    private fun patchStatics(
+        graphics: SPageFileGraphics,
+        statics: SPageFileStatic,
+        info: EvoFileInfo,
+        calibration: TrackCalibration? = null,
+    ) {
         if (statics.numCars <= 0) statics.numCars = 1
         if (statics.numberOfSessions <= 0) statics.numberOfSessions = 1
         if (statics.sectorCount <= 0) {
@@ -211,13 +319,16 @@ class AcEvoFallbackShmPatcher(
             statics.sectorCount = totalSectors
         }
 
-        val trackId = info.trackId?.trim().orEmpty()
+        val trackId = TrackIdNormalizer
+            .normalize(track = info.trackId ?: info.trackName.orEmpty(), layout = info.layoutId)
+            .trim()
         val carModel = info.carModel?.trim().orEmpty()
+        val carId = TelemetryIdentityIds.stableCarId(carModel)
 
         val effectiveTrackId = when {
             trackId.isNotBlank() -> trackId.also { lastPatchedTrackId = it }
             lastPatchedTrackId.isNotBlank() -> lastPatchedTrackId
-            else -> info.trackName.orEmpty()
+            else -> ""
         }
 
         val effectiveCarModel = when {
@@ -234,8 +345,19 @@ class AcEvoFallbackShmPatcher(
         if (statics.carModel.toKString().isBlank() && effectiveCarModel.isNotBlank()) {
             statics.carModel.writeWString(effectiveCarModel)
         }
+        applyCarIdToGraphics(graphics, carId)
 
         applyDriverToStatics(statics, info.driverName)
+    }
+
+    private fun applyCarIdToGraphics(graphics: SPageFileGraphics, carId: Int?) {
+        val effectiveCarId = carId ?: return
+        if (graphics.playerCarID <= 0) {
+            graphics.playerCarID = effectiveCarId
+        }
+        if (graphics.carID.isNotEmpty() && graphics.carID[0] <= 0) {
+            graphics.carID[0] = effectiveCarId
+        }
     }
 
     private fun logIdentityIfNeeded(trackId: String, carModel: String, epoch: Long) {
@@ -244,7 +366,7 @@ class AcEvoFallbackShmPatcher(
         if (identMsg != lastPatchedIdentityLog && (nowMs - lastPatchedIdentityLogMs) > IDENTITY_LOG_MIN_INTERVAL_MS) {
             lastPatchedIdentityLog = identMsg
             lastPatchedIdentityLogMs = nowMs
-            logger.info { identMsg }
+            logger.debug { identMsg }
         }
     }
 
@@ -268,16 +390,17 @@ class AcEvoFallbackShmPatcher(
                 else -> info.sessionType.shmValue
             }
         }
+
+        if (graphics.sessionIndex > 0) {
+            syntheticSessionIndex = maxOf(syntheticSessionIndex, graphics.sessionIndex)
+            return
+        }
+        if (syntheticSessionIndex > 0) {
+            graphics.sessionIndex = syntheticSessionIndex
+        }
     }
 
-    private fun patchGraphics(
-        graphics: SPageFileGraphics,
-        info: EvoFileInfo,
-        snapshot: LapTimingSnapshot,
-        fuelSnapshot: FuelSnapshot,
-    ) {
-        applySessionToGraphics(graphics, info.sessionType)
-
+    private fun patchGraphics(graphics: SPageFileGraphics, snapshot: LapTimingSnapshot, fuelSnapshot: FuelSnapshot) {
         if (graphics.completedLaps <= 0 && snapshot.completedLapsCount > 0) {
             graphics.completedLaps = snapshot.completedLapsCount
         }
@@ -289,17 +412,37 @@ class AcEvoFallbackShmPatcher(
     }
 
     private fun applySessionToGraphics(graphics: SPageFileGraphics, sessionType: EvoSessionType) {
-        if (graphics.session < 0 && sessionType != EvoSessionType.UNKNOWN) {
-            graphics.session = sessionType.shmValue
+        if (sessionType == EvoSessionType.UNKNOWN) return
+
+        val patched = sessionType.shmValue
+        val native = graphics.session
+
+        if (native == patched) {
+            clearPendingSessionTypeOverride()
+            return
         }
 
-        if (sessionType != lastPatchedSessionType) {
-            logger.info {
-                "FallbackSHM sessionType: ${lastPatchedSessionType.name} ->" +
-                    " ${sessionType.name} (shmValue=${sessionType.shmValue})"
-            }
-            lastPatchedSessionType = sessionType
+        if (native < 0) {
+            graphics.session = patched
+            return
         }
+
+        val pendingFrom = pendingSessionTypeOverrideFromShm
+        val pendingTo = pendingSessionTypeOverrideToShm
+        if (pendingFrom != null && pendingTo != null && pendingTo == patched && native == pendingFrom) {
+            graphics.session = patched
+            return
+        }
+
+        // In ACE fallback mode we treat file-derived sessionType as authoritative once available.
+        // Native graphics.session can flap on pause/resume/UI transitions and cause false lifecycle restarts.
+        graphics.session = patched
+        if (pendingFrom != null || pendingTo != null) clearPendingSessionTypeOverride()
+    }
+
+    private fun clearPendingSessionTypeOverride() {
+        pendingSessionTypeOverrideFromShm = null
+        pendingSessionTypeOverrideToShm = null
     }
 
     private fun applyLapTimesToGraphics(graphics: SPageFileGraphics, snapshot: LapTimingSnapshot) {
@@ -350,7 +493,6 @@ class AcEvoFallbackShmPatcher(
         const val PENALTY_DEDUP_CAPACITY = 32
         val FILE_POLL_INTERVAL_NS = 100.milliseconds.inWholeNanoseconds
         val IDENTITY_LOG_MIN_INTERVAL_MS = 500.milliseconds.inWholeMilliseconds
-        val RESPAWN_COOLDOWN_NS = 2.seconds.inWholeNanoseconds
     }
 
     private fun hasSignal(info: EvoFileInfo): Boolean {
@@ -363,6 +505,25 @@ class AcEvoFallbackShmPatcher(
         if (info.sessionType != EvoSessionType.UNKNOWN) return true
         if (info.hasPenalty) return true
         return false
+    }
+
+    private fun shouldResetForSessionTypeChange(current: EvoSessionType, next: EvoSessionType): Boolean {
+        if (current == EvoSessionType.UNKNOWN) return false
+        if (next == EvoSessionType.UNKNOWN) return false
+        return current != next
+    }
+
+    private fun mergeRestartHints(
+        current: AcSessionRestartHint,
+        incoming: AcSessionRestartHint,
+    ): AcSessionRestartHint = when {
+        current == AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU ||
+            incoming == AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU -> AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU
+
+        current == AcSessionRestartHint.PRESERVE_GROUP ||
+            incoming == AcSessionRestartHint.PRESERVE_GROUP -> AcSessionRestartHint.PRESERVE_GROUP
+
+        else -> AcSessionRestartHint.NONE
     }
 }
 

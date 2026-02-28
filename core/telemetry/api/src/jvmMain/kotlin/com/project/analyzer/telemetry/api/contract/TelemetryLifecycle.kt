@@ -62,11 +62,13 @@ public data class SessionInfo(
     val sessionType: SessionType,
     val carModel: String,
     val trackId: String,
+    val carId: Int? = null,
 )
 
 public enum class SessionField {
     SESSION_TYPE,
     CAR_MODEL,
+    CAR_ID,
     TRACK_ID,
 }
 
@@ -81,4 +83,7 @@ public enum class SessionEndReason {
 
     /** A new session replaced the previous one (restart / new race / etc) */
     REPLACED_BY_NEW_SESSION,
+
+    /** A real main-menu return replaced the previous session and should start a new recording group */
+    REPLACED_AFTER_MAIN_MENU,
 }

@@ -3,7 +3,7 @@ package com.project.analyzer.crash.domain.usecase
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
-class CopyReportUseCase {
+internal class CopyReportUseCase {
 
     operator fun invoke(text: String): Result<Unit> = runCatching {
         Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(text), null)

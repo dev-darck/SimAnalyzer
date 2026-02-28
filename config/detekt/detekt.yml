@@ -51,7 +51,7 @@ complexity:
     allowedConstructorParameters: 10
     ignoreDefaultParameters: true
     ignoreDataClasses: true
-    ignoreAnnotatedParameter:
+    ignoreAnnotated:
       - "Composable"
   NestedBlockDepth:
     active: true
@@ -178,10 +178,35 @@ style:
     autoCorrect: true
   UnusedPrivateClass:
     active: true
+    excludes:
+      - '**/di/**'
+      - '**/*Bindings.kt'
+      - '**/*Graph.kt'
+      - '**/*Component.kt'
+      - '**/*Module.kt'
+      - '**/*Entry.kt'
+      - '**/Qualifiers.kt'
   UnusedPrivateFunction:
     active: true
+    allowedNames: '.*Preview$'
+    excludes:
+      - '**/di/**'
+      - '**/*Bindings.kt'
+      - '**/*Graph.kt'
+      - '**/*Component.kt'
+      - '**/*Module.kt'
+      - '**/*Entry.kt'
+      - '**/Qualifiers.kt'
   UnusedPrivateProperty:
     active: true
+    excludes:
+      - '**/di/**'
+      - '**/*Bindings.kt'
+      - '**/*Graph.kt'
+      - '**/*Component.kt'
+      - '**/*Module.kt'
+      - '**/*Entry.kt'
+      - '**/Qualifiers.kt'
   VarCouldBeVal:
     active: true
     autoCorrect: true

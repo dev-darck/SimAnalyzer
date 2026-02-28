@@ -8,7 +8,6 @@ import org.slf4j.MarkerFactory
 
 public val logger: KLogger = KotlinLogging.logger {}
 
-public inline fun <reified T : Any> T.logger(): KLogger =
-    KotlinLogging.logger(T::class.java.name)
+public inline fun <reified T : Any> T.logger(): KLogger = KotlinLogging.logger(T::class.java.name)
 
 public val RATE_LIMITED: Marker = MarkerFactory.getMarker("RATE_LIMITED").toKotlinLogging()

@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.analyzer.settings.presentation.components
 
 import androidx.compose.foundation.Canvas
@@ -14,8 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -28,9 +28,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.settings.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.sin
 
 @Composable
@@ -47,10 +48,9 @@ internal fun HudSetupBlock(
             .padding(all = 16.dp),
     ) {
         Text(
-            text = "Huds",
+            text = stringResource(Res.string.hud_setup_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 20.sp,
-            style = MaterialTheme.typography.titleMedium,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -61,10 +61,9 @@ internal fun HudSetupBlock(
         ) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "Huds setup",
+                    text = stringResource(Res.string.hud_setup_label),
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
             }
 
@@ -74,7 +73,7 @@ internal fun HudSetupBlock(
                     .heightIn(min = 32.dp)
                     .background(
                         color = SimAnalyzerTheme.material.primary.copy(alpha = 0.22f),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = SimAnalyzerTheme.corners.control,
                     )
                     .onClick(
                         enabled = isHudEnabled,
@@ -83,10 +82,9 @@ internal fun HudSetupBlock(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    text = "Edit",
-                    fontSize = 12.sp,
-                    fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
+                    text = stringResource(Res.string.hud_setup_edit),
                     color = SimAnalyzerTheme.material.onSurface,
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
             }
         }
@@ -103,10 +101,9 @@ internal fun HudSetupBlock(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Display huds",
+                text = stringResource(Res.string.hud_setup_display),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 14.sp,
-                style = MaterialTheme.typography.labelMedium,
+                style = SimAnalyzerTheme.typography.labelMedium,
             )
 
             Switch(
@@ -125,7 +122,7 @@ internal fun HudSetupBlock(
 
 @Composable
 private fun HudPreviewBox() {
-    val shape = RoundedCornerShape(16.dp)
+    val shape = SimAnalyzerTheme.corners.card
     val borderColor = SimAnalyzerTheme.material.primary.copy(alpha = 0.25f)
     val bg = SimAnalyzerTheme.material.background
 
@@ -148,12 +145,12 @@ private fun HudPreviewBox() {
                 .padding(start = 6.dp, bottom = 6.dp)
                 .width(width = 210.dp)
                 .height(height = 60.dp)
-                .clip(shape = RoundedCornerShape(10.dp))
+                .clip(shape = SimAnalyzerTheme.corners.item)
                 .background(color = SimAnalyzerTheme.material.surface.copy(alpha = 0.5f))
                 .border(
                     width = 1.dp,
                     color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = SimAnalyzerTheme.corners.item,
                 ),
         ) {
             val red = SimAnalyzerTheme.extended.red
@@ -187,12 +184,12 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
             .width(width = 120.dp)
             .fillMaxWidth(fraction = 0.45f)
             .height(height = 110.dp)
-            .clip(shape = RoundedCornerShape(12.dp))
+            .clip(shape = SimAnalyzerTheme.corners.field)
             .background(color = SimAnalyzerTheme.material.surface.copy(alpha = 0.55f))
             .border(
                 width = 1.dp,
                 color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f),
-                shape = RoundedCornerShape(12.dp),
+                shape = SimAnalyzerTheme.corners.field,
             )
             .padding(10.dp),
     ) {
@@ -201,7 +198,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .height(14.dp)
                     .fillMaxWidth(0.75f)
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(SimAnalyzerTheme.corners.compact)
                     .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.12f)),
             )
             Spacer(Modifier.height(6.dp))
@@ -209,7 +206,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .height(10.dp)
                     .fillMaxWidth(0.65f)
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(SimAnalyzerTheme.corners.compact)
                     .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f)),
             )
             Spacer(Modifier.height(6.dp))
@@ -217,7 +214,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .height(10.dp)
                     .fillMaxWidth(0.55f)
-                    .clip(RoundedCornerShape(6.dp))
+                    .clip(SimAnalyzerTheme.corners.compact)
                     .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.10f)),
             )
             Spacer(Modifier.height(10.dp))
@@ -225,7 +222,7 @@ private fun ExampleHud(modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .height(34.dp)
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
+                    .clip(SimAnalyzerTheme.corners.control)
                     .background(SimAnalyzerTheme.material.onSurface.copy(alpha = 0.08f)),
             )
         }

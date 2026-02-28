@@ -7,8 +7,6 @@ internal data class InputsHudUiState(
     val isShow: Boolean = false,
     val isSessionActive: Boolean = false,
 
-    val title: String = "Inputs",
-
     val throttle: Float = 0f,
     val brake: Float = 0f,
     val clutch: Float = 0f,

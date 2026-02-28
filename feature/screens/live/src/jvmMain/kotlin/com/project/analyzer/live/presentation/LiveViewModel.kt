@@ -1,49 +1,45 @@
 package com.project.analyzer.live.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
+import com.project.analyzer.live.domain.mapper.LiveScreenStateMapper
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
 
 @Inject
-internal class LiveViewModel(private val useCase: LiveTelemetryUseCase) : LeakAwareViewModel() {
+internal class LiveViewModel(
+    private val useCase: LiveTelemetryUseCase,
+    private val uiStateMapper: LiveScreenStateMapper,
+) : LeakAwareMviViewModel<LiveIntent, LiveScreenState>(LiveScreenState()) {
 
-    private var job: Job? = null
-    private val _state = MutableStateFlow(LiveScreenState())
-    val state: StateFlow<LiveScreenState> = _state.asStateFlow()
+    private var telemetryJob: Job? = null
 
-    fun dispatch(intent: LiveIntent) {
+    override suspend fun handleIntent(intent: LiveIntent) {
         when (intent) {
-            is LiveIntent.Start -> startListening()
+            LiveIntent.Start -> startListening()
         }
     }
 
     private fun startListening() {
-        job?.cancel()
-        job = useCase.telemetryFlow
-            .onEach { result -> handleResult(result) }
+        if (telemetryJob?.isActive == true) return
+        telemetryJob?.cancel()
+        telemetryJob = useCase.telemetryFlow
+            .onEach(::handleResult)
             .launchIn(viewModelScope)
     }
 
     private fun handleResult(result: LiveTelemetryResult) {
         when (result) {
-            is LiveTelemetryResult.SessionEnded -> {
-            }
+            is LiveTelemetryResult.SessionEnded -> Unit
 
-            is LiveTelemetryResult.SessionReset -> {
-                _state.update { LiveScreenState() }
-            }
+            LiveTelemetryResult.SessionReset -> setState(LiveScreenState())
 
             is LiveTelemetryResult.Data -> {
-                _state.update { result.state }
+                uiStateMapper.map(result.frame)?.let(::setState)
             }
         }
     }

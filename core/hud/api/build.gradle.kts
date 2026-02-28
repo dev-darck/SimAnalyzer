@@ -1,4 +1,5 @@
 moduleApi {
     compose()
+    resources()
     metro()
 }

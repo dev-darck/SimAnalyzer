@@ -21,10 +21,6 @@ class ProjectScope(
         configureAppImpl(scope)
     }
 
-    fun configureResources() {
-        configureResourcesImpl()
-    }
-
     fun configureDesktopApp(scope: JvmApplication.() -> Unit = {}) {
         configureDesktopAppImpl(scope)
     }
@@ -41,8 +37,8 @@ class ProjectScope(
         configureLibraryImpl()
     }
 
-    fun compose() {
-        composeImpl()
+    fun compose(storytale: Boolean = false) {
+        composeImpl(storytale)
     }
 
     fun resources() {

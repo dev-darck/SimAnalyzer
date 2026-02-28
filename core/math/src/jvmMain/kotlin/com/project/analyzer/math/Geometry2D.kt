@@ -34,15 +34,17 @@ public object Geometry2D {
         epsParallel: Float = MathEps.PARALLEL,
         epsParam: Float = MathEps.PARAM,
     ): SegmentIntersection? {
-        val r = p1 - p0
-        val s = q1 - q0
-
-        val rxs = r cross s
+        val rx = p1.x - p0.x
+        val ry = p1.y - p0.y
+        val sx = q1.x - q0.x
+        val sy = q1.y - q0.y
+        val rxs = rx * sy - ry * sx
         if (abs(rxs) < epsParallel) return null
 
-        val qmp = q0 - p0
-        val tRaw = (qmp cross s) / rxs
-        val uRaw = (qmp cross r) / rxs
+        val qmpx = q0.x - p0.x
+        val qmpy = q0.y - p0.y
+        val tRaw = (qmpx * sy - qmpy * sx) / rxs
+        val uRaw = (qmpx * ry - qmpy * rx) / rxs
 
         val tIn = (tRaw >= -epsParam && tRaw <= 1f + epsParam)
         val uIn = (uRaw >= -epsParam && uRaw <= 1f + epsParam)
@@ -51,7 +53,10 @@ public object Geometry2D {
         return SegmentIntersection(t = tRaw, u = uRaw)
     }
 
-    public fun pointOnSegment(p0: Vec2, p1: Vec2, t: Float): Vec2 = p0 + (p1 - p0) * t
+    public fun pointOnSegment(p0: Vec2, p1: Vec2, t: Float): Vec2 = Vec2(
+        x = p0.x + (p1.x - p0.x) * t,
+        y = p0.y + (p1.y - p0.y) * t,
+    )
 
     /**
      * True when moving from p0->p1 crosses the gate plane (through [center] with axis [forward])
@@ -66,14 +71,14 @@ public object Geometry2D {
         forward: Vec2,
         dirEps: Float = MathEps.DIR,
     ): Boolean {
-        val d0 = forward.dot(p0 - center)
-        val d1 = forward.dot(p1 - center)
+        val d0 = forward.x * (p0.x - center.x) + forward.y * (p0.y - center.y)
+        val d1 = forward.x * (p1.x - center.x) + forward.y * (p1.y - center.y)
         return (d0 < -dirEps) && (d1 >= -dirEps)
     }
 
     /** How far point [p] lies outside the band |dot(p-center, normal)| <= halfWidth. */
     public fun outsideBandByNormal(p: Vec2, center: Vec2, normal: Vec2, halfWidth: Float): Float {
-        val along = (p - center).dot(normal)
+        val along = (p.x - center.x) * normal.x + (p.y - center.y) * normal.y
         return max(0f, abs(along) - halfWidth)
     }
 }

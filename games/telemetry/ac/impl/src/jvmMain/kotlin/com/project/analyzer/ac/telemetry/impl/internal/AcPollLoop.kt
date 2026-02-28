@@ -14,6 +14,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.util.concurrent.locks.LockSupport
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -101,7 +102,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         when (detection.state) {
             GameConnectionState.DISCONNECTED -> runDisconnectedLoop(onResult)
             GameConnectionState.IN_MENU -> runMenuLoop(onResult)
-            GameConnectionState.IN_SESSION -> runSessionLoop(onResult)
+            GameConnectionState.IN_SESSION -> runSessionLoop(currentCoroutineContext(), onResult)
         }
     }
 
@@ -145,14 +146,15 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         frameId += 1L
         reusableSnapshot.frameId = frameId
         reusableSnapshot.timestampNs = now
+        reusableSnapshot.sessionRestartHint = AcSessionRestartHint.NONE
 
         onResult(PollResult.Frame(reusableSnapshot))
     }
 
-    private suspend fun runSessionLoop(onResult: (PollResult) -> Unit) {
+    private fun runSessionLoop(coroutineContext: CoroutineContext, onResult: (PollResult) -> Unit) {
         var nextTickNanos = System.nanoTime()
 
-        while (currentCoroutineContext().isActive) {
+        while (coroutineContext.isActive) {
             val now = System.nanoTime()
 
             shm.readAll()
@@ -185,6 +187,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
             frameId += 1L
             reusableSnapshot.frameId = frameId
             reusableSnapshot.timestampNs = now
+            reusableSnapshot.sessionRestartHint = AcSessionRestartHint.NONE
             onResult(PollResult.Frame(reusableSnapshot))
 
             lastEmittedFrameNs = now
@@ -203,7 +206,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         }
     }
 
-    private suspend fun sleepUntilNextTick(scheduledTickNs: Long): Long {
+    private fun sleepUntilNextTick(scheduledTickNs: Long): Long {
         val nowNs = System.nanoTime()
 
         val nextTickNs = when {
@@ -219,9 +222,8 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         }
 
         val remainingNs = nextTickNs - nowNs
-        when {
-            remainingNs > DELAY_THRESHOLD_NS -> delay(remainingNs / NS_PER_MS)
-            remainingNs > 0L -> LockSupport.parkNanos(remainingNs)
+        if (remainingNs > 0L) {
+            LockSupport.parkNanos(remainingNs)
         }
 
         return nextTickNs
@@ -253,15 +255,11 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         )
     }
 
-    private fun logStateTransition(
-        oldState: GameConnectionState,
-        oldSource: DataSourceType,
-        detection: Detection,
-    ) {
+    private fun logStateTransition(oldState: GameConnectionState, oldSource: DataSourceType, detection: Detection) {
         val g = shm.graphics
         val p = shm.physics
 
-        logger.atInfo(RATE_LIMITED) {
+        logger.atDebug(RATE_LIMITED) {
             val stateStr = "$oldState($oldSource) -> ${detection.state}(${detection.dataSource}) "
             val fallbackStr = "fallback=${detection.needsFallback} "
             val gfxStr = "gfx(packet=${g.packetId}, status=${g.status}, session=${g.session}, " +
@@ -277,7 +275,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         if (detection.needsFallback == lastNeedsFallback) return
 
         lastNeedsFallback = detection.needsFallback
-        logger.info { "needsFallback changed -> ${detection.needsFallback} (source=$currentDataSource)" }
+        logger.debug { "needsFallback changed -> ${detection.needsFallback} (source=$currentDataSource)" }
     }
 
     private fun detectGameState(): Detection {
@@ -481,9 +479,5 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
 
         val DISCONNECTED_POLL_MIN_MS = 100.milliseconds.inWholeMilliseconds
         val DISCONNECTED_POLL_MAX_MS = 2.seconds.inWholeMilliseconds
-
-        val DELAY_THRESHOLD_NS = 5.milliseconds.inWholeNanoseconds
-
-        val NS_PER_MS = 1.milliseconds.inWholeNanoseconds
     }
 }

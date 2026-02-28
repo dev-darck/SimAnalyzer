@@ -190,11 +190,9 @@ class CarMapper {
         const val MAX_TEMP_C = 200f // Water temp
         const val MAX_EXHAUST_TEMP_C = 1500f
 
-        fun Int.sanitize(min: Int, max: Int): Int =
-            if (this in min..max) this else min
+        fun Int.sanitize(min: Int, max: Int): Int = if (this in min..max) this else min
 
-        fun Float.sanitize(min: Float, max: Float): Float =
-            if (this.isFinite() && this in min..max) this else min
+        fun Float.sanitize(min: Float, max: Float): Float = if (this.isFinite() && this in min..max) this else min
     }
 }
 

@@ -1,0 +1,15 @@
+<resources>
+    <string name="chooser_confirm_file">Select file</string>
+    <string name="chooser_confirm_folder">Select folder</string>
+    <string name="chooser_header_file">Select a file</string>
+    <string name="chooser_header_directory">Select a directory</string>
+    <string name="chooser_no_folder_selected">No folder selected</string>
+    <string name="chooser_hidden_on">Hidden: ON</string>
+    <string name="chooser_hidden_off">Hidden: OFF</string>
+    <string name="chooser_no_selection">No selection</string>
+    <string name="chooser_sidebar_quick_access">Quick access</string>
+    <string name="chooser_sidebar_this_pc">This PC</string>
+    <string name="chooser_tree_select_drive">Select a drive to browse</string>
+    <string name="chooser_tree_expand">Expand</string>
+    <string name="chooser_tree_collapse">Collapse</string>
+</resources>

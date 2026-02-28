@@ -5,6 +5,7 @@ import com.project.analyzer.kmp.configureComposeKmp
 import com.project.analyzer.kmp.configureComposeResources
 import com.project.analyzer.kmp.configureDesktop
 import com.project.analyzer.kmp.configureKmpLibrary
+import com.project.analyzer.kmp.configureStorytale
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.compose.desktop.application.dsl.JvmApplication
@@ -14,10 +15,6 @@ internal fun ProjectScope.configureAppImpl(scope: JvmApplication.() -> Unit = {}
     detektConfiguration()
     configureComposeKmp()
     configureDesktop(scope)
-}
-
-internal fun ProjectScope.configureResourcesImpl() {
-    configureComposeResources()
 }
 
 internal fun ProjectScope.configureDesktopAppImpl(scope: JvmApplication.() -> Unit = {}) {
@@ -40,8 +37,11 @@ internal fun ProjectScope.configureLibraryImpl() {
     configureKmpLibrary()
 }
 
-internal fun ProjectScope.composeImpl() {
+internal fun ProjectScope.composeImpl(storytale: Boolean = false) {
     configureComposeKmp()
+    if (storytale) {
+        configureStorytale()
+    }
 }
 
 internal fun ProjectScope.resourcesImpl() {

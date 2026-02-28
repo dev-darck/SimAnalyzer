@@ -61,11 +61,17 @@ class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
             ) {
                 if (state.recording) {
                     Button(onClick = recorder::stop) {
-                        Text("Stop")
+                        Text(
+                            text = "Stop",
+                            style = SimAnalyzerTheme.typography.labelMedium,
+                        )
                     }
                 } else {
                     Button(onClick = recorder::start) {
-                        Text("Start")
+                        Text(
+                            text = "Start",
+                            style = SimAnalyzerTheme.typography.labelMedium,
+                        )
                     }
                 }
 
@@ -73,14 +79,20 @@ class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
                     onClick = recorder::markPitEntry,
                     enabled = state.recording,
                 ) {
-                    Text("Pit in")
+                    Text(
+                        text = "Pit in",
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
 
                 Button(
                     onClick = recorder::markPitExit,
                     enabled = state.recording,
                 ) {
-                    Text("Pit out")
+                    Text(
+                        text = "Pit out",
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
             }
         }

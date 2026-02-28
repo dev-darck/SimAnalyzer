@@ -1,4 +1,3 @@
 projectScope {
     configureApp()
-    configureResources()
 }

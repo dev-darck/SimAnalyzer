@@ -4,7 +4,7 @@ import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.settings.InputHudSettings
 import kotlinx.coroutines.flow.Flow
 
-interface InputsUseCase {
+internal interface InputsUseCase {
 
     val settings: Flow<InputHudSettings>
     val results: Flow<InputsResult>

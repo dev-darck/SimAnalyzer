@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.analyzer.settings.presentation.components
 
 import androidx.compose.foundation.background
@@ -18,15 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.settings.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.theme.ThemeMode
 import com.project.analyzer.ui.icons.Dark
 import com.project.analyzer.ui.icons.Light
 import com.project.analyzer.ui.icons.System
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun AppearanceBlock(
@@ -41,17 +43,15 @@ internal fun AppearanceBlock(
             .padding(all = 16.dp),
     ) {
         Text(
-            text = "Appearance",
+            text = stringResource(Res.string.appearance_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Theme mode",
+            text = stringResource(Res.string.appearance_theme_mode),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.labelLarge,
         )
         Spacer(modifier = Modifier.height(12.dp))
         Row(
@@ -60,21 +60,21 @@ internal fun AppearanceBlock(
         ) {
             ThemeOption(
                 icon = Icons.Filled.Light,
-                label = "Light",
+                label = stringResource(Res.string.appearance_theme_light),
                 isSelected = selectedTheme == ThemeMode.Light,
                 onClick = { onThemeSelected(ThemeMode.Light) },
                 modifier = Modifier.weight(1f),
             )
             ThemeOption(
                 icon = Icons.Filled.Dark,
-                label = "Dark",
+                label = stringResource(Res.string.appearance_theme_dark),
                 isSelected = selectedTheme == ThemeMode.Dark,
                 onClick = { onThemeSelected(ThemeMode.Dark) },
                 modifier = Modifier.weight(1f),
             )
             ThemeOption(
                 icon = Icons.Filled.System,
-                label = "System",
+                label = stringResource(Res.string.appearance_theme_system),
                 isSelected = selectedTheme == ThemeMode.System,
                 onClick = { onThemeSelected(ThemeMode.System) },
                 modifier = Modifier.weight(1f),
@@ -122,8 +122,7 @@ private fun ThemeOption(
         Text(
             text = label,
             color = contentColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
+            style = SimAnalyzerTheme.typography.labelMedium,
         )
     }
 }

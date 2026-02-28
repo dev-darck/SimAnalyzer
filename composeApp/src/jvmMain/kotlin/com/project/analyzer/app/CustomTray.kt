@@ -266,7 +266,7 @@ private fun TrayMenuContent(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        shape = RoundedCornerShape(14.dp),
+        shape = SimAnalyzerTheme.corners.overlay,
         color = surface,
         shadowElevation = 12.dp,
         border = BorderStroke(1.dp, outline),
@@ -295,13 +295,12 @@ private fun TrayMenuContent(
                     Text(
                         text = brandName,
                         color = textPrimary,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
+                        style = SimAnalyzerTheme.typography.titleSmall,
                     )
                     Text(
                         text = "Tray actions",
                         color = textSecondary,
-                        style = MaterialTheme.typography.labelSmall,
+                        style = SimAnalyzerTheme.typography.labelSmall,
                     )
                 }
 
@@ -402,7 +401,7 @@ private fun TrayMenuItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(SimAnalyzerTheme.corners.item)
             .background(bg)
             .hoverable(interaction)
             .clickable(
@@ -424,8 +423,7 @@ private fun TrayMenuItem(
         Text(
             text = text,
             color = textColor,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium,
+            style = SimAnalyzerTheme.typography.bodySmall,
             modifier = Modifier.weight(1f),
         )
 
@@ -440,7 +438,7 @@ private fun TrayMenuItem(
 private fun StatusPill(text: String, background: Color, foreground: Color) {
     Box(
         modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
+            .clip(SimAnalyzerTheme.corners.pill)
             .background(background)
             .padding(horizontal = 8.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center,
@@ -448,8 +446,7 @@ private fun StatusPill(text: String, background: Color, foreground: Color) {
         Text(
             text = text,
             color = foreground,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
     }
 }

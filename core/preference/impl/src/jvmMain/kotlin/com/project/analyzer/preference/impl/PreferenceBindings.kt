@@ -15,21 +15,23 @@ private const val SESSION_PREF_NAME = "session_preferences.preferences_pb"
 
 @BindingContainer
 @ContributesTo(AppScope::class)
-object PreferenceBindings {
+interface PreferenceBindings {
+    companion object {
 
-    @Provides
-    @UserPref
-    @SingleIn(AppScope::class)
-    fun provideUserPref(directories: AppDirectories): Preference = PreferenceImpl(
-        directories = directories,
-        preferenceName = USER_PREF_NAME,
-    )
+        @Provides
+        @UserPref
+        @SingleIn(AppScope::class)
+        fun provideUserPref(directories: AppDirectories): Preference = PreferenceImpl(
+            directories = directories,
+            preferenceName = USER_PREF_NAME,
+        )
 
-    @Provides
-    @SessionPref
-    @SingleIn(AppScope::class)
-    fun provideSessionPref(directories: AppDirectories): Preference = PreferenceImpl(
-        directories = directories,
-        preferenceName = SESSION_PREF_NAME,
-    )
+        @Provides
+        @SessionPref
+        @SingleIn(AppScope::class)
+        fun provideSessionPref(directories: AppDirectories): Preference = PreferenceImpl(
+            directories = directories,
+            preferenceName = SESSION_PREF_NAME,
+        )
+    }
 }

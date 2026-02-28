@@ -26,6 +26,12 @@ internal class IndexAnalyzer {
     private var distanceKm = 0.0
 
     fun consume(record: IndexRecord) {
+        val previousTimestamp = prevTimestampNs
+        if (previousTimestamp != null && record.timestampNs <= previousTimestamp) {
+            // Protect analytics from duplicate or out-of-order index entries.
+            return
+        }
+
         distanceKm += integrateDistance(prevTimestampNs, prevSpeedKmh, record.timestampNs, record.speedKmh)
         prevTimestampNs = record.timestampNs
         prevSpeedKmh = record.speedKmh
@@ -118,19 +124,20 @@ internal class LapBuilder(
     fun toSummary(): LapSummary {
         val start = startNs
         val end = endNs
-        val complete = start != null && end != null
+        val sectorTimesMs = (0..2).map { index ->
+            sectorTimes[index]?.let { (it / 1_000_000L).toInt() }
+        }
+        val hasFullSectorSet = sectorTimesMs.all { it != null }
+        val complete = start != null && end != null && hasFullSectorSet
         val totalMs = if (complete) {
             ((end - start) / 1_000_000L).toInt()
         } else {
             null
         }
 
-        val sectorTimesMs = (0..2).map { index ->
-            sectorTimes[index]?.let { (it / 1_000_000L).toInt() }
-        }
-
         return LapSummary(
             lap = lap,
+            sessionType = null,
             totalTimeMs = totalMs,
             sectorTimesMs = sectorTimesMs,
             invalid = invalid,

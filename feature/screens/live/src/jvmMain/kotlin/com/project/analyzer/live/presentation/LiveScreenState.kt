@@ -1,7 +1,9 @@
 package com.project.analyzer.live.presentation
 
+import com.project.analyzer.live.presentation.components.ElectronicItemLabel
 import com.project.analyzer.live.presentation.components.ElectronicItemUi
 import com.project.analyzer.live.presentation.components.ElectronicsBlockUi
+import com.project.analyzer.live.presentation.components.ElectronicsTitle
 import com.project.analyzer.live.presentation.components.Sector
 import com.project.analyzer.live.presentation.components.ValueStatus
 import com.project.analyzer.live.presentation.components.WheelPos
@@ -39,12 +41,12 @@ internal data class LiveScreenState(
     ),
 
     val electronics: ElectronicsBlockUi = ElectronicsBlockUi(
-        title = "Electronics",
+        title = ElectronicsTitle.Electronics,
         items = listOf(
-            ElectronicItemUi("TC", "0"),
-            ElectronicItemUi("ABS", "0"),
-            ElectronicItemUi("MAP", "0"),
-            ElectronicItemUi("BB", "0%"),
+            ElectronicItemUi(ElectronicItemLabel.TC, "0"),
+            ElectronicItemUi(ElectronicItemLabel.ABS, "0"),
+            ElectronicItemUi(ElectronicItemLabel.Map, "0"),
+            ElectronicItemUi(ElectronicItemLabel.BrakeBias, "0%"),
         ),
     ),
 

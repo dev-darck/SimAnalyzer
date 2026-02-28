@@ -24,7 +24,7 @@ internal class FuelRepositoryImpl(
     private val logger = logger()
 
     override suspend fun updateIfBetter(
-        carModel: String,
+        carId: Int,
         trackId: String,
         peakLitersPerLap: Double?,
         bestValidLapTimeMs: Int?,
@@ -32,7 +32,7 @@ internal class FuelRepositoryImpl(
         if (peakLitersPerLap == null && bestValidLapTimeMs == null) return
         if (peakLitersPerLap?.isFinite() == false) return
 
-        val existing = load(carModel, trackId)
+        val existing = load(carId, trackId)
 
         val newPeak = when {
             peakLitersPerLap == null || peakLitersPerLap <= 0 -> existing?.peakLitersPerLap
@@ -60,13 +60,13 @@ internal class FuelRepositoryImpl(
             savedAtEpochMs = System.currentTimeMillis(),
         )
 
-        val key = buildKey(carModel, trackId) ?: return
-        logger.info { "FuelRepositoryImpl save fuel consumption data: $dto by key: ${key.name}" }
+        val key = buildKey(carId, trackId) ?: return
+        logger.debug { "FuelRepositoryImpl save fuel consumption data: $dto by key: ${key.name}" }
         preference.put(key to json.encodeToString(FuelDataDto.serializer(), dto))
     }
 
-    override suspend fun load(carModel: String, trackId: String): SavedFuelData? {
-        val key = buildKey(carModel, trackId) ?: return null
+    override suspend fun load(carId: Int, trackId: String): SavedFuelData? {
+        val key = buildKey(carId, trackId) ?: return null
         val jsonString = preference.getOrNull(key) ?: return null
 
         return try {
@@ -82,17 +82,17 @@ internal class FuelRepositoryImpl(
         }
     }
 
-    override suspend fun clear(carModel: String, trackId: String) {
-        val key = buildKey(carModel, trackId) ?: return
+    override suspend fun clear(carId: Int, trackId: String) {
+        val key = buildKey(carId, trackId) ?: return
         preference.remove(key)
     }
 
-    private fun buildKey(carModel: String, trackId: String): StringPrefKey? {
+    private fun buildKey(carId: Int, trackId: String): StringPrefKey? {
         val identity = FuelIdentityKey.from(
-            carModel = carModel,
+            carId = carId,
             trackId = trackId,
         ) ?: return null
-        return StringPrefKey("${KEY_PREFIX}${identity.carModel}_${identity.trackId}")
+        return StringPrefKey("${KEY_PREFIX}${identity.carId}_${identity.trackId}")
     }
 
     @Serializable

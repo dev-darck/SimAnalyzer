@@ -1,12 +1,12 @@
 package com.project.analyzer.calibration.presentation.verify
 
-import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
-import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
-import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
+import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationCarPose
+import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugGateDetector
+import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugLapAnalyzer
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,16 +14,16 @@ import kotlinx.coroutines.flow.update
 import kotlin.math.abs
 import kotlin.math.atan2
 
-class UiStatePublisher(
+internal class UiStatePublisher(
     private val state: MutableStateFlow<CalibrationVerifyState>,
     private val overlayDebugBus: OverlayDebugBus,
-    private val lapAnalyzer: FallbackLapAnalyzer,
-    private val gateDetector: GateCrossingDetector,
+    private val lapAnalyzer: AcCalibrationDebugLapAnalyzer,
+    private val gateDetector: AcCalibrationDebugGateDetector,
 ) {
 
     private val gateCrossedTimes = mutableMapOf<String, Long>()
 
-    fun publish(nowNs: Long, carPose: CarPose, calibration: TrackCalibration, speedKmh: Float) {
+    fun publish(nowNs: Long, carPose: AcCalibrationCarPose, calibration: TrackCalibration, speedKmh: Float) {
         val snapshot = lapAnalyzer.getSnapshot(nowNs)
 
         val headingDeg = if (carPose.headingDir.len() > 0.01f) {
@@ -84,8 +84,8 @@ class UiStatePublisher(
     }
 
     fun markCrossingsUsingDetector(
-        prev: CarPose,
-        cur: CarPose,
+        prev: AcCalibrationCarPose,
+        cur: AcCalibrationCarPose,
         cal: TrackCalibration,
         currentSectorIndex: Int,
         isLapRunning: Boolean,
@@ -95,8 +95,7 @@ class UiStatePublisher(
             if (!allowed) return
             if (gateCrossedTimes[key] != null) return
 
-            val crossing = gateDetector.detectCrossing(prev, cur, gate)
-            if (crossing != null) {
+            if (gateDetector.hasCrossing(prev, cur, gate)) {
                 gateCrossedTimes[key] = nowMs
             }
         }
@@ -111,7 +110,7 @@ class UiStatePublisher(
         }
     }
 
-    private fun buildGateInfo(carPose: CarPose, cal: TrackCalibration): List<GateDebugInfo> =
+    private fun buildGateInfo(carPose: AcCalibrationCarPose, cal: TrackCalibration): List<GateDebugInfo> =
         cal.gates.map { (key, gate) ->
             val (inside, margin, dParallel) = calculateOutOfWidth(carPose.position, gate)
             buildGateDebugInfo(

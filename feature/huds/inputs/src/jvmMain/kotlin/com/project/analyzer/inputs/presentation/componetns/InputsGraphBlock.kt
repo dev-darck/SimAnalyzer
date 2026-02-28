@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.inputs.presentation.componetns
 
 import androidx.compose.foundation.Canvas
@@ -21,9 +23,11 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.feature.huds.inputs.Res.*
 import com.project.analyzer.inputs.presentation.InputsHudUiState
 import com.project.analyzer.inputs.presentation.model.InputsSeries
 import com.project.analyzer.theme.SimAnalyzerTheme
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
 private val dash = PathEffect.dashPathEffect(floatArrayOf(6f, 6f))
@@ -42,11 +46,23 @@ internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modi
                     .fillMaxHeight(),
                 horizontalAlignment = Alignment.End,
             ) {
-                Text(text = "100", color = SimAnalyzerTheme.material.onSurfaceVariant)
+                Text(
+                    text = stringResource(Res.string.inputs_graph_axis_100),
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
+                    style = SimAnalyzerTheme.typography.labelSmall,
+                )
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "50", color = SimAnalyzerTheme.material.onSurfaceVariant)
+                Text(
+                    text = stringResource(Res.string.inputs_graph_axis_50),
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
+                    style = SimAnalyzerTheme.typography.labelSmall,
+                )
                 Spacer(modifier = Modifier.weight(1f))
-                Text(text = "0", color = SimAnalyzerTheme.material.onSurfaceVariant)
+                Text(
+                    text = stringResource(Res.string.inputs_graph_axis_0),
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
+                    style = SimAnalyzerTheme.typography.labelSmall,
+                )
             }
 
             Spacer(Modifier.width(8.dp))
@@ -77,8 +93,6 @@ internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modi
             val midY = top + plotH * 0.5f
 
             fun yPedal(v: Float): Float = bottom - v.coerceIn(0f, 1f) * plotH
-            fun ySteer(s: Float): Float = midY - s.coerceIn(-1f, 1f) * (plotH * 0.5f)
-
             for (k in 0..4) {
                 val v = k / 4f
                 val y = yPedal(v)
@@ -114,8 +128,10 @@ internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modi
                     series = state.series,
                     left = left,
                     plotW = plotW,
-                    yMap = ::yPedal,
-                    pick = { t, _, _, _ -> t },
+                    plotH = plotH,
+                    bottom = bottom,
+                    midY = midY,
+                    channel = InputsGraphChannel.Throttle,
                     color = tColor,
                     path = throttlePath,
                 )
@@ -125,8 +141,10 @@ internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modi
                     series = state.series,
                     left = left,
                     plotW = plotW,
-                    yMap = ::yPedal,
-                    pick = { _, b, _, _ -> b },
+                    plotH = plotH,
+                    bottom = bottom,
+                    midY = midY,
+                    channel = InputsGraphChannel.Brake,
                     color = bColor,
                     path = brakePath,
                 )
@@ -136,8 +154,10 @@ internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modi
                     series = state.series,
                     left = left,
                     plotW = plotW,
-                    yMap = ::yPedal,
-                    pick = { _, _, c, _ -> c },
+                    plotH = plotH,
+                    bottom = bottom,
+                    midY = midY,
+                    channel = InputsGraphChannel.Clutch,
                     color = cColor,
                     path = clutchPath,
                 )
@@ -147,8 +167,10 @@ internal fun InputsGraphBlock(state: InputsHudUiState, modifier: Modifier = Modi
                     series = state.series,
                     left = left,
                     plotW = plotW,
-                    yMap = ::ySteer,
-                    pick = { _, _, _, s -> s },
+                    plotH = plotH,
+                    bottom = bottom,
+                    midY = midY,
+                    channel = InputsGraphChannel.Steer,
                     color = sColor,
                     path = steerPath,
                 )
@@ -161,8 +183,10 @@ private fun DrawScope.drawSeries(
     series: InputsSeries,
     left: Float,
     plotW: Float,
-    yMap: (Float) -> Float,
-    pick: (t: Float, b: Float, c: Float, s: Float) -> Float,
+    plotH: Float,
+    bottom: Float,
+    midY: Float,
+    channel: InputsGraphChannel,
     color: Color,
     path: Path,
 ) {
@@ -173,12 +197,22 @@ private fun DrawScope.drawSeries(
     val maxPoints = plotW.roundToInt().coerceAtLeast(2)
     val step = ((n - 1) + (maxPoints - 2)) / (maxPoints - 1)
     path.reset()
+    val halfPlotH = plotH * 0.5f
 
     var first = true
     series.forEachOldestToNewest(step = step) { i, t, b, c, s ->
         val x = left + i * dx
-        val v = pick(t, b, c, s)
-        val y = yMap(v)
+        val v = when (channel) {
+            InputsGraphChannel.Throttle -> t
+            InputsGraphChannel.Brake -> b
+            InputsGraphChannel.Clutch -> c
+            InputsGraphChannel.Steer -> s
+        }
+        val y = if (channel == InputsGraphChannel.Steer) {
+            midY - v.coerceIn(-1f, 1f) * halfPlotH
+        } else {
+            bottom - v.coerceIn(0f, 1f) * plotH
+        }
         if (first) {
             path.moveTo(x, y)
             first = false
@@ -196,4 +230,11 @@ private fun DrawScope.drawSeries(
             join = StrokeJoin.Round,
         ),
     )
+}
+
+private enum class InputsGraphChannel {
+    Throttle,
+    Brake,
+    Clutch,
+    Steer,
 }

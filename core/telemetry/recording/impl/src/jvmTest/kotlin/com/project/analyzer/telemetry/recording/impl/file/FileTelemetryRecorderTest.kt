@@ -5,6 +5,11 @@ import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisi
 import com.project.analyzer.telemetry.recording.api.index.TelemetryFrameIndex
 import com.project.analyzer.telemetry.recording.api.payload.TelemetryFramePayload
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionDescriptor
+import com.project.analyzer.telemetry.recording.impl.file.codec.DefaultFrameStorageCodecFactory
+import com.project.analyzer.telemetry.recording.impl.file.engine.DefaultTelemetryFileActiveSessionsFactory
+import com.project.analyzer.telemetry.recording.impl.file.engine.DefaultTelemetryFileCommandProcessorFactory
+import com.project.analyzer.telemetry.recording.impl.file.session.FileTelemetrySessionStore
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -38,13 +43,7 @@ class FileTelemetryRecorderTest {
             maxRecordedLaps = 0,
         )
         val settings = TestSettings(config)
-        val compressor = TelemetrySessionCompressor(json)
-        val recorder = FileTelemetryRecorder(
-            settings = settings,
-            json = json,
-            compressor = compressor,
-            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
-        )
+        val recorder = createRecorder(settings, UnconfinedTestDispatcher(testScheduler))
 
         val descriptor = TelemetrySessionDescriptor(
             sessionId = 42L,
@@ -70,7 +69,7 @@ class FileTelemetryRecorderTest {
             TelemetryFramePayload(
                 sessionId = 42L,
                 gameId = "ac",
-                timestampNs = 10L,
+                timestampNs = 10_000_000L,
                 frameId = 1L,
                 payloadType = PAYLOAD_TYPE,
                 dataSourceId = DATA_SOURCE_ID,
@@ -82,7 +81,7 @@ class FileTelemetryRecorderTest {
             TelemetryFramePayload(
                 sessionId = 42L,
                 gameId = "ac",
-                timestampNs = 20L,
+                timestampNs = 40_000_000L,
                 frameId = 2L,
                 payloadType = PAYLOAD_TYPE,
                 dataSourceId = DATA_SOURCE_ID,
@@ -123,7 +122,7 @@ class FileTelemetryRecorderTest {
             assertEquals(PAYLOAD_TYPE, String(type, Charsets.UTF_8))
             assertEquals(PAYLOAD_SIZE, input.readInt())
 
-            assertEquals(10L, input.readLong())
+            assertEquals(10_000_000L, input.readLong())
             assertEquals(1L, input.readLong())
             assertEquals(DATA_SOURCE_ID, input.readUnsignedByte())
             assertEquals(PAYLOAD_SIZE, input.readInt())
@@ -141,7 +140,7 @@ class FileTelemetryRecorderTest {
             assertEquals(INDEX_RECORD_SIZE, input.readInt())
             assertEquals(0, input.readInt())
 
-            assertEquals(10L, input.readLong())
+            assertEquals(10_000_000L, input.readLong())
             assertEquals(1L, input.readLong())
             assertEquals(DATA_SOURCE_ID, input.readUnsignedByte())
             input.skipBytes(3)
@@ -177,14 +176,7 @@ class FileTelemetryRecorderTest {
             maxRecordedLaps = 0,
         )
         val settings = TestSettings(config)
-        val compressor = TelemetrySessionCompressor(json)
-
-        val recorder = FileTelemetryRecorder(
-            settings = settings,
-            json = json,
-            compressor = compressor,
-            ioDispatcher = UnconfinedTestDispatcher(testScheduler),
-        )
+        val recorder = createRecorder(settings, UnconfinedTestDispatcher(testScheduler))
 
         val descriptor = TelemetrySessionDescriptor(
             sessionId = 7L,
@@ -199,7 +191,7 @@ class FileTelemetryRecorderTest {
             TelemetryFramePayload(
                 sessionId = 7L,
                 gameId = "ac",
-                timestampNs = 1L,
+                timestampNs = 10_000_000L,
                 frameId = 1L,
                 payloadType = PAYLOAD_TYPE,
                 dataSourceId = DATA_SOURCE_ID,
@@ -211,7 +203,7 @@ class FileTelemetryRecorderTest {
             TelemetryFramePayload(
                 sessionId = 7L,
                 gameId = "ac",
-                timestampNs = 2L,
+                timestampNs = 20_000_000L,
                 frameId = 2L,
                 payloadType = PAYLOAD_TYPE,
                 dataSourceId = DATA_SOURCE_ID,
@@ -223,7 +215,7 @@ class FileTelemetryRecorderTest {
             TelemetryFramePayload(
                 sessionId = 7L,
                 gameId = "ac",
-                timestampNs = 3L,
+                timestampNs = 40_000_000L,
                 frameId = 3L,
                 payloadType = PAYLOAD_TYPE,
                 dataSourceId = DATA_SOURCE_ID,
@@ -266,6 +258,27 @@ class FileTelemetryRecorderTest {
 
         override fun observeConfig(): Flow<TelemetryAcquisitionConfig> = flowOf(config)
         override suspend fun currentConfig(): TelemetryAcquisitionConfig = config
+    }
+
+    private fun createRecorder(
+        settings: TelemetryAcquisitionSettings,
+        dispatcher: CoroutineDispatcher,
+    ): FileTelemetryRecorder {
+        val compressor = TelemetrySessionCompressor(json)
+        val sessionStore = FileTelemetrySessionStore(
+            json = json,
+            frameStorageCodecFactory = DefaultFrameStorageCodecFactory,
+            frameWriteAdapters = emptyList(),
+        )
+        return FileTelemetryRecorder(
+            settings = settings,
+            commandProcessorFactory = DefaultTelemetryFileCommandProcessorFactory(
+                sessionStore = sessionStore,
+                activeSessionsFactory = DefaultTelemetryFileActiveSessionsFactory,
+            ),
+            compressionService = compressor,
+            ioDispatcher = dispatcher,
+        )
     }
 
     private fun openMaybeCompressed(file: File) =

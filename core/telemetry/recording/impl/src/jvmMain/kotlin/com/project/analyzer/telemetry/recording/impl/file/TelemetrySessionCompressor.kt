@@ -10,12 +10,14 @@ import kotlinx.serialization.json.Json
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.zip.Deflater
 import java.util.zip.GZIPOutputStream
 
 @Inject
 @SingleIn(SessionScope::class)
-class TelemetrySessionCompressor(private val json: Json) {
-    internal fun compress(task: SessionCompressionTask) {
+internal class TelemetrySessionCompressor(private val json: Json) : TelemetrySessionCompressionService {
+
+    override fun compress(task: SessionCompressionTask) {
         val metaFile = task.metaFile
         val dir = metaFile.parentFile ?: return
         val metadata = task.metadata
@@ -24,9 +26,7 @@ class TelemetrySessionCompressor(private val json: Json) {
         val indexName = compressFileIfNeeded(File(dir, metadata.indexFile))
         val eventsName = compressFileIfNeeded(File(dir, metadata.eventsFile))
 
-        if (framesName == null && indexName == null && eventsName == null) {
-            return
-        }
+        if (framesName == null && indexName == null && eventsName == null) return
 
         val updated = metadata.copy(
             framesFile = framesName ?: metadata.framesFile,
@@ -46,7 +46,10 @@ class TelemetrySessionCompressor(private val json: Json) {
 
         return try {
             source.inputStream().use { input ->
-                GZIPOutputStream(BufferedOutputStream(FileOutputStream(tmp))).use { output ->
+                GZIPOutputStream(
+                    BufferedOutputStream(FileOutputStream(tmp)),
+                    Deflater.BEST_COMPRESSION,
+                ).use { output ->
                     input.copyTo(output)
                 }
             }
@@ -77,9 +80,9 @@ class TelemetrySessionCompressor(private val json: Json) {
     private fun writeMetadata(metaFile: File, metadata: SessionMetadata) {
         runCatching {
             val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
-            tmp.writeText(json.encodeToString(metadata))
+            tmp.writeText(json.encodeToString(SessionMetadata.serializer(), metadata))
             if (!tmp.renameTo(metaFile)) {
-                metaFile.writeText(json.encodeToString(metadata))
+                metaFile.writeText(json.encodeToString(SessionMetadata.serializer(), metadata))
                 tmp.delete()
             }
         }.onFailure { e ->

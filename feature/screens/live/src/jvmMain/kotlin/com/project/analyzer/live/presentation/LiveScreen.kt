@@ -17,8 +17,12 @@ import com.project.analyzer.live.presentation.components.TelemetryInputsBlock
 import com.project.analyzer.live.presentation.components.TimingBoardBlock
 import com.project.analyzer.live.presentation.components.WheelsBlock
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.adaptive.ResponsiveGridMode
 import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+
+private val LIVE_TALL_CARD_HEIGHT = 200.dp
+private val LIVE_COMPACT_CARD_HEIGHT = 208.dp
 
 @Composable
 internal fun LiveScreen() {
@@ -36,6 +40,7 @@ internal fun LiveScreen() {
 private fun Screen(state: LiveScreenState = LiveScreenState()) {
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp),
+        gridMode = ResponsiveGridMode.Grid,
         backgroundColor = SimAnalyzerTheme.material.background,
     ) {
         item(key = "TelemetryBlock", isContentFull = true) {
@@ -51,7 +56,7 @@ private fun Screen(state: LiveScreenState = LiveScreenState()) {
 
         item("TimingBoardBlock") {
             TimingBoardBlock(
-                modifier = Modifier.height(230.dp),
+                modifier = Modifier.height(LIVE_TALL_CARD_HEIGHT),
                 bestLapTime = state.bestLapTime,
                 currentLapTime = state.currentLapTime,
                 lastLapTime = state.lastLapTime,
@@ -65,7 +70,7 @@ private fun Screen(state: LiveScreenState = LiveScreenState()) {
 
         item("TelemetryInputsBlock") {
             TelemetryInputsBlock(
-                modifier = Modifier,
+                modifier = Modifier.height(LIVE_TALL_CARD_HEIGHT),
                 clutch = state.clutch,
                 brake = state.brake,
                 throttle = state.throttle,
@@ -75,7 +80,9 @@ private fun Screen(state: LiveScreenState = LiveScreenState()) {
 
         item("FuelSectorsBlock") {
             FuelSectorsBlock(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LIVE_COMPACT_CARD_HEIGHT),
                 fuelLiters = state.fuelLiters,
                 estLaps = state.estLaps,
                 sectors = state.sectors,
@@ -86,7 +93,9 @@ private fun Screen(state: LiveScreenState = LiveScreenState()) {
         item("ElectronicsBlock") {
             ElectronicsBlock(
                 data = state.electronics,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(LIVE_COMPACT_CARD_HEIGHT),
             )
         }
 

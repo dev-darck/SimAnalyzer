@@ -21,33 +21,35 @@ import kotlinx.serialization.json.Json
 
 @ContributesTo(HudScope::class)
 @BindingContainer
-object FuelHudBindings {
+interface FuelHudBindings {
+    companion object {
 
-    @Provides
-    @SingleIn(HudScope::class)
-    private fun provideFuelConsumptionUseCase(
-        telemetry: TelemetryLifecycle,
-        engine: FuelConsumptionEngine,
-        repository: FuelRepository,
-    ): FuelConsumptionUseCase = FuelConsumptionUseCaseImpl(
-        telemetry = telemetry,
-        engine = engine,
-        repository = repository,
-    )
+        @Provides
+        @SingleIn(HudScope::class)
+        private fun provideFuelConsumptionUseCase(
+            telemetry: TelemetryLifecycle,
+            engine: FuelConsumptionEngine,
+            repository: FuelRepository,
+        ): FuelConsumptionUseCase = FuelConsumptionUseCaseImpl(
+            telemetry = telemetry,
+            engine = engine,
+            repository = repository,
+        )
 
-    @Provides
-    @SingleIn(HudScope::class)
-    private fun provideFuelRepository(
-        @SessionPref
-        preference: Preference,
-        json: Json,
-    ): FuelRepository = FuelRepositoryImpl(
-        preference = preference,
-        json = json,
-    )
+        @Provides
+        @SingleIn(HudScope::class)
+        private fun provideFuelRepository(
+            @SessionPref
+            preference: Preference,
+            json: Json,
+        ): FuelRepository = FuelRepositoryImpl(
+            preference = preference,
+            json = json,
+        )
 
-    @Provides
-    @IntoMap
-    @ViewModelKey(FuelHudViewModel::class)
-    private fun provideFuelHudViewModel(useCase: FuelConsumptionUseCase): ViewModel = FuelHudViewModel(useCase)
+        @Provides
+        @IntoMap
+        @ViewModelKey(FuelHudViewModel::class)
+        private fun provideFuelHudViewModel(useCase: FuelConsumptionUseCase): ViewModel = FuelHudViewModel(useCase)
+    }
 }

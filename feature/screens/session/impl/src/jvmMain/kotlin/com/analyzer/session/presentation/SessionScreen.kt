@@ -1,25 +1,21 @@
 package com.analyzer.session.presentation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.session.presentation.components.SessionScreenHeader
 import com.analyzer.session.presentation.components.SessionScreenStatsRow
 import com.analyzer.session.presentation.components.SessionScreenTable
-import com.analyzer.session.presentation.model.DropdownFilterUi
-import com.analyzer.session.presentation.model.DropdownOptionUi
 import com.analyzer.session.presentation.model.FILTER_ALL_ID
+import com.analyzer.session.presentation.model.SessionFilterKind
+import com.analyzer.session.presentation.model.SessionFilterOptionUi
+import com.analyzer.session.presentation.model.SessionFilterUiModel
 import com.analyzer.session.presentation.model.SessionListIntent
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
@@ -27,6 +23,7 @@ import com.analyzer.session.presentation.model.SessionStatsUi
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.components.ScrollableScreenColumn
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Composable
@@ -34,6 +31,23 @@ internal fun SessionScreen() {
     val viewModel = metroViewModel<SessionListViewModel>()
     val navigator = LocalNavigator.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val existingSessionIds = remember(state.sessions) {
+        state.sessions.mapTo(HashSet(state.sessions.size)) { it.sessionId }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.dispatch(SessionListIntent.Start)
+    }
+
+    DisposableEffect(navigator, existingSessionIds) {
+        navigator.registerForwardValidator(Route.SessionRoot.SessionDetails::class) { route ->
+            val detailsRoute = route as? Route.SessionRoot.SessionDetails ?: return@registerForwardValidator true
+            existingSessionIds.contains(detailsRoute.sessionId)
+        }
+        onDispose {
+            navigator.unregisterForwardValidator(Route.SessionRoot.SessionDetails::class)
+        }
+    }
 
     SessionListContent(
         state = state,
@@ -51,14 +65,7 @@ internal fun SessionListContent(
     modifier: Modifier = Modifier,
     onOpenDetails: (Long) -> Unit = {},
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    ScrollableScreenColumn(modifier = modifier) {
         SessionScreenStatsRow(
             stats = state.stats,
             modifier = Modifier.fillMaxWidth(),
@@ -96,49 +103,45 @@ private fun previewState(): SessionListState = SessionListState(
         incidentsCount = 0,
         favoriteCar = "Car Name",
     ),
-    gameFilter = DropdownFilterUi(
-        label = "Game",
+    gameFilter = SessionFilterUiModel(
+        kind = SessionFilterKind.Game,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
         options = listOf(
-            DropdownOptionUi(FILTER_ALL_ID, "All"),
-            DropdownOptionUi("acc", "ACC"),
+            SessionFilterOptionUi(FILTER_ALL_ID),
+            SessionFilterOptionUi("acc", "ACC"),
         ),
     ),
-    trackFilter = DropdownFilterUi(
-        label = "Track",
+    trackFilter = SessionFilterUiModel(
+        kind = SessionFilterKind.Track,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
         options = listOf(
-            DropdownOptionUi(FILTER_ALL_ID, "All"),
-            DropdownOptionUi("spa", "Spa"),
+            SessionFilterOptionUi(FILTER_ALL_ID),
+            SessionFilterOptionUi("spa", "Spa"),
         ),
     ),
-    carFilter = DropdownFilterUi(
-        label = "Car",
+    carFilter = SessionFilterUiModel(
+        kind = SessionFilterKind.Car,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
         options = listOf(
-            DropdownOptionUi(FILTER_ALL_ID, "All"),
-            DropdownOptionUi("car_name", "Car Name"),
+            SessionFilterOptionUi(FILTER_ALL_ID),
+            SessionFilterOptionUi("car_name", "Car Name"),
         ),
     ),
-    dateFilter = DropdownFilterUi(
-        label = "Date",
+    dateFilter = SessionFilterUiModel(
+        kind = SessionFilterKind.Date,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
         options = listOf(
-            DropdownOptionUi(FILTER_ALL_ID, "All"),
-            DropdownOptionUi("oct_2025", "Oct 2025"),
+            SessionFilterOptionUi(FILTER_ALL_ID),
+            SessionFilterOptionUi("oct_2025", "Oct 2025"),
         ),
     ),
-    sortFilter = DropdownFilterUi(
-        label = "Sort by",
-        selectedId = "best",
-        selectedLabel = "Best lap",
+    sortFilter = SessionFilterUiModel(
+        kind = SessionFilterKind.Sort,
+        selectedId = "newest",
         options = listOf(
-            DropdownOptionUi("best", "Best lap"),
-            DropdownOptionUi("latest", "Latest"),
+            SessionFilterOptionUi("newest"),
+            SessionFilterOptionUi("oldest"),
+            SessionFilterOptionUi("best"),
         ),
     ),
     page = 1,
@@ -153,6 +156,13 @@ private fun previewSessions(): List<SessionRowUi> = List(size = 8) { index ->
         dateLabel = "Oct 24, 2025",
         timeLabel = "20:40",
         gameLabel = "ACC",
+        sessionTypeLabel = if (index % 3 == 0) {
+            "Practice"
+        } else if (index % 3 == 1) {
+            "Qualifying"
+        } else {
+            "Race"
+        },
         trackLabel = "Location",
         carLabel = "Car Name",
         lapsLabel = "0",

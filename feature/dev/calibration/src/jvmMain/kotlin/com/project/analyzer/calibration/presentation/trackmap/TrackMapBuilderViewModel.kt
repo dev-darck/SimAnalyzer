@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Inject
-class TrackMapBuilderViewModel(private val recorder: TrackMapRecorder) : LeakAwareViewModel() {
+internal class TrackMapBuilderViewModel(private val recorder: TrackMapRecorder) : LeakAwareViewModel() {
 
     val state: StateFlow<TrackMapRecorderState> = recorder.state
 

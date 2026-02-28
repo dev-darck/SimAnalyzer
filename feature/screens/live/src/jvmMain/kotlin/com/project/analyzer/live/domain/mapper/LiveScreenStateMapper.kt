@@ -3,8 +3,10 @@ package com.project.analyzer.live.domain.mapper
 import com.project.analyzer.live.domain.usecase.GearFilter
 import com.project.analyzer.live.domain.usecase.SectorsFilter
 import com.project.analyzer.live.presentation.LiveScreenState
+import com.project.analyzer.live.presentation.components.ElectronicItemLabel
 import com.project.analyzer.live.presentation.components.ElectronicItemUi
 import com.project.analyzer.live.presentation.components.ElectronicsBlockUi
+import com.project.analyzer.live.presentation.components.ElectronicsTitle
 import com.project.analyzer.live.presentation.components.Sector
 import com.project.analyzer.live.presentation.components.ValueStatus
 import com.project.analyzer.live.presentation.components.WheelPos
@@ -59,7 +61,10 @@ internal class LiveScreenStateMapper {
             maxRpmScale = maxRpm.toMaxRpmScale(),
             gear = gearFilter.filter((car.engine?.gear ?: 1).toDisplayGear()),
 
-            lapCount = frame.lap?.completedLaps ?: frame.session?.completedLaps ?: 0,
+            lapCount = frame.lap?.currentLapIndex
+                ?: frame.lap?.completedLaps?.let { it + 1 }
+                ?: frame.session?.completedLaps?.let { it + 1 }
+                ?: 0,
             bestLapTime = (frame.lap?.bestLapTimeMs)?.fromMsToLapTime() ?: "0:00.000",
             currentLapTime = frame.lap?.currentLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
             lastLapTime = frame.lap?.lastLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
@@ -124,10 +129,10 @@ internal class LiveScreenStateMapper {
         val absInAction = assists?.absInAction ?: false
 
         val title = when {
-            tcInAction && absInAction -> "⚠ TC + ABS"
-            tcInAction -> "⚠ TC Active"
-            absInAction -> "⚠ ABS Active"
-            else -> "Dynamics"
+            tcInAction && absInAction -> ElectronicsTitle.TcAbsActive
+            tcInAction -> ElectronicsTitle.TcActive
+            absInAction -> ElectronicsTitle.AbsActive
+            else -> ElectronicsTitle.Dynamics
         }
 
         val brakeBiasPct = (car?.controls?.brakeBias ?: 0f) * 100f
@@ -146,22 +151,22 @@ internal class LiveScreenStateMapper {
 
         val items = listOf(
             ElectronicItemUi(
-                title = "SLIP (max)",
+                label = ElectronicItemLabel.SlipMax,
                 value = "%.2f".format(Locale.US, maxSlip),
                 highlighted = slipWarning,
             ),
             ElectronicItemUi(
-                title = "LOAD",
+                label = ElectronicItemLabel.Load,
                 value = "${"%.1f".format(Locale.US, maxLoadKn)}kN",
                 highlighted = false,
             ),
             ElectronicItemUi(
-                title = "TYRE (avg)",
+                label = ElectronicItemLabel.TyreAverage,
                 value = "${"%.1f".format(Locale.US, avgTyreTemp)}°",
                 highlighted = avgTyreTemp !in 60f..100f,
             ),
             ElectronicItemUi(
-                title = "BB",
+                label = ElectronicItemLabel.BrakeBias,
                 value = "${"%.1f".format(Locale.US, brakeBiasPct)}%",
                 highlighted = false,
             ),

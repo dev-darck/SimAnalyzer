@@ -7,6 +7,7 @@ import com.project.analyzer.fuel.domain.model.FuelResult
 import com.project.analyzer.fuel.domain.predictor.FuelConsumptionEngine
 import com.project.analyzer.fuel.domain.repository.FuelRepository
 import com.project.analyzer.hud.api.HudScope
+import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionInfo
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.merge
 
 @Inject
 @SingleIn(HudScope::class)
-internal class FuelConsumptionUseCaseImpl(
+class FuelConsumptionUseCaseImpl(
     private val telemetry: TelemetryLifecycle,
     private val engine: FuelConsumptionEngine,
     private val repository: FuelRepository,
@@ -34,6 +35,7 @@ internal class FuelConsumptionUseCaseImpl(
 
     private var currentSession: SessionInfo? = null
     private var savedFuelData: SavedFuelData? = null
+    private var pendingReplacement: PendingReplacement? = null
 
     private var sessionPeakLitersPerLap: Double = 0.0
     private var sessionBestValidLapTimeMs: Int? = null
@@ -76,6 +78,10 @@ internal class FuelConsumptionUseCaseImpl(
             }
 
             is TelemetryLifecycleEvent.SessionStarted -> {
+                if (pendingReplacement != null) {
+                    return onReplacementStarted(event.session)
+                }
+
                 if (activeSessionId != 0L && activeSessionId != event.session.sessionId) {
                     flushIfNeeded(reason = "sessionReplacedByStart")
                 }
@@ -151,6 +157,15 @@ internal class FuelConsumptionUseCaseImpl(
             is TelemetryLifecycleEvent.SessionEnded -> {
                 if (event.sessionId != activeSessionId) return null
 
+                if (event.reason == SessionEndReason.REPLACED_BY_NEW_SESSION) {
+                    pendingReplacement = PendingReplacement(
+                        session = currentSession,
+                        activeSessionId = activeSessionId,
+                    )
+                    mode = Mode.REPLACING
+                    return null
+                }
+
                 flushIfNeeded(reason = "sessionEnded:${event.reason}")
                 resetState(full = true)
 
@@ -195,7 +210,7 @@ internal class FuelConsumptionUseCaseImpl(
 
         currentSession?.toFuelIdentityKey()?.let { key ->
             repository.clear(
-                carModel = key.carModel,
+                carId = key.carId,
                 trackId = key.trackId,
             )
         }
@@ -209,18 +224,18 @@ internal class FuelConsumptionUseCaseImpl(
         if (peak <= 0.0 && best == null) return
 
         repository.updateIfBetter(
-            carModel = key.carModel,
+            carId = key.carId,
             trackId = key.trackId,
             peakLitersPerLap = peak.takeIf { it > 0.0 },
             bestValidLapTimeMs = best,
         )
-        logger.info { "Fuel flush ($reason) key=${key.composite} peak=$peak bestMs=$best" }
+        logger.debug { "Fuel flush ($reason) key=${key.composite} peak=$peak bestMs=$best" }
     }
 
     private suspend fun loadIfIdentityReady(session: SessionInfo): SavedFuelData? {
         val key = session.toFuelIdentityKey() ?: return null
         return repository.load(
-            carModel = key.carModel,
+            carId = key.carId,
             trackId = key.trackId,
         )
     }
@@ -231,6 +246,7 @@ internal class FuelConsumptionUseCaseImpl(
         sessionPeakLitersPerLap = 0.0
         sessionBestValidLapTimeMs = null
         savedFuelData = null
+        pendingReplacement = null
 
         if (full) {
             activeSessionId = 0L
@@ -252,6 +268,7 @@ internal class FuelConsumptionUseCaseImpl(
             },
             carModel = pick(old.carModel, incoming.carModel),
             trackId = pick(old.trackId, incoming.trackId),
+            carId = incoming.carId ?: old.carId,
         )
     }
 
@@ -267,14 +284,71 @@ internal class FuelConsumptionUseCaseImpl(
         val msg = "$prefix sessionId=${session.sessionId} key=${key?.composite ?: "<pending>"}"
         if (msg != lastIdentityLog) {
             lastIdentityLog = msg
-            logger.info { msg }
+            logger.debug { msg }
         }
     }
 
     private fun SessionInfo.toFuelIdentityKey(): FuelIdentityKey? = FuelIdentityKey.from(
-        carModel = carModel,
+        carId = carId,
         trackId = trackId,
     )
+
+    private suspend fun onReplacementStarted(session: SessionInfo): FuelResult? {
+        val pending = pendingReplacement
+        pendingReplacement = null
+
+        val previousSession = pending?.session
+        val shouldPreserve = shouldPreserveAcrossReplacement(previousSession, session)
+        if (!shouldPreserve && pending?.activeSessionId != 0L && pending?.activeSessionId != session.sessionId) {
+            flushIfNeeded(reason = "sessionReplacedByStart")
+        }
+
+        activeSessionId = session.sessionId
+        mode = Mode.RUNNING
+        currentSession = session
+
+        return if (shouldPreserve) {
+            if (savedFuelData == null) {
+                savedFuelData = loadIfIdentityReady(session)
+            }
+            logIdentity("SessionStarted(replacementPreserved)", session)
+            null
+        } else {
+            sessionPeakLitersPerLap = 0.0
+            sessionBestValidLapTimeMs = null
+            engine.reset()
+            savedFuelData = loadIfIdentityReady(session)
+            logIdentity("SessionStarted(replacementReset)", session)
+            FuelResult.Reset
+        }
+    }
+
+    private fun shouldPreserveAcrossReplacement(old: SessionInfo?, new: SessionInfo): Boolean {
+        if (old == null) return false
+        if (old.sessionType == new.sessionType) return false
+        if (!sameTrack(old.trackId, new.trackId)) return false
+        return sameCar(old, new)
+    }
+
+    private fun sameTrack(oldTrackId: String, newTrackId: String): Boolean {
+        val oldTrack = oldTrackId.trim().lowercase()
+        val newTrack = newTrackId.trim().lowercase()
+        if (oldTrack.isBlank() || newTrack.isBlank()) return false
+        return oldTrack == newTrack
+    }
+
+    private fun sameCar(old: SessionInfo, new: SessionInfo): Boolean {
+        val oldCarId = old.carId?.takeIf { it > 0 }
+        val newCarId = new.carId?.takeIf { it > 0 }
+        if (oldCarId != null && newCarId != null) {
+            return oldCarId == newCarId
+        }
+
+        val oldCarModel = old.carModel.trim().lowercase()
+        val newCarModel = new.carModel.trim().lowercase()
+        if (oldCarModel.isBlank() || newCarModel.isBlank()) return false
+        return oldCarModel == newCarModel
+    }
 
     sealed interface Input {
         data class Frame(val frame: TelemetryFrame) : Input
@@ -282,9 +356,15 @@ internal class FuelConsumptionUseCaseImpl(
         data object ManualReset : Input
     }
 
+    private data class PendingReplacement(
+        val session: SessionInfo?,
+        val activeSessionId: Long,
+    )
+
     private enum class Mode {
         NONE,
         RUNNING,
         PAUSED,
+        REPLACING,
     }
 }

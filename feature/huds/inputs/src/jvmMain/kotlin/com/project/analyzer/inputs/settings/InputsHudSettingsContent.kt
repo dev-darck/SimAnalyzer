@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 @file:OptIn(ExperimentalFoundationApi::class)
 
 package com.project.analyzer.inputs.settings
@@ -20,9 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.feature.huds.inputs.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.slider.SettingsIntSliderRow
 import com.project.analyzer.ui.tooltip.Tooltip
+import org.jetbrains.compose.resources.stringResource
 
 private val options = listOf(1, 2, 3)
 
@@ -38,48 +42,60 @@ internal fun InputsHudSettingsContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        SettingSwitch(title = "Throttle line", checked = settings.showThrottle) { v ->
+        SettingSwitch(
+            title = stringResource(Res.string.inputs_settings_throttle_line),
+            checked = settings.showThrottle,
+        ) { v ->
             onChange(settings.copy(showThrottle = v))
         }
-        SettingSwitch(title = "Brake line", checked = settings.showBrake) { v ->
+        SettingSwitch(
+            title = stringResource(Res.string.inputs_settings_brake_line),
+            checked = settings.showBrake,
+        ) { v ->
             onChange(settings.copy(showBrake = v))
         }
-        SettingSwitch(title = "Clutch line", checked = settings.showClutch) { v ->
+        SettingSwitch(
+            title = stringResource(Res.string.inputs_settings_clutch_line),
+            checked = settings.showClutch,
+        ) { v ->
             onChange(settings.copy(showClutch = v))
         }
-        SettingSwitch(title = "Steering line", checked = settings.showSteer) { v ->
+        SettingSwitch(
+            title = stringResource(Res.string.inputs_settings_steering_line),
+            checked = settings.showSteer,
+        ) { v ->
             onChange(settings.copy(showSteer = v))
         }
 
         Spacer(Modifier.height(6.dp))
 
-        SettingSwitch(title = "Header", checked = settings.showHeader) { v ->
+        SettingSwitch(title = stringResource(Res.string.inputs_settings_header), checked = settings.showHeader) { v ->
             onChange(settings.copy(showHeader = v))
         }
-        SettingSwitch(title = "Legend", checked = settings.showLegend) { v ->
+        SettingSwitch(title = stringResource(Res.string.inputs_settings_legend), checked = settings.showLegend) { v ->
             onChange(settings.copy(showLegend = v))
         }
 
         Spacer(Modifier.height(6.dp))
 
         SettingsIntSliderRow(
-            title = "Width",
-            tooltip = "Panel width in dp.",
+            title = stringResource(Res.string.inputs_settings_width),
+            tooltip = stringResource(Res.string.inputs_settings_width_tooltip),
             value = draft.widthDp,
             range = 260..900,
             step = 10,
-            valueSuffix = "dp",
+            valueSuffix = stringResource(Res.string.inputs_settings_value_suffix_dp),
             onPreviewChange = { v -> draft = draft.copy(widthDp = v) },
             onCommit = { onChange(draft) },
         )
 
         SettingsIntSliderRow(
-            title = "Graph height",
-            tooltip = "Graph area height in dp.",
+            title = stringResource(Res.string.inputs_settings_graph_height),
+            tooltip = stringResource(Res.string.inputs_settings_graph_height_tooltip),
             value = draft.graphHeightDp,
             range = 60..120,
             step = 10,
-            valueSuffix = "dp",
+            valueSuffix = stringResource(Res.string.inputs_settings_value_suffix_dp),
             onPreviewChange = { v -> draft = draft.copy(graphHeightDp = v) },
             onCommit = { onChange(draft) },
         )
@@ -101,6 +117,7 @@ private fun SettingSwitch(title: String, checked: Boolean, onChecked: (Boolean) 
             text = title,
             modifier = Modifier.weight(1f),
             color = SimAnalyzerTheme.material.onSurface,
+            style = SimAnalyzerTheme.typography.bodySmall,
         )
         Switch(
             checked = checked,
@@ -113,12 +130,13 @@ private fun SettingSwitch(title: String, checked: Boolean, onChecked: (Boolean) 
 private fun HistoryPicker(valueSec: Int, onSelect: (Int) -> Unit) {
     Column {
         Tooltip(
-            tooltip =
-                "How many seconds of past inputs are visible in the graph.\n" +
-                    "Shorter = more responsive (sharper). Longer = smoother, longer tail.\n" +
-                    "Example: 2s shows only recent changes, 5s shows a longer trace.",
+            tooltip = stringResource(Res.string.inputs_settings_history_tooltip),
         ) {
-            Text(text = "History", color = SimAnalyzerTheme.material.onSurface)
+            Text(
+                text = stringResource(Res.string.inputs_settings_history),
+                color = SimAnalyzerTheme.material.onSurface,
+                style = SimAnalyzerTheme.typography.bodySmall,
+            )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             options.forEach { sec ->
@@ -127,12 +145,13 @@ private fun HistoryPicker(valueSec: Int, onSelect: (Int) -> Unit) {
                     onClick = { onSelect(sec) },
                 ) {
                     Text(
-                        text = "${sec}s",
+                        text = stringResource(Res.string.inputs_settings_history_value, sec.toString()),
                         color = if (selected) {
                             SimAnalyzerTheme.material.primary
                         } else {
                             SimAnalyzerTheme.material.onSurfaceVariant
                         },
+                        style = SimAnalyzerTheme.typography.labelMedium,
                     )
                 }
             }

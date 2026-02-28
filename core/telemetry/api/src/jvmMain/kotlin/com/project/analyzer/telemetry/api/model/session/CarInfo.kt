@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.api.model.session
 
 public data class CarInfo(
     val carModel: String? = null,
+    val carName: String? = null,
     val carSkin: String? = null,
     val carId: Int? = null, // playerCarID
 
@@ -45,6 +46,7 @@ public data class CarInfo(
             return false
         }
         return carModel == other.carModel &&
+            carName == other.carName &&
             carSkin == other.carSkin &&
             carId == other.carId &&
             maxTorqueNm == other.maxTorqueNm &&
@@ -55,6 +57,7 @@ public data class CarInfo(
 
     override fun hashCode(): Int {
         var result = carModel?.hashCode() ?: 0
+        result = 31 * result + (carName?.hashCode() ?: 0)
         result = 31 * result + (carSkin?.hashCode() ?: 0)
         result = 31 * result + (carId ?: 0)
         result = 31 * result + (maxTorqueNm?.hashCode() ?: 0)

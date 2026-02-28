@@ -16,16 +16,18 @@ import dev.zacsweers.metro.StringKey
 
 @ContributesTo(SessionScope::class)
 @BindingContainer
-object LmuTelemetryBindings {
+interface LmuTelemetryBindings {
+    companion object {
 
-    @Provides
-    @IntoMap
-    @StringKey(LMU_KEY)
-    private fun provideLmuTelemetryLifecycle(impl: LmuTelemetryLifecycle): TelemetryLifecycle = impl
+        @Provides
+        @IntoMap
+        @StringKey(LMU_KEY)
+        private fun provideLmuTelemetryLifecycle(impl: LmuTelemetryLifecycle): TelemetryLifecycle = impl
 
-    @Provides
-    private fun provideLmuSharedMemory(impl: DefaultLmuSharedMemory): LmuSharedMemory = impl
+        @Provides
+        private fun provideLmuSharedMemory(impl: DefaultLmuSharedMemory): LmuSharedMemory = impl
 
-    @Provides
-    private fun provideLmuTelemetryFeed(impl: LmuSharedMemoryTelemetryFeed): LmuTelemetryFeed = impl
+        @Provides
+        private fun provideLmuTelemetryFeed(impl: LmuSharedMemoryTelemetryFeed): LmuTelemetryFeed = impl
+    }
 }

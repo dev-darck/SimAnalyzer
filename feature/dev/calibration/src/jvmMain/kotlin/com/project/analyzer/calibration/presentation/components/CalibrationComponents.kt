@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.calibration.presentation.components
 
 import androidx.compose.foundation.background
@@ -21,7 +23,6 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -33,14 +34,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.setup.CalibrationIntent
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
+import com.project.analyzer.feature.dev.calibration.Res.*
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatDecimal
+import org.jetbrains.compose.resources.stringResource
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
@@ -61,14 +64,14 @@ fun CalibrationSectionCard(
         Text(
             text = title,
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.titleMedium,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
         if (subtitle != null) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = subtitle,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
         Spacer(modifier = Modifier.height(12.dp))
@@ -86,13 +89,13 @@ fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit)
         ) {
             Column {
                 Text(
-                    text = "Extra sectors",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = stringResource(Res.string.calibration_extra_sectors_title),
+                    style = SimAnalyzerTheme.typography.titleSmall,
                     color = SimAnalyzerTheme.material.onSurface,
                 )
                 Text(
-                    text = "Sector 1 uses Start/Finish. Each sector ends at the next gate.",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(Res.string.calibration_extra_sectors_subtitle),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -100,34 +103,49 @@ fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit)
             Button(
                 enabled = !state.isBusy,
                 onClick = { dispatch(CalibrationIntent.AddSector) },
-            ) { Text("Add sector") }
+            ) {
+                Text(
+                    text = stringResource(Res.string.calibration_add_sector),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
+            }
         }
 
         if (state.sectorCount <= 1) {
             Text(
-                text = "No extra sectors yet.",
-                style = MaterialTheme.typography.bodySmall,
+                text = stringResource(Res.string.calibration_no_extra_sectors),
+                style = SimAnalyzerTheme.typography.bodySmall,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
         } else {
             for (i in 2..state.sectorCount) {
-                val finishLabel = if (i == state.sectorCount) "Start/Finish" else "S${i + 1} start"
+                val finishLabel = if (i == state.sectorCount) {
+                    stringResource(Res.string.calibration_start_finish)
+                } else {
+                    stringResource(Res.string.calibration_sector_start_title, i + 1)
+                }
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("Sector S$i", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        text = stringResource(Res.string.calibration_sector_title, i),
+                        style = SimAnalyzerTheme.typography.bodyLarge,
+                    )
                     IconButton(
                         enabled = !state.isBusy,
                         onClick = { dispatch(CalibrationIntent.RemoveSector(i)) },
                     ) {
-                        Icon(Icons.Filled.Close, contentDescription = "Remove sector S$i")
+                        Icon(
+                            Icons.Filled.Close,
+                            contentDescription = stringResource(Res.string.calibration_remove_sector, i),
+                        )
                     }
                 }
 
                 GateRow(
-                    title = "S$i start",
+                    title = stringResource(Res.string.calibration_sector_start_title, i),
                     gate = state.sectorStart(i),
                     enabled = !state.isBusy,
                     onClick = { dispatch(CalibrationIntent.CaptureSectorStart(i)) },
@@ -135,8 +153,8 @@ fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit)
                 )
 
                 Text(
-                    text = "Finish: $finishLabel",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(Res.string.calibration_sector_finish, finishLabel),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -150,12 +168,22 @@ internal fun ActionsBlock(state: CalibrationState, onSave: () -> Unit, onReset: 
         Button(
             enabled = !state.isBusy && state.isReadyToSave(),
             onClick = onSave,
-        ) { Text("Save calibration") }
+        ) {
+            Text(
+                text = stringResource(Res.string.calibration_save),
+                style = SimAnalyzerTheme.typography.labelMedium,
+            )
+        }
 
         OutlinedButton(
             enabled = !state.isBusy,
             onClick = onReset,
-        ) { Text("Reset") }
+        ) {
+            Text(
+                text = stringResource(Res.string.calibration_reset),
+                style = SimAnalyzerTheme.typography.labelMedium,
+            )
+        }
     }
 }
 
@@ -166,7 +194,12 @@ internal fun TrackNameBlock(state: CalibrationState, onName: (String) -> Unit) {
             value = state.trackName,
             onValueChange = onName,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Track name") },
+            label = {
+                Text(
+                    text = stringResource(Res.string.calibration_track_name),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
+            },
             singleLine = true,
         )
 
@@ -175,11 +208,11 @@ internal fun TrackNameBlock(state: CalibrationState, onName: (String) -> Unit) {
             .trim()
 
         if (detectedTrack.isNotBlank()) {
-            InfoRow(label = "Detected", value = detectedTrack)
+            InfoRow(label = stringResource(Res.string.calibration_detected), value = detectedTrack)
         }
-        InfoRow(label = "Track ID", value = state.trackId.ifBlank { "-" })
+        InfoRow(label = stringResource(Res.string.calibration_header_track_id), value = state.trackId.ifBlank { "-" })
         state.sessionCarModel?.takeIf { it.isNotBlank() }?.let {
-            InfoRow(label = "Car", value = it)
+            InfoRow(label = stringResource(Res.string.calibration_car), value = it)
         }
     }
 }
@@ -189,8 +222,8 @@ internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Un
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                text = "Reference point",
-                style = MaterialTheme.typography.bodyMedium,
+                text = stringResource(Res.string.calibration_reference_point),
+                style = SimAnalyzerTheme.typography.bodyMedium,
                 color = SimAnalyzerTheme.material.onSurface,
             )
             ReferencePointDropdown(selected = state.referencePoint, onSelected = onRp)
@@ -198,8 +231,8 @@ internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Un
 
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                text = "Capture radius (m)",
-                style = MaterialTheme.typography.bodyMedium,
+                text = stringResource(Res.string.calibration_capture_radius),
+                style = SimAnalyzerTheme.typography.bodyMedium,
                 color = SimAnalyzerTheme.material.onSurface,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -211,8 +244,8 @@ internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Un
                     modifier = Modifier.width(140.dp),
                 )
                 Text(
-                    text = "Keep the car centered on the line when capturing.",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(Res.string.calibration_capture_radius_hint),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -227,19 +260,23 @@ internal fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (Refer
         OutlinedButton(onClick = { expanded = true }) {
             Text(
                 text = selected.displayName(),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
+                style = SimAnalyzerTheme.typography.bodyMedium,
             )
             Spacer(modifier = Modifier.width(6.dp))
             Icon(
                 imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = "Select reference point",
+                contentDescription = stringResource(Res.string.calibration_select_reference_point),
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             ReferencePoint.entries.forEach { rp ->
                 DropdownMenuItem(
-                    text = { Text(rp.displayName()) },
+                    text = {
+                        Text(
+                            text = rp.displayName(),
+                            style = SimAnalyzerTheme.typography.bodySmall,
+                        )
+                    },
                     onClick = {
                         expanded = false
                         onSelected(rp)
@@ -267,19 +304,24 @@ fun GateRow(title: String, gate: Gate?, enabled: Boolean, onClick: () -> Unit, o
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(title, style = SimAnalyzerTheme.typography.bodyLarge)
             if (gate != null) {
                 val fwd = gate.forwardV2()
                 val angle = Math.toDegrees(kotlin.math.atan2(fwd.x.toDouble(), fwd.y.toDouble()))
                 Text(
-                    "pos=(%.1f, %.1f) fwd=%s deg".format(gate.center.x, gate.center.y, "%.0f".format(angle)),
-                    style = MaterialTheme.typography.bodySmall,
+                    stringResource(
+                        Res.string.calibration_gate_details,
+                        formatDecimal(gate.center.x, decimals = 1),
+                        formatDecimal(gate.center.y, decimals = 1),
+                        formatDecimal(angle, decimals = 0),
+                    ),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             } else {
                 Text(
-                    "Not captured",
-                    style = MaterialTheme.typography.bodySmall,
+                    stringResource(Res.string.calibration_gate_not_captured),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -288,11 +330,19 @@ fun GateRow(title: String, gate: Gate?, enabled: Boolean, onClick: () -> Unit, o
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (gate != null && onFlip != null) {
                 OutlinedButton(onClick = onFlip) {
-                    Text("Flip")
+                    Text(
+                        text = stringResource(Res.string.calibration_flip),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
             }
             Button(onClick = onClick, enabled = enabled) {
-                Text(if (gate == null) "Capture" else "Recapture")
+                Text(
+                    text = stringResource(
+                        if (gate == null) Res.string.calibration_capture else Res.string.calibration_recapture,
+                    ),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
             }
         }
     }
@@ -307,12 +357,12 @@ private fun InfoRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurface,
         )
     }
@@ -324,7 +374,9 @@ internal fun copyToClipboard(text: String) {
         .setContents(StringSelection(text), null)
 }
 
-private fun ReferencePoint.displayName(): String {
-    val spaced = name.lowercase().replace('_', ' ')
-    return spaced.replaceFirstChar { it.uppercase() }
+@Composable
+private fun ReferencePoint.displayName(): String = when (this) {
+    ReferencePoint.CAR_CENTER -> stringResource(Res.string.calibration_reference_point_car_center)
+    ReferencePoint.FRONT_AXLE -> stringResource(Res.string.calibration_reference_point_front_axle)
+    ReferencePoint.REAR_AXLE -> stringResource(Res.string.calibration_reference_point_rear_axle)
 }

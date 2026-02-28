@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -34,14 +36,14 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
@@ -101,7 +103,7 @@ internal fun TelemetryBlock(
                 ) {
                     AxisValueWithUnit(
                         value = speedStr,
-                        unit = "km/h",
+                        unit = stringResource(Res.string.telemetry_speed_unit),
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -116,7 +118,7 @@ internal fun TelemetryBlock(
 
                     AxisValueWithUnit(
                         value = rpmText,
-                        unit = "rpm",
+                        unit = stringResource(Res.string.telemetry_rpm_unit),
                         modifier = Modifier
                             .weight(1f)
                             .fillMaxHeight(),
@@ -202,8 +204,7 @@ private fun ScaleLabels(maxScale: Int, labelCount: Int = 6, modifier: Modifier =
             Text(
                 text = v.roundToInt().toString(),
                 color = SimAnalyzerTheme.extended.surface50,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                style = SimAnalyzerTheme.typography.labelMedium,
             )
         }
     }
@@ -214,15 +215,11 @@ private fun AxisValueWithUnit(
     value: String,
     unit: String,
     modifier: Modifier = Modifier,
-    valueStyle: TextStyle = TextStyle(
+    valueStyle: TextStyle = SimAnalyzerTheme.typography.displayMedium.copy(
         color = SimAnalyzerTheme.material.onSurface,
-        fontSize = 58.sp,
-        fontWeight = FontWeight.Bold,
     ),
-    unitStyle: TextStyle = TextStyle(
+    unitStyle: TextStyle = SimAnalyzerTheme.typography.labelLarge.copy(
         color = SimAnalyzerTheme.material.onSurfaceVariant,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
     ),
     axisBiasY: Dp = 0.dp,
 ) {
@@ -281,12 +278,9 @@ private fun AxisValueWithUnit(
 fun GearBadge(gear: Int, size: Dp, baseColor: Color, modifier: Modifier = Modifier) {
     val textMeasurer = rememberTextMeasurer()
     val textColor = SimAnalyzerTheme.material.onPrimary
+    val reverseLabel = stringResource(Res.string.telemetry_reverse_gear)
     val style = remember(textColor) {
-        TextStyle(
-            color = textColor,
-            fontSize = 64.sp,
-            fontWeight = FontWeight.Bold,
-        )
+        SimAnalyzerTheme.typography.displayLarge.copy(color = textColor)
     }
 
     Canvas(modifier = modifier.size(size)) {
@@ -299,7 +293,7 @@ fun GearBadge(gear: Int, size: Dp, baseColor: Color, modifier: Modifier = Modifi
             style = Stroke(width = 4.dp.toPx()),
         )
 
-        val text = AnnotatedString(if (gear == -1) "R" else gear.toString())
+        val text = AnnotatedString(if (gear == -1) reverseLabel else gear.toString())
         val layout = textMeasurer.measure(text = text, style = style)
 
         val x = (this.size.width - layout.size.width) / 2f

@@ -1,9 +1,6 @@
 package com.project.analyzer.calibration.presentation.verify
 
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.FallbackLapAnalyzer
-import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
-import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.calibration.data.model.CalibrationSample
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
@@ -17,6 +14,9 @@ import com.project.analyzer.calibration.presentation.verify.state.CalibrationVer
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
 import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.math.Vec2
+import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationCarPose
+import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugGateDetector
+import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugLapAnalyzer
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
@@ -29,13 +29,13 @@ import kotlinx.coroutines.launch
 import kotlin.math.atan2
 
 @Inject
-class CalibrationVerifyViewModel(
+internal class CalibrationVerifyViewModel(
     private val loadUseCase: LoadTrackCalibrationUseCase,
     private val saveUseCase: SaveTrackCalibrationUseCase,
     private val captureGate: CaptureGateOnStandstillUseCase,
     private val sampleProvider: TelemetrySampleProvider,
-    private val lapAnalyzer: FallbackLapAnalyzer,
-    gateCrossingDetector: GateCrossingDetector,
+    private val lapAnalyzer: AcCalibrationDebugLapAnalyzer,
+    gateCrossingDetector: AcCalibrationDebugGateDetector,
     overlayDebugBus: OverlayDebugBus,
 ) : LeakAwareViewModel() {
 
@@ -55,7 +55,7 @@ class CalibrationVerifyViewModel(
     private var lastPosForVelocity: Vec2? = null
     private var lastTsForVelocityNs: Long = 0L
 
-    private var prevPoseForUiCrossing: CarPose? = null
+    private var prevPoseForUiCrossing: AcCalibrationCarPose? = null
 
     init {
         viewModelScope.launch {
@@ -116,7 +116,7 @@ class CalibrationVerifyViewModel(
 
                     val isMovingForward = velocityDir.dot(headingDir) >= 0f
 
-                    val carPose = CarPose(
+                    val carPose = AcCalibrationCarPose(
                         position = pose.pos,
                         velocityDir = velocityDir,
                         headingDir = headingDir,

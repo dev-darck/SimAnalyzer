@@ -1,73 +1,50 @@
 package com.project.analyzer.hudSettings.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.hud.api.HudPanel
-import com.project.analyzer.impl.compose.HudPreferences
-import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.hudSettings.domain.interactor.HudSettingsUseCase
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.Provider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @Inject
-internal class HudSettingsViewModel(
-    private val preferences: HudPreferences,
-    private val panels: Provider<Set<HudPanel>>,
-) : LeakAwareViewModel() {
-
-    private val _state = MutableStateFlow(HudUiState())
-    val state: StateFlow<HudUiState> = _state.asStateFlow()
+internal class HudSettingsViewModel(private val useCase: HudSettingsUseCase) :
+    LeakAwareMviViewModel<HudSettingsIntent, HudUiState>(HudUiState()) {
 
     init {
         viewModelScope.launch {
-            _state.update {
-                it.copy(
-                    panels = panels.invoke()
-                        .filter { panel -> !panel.isDevOnly }
-                        .sortedBy { panel -> panel.id },
+            val panels = useCase.loadPanels()
+            updateState { copy(panels = panels) }
+        }
+
+        viewModelScope.launch {
+            useCase.observeVisiblePanels().collect { visibleIds ->
+                updateState { useCase.applyVisiblePanels(this, visibleIds) }
+            }
+        }
+
+        viewModelScope.launch {
+            useCase.observeHudOpacity().collect { opacity ->
+                updateState { useCase.applyHudOpacity(this, opacity) }
+            }
+        }
+    }
+
+    override suspend fun handleIntent(intent: HudSettingsIntent) {
+        when (intent) {
+            is HudSettingsIntent.TogglePanel -> {
+                useCase.updateVisiblePanels(
+                    currentVisibleIds = currentState.visiblePanels.keys,
+                    id = intent.id,
+                    enable = intent.enable,
                 )
             }
-        }
-
-        viewModelScope.launch {
-            preferences.observeVisiblePanels().collect { visibleIds ->
-                _state.update { current ->
-                    val newVisible = visibleIds.associateWith { id ->
-                        current.visiblePanels[id] ?: 0
-                    }
-                    current.copy(visiblePanels = newVisible)
-                }
-            }
-        }
-    }
-
-    fun dispatch(intent: HudSettingsIntent) {
-        when (intent) {
-            is HudSettingsIntent.TogglePanel -> togglePanel(intent.id, intent.enable)
 
             is HudSettingsIntent.OnShowPanel -> {
-                viewModelScope.launch {
-                    _state.update {
-                        if (it.panel?.id != intent.id) {
-                            it.copy(panel = it.panels.find { panel -> panel.id == intent.id })
-                        } else {
-                            it.copy(panel = null)
-                        }
-                    }
-                }
+                updateState { useCase.toggleSelectedPanel(this, intent.id) }
             }
-        }
-    }
 
-    private fun togglePanel(id: String, enable: Boolean) {
-        viewModelScope.launch {
-            if (enable) {
-                preferences.saveVisiblePanels(_state.value.visiblePanels.keys + id)
-            } else {
-                preferences.saveVisiblePanels(_state.value.visiblePanels.keys - id)
+            is HudSettingsIntent.UpdateHudOpacity -> {
+                useCase.updateHudOpacity(intent.opacity)
             }
         }
     }

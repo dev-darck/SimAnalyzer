@@ -12,7 +12,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 @Inject
-internal class FuelConsumptionEngine {
+class FuelConsumptionEngine {
     private val tuning: FuelConsumptionTuning
         get() = FuelConsumptionConfig.tuning
 
@@ -40,6 +40,7 @@ internal class FuelConsumptionEngine {
 
     // Session info cache
     private var cachedCarModel: String? = null
+    private var cachedCarId: Int? = null
     private var cachedTrackId: String? = null
     private var cachedTrackLengthM: Double? = null
 
@@ -116,12 +117,14 @@ internal class FuelConsumptionEngine {
         secondsSinceFuelTick = 0.0
 
         cachedCarModel = null
+        cachedCarId = null
         cachedTrackId = null
         cachedTrackLengthM = null
     }
 
     private fun updateSessionCache(frame: TelemetryFrame) {
         frame.session?.car?.carModel?.let { cachedCarModel = it }
+        frame.session?.car?.carId?.takeIf { it > 0 }?.let { cachedCarId = it }
         frame.session?.track?.trackId?.let { cachedTrackId = it }
         frame.session?.track?.lengthMeters
             ?.toDouble()
@@ -275,7 +278,9 @@ internal class FuelConsumptionEngine {
             gameFuelPerLap = gameFuelPerLap,
             gameFuelEstimatedLaps = gameFuelEstimatedLaps,
             carModel = cachedCarModel,
+            carId = cachedCarId,
             trackId = cachedTrackId,
+            currentLapIndex = frame.lap?.currentLapIndex?.takeIf { it > 0 },
             completedLaps = frame.lap?.completedLaps ?: frame.session?.completedLaps ?: 0,
             confidence = estimateConfidence(gameFuelPerLap),
             isCurrentLapValid = frame.lap?.validity.isValid(),

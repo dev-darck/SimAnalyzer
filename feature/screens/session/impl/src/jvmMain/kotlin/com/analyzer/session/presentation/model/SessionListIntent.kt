@@ -1,6 +1,7 @@
 package com.analyzer.session.presentation.model
 
 sealed interface SessionListIntent {
+    data object Start : SessionListIntent
     data object Refresh : SessionListIntent
     data class ChangeGame(val optionId: String) : SessionListIntent
     data class ChangeTrack(val optionId: String) : SessionListIntent

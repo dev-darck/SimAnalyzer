@@ -16,18 +16,23 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(ScreenScope::class)
 @BindingContainer
-object LiveBindings {
+interface LiveBindings {
+    companion object {
 
-    @Provides
-    @SingleIn(ScreenScope::class)
-    private fun provideLiveTelemetryUseCase(
-        telemetryLifecycle: TelemetryLifecycle,
-        liveScreenStateMapper: LiveScreenStateMapper,
-    ): LiveTelemetryUseCase = LiveTelemetryUseCaseImpl(telemetryLifecycle, liveScreenStateMapper)
+        @Provides
+        @SingleIn(ScreenScope::class)
+        private fun provideLiveTelemetryUseCase(telemetryLifecycle: TelemetryLifecycle): LiveTelemetryUseCase =
+            LiveTelemetryUseCaseImpl(telemetryLifecycle)
 
-    @Provides
-    @IntoMap
-    @ViewModelKey(LiveViewModel::class)
-    private fun provideLiveViewModel(liveTelemetryUseCase: LiveTelemetryUseCase): ViewModel =
-        LiveViewModel(liveTelemetryUseCase)
+        @Provides
+        @IntoMap
+        @ViewModelKey(LiveViewModel::class)
+        private fun provideLiveViewModel(
+            liveTelemetryUseCase: LiveTelemetryUseCase,
+            liveScreenStateMapper: LiveScreenStateMapper,
+        ): ViewModel = LiveViewModel(
+            useCase = liveTelemetryUseCase,
+            uiStateMapper = liveScreenStateMapper,
+        )
+    }
 }

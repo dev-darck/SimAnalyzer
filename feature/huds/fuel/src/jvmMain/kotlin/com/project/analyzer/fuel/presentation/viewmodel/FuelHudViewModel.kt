@@ -9,23 +9,19 @@ import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
 import com.project.analyzer.fuel.domain.usecase.FuelConsumptionUseCase
 import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.map.toUiState
-import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.util.Locale
 import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
-internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : LeakAwareViewModel() {
+internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) :
+    LeakAwareMviViewModel<FuelIntent, FuelHudUiState>(FuelHudUiState()) {
 
     private val safetyFactor: Double get() = 1.0 + (FuelConsumptionConfig.safetyMarginPercent / 100.0)
 
@@ -34,18 +30,13 @@ internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : L
     private var fuelEstimateJob: Job? = null
     private var lastDataUiEmitNs: Long = 0L
 
-    private val _state = MutableStateFlow(FuelHudUiState())
-    val state: StateFlow<FuelHudUiState> = _state.asStateFlow()
-
-    fun dispatch(intent: FuelIntent) {
+    override suspend fun handleIntent(intent: FuelIntent) {
         when (intent) {
-            is FuelIntent.Start -> subscribeToEstimates()
+            FuelIntent.Start -> subscribeToEstimates()
 
-            is FuelIntent.ResetAll -> {
+            FuelIntent.ResetAll -> {
                 peaksByKey[currentKey]?.reset()
-                viewModelScope.launch {
-                    useCase.resetAll()
-                }
+                useCase.resetAll()
             }
         }
     }
@@ -84,7 +75,7 @@ internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : L
 
     private fun handleDataResult(result: FuelResult.Data) {
         val estimate = result.estimate
-        val newKey = FuelIdentityKey.from(estimate.carModel, estimate.trackId) ?: FuelIdentityKey.UNKNOWN
+        val newKey = FuelIdentityKey.from(estimate.carId, estimate.trackId) ?: FuelIdentityKey.UNKNOWN
         if (newKey != currentKey) {
             currentKey = newKey
             lastDataUiEmitNs = 0L
@@ -93,15 +84,15 @@ internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : L
         updatePeakStateFromEstimate(estimate)
 
         val nowNs = System.nanoTime()
-        val currentState = _state.value
-        val forceEmit = shouldForceDataEmit(currentState, estimate)
+        val current = currentState
+        val forceEmit = shouldForceDataEmit(current, estimate)
         if (!forceEmit && nowNs - lastDataUiEmitNs < DATA_UI_EMIT_INTERVAL_NS) return
 
         val baseUiState = estimate.toUiState(safetyFactor)
         val withPeaks = applyPeakProjection(baseUiState)
 
         lastDataUiEmitNs = nowNs
-        updateState { withPeaks.copy(isShow = true, isSessionActive = true) }
+        setState(withPeaks.copy(isShow = true, isSessionActive = true))
     }
 
     private fun updatePeakStateFromEstimate(estimate: FuelEstimate) {
@@ -136,12 +127,7 @@ internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) : L
         return false
     }
 
-    private inline fun updateState(transform: FuelHudUiState.() -> FuelHudUiState) {
-        _state.update { it.transform() }
-    }
-
     private companion object {
-
         val DATA_UI_EMIT_INTERVAL_NS: Long = 50.milliseconds.inWholeNanoseconds // 20 Hz
     }
 }

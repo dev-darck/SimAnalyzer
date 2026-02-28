@@ -4,30 +4,23 @@ import androidx.lifecycle.viewModelScope
 import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.domain.usecase.InputsUseCase
 import com.project.analyzer.inputs.presentation.model.InputsSeries
-import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.max
 
 @Inject
-internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwareViewModel() {
+internal class InputsHudViewModel(private val useCase: InputsUseCase) :
+    LeakAwareMviViewModel<InputsIntent, InputsHudUiState>(InputsHudUiState()) {
 
     private var steerPeakAbs: Float = 0.35f
     private val steerPeakDecay: Float = 0.995f
     private val steerPeakMin: Float = 0.10f
-
-    private val _state = MutableStateFlow(InputsHudUiState())
-    val state: StateFlow<InputsHudUiState> = _state.asStateFlow()
 
     private var telemetryJob: Job? = null
 
@@ -36,21 +29,18 @@ internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwar
             .settings
             .distinctUntilChanged()
             .onEach {
-                _state.update { state ->
-                    val updated = state.copy(settings = it)
+                updateState {
+                    val updated = copy(settings = it)
                     updated.copy(series = applyHistoryCapacityIfNeeded(updated))
                 }
             }
             .launchIn(viewModelScope)
     }
 
-    fun dispatch(intent: InputsIntent) {
+    override suspend fun handleIntent(intent: InputsIntent) {
         when (intent) {
             InputsIntent.Start -> subscribe()
-
-            is InputsIntent.UpdateSettings -> viewModelScope.launch {
-                useCase.updateSettings(intent.inputHudSettings)
-            }
+            is InputsIntent.UpdateSettings -> useCase.updateSettings(intent.inputHudSettings)
         }
     }
 
@@ -67,9 +57,9 @@ internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwar
             is InputsResult.SessionStarted -> {
                 resetSessionDerivedState()
 
-                _state.update { st ->
-                    val series = newEmptySeriesFor(st)
-                    st.copy(
+                updateState {
+                    val series = newEmptySeriesFor(this)
+                    copy(
                         isShow = true,
                         isSessionActive = true,
                         throttle = 0f,
@@ -77,38 +67,38 @@ internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwar
                         clutch = 0f,
                         steerNorm = 0f,
                         series = series,
-                        renderTick = nextTick(st.renderTick),
+                        renderTick = nextTick(renderTick),
                     )
                 }
             }
 
             is InputsResult.SessionResumed -> {
-                _state.update { st ->
-                    st.copy(
+                updateState {
+                    copy(
                         isShow = true,
                         isSessionActive = true,
-                        renderTick = nextTick(st.renderTick),
+                        renderTick = nextTick(renderTick),
                     )
                 }
             }
 
             is InputsResult.SessionPaused -> {
-                _state.update { st ->
-                    st.copy(
+                updateState {
+                    copy(
                         isShow = false,
                         isSessionActive = false,
-                        renderTick = nextTick(st.renderTick),
+                        renderTick = nextTick(renderTick),
                     )
                 }
             }
 
             is InputsResult.SessionEnded -> {
                 resetSessionDerivedState()
-                _state.update { st ->
-                    st.copy(
+                updateState {
+                    copy(
                         isShow = false,
                         isSessionActive = false,
-                        renderTick = nextTick(st.renderTick),
+                        renderTick = nextTick(renderTick),
                     )
                 }
             }
@@ -124,11 +114,11 @@ internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwar
                 steerPeakAbs = max(steerPeakMin, max(steerAbs, steerPeakAbs * steerPeakDecay))
                 val steerNorm = (steer / steerPeakAbs).coerceIn(-1f, 1f)
 
-                _state.update { st ->
-                    val series = applyHistoryCapacityIfNeeded(st)
+                updateState {
+                    val series = applyHistoryCapacityIfNeeded(this)
                     series.push(t, b, c, steerNorm)
 
-                    st.copy(
+                    copy(
                         isShow = true,
                         isSessionActive = true,
                         throttle = t,
@@ -136,7 +126,7 @@ internal class InputsHudViewModel(private val useCase: InputsUseCase) : LeakAwar
                         clutch = c,
                         steerNorm = steerNorm,
                         series = series,
-                        renderTick = nextTick(st.renderTick),
+                        renderTick = nextTick(renderTick),
                     )
                 }
             }

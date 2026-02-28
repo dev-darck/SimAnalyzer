@@ -8,7 +8,6 @@ import com.project.analyzer.inputs.presentation.InputsHudViewModel
 import com.project.analyzer.inputs.settings.repository.InputHudSettingsRepository
 import com.project.analyzer.inputs.settings.repository.InputsHudSettingsRepositoryImpl
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
@@ -17,14 +16,15 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 @ContributesTo(HudScope::class)
 @BindingContainer
 interface InputsHudBindings {
-
-    @Binds
-    fun bindInputsUseCase(impl: InputsUseCaseImpl): InputsUseCase
-
-    @Binds
-    fun bindInputHudSettingsRepository(impl: InputsHudSettingsRepositoryImpl): InputHudSettingsRepository
-
     companion object {
+
+        @Provides
+        private fun provideInputsUseCase(impl: InputsUseCaseImpl): InputsUseCase = impl
+
+        @Provides
+        private fun provideInputHudSettingsRepository(
+            impl: InputsHudSettingsRepositoryImpl,
+        ): InputHudSettingsRepository = impl
 
         @Provides
         @IntoMap

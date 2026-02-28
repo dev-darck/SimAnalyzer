@@ -12,6 +12,11 @@ pluginManagement {
             }
         }
         mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev") {
+            mavenContent {
+                includeGroupAndSubgroups("org.jetbrains.compose.storytale")
+            }
+        }
         gradlePluginPortal()
     }
 }
@@ -26,6 +31,11 @@ dependencyResolutionManagement {
             }
         }
         mavenCentral()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev") {
+            mavenContent {
+                includeGroupAndSubgroups("org.jetbrains.compose.storytale")
+            }
+        }
     }
 }
 

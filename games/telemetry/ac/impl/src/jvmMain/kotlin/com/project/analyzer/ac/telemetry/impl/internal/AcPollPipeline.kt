@@ -1,12 +1,17 @@
 package com.project.analyzer.ac.telemetry.impl.internal
 
 import com.project.analyzer.ac.telemetry.impl.fallback.AcEvoFallbackShmPatcher
+import com.project.analyzer.ac.telemetry.impl.internal.pipeline.AcFallbackPollSnapshotAdapter
+import com.project.analyzer.ac.telemetry.impl.internal.pipeline.AcPollSnapshotAdapter
+import com.project.analyzer.ac.telemetry.impl.internal.pipeline.AcPollSnapshotAdapterContext
+import com.project.analyzer.ac.telemetry.impl.internal.pipeline.AcPollSnapshotPipeline
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
 import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -14,9 +19,13 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
 
-internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fallback: AcEvoFallbackShmPatcher) {
+internal class AcPollPipeline @Inject constructor(
+    private val pollLoop: AcPollLoop,
+    snapshotAdapters: Set<AcPollSnapshotAdapter>,
+) {
 
     private val logger = logger()
     private val physicsSize = SPageFilePhysics().size()
@@ -27,8 +36,7 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
     private val graphicsBuffer = ByteArray(graphicsSize)
     private val staticsBuffer = ByteArray(staticsSize)
 
-    private val poolLock = Any()
-    private val snapshotPool = ArrayDeque<AcRawSnapshot>(SNAPSHOT_POOL_SIZE)
+    private val snapshotPool = ConcurrentLinkedDeque<AcRawSnapshot>()
 
     private var boundSnapshot: AcRawSnapshot? = null
     private val boundSnapshotMemory = object : AcSharedMemory {
@@ -52,6 +60,8 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
     private var pollJob: Job? = null
     private var channel: Channel<PollResult>? = null
     private var currentState: GameConnectionState = GameConnectionState.DISCONNECTED
+    private val snapshotPipeline = AcPollSnapshotPipeline(adapters = snapshotAdapters.toList())
+    private val snapshotAdapterContext = SnapshotAdapterContext()
 
     init {
         repeat(SNAPSHOT_POOL_SIZE) {
@@ -85,7 +95,7 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
         channel = null
 
         closePollDispatcher()
-        fallback.clear()
+        snapshotPipeline.onStop()
         pollLoop.stop()
     }
 
@@ -102,9 +112,7 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
 
     private fun handleStateChanged(result: PollResult.StateChanged, channel: Channel<PollResult>) {
         currentState = result.state
-        if (result.state == GameConnectionState.DISCONNECTED) {
-            fallback.clear()
-        }
+        snapshotPipeline.onStateChanged(result.state)
         if (!channel.trySend(result).isSuccess) {
             logDrop("state_change")
         }
@@ -126,7 +134,7 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
         }
 
         try {
-            patchWithFallback(pooled)
+            applySnapshotAdapters(pooled)
         } catch (error: Exception) {
             releaseToPool(pooled)
             throw error
@@ -138,14 +146,13 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
         }
     }
 
-    private fun patchWithFallback(snapshot: AcRawSnapshot) {
+    private fun applySnapshotAdapters(snapshot: AcRawSnapshot) {
         boundSnapshot = snapshot
+        snapshotAdapterContext.snapshot = snapshot
+        snapshotAdapterContext.gameState = currentState
+        snapshotAdapterContext.loopStartNanos = snapshot.timestampNs
         try {
-            fallback.patchIfNeeded(
-                shm = boundSnapshotMemory,
-                loopStartNanos = snapshot.timestampNs.takeIf { it > 0L } ?: System.nanoTime(),
-                gameState = currentState,
-            )
+            snapshotPipeline.apply(snapshotAdapterContext)
         } finally {
             boundSnapshot = null
         }
@@ -164,14 +171,10 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
         }
     }
 
-    private fun acquireFromPool(): AcRawSnapshot? = synchronized(poolLock) {
-        if (snapshotPool.isEmpty()) null else snapshotPool.removeFirst()
-    }
+    private fun acquireFromPool(): AcRawSnapshot? = snapshotPool.pollFirst()
 
     private fun releaseToPool(snapshot: AcRawSnapshot) {
-        synchronized(poolLock) {
-            snapshotPool.addLast(snapshot)
-        }
+        snapshotPool.offerLast(snapshot)
     }
 
     private fun newSnapshot(): AcRawSnapshot = AcRawSnapshot(
@@ -187,6 +190,7 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
 
         target.timestampNs = source.timestampNs
         target.frameId = source.frameId
+        target.sessionRestartHint = source.sessionRestartHint
     }
 
     private fun readSnapshot(snapshot: AcRawSnapshot) {
@@ -212,6 +216,16 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
 
     private fun requireBoundSnapshot(): AcRawSnapshot = requireNotNull(boundSnapshot) { "Snapshot is not bound" }
 
+    private inner class SnapshotAdapterContext : AcPollSnapshotAdapterContext {
+        override lateinit var snapshot: AcRawSnapshot
+        override var gameState: GameConnectionState = GameConnectionState.DISCONNECTED
+        override var loopStartNanos: Long = 0L
+
+        override fun withSharedMemory(block: (AcSharedMemory) -> Unit) {
+            block(boundSnapshotMemory)
+        }
+    }
+
     private fun ensurePollDispatcher(): ExecutorCoroutineDispatcher {
         val existing = pollDispatcher
         if (existing != null) return existing
@@ -233,4 +247,9 @@ internal class AcPollPipeline(private val pollLoop: AcPollLoop, private val fall
         const val SNAPSHOT_POOL_SIZE: Int = 128
         const val STATE_BUFFER_CAPACITY: Int = 8
     }
+
+    internal constructor(pollLoop: AcPollLoop, fallback: AcEvoFallbackShmPatcher) : this(
+        pollLoop = pollLoop,
+        snapshotAdapters = setOf(AcFallbackPollSnapshotAdapter(fallback)),
+    )
 }

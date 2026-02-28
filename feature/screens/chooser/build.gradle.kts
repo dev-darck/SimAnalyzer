@@ -1,5 +1,6 @@
 moduleImpl {
     compose()
+    resources()
     metro()
     logger()
 

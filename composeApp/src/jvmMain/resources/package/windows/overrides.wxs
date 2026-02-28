@@ -1,21 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
-        <!-- Binary for cleanup VBScript -->
         <Binary Id="UninstallCleanupVBS" SourceFile="uninstall-cleanup.vbs" />
-        
-        <!-- Custom action to execute the VBScript -->
-        <CustomAction Id="CA_UninstallCleanup" 
-                      BinaryKey="UninstallCleanupVBS" 
-                      VBScriptCall="Main" 
-                      Execute="immediate" 
-                      Return="ignore" />
-        
-        <!-- Execute the action during uninstallation -->
+
+        <CustomAction
+            Id="CA_UninstallCleanup"
+            BinaryKey="UninstallCleanupVBS"
+            VBScriptCall="Main"
+            Execute="immediate"
+            Return="ignore"
+        />
+
         <InstallExecuteSequence>
             <Custom Action="CA_UninstallCleanup" After="InstallInitialize">
                 REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE
             </Custom>
         </InstallExecuteSequence>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="INSTALLDIR">
+            <Component
+                Id="SimAnalyzerInstallSettingsComponent"
+                Guid="3094C4EB-DB5E-4C7A-9B2F-0D66F696AF3E"
+            >
+                <RegistryValue
+                    Root="HKCU"
+                    Key="Software\\SimAnalyzer"
+                    Name="DataRoot"
+                    Type="string"
+                    Value="[INSTALLDIR]data"
+                    KeyPath="yes"
+                />
+                <IniFile
+                    Id="SimAnalyzerInstallSettingsDataRoot"
+                    Action="addLine"
+                    Directory="INSTALLDIR"
+                    Name="simanalyzer-installation.ini"
+                    Section="Paths"
+                    Key="DataRoot"
+                    Value="[INSTALLDIR]data"
+                />
+                <RemoveFile
+                    Id="SimAnalyzerInstallSettingsCleanup"
+                    Name="simanalyzer-installation.ini"
+                    On="uninstall"
+                />
+            </Component>
+        </DirectoryRef>
+
+        <FeatureRef Id="DefaultFeature">
+            <ComponentRef Id="SimAnalyzerInstallSettingsComponent" />
+        </FeatureRef>
     </Fragment>
 </Wix>

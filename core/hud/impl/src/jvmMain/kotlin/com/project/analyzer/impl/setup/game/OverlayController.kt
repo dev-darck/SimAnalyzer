@@ -1,27 +1,29 @@
 package com.project.analyzer.impl.setup.game
 
 import androidx.compose.ui.unit.IntRect
-import com.project.analyzer.game.impl.GameDetector
-import com.project.analyzer.game.impl.GameWindowInfo
-import com.project.analyzer.game.impl.WS_EX_APPWINDOW
-import com.project.analyzer.game.impl.WS_EX_NOACTIVATE
-import com.project.analyzer.game.impl.WS_EX_TOOLWINDOW
-import com.project.analyzer.game.impl.user32Ex
+import com.project.analyzer.game.api.GameWindowDetector
+import com.project.analyzer.game.api.GameWindowInfo
+import com.project.analyzer.game.api.WS_EX_APPWINDOW
+import com.project.analyzer.game.api.WS_EX_NOACTIVATE
+import com.project.analyzer.game.api.WS_EX_TOOLWINDOW
+import com.project.analyzer.game.api.user32Ex
 import com.project.analyzer.impl.setup.WindowsOverlayRegion
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
 import com.sun.jna.Native
+import com.sun.jna.NativeLibrary
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef.HWND
 import com.sun.jna.platform.win32.WinUser
+import com.sun.jna.ptr.IntByReference
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,6 +33,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.awt.MouseInfo
 import java.awt.Rectangle
 import java.awt.Window
@@ -40,7 +43,7 @@ import javax.swing.SwingUtilities
 import kotlin.time.Duration.Companion.milliseconds
 
 class OverlayController(
-    private val gameDetector: GameDetector,
+    private val gameDetector: GameWindowDetector,
     private val hitRegions: HitRegions,
     private val coroutineDispatcher: CoroutineDispatcher,
 ) {
@@ -59,6 +62,8 @@ class OverlayController(
     private var hitRegionsJob: Job? = null
     private var clickThroughJob: Job? = null
     private var boundsGuardJob: Job? = null
+    private val clickThroughSignals = Channel<Unit>(capacity = Channel.CONFLATED)
+    private val boundsGuardSignals = Channel<Unit>(capacity = Channel.CONFLATED)
 
     @Volatile
     private var expectedBounds: Rectangle? = null
@@ -82,9 +87,8 @@ class OverlayController(
 
         runOnEdt {
             window.background = java.awt.Color(0, 0, 0, 0)
-            window.isVisible = false
-            WindowsOverlayRegion.resetToFullWindow(window)
             applyOverlayStyles(window)
+            WindowsOverlayRegion.apply(window, emptyList())
 
             overlayHwnd = currentOverlayHwnd()
             gameDetector.setOverlayHwnd(overlayHwnd)
@@ -97,7 +101,28 @@ class OverlayController(
         startClickThroughController(scope)
         startBoundsGuard(scope)
 
-        logger.info { "Attach to window ${window.name} overlayHwnd=$overlayHwnd" }
+        logger.debug { "Attach to window ${window.name} overlayHwnd=$overlayHwnd" }
+    }
+
+    fun onComposeWindowVisibilityChanged(isVisible: Boolean) {
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
+        if (!isVisible) return
+
+        val window = overlayWindow ?: return
+        if (_state.value.isDragging) return
+
+        runOnEdt {
+            expectedBounds?.let { applyBoundsIfNeeded(window, it) }
+            if (!_state.value.isVisible) return@runOnEdt
+            WindowsOverlayRegion.apply(window, hitRegions.snapshot())
+            ensureTopmost()
+        }
+
+        // Compose applies window visibility asynchronously; refresh again after the EDT sync so
+        // click-through state is recomputed against the actually visible window.
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
     }
 
     fun beginDrag() {
@@ -112,12 +137,14 @@ class OverlayController(
         runOnEdt {
             setMouseTransparent(hwnd, enabled = false)
             WindowsOverlayRegion.resetToFullWindow(window)
-            ensureTopmostAndShow()
+            ensureTopmost()
         }
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
 
         val captureResult = user32Ex.SetCapture(hwnd)
         val lastErr = Native.getLastError()
-        logger.info { "SetCapture result=$captureResult lastError=$lastErr" }
+        logger.debug { "SetCapture result=$captureResult lastError=$lastErr" }
     }
 
     fun endDrag() {
@@ -127,14 +154,16 @@ class OverlayController(
 
         val releaseResult = user32Ex.ReleaseCapture()
         val lastErr = Native.getLastError()
-        logger.info { "ReleaseCapture result=$releaseResult lastError=$lastErr" }
+        logger.debug { "ReleaseCapture result=$releaseResult lastError=$lastErr" }
 
         val window = overlayWindow ?: return
 
         runOnEdt {
             WindowsOverlayRegion.apply(window, hitRegions.snapshot())
-            ensureTopmostAndShow()
+            ensureTopmost()
         }
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
     }
 
     fun detach() {
@@ -150,11 +179,10 @@ class OverlayController(
         overlayWindow?.let { window ->
             runOnEdt {
                 detachResizeGuard(window)
-                window.isVisible = false
             }
         }
 
-        logger.info { "Detach from window ${overlayWindow?.name} overlayHwnd=$overlayHwnd" }
+        logger.debug { "Detach from window ${overlayWindow?.name} overlayHwnd=$overlayHwnd" }
 
         val closingHwnd = overlayHwnd
         expectedBounds = null
@@ -164,6 +192,8 @@ class OverlayController(
         overlayHwnd = null
 
         _state.update { OverlayState() }
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
 
         if (closingHwnd != null) {
             LeakCanaryRuntime.watch(closingHwnd, "OverlayController.hwnd")
@@ -175,6 +205,7 @@ class OverlayController(
         inputLocked = locked
         lastClickThrough = null
         ignoreForegroundUntilNs = System.nanoTime() + INPUT_LOCK_FOCUS_GRACE_NS
+        signalClickThroughRefresh()
         requestGameForeground()
     }
 
@@ -206,21 +237,6 @@ class OverlayController(
 
         expectedBounds = expected
         applyBoundsIfNeeded(window, expected)
-
-        if (!window.isVisible) {
-            logger.info {
-                "Enable full screen window to bind it to monitor size monitor id ${gameInfo.monitor.id} ${gameInfo.monitor.bounds}"
-            }
-            WindowsOverlayRegion.resetToFullWindow(window)
-            window.isVisible = true
-        }
-
-        ensureTopmostAndShow()
-
-        if (!_state.value.isDragging) {
-            WindowsOverlayRegion.apply(window, hitRegions.snapshot())
-        }
-
         _state.update {
             it.copy(
                 isVisible = true,
@@ -228,16 +244,39 @@ class OverlayController(
                 gameInfo = gameInfo,
             )
         }
+
+        if (!window.isVisible) {
+            logger.debug {
+                "Enable full screen window to bind it to monitor size monitor id ${gameInfo.monitor.id} ${gameInfo.monitor.bounds}"
+            }
+            // Safe default for the hidden/first-show path: hidden overlay must not intercept
+            // clicks even if click-through refresh races with Compose window visibility.
+            WindowsOverlayRegion.apply(window, emptyList())
+            currentOverlayHwnd()?.let { setMouseTransparent(it, enabled = true) }
+            lastClickThrough = true
+        }
+
+        if (window.isVisible) {
+            ensureTopmost()
+        }
+
+        if (window.isVisible && !_state.value.isDragging) {
+            WindowsOverlayRegion.apply(window, hitRegions.snapshot())
+        }
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
     }
 
     private fun hideOverlay(window: Window) {
         if (_state.value.isDragging) endDrag()
 
         expectedBounds = null
+        hitRegions.clear()
+        lastClickThrough = true
 
         if (window.isVisible) {
-            WindowsOverlayRegion.resetToFullWindow(window)
-            window.isVisible = false
+            WindowsOverlayRegion.apply(window, emptyList())
+            currentOverlayHwnd()?.let { setMouseTransparent(it, enabled = true) }
         }
 
         _state.update {
@@ -248,12 +287,15 @@ class OverlayController(
                 isDragging = false,
             )
         }
+        signalClickThroughRefresh()
+        signalBoundsGuardRefresh()
     }
 
     private fun startHitRegionsObserver(scope: CoroutineScope) {
         hitRegionsJob?.cancel()
         hitRegionsJob = scope.launch {
             hitRegions.observeChanges().collect { regions ->
+                signalClickThroughRefresh()
                 val window = overlayWindow ?: return@collect
                 if (!window.isVisible) return@collect
                 if (_state.value.isDragging) return@collect
@@ -269,16 +311,32 @@ class OverlayController(
         clickThroughJob?.cancel()
         clickThroughJob = scope.launch(coroutineDispatcher) {
             while (isActive) {
-                updateClickThroughState()
-                delay(CLICK_THROUGH_POLL_MS)
+                if (shouldPollClickThroughWithMouse()) {
+                    updateClickThroughState()
+                    withTimeoutOrNull(CLICK_THROUGH_POLL_MS) {
+                        clickThroughSignals.receive()
+                    }
+                } else {
+                    clickThroughSignals.receive()
+                    updateClickThroughState()
+                }
             }
         }
+        signalClickThroughRefresh()
     }
 
     private suspend fun updateClickThroughState() {
         val window = overlayWindow ?: return
         val hwnd = currentOverlayHwnd() ?: return
-        if (!window.isVisible) return
+        if (!window.isVisible) {
+            if (lastClickThrough != true) {
+                lastClickThrough = true
+                withContext(Dispatchers.Swing) {
+                    setMouseTransparent(hwnd, enabled = true)
+                }
+            }
+            return
+        }
         val regions = hitRegions.snapshot()
 
         if (inputLocked) {
@@ -320,11 +378,19 @@ class OverlayController(
     private fun startBoundsGuard(scope: CoroutineScope) {
         boundsGuardJob?.cancel()
         boundsGuardJob = scope.launch(coroutineDispatcher) {
-            while (true) {
-                guardBounds()
-                delay(BOUNDS_GUARD_POLL_MS)
+            while (isActive) {
+                if (shouldRunBoundsGuardFallback()) {
+                    guardBounds()
+                    withTimeoutOrNull(BOUNDS_GUARD_POLL_MS) {
+                        boundsGuardSignals.receive()
+                    }
+                } else {
+                    boundsGuardSignals.receive()
+                    guardBounds()
+                }
             }
         }
+        signalBoundsGuardRefresh()
     }
 
     private suspend fun guardBounds() {
@@ -378,12 +444,30 @@ class OverlayController(
         if (actual == expected) return
 
         applyBoundsIfNeeded(window, expected)
+        signalBoundsGuardRefresh()
     }
 
-    private fun ensureTopmostAndShow() {
+    private fun shouldPollClickThroughWithMouse(): Boolean {
+        val window = overlayWindow ?: return false
+        return inputLocked && window.isVisible
+    }
+
+    private fun shouldRunBoundsGuardFallback(): Boolean {
+        val window = overlayWindow ?: return false
+        return expectedBounds != null && window.isVisible && !_state.value.isDragging
+    }
+
+    private fun signalClickThroughRefresh() {
+        clickThroughSignals.trySend(Unit)
+    }
+
+    private fun signalBoundsGuardRefresh() {
+        boundsGuardSignals.trySend(Unit)
+    }
+
+    private fun ensureTopmost() {
         val hwnd = currentOverlayHwnd() ?: return
-        if (!ensureValidHwnd(hwnd, "ensureTopmostAndShow")) return
-        user32.ShowWindow(hwnd, WinUser.SW_SHOWNOACTIVATE)
+        if (!ensureValidHwnd(hwnd, "ensureTopmost")) return
         val result = user32.SetWindowPos(
             hwnd,
             HWND(Pointer.createConstant(-1)),
@@ -393,12 +477,22 @@ class OverlayController(
             0,
             WinUser.SWP_NOMOVE or
                 WinUser.SWP_NOSIZE or
-                WinUser.SWP_NOACTIVATE or
-                WinUser.SWP_SHOWWINDOW,
+                WinUser.SWP_NOACTIVATE,
         )
 
         val err = Native.getLastError()
-        logger.info { "Set app under apps: SetWindowPos ok=$result lastError=$err hwnd=${hwnd.pointer}" }
+        if (result) return
+
+        if (err == ERROR_INVALID_WINDOW_HANDLE) {
+            logger.atDebug(RATE_LIMITED) {
+                message = "ensureTopmost: stale HWND ignored (lastError=$err hwnd=${hwnd.pointer})"
+            }
+            return
+        }
+
+        logger.atWarn(RATE_LIMITED) {
+            message = "Set app under apps failed: SetWindowPos ok=$result lastError=$err hwnd=${hwnd.pointer}"
+        }
     }
 
     private fun requestGameForeground() {
@@ -444,6 +538,29 @@ class OverlayController(
         exStyle = exStyle or WinUser.WS_EX_TRANSPARENT
 
         user32.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, exStyle)
+        disableDwmWindowShadow(hwnd)
+    }
+
+    private fun disableDwmWindowShadow(hwnd: HWND) {
+        val dwm = runCatching { NativeLibrary.getInstance("dwmapi") }.getOrNull() ?: return
+        val setAttribute = runCatching { dwm.getFunction("DwmSetWindowAttribute") }.getOrNull() ?: return
+
+        // Suppress DWM shadow/non-client rendering for transparent overlay windows.
+        val ncRenderingDisabled = IntByReference(DWMNCRP_DISABLED)
+        runCatching {
+            setAttribute.invoke(arrayOf(hwnd, DWMWA_NCRENDERING_POLICY, ncRenderingDisabled.pointer, 4))
+        }
+
+        // Best-effort cleanup for Win11 border/corner halo.
+        val noBorderColor = IntByReference(DWMWA_COLOR_NONE)
+        runCatching {
+            setAttribute.invoke(arrayOf(hwnd, DWMWA_BORDER_COLOR, noBorderColor.pointer, 4))
+        }
+
+        val noRoundedCorners = IntByReference(DWMWCP_DONOTROUND)
+        runCatching {
+            setAttribute.invoke(arrayOf(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, noRoundedCorners.pointer, 4))
+        }
     }
 
     private fun isGameOrOverlayForeground(gameHwnd: HWND): Boolean {
@@ -501,7 +618,14 @@ class OverlayController(
 
         private const val LOCK_HANDLE_SIZE_PX = 32
         private val CLICK_THROUGH_POLL_MS = 16.milliseconds.inWholeMilliseconds
-        private val BOUNDS_GUARD_POLL_MS = 150.milliseconds.inWholeMilliseconds
+        private val BOUNDS_GUARD_POLL_MS = 500.milliseconds.inWholeMilliseconds
         private val INPUT_LOCK_FOCUS_GRACE_NS = 1200.milliseconds.inWholeNanoseconds
+        private const val DWMWA_NCRENDERING_POLICY = 2
+        private const val DWMWA_WINDOW_CORNER_PREFERENCE = 33
+        private const val DWMWA_BORDER_COLOR = 34
+        private const val DWMNCRP_DISABLED = 1
+        private const val DWMWCP_DONOTROUND = 1
+        private const val DWMWA_COLOR_NONE = 0xFFFFFFFE.toInt()
+        private const val ERROR_INVALID_WINDOW_HANDLE = 1400
     }
 }

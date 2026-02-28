@@ -99,6 +99,7 @@ internal object TelemetryInspectorMapper {
 
     private fun mapCarInfo(c: CarInfo, p: String, out: Entries) {
         out.str("$p.carModel", c.carModel)
+        out.str("$p.carName", c.carName)
         out.str("$p.carSkin", c.carSkin)
         out.int("$p.carId", c.carId)
         out.float("$p.maxTorqueNm", c.maxTorqueNm)

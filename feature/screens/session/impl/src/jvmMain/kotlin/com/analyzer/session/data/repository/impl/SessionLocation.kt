@@ -9,3 +9,5 @@ internal data class SessionLocation(
     val metadata: RecordedSessionMetadata,
     val analysis: IndexAnalysis? = null,
 )
+
+internal data class SessionBundleLocation(val summary: RecordedSessionSummary, val locations: List<SessionLocation>)

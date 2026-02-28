@@ -13,6 +13,7 @@ import java.io.RandomAccessFile
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.math.min
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -30,6 +31,7 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
     private var pending: String = ""
     private var sessionEpoch: Long = 0L
     private var lastInfo: EvoFileInfo = EvoFileInfo()
+    private var pendingMainMenuRestart: Boolean = false
     private var lastGameStartedBumpMs: Long = 0L
     private var lastHardBoundaryBumpMs: Long = 0L
     private var lastGameStartedTsMs: Long? = null
@@ -72,6 +74,7 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         pending = ""
         sessionEpoch = 0L
         lastInfo = EvoFileInfo()
+        pendingMainMenuRestart = false
         lastGameStartedBumpMs = 0L
         lastHardBoundaryBumpMs = 0L
         lastGameStartedTsMs = null
@@ -121,6 +124,7 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         raf = RandomAccessFile(file, "r")
         pending = ""
         lastPos = file.length()
+        pendingMainMenuRestart = false
         lastGameStartedBumpMs = 0L
         lastHardBoundaryBumpMs = 0L
         lastGameStartedTsMs = null
@@ -153,7 +157,18 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         if (lines.isEmpty()) return
 
         val parsed = parser.parseLines(lines, includePenalties = false)
-        mergeParsedIntoLastInfo(parsed, includePenalties = false)
+        val includeSessionType = shouldPrimeSessionType(file)
+        if (!includeSessionType && parsed.sessionType != null) {
+            logger.debug {
+                "primeFromTail: ignore stale sessionType=${parsed.sessionType} " +
+                    "(fileAgeMs=${System.currentTimeMillis() - file.lastModified()})"
+            }
+        }
+        mergeParsedIntoLastInfo(
+            parsed = parsed,
+            includePenalties = false,
+            includeSessionType = includeSessionType,
+        )
     }
 
     private fun readNewLines(file: File): List<String> {
@@ -186,14 +201,23 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
 
     private fun maybeBumpEpoch(parsed: Parsed) {
         val nowMs = System.currentTimeMillis()
+        val mainMenuBeforeBoundary = isMainMenuBeforeBoundary(parsed)
+        val epochStartsFromMainMenu = pendingMainMenuRestart || mainMenuBeforeBoundary
 
         if (shouldBumpHardBoundary(parsed, nowMs)) {
-            bumpEpoch("hardBoundary")
+            bumpEpoch("hardBoundary", epochStartsFromMainMenu)
+            pendingMainMenuRestart = parsed.mainMenuEntered && !mainMenuBeforeBoundary
             return
         }
 
         if (shouldBumpGameStarted(parsed, nowMs)) {
-            bumpEpoch("gameStarted")
+            bumpEpoch("gameStarted", epochStartsFromMainMenu)
+            pendingMainMenuRestart = parsed.mainMenuEntered && !mainMenuBeforeBoundary
+            return
+        }
+
+        if (parsed.mainMenuEntered) {
+            pendingMainMenuRestart = true
         }
     }
 
@@ -239,10 +263,11 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         return false
     }
 
-    private fun bumpEpoch(reason: String) {
+    private fun bumpEpoch(reason: String, startedFromMainMenu: Boolean = false) {
         sessionEpoch++
         lastInfo = lastInfo.copy(
             sessionEpoch = sessionEpoch,
+            sessionEpochStartedFromMainMenu = startedFromMainMenu,
             sessionType = EvoSessionType.UNKNOWN,
             hasPenalty = false,
             penaltyId = null,
@@ -250,7 +275,17 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
             penaltyTimestamp = null,
         )
         parser.resetForEpoch()
-        logger.info { "EvoFileInfo epoch++ -> $sessionEpoch ($reason)" }
+        logger.debug { "EvoFileInfo epoch++ -> $sessionEpoch ($reason)" }
+    }
+
+    private fun isMainMenuBeforeBoundary(parsed: Parsed): Boolean {
+        if (!parsed.mainMenuEntered) return false
+
+        val boundaryTs = parsed.hardBoundaryTimestampMs ?: parsed.gameStartedTimestampMs
+        val mainMenuTs = parsed.mainMenuTimestampMs
+
+        if (boundaryTs == null || mainMenuTs == null) return parsed.mainMenuEntered
+        return mainMenuTs <= boundaryTs
     }
 
     private companion object {
@@ -260,6 +295,7 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         val FILE_KEY_CHECK_INTERVAL_MS = 2.seconds.inWholeMilliseconds
         val HARD_BOUNDARY_DEBOUNCE_MS = 5.seconds.inWholeMilliseconds
         val GAME_STARTED_DEBOUNCE_MS = 8.seconds.inWholeMilliseconds
+        val PRIME_SESSION_TYPE_MAX_AGE_MS = 2.minutes.inWholeMilliseconds
     }
 
     private fun buildFallbackTrackId(trackName: String?, layout: String?): String? {
@@ -270,7 +306,11 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         ).takeIf { it.isNotBlank() }
     }
 
-    private fun mergeParsedIntoLastInfo(parsed: Parsed, includePenalties: Boolean) {
+    private fun mergeParsedIntoLastInfo(
+        parsed: Parsed,
+        includePenalties: Boolean,
+        includeSessionType: Boolean = true,
+    ) {
         val resolved = parser.resolveTrackId(parsed, lastInfo)
         val effectiveLayout = resolved.layout ?: lastInfo.layoutId
 
@@ -289,7 +329,12 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         }
 
         val newCar = parser.chooseCarModel(parsed, lastInfo)
-        val effectiveSessionType = parsed.sessionType ?: lastInfo.sessionType
+        val newSessionType = parser.chooseSessionType(parsed, lastInfo)
+        val effectiveSessionType = if (includeSessionType) {
+            newSessionType ?: lastInfo.sessionType
+        } else {
+            lastInfo.sessionType
+        }
 
         val hasPenalty = if (includePenalties) {
             parsed.penalty != null || lastInfo.hasPenalty
@@ -339,5 +384,12 @@ class AcEvoFileInfoExtractor(private val locator: AcEvoLogLocator) : EvoFileInfo
         }
 
         return newTrackId ?: previousName
+    }
+
+    private fun shouldPrimeSessionType(file: File): Boolean {
+        val lm = file.lastModified()
+        if (lm <= 0L) return false
+        val ageMs = System.currentTimeMillis() - lm
+        return ageMs in 0..PRIME_SESSION_TYPE_MAX_AGE_MS
     }
 }

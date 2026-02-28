@@ -1,113 +1,76 @@
 package com.project.analyzer.impl.compose
 
-import androidx.compose.ui.unit.IntOffset
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.leak.api.LeakAwareViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
-internal class HudViewModel(private val preferences: HudPreferences) : LeakAwareViewModel() {
-
-    private val _state = MutableStateFlow(HudUiState())
-    val state: StateFlow<HudUiState> = _state.asStateFlow()
+internal class HudViewModel(private val useCase: HudContainerUseCase) :
+    LeakAwareMviViewModel<HudIntent, HudUiState>(HudUiState()) {
 
     init {
-        viewModelScope.launch {
-            preferences.observeVisiblePanels().collect { visibleIds ->
-                _state.update { current ->
-                    val newVisiblePanels = visibleIds.associateWith { id ->
-                        current.visiblePanels[id] ?: 0
-                    }
-                    current.copy(visiblePanels = newVisiblePanels)
-                }
+        useCase.observeVisiblePanels()
+            .onEach { visibleIds ->
+                updateState { useCase.applyVisiblePanels(this, visibleIds) }
             }
-        }
-        viewModelScope.launch {
-            preferences.observeInputLocked().collect { locked ->
-                _state.update { current -> current.copy(inputLocked = locked) }
+            .launchIn(viewModelScope)
+
+        useCase.observeInputLocked()
+            .onEach { locked ->
+                updateState { useCase.applyInputLocked(this, locked) }
             }
-        }
+            .launchIn(viewModelScope)
+
+        useCase.observeHudOpacity()
+            .onEach { opacity ->
+                updateState { useCase.applyHudOpacity(this, opacity) }
+            }
+            .launchIn(viewModelScope)
+
         viewModelScope.launch {
-            loadPositions()
+            val positions = useCase.loadPositions()
+            updateState { useCase.applyPositions(this, positions) }
         }
     }
 
-    fun dispatch(intent: HudIntent) {
+    override suspend fun handleIntent(intent: HudIntent) {
         when (intent) {
-            is HudIntent.Show -> showPanel(intent.id)
-            is HudIntent.Hide -> hidePanel(intent.id)
-            is HudIntent.Toggle -> togglePanel(intent.id)
-            is HudIntent.Restart -> restartPanel(intent.id)
-            is HudIntent.HideAll -> hideAllPanels()
-            is HudIntent.SavePosition -> savePosition(intent.id, intent.offset)
-        }
-    }
-
-    fun toggleInputLock() {
-        val next = !_state.value.inputLocked
-        _state.update { it.copy(inputLocked = next) }
-        viewModelScope.launch {
-            preferences.setInputLocked(next)
-        }
-    }
-
-    private fun showPanel(id: String) {
-        viewModelScope.launch {
-            val currentIds = _state.value.visiblePanels.keys
-            preferences.saveVisiblePanels(currentIds + id)
-        }
-    }
-
-    private fun hidePanel(id: String) {
-        viewModelScope.launch {
-            val currentIds = _state.value.visiblePanels.keys
-            preferences.saveVisiblePanels(currentIds - id)
-        }
-    }
-
-    private fun togglePanel(id: String) {
-        if (id in _state.value.visiblePanels) {
-            hidePanel(id)
-        } else {
-            showPanel(id)
-        }
-    }
-
-    private fun restartPanel(id: String) {
-        _state.update { current ->
-            if (id in current.visiblePanels) {
-                val newVersion = (current.visiblePanels[id] ?: 0) + 1
-                current.copy(
-                    visiblePanels = current.visiblePanels + (id to newVersion),
-                )
-            } else {
-                current
+            is HudIntent.Show -> {
+                useCase.saveVisiblePanels(currentState.visiblePanels.keys + intent.id)
             }
-        }
-    }
 
-    private fun hideAllPanels() {
-        viewModelScope.launch {
-            preferences.saveVisiblePanels(emptySet())
-        }
-    }
+            is HudIntent.Hide -> {
+                useCase.saveVisiblePanels(currentState.visiblePanels.keys - intent.id)
+            }
 
-    private fun savePosition(id: String, offset: IntOffset) {
-        _state.update { current ->
-            current.copy(positions = current.positions + (id to offset))
-        }
-        viewModelScope.launch {
-            preferences.savePosition(id, offset)
-        }
-    }
+            is HudIntent.Toggle -> {
+                val next = if (intent.id in currentState.visiblePanels) {
+                    currentState.visiblePanels.keys - intent.id
+                } else {
+                    currentState.visiblePanels.keys + intent.id
+                }
+                useCase.saveVisiblePanels(next)
+            }
 
-    private suspend fun loadPositions() {
-        val positions = preferences.getVisiblePanelsPositions()
-        _state.update { current ->
-            current.copy(positions = positions)
+            is HudIntent.Restart -> {
+                updateState { useCase.restartPanel(this, intent.id) }
+            }
+
+            HudIntent.HideAll -> {
+                useCase.saveVisiblePanels(emptySet())
+            }
+
+            is HudIntent.SavePosition -> {
+                updateState { useCase.savePositionLocally(this, intent.id, intent.position) }
+                useCase.savePosition(intent.id, intent.position)
+            }
+
+            HudIntent.ToggleInputLock -> {
+                val nextState = useCase.toggleInputLock(currentState)
+                setState(nextState)
+                useCase.saveInputLocked(nextState.inputLocked)
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Inject
 @SingleIn(HudScope::class)
-class InputsHudSettingsRepositoryImpl(appDirectories: AppDirectories) : InputHudSettingsRepository {
+internal class InputsHudSettingsRepositoryImpl(appDirectories: AppDirectories) : InputHudSettingsRepository {
 
     private val store by lazy { createInputHudSettingsDataStore(directory = appDirectories.preferencesDir) }
 

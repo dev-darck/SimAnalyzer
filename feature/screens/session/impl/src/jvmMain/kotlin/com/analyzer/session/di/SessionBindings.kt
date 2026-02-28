@@ -6,20 +6,23 @@ import com.analyzer.session.data.repository.impl.RecordedSessionRepositoryImpl
 import com.analyzer.session.presentation.SessionListViewModel
 import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
+import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(ScreenScope::class)
 @BindingContainer
 interface SessionBindings {
+    companion object {
 
-    @Binds
-    fun bindRecordedSessionRepository(impl: RecordedSessionRepositoryImpl): RecordedSessionRepository
+        @Provides
+        private fun provideRecordedSessionRepository(impl: RecordedSessionRepositoryImpl): RecordedSessionRepository =
+            impl
 
-    @Binds
-    @IntoMap
-    @ViewModelKey(SessionListViewModel::class)
-    fun bindSessionListViewModel(impl: SessionListViewModel): ViewModel
+        @Provides
+        @IntoMap
+        @ViewModelKey(SessionListViewModel::class)
+        private fun provideSessionListViewModel(impl: SessionListViewModel): ViewModel = impl
+    }
 }

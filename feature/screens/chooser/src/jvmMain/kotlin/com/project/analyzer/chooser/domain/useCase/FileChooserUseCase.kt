@@ -3,7 +3,7 @@ package com.project.analyzer.chooser.domain.useCase
 import com.project.analyzer.chooser.domain.model.SidebarData
 import com.project.analyzer.chooser.domain.model.TreeResult
 
-interface FileChooserUseCase {
+internal interface FileChooserUseCase {
 
     suspend fun loadSidebar(): SidebarData
 

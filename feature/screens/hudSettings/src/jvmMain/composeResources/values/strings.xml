@@ -1,0 +1,16 @@
+<resources>
+    <string name="hud_settings_title">Settings</string>
+    <string name="hud_settings_select_hint">Select a HUD from the list to edit its settings.</string>
+    <string name="hud_settings_no_configurable">This HUD has no configurable settings.</string>
+    <string name="hud_settings_huds_title">HUDs</string>
+    <string name="hud_settings_common_title">Common Settings</string>
+    <string name="hud_settings_common_description">Shared overlay settings applied to every HUD panel.</string>
+    <string name="hud_settings_opacity_title">Opacity</string>
+    <string name="hud_settings_opacity_tooltip">Controls only the HUD background alpha for both the live overlay and
+        this preview.
+    </string>
+    <string name="hud_settings_preview_title">Preview</string>
+    <string name="hud_settings_preview_fuel">Fuel HUD</string>
+    <string name="hud_settings_preview_timing">Timing HUD</string>
+    <string name="hud_settings_preview_electronics">Electronics HUD</string>
+</resources>

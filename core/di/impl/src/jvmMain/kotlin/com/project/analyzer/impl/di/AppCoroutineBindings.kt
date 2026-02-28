@@ -12,17 +12,19 @@ import kotlinx.coroutines.Dispatchers
 
 @ContributesTo(AppScope::class)
 @BindingContainer
-object AppCoroutineBindings {
+interface AppCoroutineBindings {
+    companion object {
 
-    @IO
-    @Provides
-    fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+        @IO
+        @Provides
+        fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
 
-    @Main
-    @Provides
-    fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
+        @Main
+        @Provides
+        fun provideMainDispatcher(): CoroutineDispatcher = Dispatchers.Main
 
-    @Default
-    @Provides
-    fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+        @Default
+        @Provides
+        fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
+    }
 }

@@ -28,7 +28,9 @@ data class FuelEstimate(
 
     // Session info
     val carModel: String?,
+    val carId: Int?,
     val trackId: String?,
+    val currentLapIndex: Int?,
     val completedLaps: Int,
 
     // Data quality indicator (0..1)

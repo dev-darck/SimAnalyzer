@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.calibration.presentation.trackmap
 
 import androidx.compose.foundation.background
@@ -11,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.components.CalibrationSectionCard
 import com.project.analyzer.calibration.trackmap.TrackMapRecorderState
+import com.project.analyzer.feature.dev.calibration.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatDecimal
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import org.jetbrains.compose.resources.stringResource
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -45,20 +49,20 @@ fun TrackMapLibraryScreen() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CalibrationSectionCard(
-            title = "Saved track maps",
-            subtitle = "Browse stored layouts and verify distances.",
+            title = stringResource(Res.string.track_map_library_title),
+            subtitle = stringResource(Res.string.track_map_library_subtitle),
         ) {
             Text(
-                text = "Total maps: ${items.size}",
+                text = stringResource(Res.string.track_map_library_total, items.size),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
 
         if (items.isEmpty()) {
             CalibrationSectionCard(
-                title = "No maps yet",
-                subtitle = "Capture a track map to see it listed here.",
+                title = stringResource(Res.string.track_map_library_empty_title),
+                subtitle = stringResource(Res.string.track_map_library_empty_subtitle),
             )
         } else {
             LazyColumn(
@@ -114,7 +118,7 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             Text(
                 text = item.map.trackName.ifBlank { item.map.trackId },
                 color = SimAnalyzerTheme.material.onSurface,
-                style = MaterialTheme.typography.titleMedium,
+                style = SimAnalyzerTheme.typography.titleMedium,
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -124,13 +128,13 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
                 Text(
                     text = "$gameLabel · ${item.map.trackId}",
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = SimAnalyzerTheme.typography.bodySmall,
                 )
                 item.map.layoutId?.takeIf { it.isNotBlank() }?.let { layoutId ->
                     Text(
                         text = layoutId,
                         color = SimAnalyzerTheme.material.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = SimAnalyzerTheme.typography.bodySmall,
                     )
                 }
             }
@@ -149,39 +153,48 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "Points: ${item.points.size}",
+                text = stringResource(Res.string.track_map_library_points, item.points.size),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
-                text = "Distance: ${formatDistance(item.distanceMeters)}",
+                text = stringResource(Res.string.track_map_library_distance, formatDistance(item.distanceMeters)),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
-                text = "Width: %.1f m".format(
-                    averageWidth(
-                        leftWidths = item.leftWidthsMeters,
-                        rightWidths = item.rightWidthsMeters,
+                text = stringResource(
+                    Res.string.track_map_library_width,
+                    formatDecimal(
+                        averageWidth(
+                            leftWidths = item.leftWidthsMeters,
+                            rightWidths = item.rightWidthsMeters,
+                        ),
+                        decimals = 1,
                     ),
                 ),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
-                text = "Pit: ${item.pitPoints.size}",
+                text = stringResource(Res.string.track_map_library_pit, item.pitPoints.size),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
                 text = formatEpoch(item.map.createdAtEpochMs),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
 
         OutlinedButton(onClick = { showPoints = !showPoints }) {
-            Text(if (showPoints) "Hide points" else "Show points")
+            Text(
+                text = stringResource(
+                    if (showPoints) Res.string.track_map_library_hide_points else Res.string.track_map_library_show_points,
+                ),
+                style = SimAnalyzerTheme.typography.labelMedium,
+            )
         }
 
         if (showPoints) {
@@ -193,7 +206,7 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             }
             val truncatedCount = (item.points.size - maxPreview).coerceAtLeast(0)
             val previewText = if (truncatedCount > 0) {
-                previewLines + "\n... +$truncatedCount more"
+                previewLines + stringResource(Res.string.track_map_library_more_points, truncatedCount)
             } else {
                 previewLines
             }
@@ -201,7 +214,7 @@ private fun TrackMapLibraryCard(item: TrackMapLibraryItem) {
             Text(
                 text = previewText,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(

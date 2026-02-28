@@ -5,7 +5,7 @@ import java.awt.Desktop
 import java.net.URI
 import java.net.URLEncoder
 
-class ReportOnGitHubUseCase(private val copyReportUseCase: CopyReportUseCase) {
+internal class ReportOnGitHubUseCase(private val copyReportUseCase: CopyReportUseCase) {
 
     operator fun invoke(report: CrashReport, githubRepo: String): Result<Unit> {
         copyReportUseCase(report.fullText)

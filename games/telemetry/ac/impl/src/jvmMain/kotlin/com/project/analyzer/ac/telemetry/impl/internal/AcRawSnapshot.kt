@@ -13,4 +13,6 @@ class AcRawSnapshot(
 
     var frameId: Long = 0L
         internal set
+
+    var sessionRestartHint: AcSessionRestartHint = AcSessionRestartHint.NONE
 }
