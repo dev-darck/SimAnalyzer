@@ -6,4 +6,4 @@ import dev.zacsweers.metro.ContributesTo
 
 @ContributesTo(ScreenScope::class)
 @BindingContainer
-object SetupBindings
+interface SetupBindings

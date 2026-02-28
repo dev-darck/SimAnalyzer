@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.analyzer.settings.presentation.components
 
 import androidx.compose.foundation.background
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -32,16 +33,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.analyzer.settings.presentation.GameSelectionUi
 import com.analyzer.settings.presentation.buildGameSelectionUi
+import com.project.analyzer.feature.screens.settings.Res.*
 import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.theme.SimAnalyzerTheme
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun TelemetryGameSelectionBlock(
@@ -56,18 +57,17 @@ internal fun TelemetryGameSelectionBlock(
             .padding(all = 16.dp),
     ) {
         Text(
-            text = "Game selection",
+            text = stringResource(Res.string.game_selection_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Choose auto detection or lock telemetry to a single game.",
+            text = stringResource(Res.string.game_selection_description),
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp,
+            style = SimAnalyzerTheme.typography.bodySmall,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -89,9 +89,12 @@ private fun GameSelectionDropdown(
     var menuWidthPx by remember { mutableStateOf(0) }
     val density = LocalDensity.current
     val options = selectionUi.options
-    val currentLabel = selectionUi.label
-    val currentSubtitle = selectionUi.subtitle
-    val accentColor = if (selectionUi.isAuto) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.material.primary
+    val currentText = selectionPresentation(selectionUi.selection)
+    val accentColor = if (selectionUi.selection is GameSelection.Auto) {
+        SimAnalyzerTheme.extended.teal
+    } else {
+        SimAnalyzerTheme.material.primary
+    }
     val containerColor = SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.2f)
     val borderColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.6f)
     val chipColor = accentColor.copy(alpha = 0.2f)
@@ -112,7 +115,7 @@ private fun GameSelectionDropdown(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GameModeChip(
-                label = selectionUi.tag,
+                label = currentText.tag,
                 background = chipColor,
                 textColor = accentColor,
             )
@@ -122,17 +125,16 @@ private fun GameSelectionDropdown(
                 verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
-                    text = currentLabel,
+                    text = currentText.label,
                     color = SimAnalyzerTheme.material.onSurface,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = SimAnalyzerTheme.typography.labelLarge.copy(),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = currentSubtitle,
+                    text = currentText.subtitle,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp,
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -140,13 +142,13 @@ private fun GameSelectionDropdown(
             Box(
                 modifier = Modifier
                     .size(30.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .clip(SimAnalyzerTheme.corners.item)
                     .background(accentColor.copy(alpha = 0.18f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     imageVector = Icons.Filled.KeyboardArrowDown,
-                    contentDescription = "Select game",
+                    contentDescription = stringResource(Res.string.game_selection_select_game),
                     tint = accentColor,
                 )
             }
@@ -163,6 +165,7 @@ private fun GameSelectionDropdown(
         ) {
             options.forEachIndexed { index, option ->
                 val isSelected = option.selection == selectionUi.selection
+                val optionText = selectionPresentation(option.selection)
                 val itemBackground = if (isSelected) {
                     accentColor.copy(alpha = 0.12f)
                 } else {
@@ -172,15 +175,14 @@ private fun GameSelectionDropdown(
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = option.label,
-                                fontSize = 14.sp,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                text = optionText.label,
+                                style = SimAnalyzerTheme.typography.labelLarge.copy(),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = option.subtitle,
-                                fontSize = 11.sp,
+                                text = optionText.subtitle,
+                                style = SimAnalyzerTheme.typography.labelSmall,
                                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
@@ -204,7 +206,7 @@ private fun GameSelectionDropdown(
                     },
                     modifier = Modifier
                         .padding(horizontal = 8.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(SimAnalyzerTheme.corners.field)
                         .background(itemBackground),
                 )
                 if (index != options.lastIndex) {
@@ -219,7 +221,7 @@ private fun GameSelectionDropdown(
 private fun GameModeChip(label: String, background: Color, textColor: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(50))
+            .clip(SimAnalyzerTheme.corners.pill)
             .background(background)
             .padding(horizontal = 10.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
@@ -227,12 +229,31 @@ private fun GameModeChip(label: String, background: Color, textColor: Color, mod
         Text(
             text = label,
             color = textColor,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.SemiBold,
-            letterSpacing = 0.4.sp,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
     }
 }
+
+@Composable
+private fun selectionPresentation(selection: GameSelection): GameSelectionPresentation = when (selection) {
+    GameSelection.Auto -> GameSelectionPresentation(
+        label = stringResource(Res.string.game_selection_auto_detect),
+        subtitle = stringResource(Res.string.game_selection_auto_subtitle),
+        tag = stringResource(Res.string.game_selection_tag_auto),
+    )
+
+    is GameSelection.Manual -> GameSelectionPresentation(
+        label = when (selection.game) {
+            GameId.AC -> stringResource(Res.string.game_assetto_corsa)
+            GameId.ACC -> stringResource(Res.string.game_assetto_corsa_competizione)
+            GameId.ACE -> stringResource(Res.string.game_assetto_corsa_evo)
+        },
+        subtitle = stringResource(Res.string.game_selection_manual_subtitle),
+        tag = stringResource(Res.string.game_selection_tag_manual),
+    )
+}
+
+private data class GameSelectionPresentation(val label: String, val subtitle: String, val tag: String)
 
 @Preview
 @Composable

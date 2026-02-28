@@ -1,8 +1,13 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.project.analyzer.inputs.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,58 +18,78 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.feature.huds.inputs.Res.Res
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_active_tooltip
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_graph_tooltip
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_header_tooltip
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_idle_tooltip
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_percent
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_title
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_values
+import com.project.analyzer.feature.huds.inputs.Res.inputs_hud_values_tooltip
+import com.project.analyzer.hud.api.hudPanelSurfaceColor
 import com.project.analyzer.inputs.presentation.componetns.InputsGraphBlock
 import com.project.analyzer.inputs.presentation.componetns.LegendRow
 import com.project.analyzer.inputs.presentation.model.InputsSeries
 import com.project.analyzer.inputs.settings.InputHudSettings
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatPercent
+import com.project.analyzer.ui.tooltip.Tooltip
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.PI
 import kotlin.math.sin
 
 @Composable
-internal fun InputsHudContent(state: InputsHudUiState = InputsHudUiState(), modifier: Modifier = Modifier) {
+internal fun InputsHudContent(
+    state: InputsHudUiState = InputsHudUiState(),
+    modifier: Modifier = Modifier,
+    isToolTipEnabled: Boolean = false,
+) {
     AnimatedVisibility(
         visible = state.isShow,
         enter = fadeIn(),
         exit = fadeOut(),
     ) {
-        val shape = RoundedCornerShape(14.dp)
+        val shape = SimAnalyzerTheme.corners.overlay
 
         Box(
             modifier = modifier
                 .width(state.settings.widthDp.dp)
                 .clip(shape)
-                .background(color = SimAnalyzerTheme.material.surface.copy(alpha = 0.35f))
+                .background(color = hudPanelSurfaceColor(SimAnalyzerTheme.material.surface))
                 .padding(all = 12.dp),
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
                 if (state.settings.showHeader) {
-                    Header(state = state)
+                    Header(state = state, isToolTipEnabled = isToolTipEnabled)
                     Spacer(modifier = Modifier.height(8.dp))
                     HorizontalDivider(color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.8f))
                     Spacer(modifier = Modifier.height(10.dp))
                 }
 
-                InputsGraphBlock(
-                    state = state,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(state.settings.graphHeightDp.dp),
-                )
+                Hinted(
+                    tooltip = stringResource(Res.string.inputs_hud_graph_tooltip),
+                    isEnabled = isToolTipEnabled,
+                ) {
+                    InputsGraphBlock(
+                        state = state,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(state.settings.graphHeightDp.dp),
+                    )
+                }
 
                 if (state.settings.showLegend) {
                     Spacer(Modifier.height(8.dp))
-                    LegendRow()
+                    LegendRow(isToolTipEnabled = isToolTipEnabled)
                 }
             }
         }
@@ -72,16 +97,22 @@ internal fun InputsHudContent(state: InputsHudUiState = InputsHudUiState(), modi
 }
 
 @Composable
-private fun Header(state: InputsHudUiState) {
+private fun Header(state: InputsHudUiState, isToolTipEnabled: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = state.title,
-            color = SimAnalyzerTheme.material.onSurfaceVariant,
+        Hinted(
+            tooltip = stringResource(Res.string.inputs_hud_header_tooltip),
+            isEnabled = isToolTipEnabled,
             modifier = Modifier.weight(1f),
-        )
+        ) {
+            Text(
+                text = stringResource(Res.string.inputs_hud_title),
+                color = SimAnalyzerTheme.material.onSurfaceVariant,
+                style = SimAnalyzerTheme.typography.bodySmall,
+            )
+        }
 
         val dotColor = if (state.isSessionActive) {
             SimAnalyzerTheme.material.tertiary
@@ -89,23 +120,64 @@ private fun Header(state: InputsHudUiState) {
             SimAnalyzerTheme.extended.middlePriorityOutline
         }
 
-        Box(
-            modifier = Modifier
-                .size(size = 8.dp)
-                .background(dotColor, androidx.compose.foundation.shape.CircleShape),
-        )
+        Hinted(
+            tooltip = if (state.isSessionActive) {
+                stringResource(Res.string.inputs_hud_active_tooltip)
+            } else {
+                stringResource(Res.string.inputs_hud_idle_tooltip)
+            },
+            isEnabled = isToolTipEnabled,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(size = 8.dp)
+                    .background(dotColor, androidx.compose.foundation.shape.CircleShape),
+            )
+        }
 
         Spacer(Modifier.width(10.dp))
 
-        Text(
-            text = "T ${pct(state.throttle)}  B ${pct(state.brake)}  C ${pct(state.clutch)}",
-            color = SimAnalyzerTheme.material.onSurface,
-            fontFamily = FontFamily.Monospace,
-        )
+        Hinted(
+            tooltip = stringResource(Res.string.inputs_hud_values_tooltip),
+            isEnabled = isToolTipEnabled,
+        ) {
+            Text(
+                text = stringResource(
+                    Res.string.inputs_hud_values,
+                    pct(state.throttle),
+                    pct(state.brake),
+                    pct(state.clutch),
+                ),
+                color = SimAnalyzerTheme.material.onSurface,
+                style = SimAnalyzerTheme.typography.bodyLarge.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
+            )
+        }
     }
 }
 
-private fun pct(v: Float): String = "${(v * 100f).toInt()}%"
+@Composable
+private fun pct(v: Float): String = stringResource(
+    Res.string.inputs_hud_percent,
+    formatPercent((v * 100f).toInt()),
+)
+
+@Composable
+private fun Hinted(
+    tooltip: String,
+    isEnabled: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier = modifier) {
+        if (isEnabled) {
+            Tooltip(tooltip = tooltip) {
+                content()
+            }
+        } else {
+            content()
+        }
+    }
+}
 
 @Preview(name = "Inputs HUD (Session)")
 @Composable
@@ -169,7 +241,6 @@ internal fun demoState(
     return InputsHudUiState(
         isShow = true,
         isSessionActive = sessionActive,
-        title = "Inputs",
         throttle = last.thr,
         brake = last.brk,
         clutch = last.clt,

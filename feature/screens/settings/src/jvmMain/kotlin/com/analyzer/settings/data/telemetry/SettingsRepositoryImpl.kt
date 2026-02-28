@@ -26,7 +26,7 @@ import java.io.IOException
 
 @Inject
 @SingleIn(ScreenScope::class)
-class SettingsRepositoryImpl(
+internal class SettingsRepositoryImpl(
     @param:UserPref
     private val userPreferences: Preference,
     private val appDirectories: AppDirectories,
@@ -74,6 +74,9 @@ class SettingsRepositoryImpl(
     }
 
     override fun observeHudEnabled(): Flow<Boolean> = userPreferences.observe(TELEMETRY_HUD_ENABLED.bool, true)
+
+    override fun observeRecordingNoticeShown(): Flow<Boolean> =
+        userPreferences.observe(KEY_RECORDING_NOTICE_SHOWN.bool, false)
 
     override fun observeGameSelectionVariant(): Flow<GameId?> = userPreferences.observe(KEY_GAME_VARIANT, "")
         .map { raw -> raw.takeIf { it.isNotBlank() }?.let { toGameId(it) } }
@@ -145,6 +148,10 @@ class SettingsRepositoryImpl(
         userPreferences.put(TelemetryAcquisitionDefaults.KEY_RECORDING_ENABLED to enabled)
     }
 
+    override suspend fun markRecordingNoticeShown() {
+        userPreferences.put(KEY_RECORDING_NOTICE_SHOWN.bool to true)
+    }
+
     override suspend fun updateMaxRecordedLaps(laps: Int) {
         val clamped = laps.coerceIn(
             TelemetrySettings.MIN_MAX_RECORDED_LAPS,
@@ -195,19 +202,12 @@ class SettingsRepositoryImpl(
         }
     }
 
-    sealed interface StorageValidationResult {
-        data object Valid : StorageValidationResult
-        data object Empty : StorageValidationResult
-        data object NotADirectory : StorageValidationResult
-        data object NotWritable : StorageValidationResult
-        data object CannotCreate : StorageValidationResult
-    }
-
     private fun toGameId(raw: String): GameId? = runCatching { GameId.valueOf(raw) }.getOrNull()
 
     private companion object {
         const val TELEMETRY_HUD_ENABLED = "telemetry_hud_enabled"
         const val TELEMETRY_TARGET = "telemetry"
+        const val KEY_RECORDING_NOTICE_SHOWN = "telemetry_recording_notice_shown"
         val KEY_GAME_VARIANT: StringPrefKey = "telemetry_settings_game_variant".str
     }
 }

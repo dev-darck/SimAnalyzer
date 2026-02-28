@@ -12,36 +12,38 @@ import dev.zacsweers.metro.SingleIn
 
 @ContributesTo(CrashScope::class)
 @BindingContainer
-object CrashModule {
+interface CrashModule {
+    companion object {
 
-    @Provides
-    @SingleIn(CrashScope::class)
-    fun provideCrashViewModel(
-        copyReportUseCase: CopyReportUseCase,
-        openFileUseCase: OpenFileUseCase,
-        openLogsFolderUseCase: OpenLogsFolderUseCase,
-        reportOnGitHubUseCase: ReportOnGitHubUseCase,
-    ): CrashViewModel = CrashViewModel(
-        copyReportUseCase = copyReportUseCase,
-        openFileUseCase = openFileUseCase,
-        openLogsFolderUseCase = openLogsFolderUseCase,
-        reportOnGitHubUseCase = reportOnGitHubUseCase,
-    )
+        @Provides
+        @SingleIn(CrashScope::class)
+        private fun provideCrashViewModel(
+            copyReportUseCase: CopyReportUseCase,
+            openFileUseCase: OpenFileUseCase,
+            openLogsFolderUseCase: OpenLogsFolderUseCase,
+            reportOnGitHubUseCase: ReportOnGitHubUseCase,
+        ): CrashViewModel = CrashViewModel(
+            copyReportUseCase = copyReportUseCase,
+            openFileUseCase = openFileUseCase,
+            openLogsFolderUseCase = openLogsFolderUseCase,
+            reportOnGitHubUseCase = reportOnGitHubUseCase,
+        )
 
-    @Provides
-    @SingleIn(CrashScope::class)
-    fun provideCopyReportUseCase(): CopyReportUseCase = CopyReportUseCase()
+        @Provides
+        @SingleIn(CrashScope::class)
+        private fun provideCopyReportUseCase(): CopyReportUseCase = CopyReportUseCase()
 
-    @Provides
-    @SingleIn(CrashScope::class)
-    fun provideOpenFileUseCase(): OpenFileUseCase = OpenFileUseCase()
+        @Provides
+        @SingleIn(CrashScope::class)
+        private fun provideOpenFileUseCase(): OpenFileUseCase = OpenFileUseCase()
 
-    @Provides
-    @SingleIn(CrashScope::class)
-    fun provideOpenLogsFolderUseCase(): OpenLogsFolderUseCase = OpenLogsFolderUseCase()
+        @Provides
+        @SingleIn(CrashScope::class)
+        private fun provideOpenLogsFolderUseCase(): OpenLogsFolderUseCase = OpenLogsFolderUseCase()
 
-    @Provides
-    @SingleIn(CrashScope::class)
-    fun provideReportOnGitHubUseCase(copyReportUseCase: CopyReportUseCase): ReportOnGitHubUseCase =
-        ReportOnGitHubUseCase(copyReportUseCase)
+        @Provides
+        @SingleIn(CrashScope::class)
+        private fun provideReportOnGitHubUseCase(copyReportUseCase: CopyReportUseCase): ReportOnGitHubUseCase =
+            ReportOnGitHubUseCase(copyReportUseCase)
+    }
 }

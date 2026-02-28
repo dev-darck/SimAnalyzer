@@ -1,6 +1,7 @@
 package com.project.analyzer.game.impl
 
 import com.project.analyzer.game.api.GameConfig
+import com.project.analyzer.game.api.GameWindowInfo
 
 internal fun GameConfig.matches(info: GameWindowInfo): Boolean {
     val titleOk = titlePatterns.isEmpty() || titlePatterns.any {

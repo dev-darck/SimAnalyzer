@@ -197,7 +197,7 @@ class FallbackLapAnalyzer(
                 return
             }
 
-            logger.info { "LAP: SYNCED to Start/Finish line" }
+            logger.debug { "LAP: Start/Finish sync acquired" }
             state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
             state.markGateTriggered(timestampNs, GATE_START_FINISH)
         }
@@ -240,10 +240,9 @@ class FallbackLapAnalyzer(
                 if (isValidSequence) {
                     state.completeLap(timestampNs, crossing.interpolationFactor)
                 } else {
-                    logger.info {
-                        "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - re-syncing"
+                    logger.debug {
+                        "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - ignored (sync locked)"
                     }
-                    state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
                 }
             } else {
                 state.syncToStartFinish(timestampNs, crossing.interpolationFactor)

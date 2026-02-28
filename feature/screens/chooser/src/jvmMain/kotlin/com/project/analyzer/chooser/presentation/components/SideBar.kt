@@ -33,9 +33,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.chooser.domain.model.File
+import com.project.analyzer.feature.screens.chooser.Res.*
 import com.project.analyzer.chooser.presentation.FileChooserIntent
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun Sidebar(
@@ -47,7 +49,10 @@ internal fun Sidebar(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        SidebarPanel(title = "Quick access", modifier = Modifier.weight(weight = 0.45f)) {
+        SidebarPanel(
+            title = stringResource(Res.string.chooser_sidebar_quick_access),
+            modifier = Modifier.weight(weight = 0.45f),
+        ) {
             PlacesList(
                 places = places,
                 selectedPath = currentDir,
@@ -55,7 +60,10 @@ internal fun Sidebar(
             )
         }
 
-        SidebarPanel(title = "This PC", modifier = Modifier.weight(weight = 0.55f)) {
+        SidebarPanel(
+            title = stringResource(Res.string.chooser_sidebar_this_pc),
+            modifier = Modifier.weight(weight = 0.55f),
+        ) {
             DrivesList(
                 drives = drives,
                 selectedDrive = selectedDrive,
@@ -76,7 +84,7 @@ private fun SidebarPanel(title: String, modifier: Modifier = Modifier, content: 
         Text(
             text = title,
             color = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.75f),
-            fontSize = 12.sp,
+            style = SimAnalyzerTheme.typography.bodySmall,
         )
         Spacer(Modifier.height(10.dp))
         content()
@@ -130,7 +138,7 @@ private fun DrivesList(drives: List<File>, selectedDrive: String, onDriveClick: 
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(SimAnalyzerTheme.corners.item)
                         .background(backgroundColor)
                         .onClick(onClick = { onDriveClick(drive) })
                         .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
@@ -147,8 +155,8 @@ private fun DrivesList(drives: List<File>, selectedDrive: String, onDriveClick: 
                         text = drive.label,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        fontSize = 12.sp,
                         color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f),
+                        style = SimAnalyzerTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -173,7 +181,7 @@ private fun SidebarItem(text: String, leadingIcon: ImageVector, isSelected: Bool
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
+            .clip(SimAnalyzerTheme.corners.item)
             .background(backgroundColor)
             .onClick(onClick = onClick)
             .padding(horizontal = 10.dp, vertical = 8.dp),
@@ -190,8 +198,8 @@ private fun SidebarItem(text: String, leadingIcon: ImageVector, isSelected: Bool
             text = text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            fontSize = 12.sp,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f),
+            style = SimAnalyzerTheme.typography.bodySmall,
         )
     }
 }

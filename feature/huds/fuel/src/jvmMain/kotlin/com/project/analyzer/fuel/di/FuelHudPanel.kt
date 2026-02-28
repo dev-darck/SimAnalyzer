@@ -26,11 +26,6 @@ class FuelHudPanel : HudPanel {
         "otherwise calculates per-lap consumption, saves the best lap stats, and restores them on next launch."
 
     @Composable
-    override fun DemoContent(modifier: Modifier) {
-        FuelDemoContent(modifier = modifier)
-    }
-
-    @Composable
     override fun Content(modifier: Modifier) {
         val viewModel = metroViewModel<FuelHudViewModel>()
         LaunchedEffect(Unit) { viewModel.dispatch(FuelIntent.Start) }
@@ -41,5 +36,10 @@ class FuelHudPanel : HudPanel {
             onResetAll = { viewModel.dispatch(FuelIntent.ResetAll) },
             modifier = modifier,
         )
+    }
+
+    @Composable
+    override fun DemoContent(modifier: Modifier) {
+        FuelDemoContent(modifier = modifier)
     }
 }

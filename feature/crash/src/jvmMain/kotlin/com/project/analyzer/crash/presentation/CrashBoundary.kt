@@ -1,4 +1,5 @@
 @file:OptIn(ExperimentalAtomicApi::class, ExperimentalComposeUiApi::class)
+@file:Suppress("WildcardImport", "NoWildcardImports")
 
 package com.project.analyzer.crash.presentation
 
@@ -12,6 +13,9 @@ import androidx.compose.ui.window.WindowExceptionHandler
 import androidx.compose.ui.window.WindowExceptionHandlerFactory
 import com.project.analyzer.crash.domain.CrashReport
 import com.project.analyzer.crash.domain.CreateCrashReportUseCase
+import com.project.analyzer.feature.crash.Res.*
+import kotlinx.coroutines.runBlocking
+import org.jetbrains.compose.resources.getString
 import java.awt.Dimension
 import java.awt.Window
 import javax.swing.JDialog
@@ -25,6 +29,7 @@ private val crashDialogShown = AtomicBoolean(false)
 @Composable
 fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) {
     val createCrashReport = remember { CreateCrashReportUseCase() }
+    val handlerTitle = remember { runBlocking { getString(Res.string.crash_dialog_handler_title) } }
 
     CompositionLocalProvider(
         LocalWindowExceptionHandlerFactory provides WindowExceptionHandlerFactory { window ->
@@ -32,7 +37,7 @@ fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) 
                 val report = createCrashReport(
                     throwable = throwable,
                     thread = Thread.currentThread(),
-                    title = "SimAnalyzer crashed (WindowExceptionHandler)",
+                    title = handlerTitle,
                     appVersion = appVersion,
                 )
 
@@ -64,6 +69,7 @@ fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) 
 
 private fun showCrashDialog(owner: Window, crashReport: CrashReport) {
     val b = owner.graphicsConfiguration.bounds
+    val dialogTitle = runBlocking { getString(Res.string.crash_dialog_title) }
 
     val desiredW = 980
     val desiredH = 720
@@ -75,7 +81,7 @@ private fun showCrashDialog(owner: Window, crashReport: CrashReport) {
     val finalH = desiredH.coerceAtMost(maxH)
 
     val dialog = JDialog(owner).apply {
-        title = "SimAnalyzer crashed"
+        title = dialogTitle
         isModal = true
         isResizable = true
         isAlwaysOnTop = true

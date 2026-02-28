@@ -1,0 +1,77 @@
+<resources>
+    <string name="timing_board_title">Timing Board</string>
+    <string name="timing_board_lap">Lap %1$d</string>
+    <string name="timing_board_header_type">TYPE</string>
+    <string name="timing_board_header_time">TIME</string>
+    <string name="timing_board_header_delta">DELTA</string>
+    <string name="timing_board_current_lap">Current lap</string>
+    <string name="timing_board_last_lap">Last lap</string>
+    <string name="timing_board_best_lap">Best lap</string>
+    <string name="timing_board_no_delta">-</string>
+
+    <string name="electronics_title">Electronics</string>
+    <string name="electronics_dynamics">Dynamics</string>
+    <string name="electronics_warning_tc_abs">TC + ABS active</string>
+    <string name="electronics_warning_tc">TC active</string>
+    <string name="electronics_warning_abs">ABS active</string>
+    <string name="electronics_item_tc">TC</string>
+    <string name="electronics_item_abs">ABS</string>
+    <string name="electronics_item_map">MAP</string>
+    <string name="electronics_item_bb">BB</string>
+    <string name="electronics_item_slip_max">SLIP (max)</string>
+    <string name="electronics_item_load">LOAD</string>
+    <string name="electronics_item_tyre_avg">TYRE (avg)</string>
+
+    <string name="race_info_title">Race Info</string>
+    <string name="race_info_fuel">Fuel</string>
+    <string name="race_info_fuel_value">%1$s L</string>
+    <string name="race_info_fuel_per_lap">L/lap</string>
+    <string name="race_info_est_laps">Est. laps</string>
+    <string name="race_info_sector">S%1$d</string>
+
+    <string name="inputs_title">Inputs</string>
+    <string name="inputs_thr">THR</string>
+    <string name="inputs_brk">BRK</string>
+    <string name="inputs_clt">CLT</string>
+    <string name="inputs_left">L</string>
+    <string name="inputs_right">R</string>
+    <string name="inputs_percent">%1$s</string>
+    <string name="inputs_steer_value">%1$d°</string>
+
+    <string name="telemetry_speed_unit">km/h</string>
+    <string name="telemetry_rpm_unit">rpm</string>
+    <string name="telemetry_reverse_gear">R</string>
+
+    <string name="wheels_title">Wheels</string>
+    <string name="wheel_position_fl">FL</string>
+    <string name="wheel_position_fr">FR</string>
+    <string name="wheel_position_rl">RL</string>
+    <string name="wheel_position_rr">RR</string>
+    <string name="wheel_metric_psi">PSI</string>
+    <string name="wheel_metric_slip">SLIP</string>
+    <string name="wheel_metric_sus">SUS</string>
+    <string name="wheel_metric_brk">BRK</string>
+    <string name="wheel_metric_ty">TY</string>
+    <string name="wheel_suspension_value">%1$dmm</string>
+    <string name="wheel_degree_value">%1$s°</string>
+    <string name="wheel_tooltip_psi">Tyre Pressure (PSI)
+        Affects grip and tyre wear.
+        Green = optimal pressure.
+    </string>
+    <string name="wheel_tooltip_slip">Wheel Slip Ratio (0-1)
+        Shows traction loss.
+        Orange &gt;0.05, red &gt;0.15.
+    </string>
+    <string name="wheel_tooltip_sus">Suspension Travel (mm)
+        Current damper compression.
+        High values = bottoming out.
+    </string>
+    <string name="wheel_tooltip_brk">Brake Disc Temperature (°C)
+        Affects braking efficiency.
+        Orange &gt;400°C, red &gt;600°C.
+    </string>
+    <string name="wheel_tooltip_ty">Tyre Core Temperature (°C)
+        Affects grip and degradation.
+        Optimal 80-100°C for slicks.
+    </string>
+</resources>

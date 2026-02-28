@@ -37,10 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.navigation.api.Root
+import com.project.analyzer.composeApp.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun Sidebar(
@@ -81,7 +83,7 @@ fun Sidebar(
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(SimAnalyzerTheme.corners.card)
                         .background(SimAnalyzerTheme.material.secondaryContainer),
                     contentAlignment = Alignment.Center,
                 ) { topIcon() }
@@ -187,7 +189,7 @@ private fun SidebarItem(
         modifier = Modifier
             .width(56.dp)
             .scale(itemScale)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(SimAnalyzerTheme.corners.card)
             .hoverable(interaction)
             .clickable(
                 enabled = !selected,
@@ -200,7 +202,7 @@ private fun SidebarItem(
         Box(
             modifier = Modifier
                 .size(width = 56.dp, height = 32.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(SimAnalyzerTheme.corners.card)
                 .background(pillColor),
             contentAlignment = Alignment.Center,
         ) {
@@ -216,8 +218,7 @@ private fun SidebarItem(
         Text(
             text = item.title,
             color = textColor,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+            style = SimAnalyzerTheme.typography.labelMedium,
         )
     }
 }
@@ -240,14 +241,12 @@ private fun animateScale(selected: Boolean, hovered: Boolean): androidx.compose.
 @Composable
 private fun SidebarItemPreview() {
     SimAnalyzerTheme {
-        val items = remember {
-            listOf(
-                NavItem(Root.Live, "Live", Icons.Filled.Live),
-                NavItem(Root.Session, "Session", Icons.Filled.Session),
+        val items = listOf(
+            NavItem(Root.Live, stringResource(Res.string.app_nav_live), Icons.Filled.Live),
+            NavItem(Root.Session, stringResource(Res.string.app_nav_session), Icons.Filled.Session),
 //            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
-                NavItem(Root.Settings, "Settings", Icons.Filled.Settings),
-            )
-        }
+            NavItem(Root.Settings, stringResource(Res.string.app_nav_settings), Icons.Filled.Settings),
+        )
 
         Sidebar(
             selectedKey = Root.Live,

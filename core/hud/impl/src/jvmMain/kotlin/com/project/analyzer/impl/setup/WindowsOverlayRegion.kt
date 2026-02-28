@@ -18,7 +18,7 @@ internal object WindowsOverlayRegion {
 
     fun apply(window: Window, rectsLogical: List<IntRect>) {
         if (rectsLogical.isEmpty()) {
-//            setEmptyRegion(window)
+            setEmptyRegion(window)
             return
         }
 

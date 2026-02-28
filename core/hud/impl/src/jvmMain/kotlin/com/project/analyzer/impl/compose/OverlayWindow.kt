@@ -2,6 +2,7 @@ package com.project.analyzer.impl.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -9,8 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
-import com.project.analyzer.game.impl.GameDetector
-import com.project.analyzer.game.impl.GameProfiles
+import com.project.analyzer.game.api.GameDetectorFactory
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
@@ -22,13 +22,41 @@ import java.util.concurrent.Executors
 fun OverlayWindow(
     onCloseRequest: () -> Unit,
     panels: Set<HudPanel>,
+    gameDetectorFactory: GameDetectorFactory,
     visible: Boolean = true,
     state: WindowState = rememberWindowState(),
 ) {
     if (!visible) return
 
+    val scope = rememberCoroutineScope()
+    val hitRegions: HitRegions = remember { InMemoryHitRegions() }
+
+    val winApiDispatcher = remember {
+        Executors.newSingleThreadExecutor { r ->
+            Thread(r, "winapi-overlay").apply { isDaemon = true }
+        }.asCoroutineDispatcher()
+    }
+
+    val gameDetector = remember {
+        gameDetectorFactory.create(
+            requireForeground = true,
+            coroutineDispatcher = winApiDispatcher,
+        )
+    }
+
+    val overlayController = remember(gameDetector, hitRegions) {
+        OverlayController(
+            gameDetector = gameDetector,
+            hitRegions = hitRegions,
+            coroutineDispatcher = winApiDispatcher,
+        )
+    }
+
+    val overlayState by overlayController.state.collectAsState()
+    val overlayWindowVisible = visible && overlayState.isVisible
+
     Window(
-        visible = true,
+        visible = overlayWindowVisible,
         onCloseRequest = onCloseRequest,
         title = "HUD Overlay",
         transparent = true,
@@ -38,40 +66,16 @@ fun OverlayWindow(
         focusable = false,
         state = state,
     ) {
-        val scope = rememberCoroutineScope()
-        val hitRegions: HitRegions = remember { InMemoryHitRegions() }
-
-        val winApiDispatcher = remember {
-            Executors.newSingleThreadExecutor { r ->
-                Thread(r, "winapi-overlay").apply { isDaemon = true }
-            }.asCoroutineDispatcher()
-        }
-
-        val gameDetector = remember {
-            val configs = GameProfiles.detectorConfigs()
-            GameDetector(
-                configs = configs,
-                requireForeground = true,
-                coroutineDispatcher = winApiDispatcher,
-            )
-        }
-
-        val overlayController = remember(gameDetector, hitRegions) {
-            OverlayController(
-                gameDetector = gameDetector,
-                hitRegions = hitRegions,
-                coroutineDispatcher = winApiDispatcher,
-            )
-        }
-
-        val overlayState by overlayController.state.collectAsState()
-
         DisposableEffect(Unit) {
             overlayController.attach(window = window, scope = scope)
             onDispose {
                 overlayController.detach()
                 winApiDispatcher.close()
             }
+        }
+
+        LaunchedEffect(overlayWindowVisible) {
+            overlayController.onComposeWindowVisibilityChanged(overlayWindowVisible)
         }
 
         if (overlayState.isVisible) {

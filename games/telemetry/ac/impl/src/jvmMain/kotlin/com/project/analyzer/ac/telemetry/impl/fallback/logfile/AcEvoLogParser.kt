@@ -5,24 +5,8 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.Parsed
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.Penalty
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_AI_DRIVER_EVO
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CAR_DISPLAY
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONNECTED_ON_CAR_WITH_UUID
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONNECTING_GAMECAR
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_CONTAINER
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DRIVER
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DRIVER_ON_CAR
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_DYNAMIC_TRACK_PRESET
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_GAME_MODE_TYPE
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_LAYOUT_TRACK_FILE
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_MY_CAR
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PENALTY_KEY
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PHYSICS_TRACK
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_PLAYER_COMMAND
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_SESSION_TYPE
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_TIMESTAMP
-import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.RegexConst.RE_TRACK_SLUG
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.ResolvedTrack
+import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.SessionTypeSource
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.TrackIdSource
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import java.time.LocalDateTime
@@ -40,6 +24,7 @@ internal class AcEvoLogParser {
     private var penaltyGroupId: String? = null
     private var penaltyGroupMs: Long = 0L
     private var playerCarUuid: String? = null
+    private var sessionTypeSource: SessionTypeSource = SessionTypeSource.NONE
     private val uuidToCarMap = mutableMapOf<String, String>()
 
     val currentPlayerCarUuid: String?
@@ -48,6 +33,7 @@ internal class AcEvoLogParser {
     fun resetForEpoch() {
         trackIdSource = TrackIdSource.NONE
         carSource = CarSource.NONE
+        sessionTypeSource = SessionTypeSource.NONE
         clearPenaltyGroup()
     }
 
@@ -67,6 +53,8 @@ internal class AcEvoLogParser {
         var hardBoundaryTs: Long? = null
         var gameStarted = false
         var gameStartedTs: Long? = null
+        var mainMenuEntered = false
+        var mainMenuTs: Long? = null
         var physicsTrackName: String? = null
         var gameStartedTrackName: String? = null
         var slugBase: String? = null
@@ -85,6 +73,14 @@ internal class AcEvoLogParser {
         var driverSteamId: String? = null
         var penalty: Penalty? = null
         var sessionType: EvoSessionType? = null
+        var sessionTypeSource: SessionTypeSource = SessionTypeSource.NONE
+
+        fun updateSessionType(candidate: EvoSessionType, source: SessionTypeSource) {
+            if (candidate == EvoSessionType.UNKNOWN) return
+            if (source.ordinal < sessionTypeSource.ordinal) return
+            sessionType = candidate
+            sessionTypeSource = source
+        }
 
         for (line in lines) {
             if (isHardBoundary(line)) {
@@ -94,20 +90,22 @@ internal class AcEvoLogParser {
                 }
             }
 
-            RE_CONNECTING_GAMECAR.find(line)?.let { m ->
-                val uuid = normalizeUuid(m.groupValues[1])
-                if (uuid.isNotBlank()) {
-                    playerCarUuid = uuid
-                }
-                driverName = m.groupValues[2].trim()
-                m.groupValues.getOrNull(3)?.takeIf { it.isNotBlank() }?.let {
-                    driverSteamId = it
+            if (isMainMenuTransition(line)) {
+                mainMenuEntered = true
+                if (mainMenuTs == null) {
+                    mainMenuTs = parseTimestamp(line)?.let(::parseTimestampMs)
                 }
             }
 
-            RE_CONNECTED_ON_CAR_WITH_UUID.find(line)?.let { m ->
-                val carModel = cleanCarId(m.groupValues[1])
-                val uuid = normalizeUuid(m.groupValues[2])
+            parseConnectingGamecar(line)?.let { (uuid, name, steamId) ->
+                if (uuid.isNotBlank()) {
+                    playerCarUuid = uuid
+                }
+                driverName = name
+                driverSteamId = steamId
+            }
+
+            parseConnectedOnCar(line)?.let { (carModel, uuid) ->
                 if (uuid.isNotBlank() && carModel.isNotBlank()) {
                     uuidToCarMap[uuid] = carModel
                     if (uuid == playerCarUuid) {
@@ -119,17 +117,31 @@ internal class AcEvoLogParser {
                 }
             }
 
-            RE_AI_DRIVER_EVO.find(line)?.let { m ->
-                val carModel = cleanCarId(m.groupValues[1])
-                val uuid = normalizeUuid(m.groupValues[2])
+            parseAiDriverEvo(line)?.let { (carModel, uuid) ->
                 if (uuid.isNotBlank() && carModel.isNotBlank()) {
                     uuidToCarMap[uuid] = carModel
                 }
             }
 
-            RE_SESSION_TYPE.find(line)?.let { m ->
-                val typeStr = m.groupValues[2]
-                sessionType = EvoSessionType.fromLogString(typeStr)
+            parseRemoteCreatedSessionType(line)?.let { typeStr ->
+                updateSessionType(
+                    candidate = typeStr,
+                    source = SessionTypeSource.REMOTE_CREATED,
+                )
+            }
+
+            parseSelectedSessionType(line)?.let { type ->
+                updateSessionType(
+                    candidate = type,
+                    source = SessionTypeSource.SELECTED_SESSION,
+                )
+            }
+
+            parseGotoLoadingPageSessionType(line)?.let { type ->
+                updateSessionType(
+                    candidate = type,
+                    source = SessionTypeSource.GOTO_LOADING_PAGE,
+                )
             }
 
             if (line.contains("Game Started!", ignoreCase = true)) {
@@ -138,8 +150,11 @@ internal class AcEvoLogParser {
                     gameStartedTs = parseTimestamp(line)?.let(::parseTimestampMs)
                 }
 
-                RE_GAME_MODE_TYPE.find(line)?.groupValues?.getOrNull(1)?.let {
-                    sessionType = EvoSessionType.fromLogString(it)
+                extractGameModeType(line)?.let {
+                    updateSessionType(
+                        candidate = EvoSessionType.fromLogString(it),
+                        source = SessionTypeSource.GAME_STARTED,
+                    )
                 }
 
                 val parts = line.split("|").map { it.trim() }
@@ -155,43 +170,33 @@ internal class AcEvoLogParser {
                 }
             }
 
-            RE_PHYSICS_TRACK.find(line)?.let {
-                physicsTrackName = it.groupValues[1].trim()
+            extractPhysicsTrackName(line)?.let {
+                physicsTrackName = it
             }
 
-            RE_TRACK_SLUG.find(line)?.let { m ->
-                val tokens = m.groupValues[1].split(Regex("\\s+")).filter { it.isNotBlank() }
-                when {
-                    tokens.size >= 2 -> {
-                        slugBase = tokens.dropLast(1).joinToString("_")
-                        slugLayout = tokens.last()
-                    }
-
-                    tokens.size == 1 -> {
-                        slugBase = tokens.first()
-                        slugLayout = null
-                    }
-                }
+            parseTrackSlug(line)?.let { (base, layout) ->
+                slugBase = base
+                slugLayout = layout
             }
 
             if (containerFolder == null) {
-                RE_CONTAINER.find(line)?.let {
-                    containerFolder = it.groupValues[1]
-                    containerLayout = it.groupValues[2]
+                parseContainerTrack(line)?.let { (folder, layout) ->
+                    containerFolder = folder
+                    containerLayout = layout
                 }
             }
 
             if (dynamicTrackFolder == null) {
-                RE_DYNAMIC_TRACK_PRESET.find(line)?.let {
-                    dynamicTrackFolder = it.groupValues[1]
-                    dynamicTrackLayout = it.groupValues[2]
+                parseDynamicTrackPreset(line)?.let { (folder, layout) ->
+                    dynamicTrackFolder = folder
+                    dynamicTrackLayout = layout
                 }
             }
 
             if (layoutFileFolder == null) {
-                RE_LAYOUT_TRACK_FILE.find(line)?.let {
-                    layoutFileFolder = it.groupValues[1]
-                    layoutFileLayout = it.groupValues[2]
+                parseLayoutTrackFile(line)?.let { (folder, layout) ->
+                    layoutFileFolder = folder
+                    layoutFileLayout = layout
                 }
             }
 
@@ -203,9 +208,9 @@ internal class AcEvoLogParser {
             }
 
             if (driverName == null) {
-                RE_DRIVER.find(line)?.let {
-                    driverName = it.groupValues[1].trim()
-                    driverSteamId = it.groupValues[2].takeIf { s -> s.isNotBlank() }
+                parseDriverConnection(line)?.let { (name, steamId) ->
+                    driverName = name
+                    driverSteamId = steamId
                 }
             }
 
@@ -219,6 +224,8 @@ internal class AcEvoLogParser {
             hardBoundaryTimestampMs = hardBoundaryTs,
             gameStarted = gameStarted,
             gameStartedTimestampMs = gameStartedTs,
+            mainMenuEntered = mainMenuEntered,
+            mainMenuTimestampMs = mainMenuTs,
             physicsTrackName = physicsTrackName,
             gameStartedTrackName = gameStartedTrackName,
             slugBase = slugBase,
@@ -235,6 +242,7 @@ internal class AcEvoLogParser {
             driverSteamId = driverSteamId,
             penalty = penalty,
             sessionType = sessionType,
+            sessionTypeSource = sessionTypeSource,
         )
     }
 
@@ -250,6 +258,24 @@ internal class AcEvoLogParser {
 
         if (!alreadySet) {
             carSource = maxOf(carSource, p.carSource)
+            return candidate
+        }
+
+        return null
+    }
+
+    fun chooseSessionType(p: Parsed, lastInfo: EvoFileInfo): EvoSessionType? {
+        val candidate = p.sessionType ?: return null
+        val candidateSource = p.sessionTypeSource
+        val alreadySet = lastInfo.sessionType != EvoSessionType.UNKNOWN
+
+        if (candidateSource.ordinal > sessionTypeSource.ordinal) {
+            sessionTypeSource = candidateSource
+            return candidate
+        }
+
+        if (!alreadySet || candidateSource == sessionTypeSource) {
+            sessionTypeSource = maxOf(sessionTypeSource, candidateSource)
             return candidate
         }
 
@@ -322,6 +348,9 @@ internal class AcEvoLogParser {
         val stableId = lastInfo.trackId?.takeIf { it.isNotBlank() }
         val stableSource = trackIdSource
         val stableLayout = lastInfo.layoutId?.takeIf { it.isNotBlank() }
+        val isPrecisionDowngrade = stableId != null &&
+            candidateId != null &&
+            isTrackPrecisionDowngrade(stableId = stableId, candidateId = candidateId)
 
         if (stableId != null && stableLayout != null && candidateLayout.isNullOrBlank()) {
             return ResolvedTrack(
@@ -335,6 +364,7 @@ internal class AcEvoLogParser {
             candidateId.isNullOrBlank() -> stableId
             stableId.isNullOrBlank() -> candidateId
             candidateId == stableId -> stableId
+            isPrecisionDowngrade -> stableId
             candidateSource.ordinal < stableSource.ordinal -> stableId
             else -> candidateId
         }
@@ -375,28 +405,189 @@ internal class AcEvoLogParser {
         )
     }
 
+    private fun isTrackPrecisionDowngrade(stableId: String, candidateId: String): Boolean {
+        if (stableId == candidateId) return false
+
+        val stableLayout = stableId.substringAfterLast('_', missingDelimiterValue = "")
+        val candidateLayout = candidateId.substringAfterLast('_', missingDelimiterValue = "")
+        if (stableLayout.isBlank() || candidateLayout.isBlank() || stableLayout != candidateLayout) {
+            return false
+        }
+
+        val stableBase = stableId.removeSuffix("_$stableLayout")
+        val candidateBase = candidateId.removeSuffix("_$candidateLayout")
+        if (stableBase.isBlank() || candidateBase.isBlank()) return false
+
+        return stableBase == candidateBase || stableBase.startsWith("${candidateBase}_")
+    }
+
+    private fun parseConnectingGamecar(line: String): Triple<String, String, String?>? {
+        val tail = substringAfterIgnoreCase(line, "connecting gamecar ")?.trimStart() ?: return null
+        val uuid = normalizeUuid(tail.takeWhile { !it.isWhitespace() && it != '(' && it != ',' })
+        val (name, steamId) = parseDriverConnection(line) ?: return null
+        return if (uuid.isNotBlank()) Triple(uuid, name, steamId) else null
+    }
+
+    private fun parseDriverConnection(line: String): Pair<String, String?>? {
+        if (!line.contains("connecting gamecar", ignoreCase = true)) return null
+        val open = line.indexOf('(')
+        val close = line.indexOf(')', startIndex = open + 1)
+        if (open < 0 || close <= open + 1) return null
+        val inside = line.substring(open + 1, close)
+        val separator = inside.lastIndexOf('|')
+        val name = if (separator >= 0) inside.substring(0, separator).trim() else inside.trim()
+        val steamId = if (separator >= 0) inside.substring(separator + 1).trim().takeIf { it.isNotBlank() } else null
+        return name.takeIf { it.isNotBlank() }?.let { it to steamId }
+    }
+
+    private fun parseConnectedOnCar(line: String): Pair<String, String>? {
+        val tail = substringAfterIgnoreCase(line, "connected on car ") ?: return null
+        val carModel = cleanCarId(tail.substringBefore(','))
+        val uuidTail = substringAfterIgnoreCase(tail, "with new carId ") ?: return null
+        val uuid = normalizeUuid(
+            uuidTail.takeWhile { !it.isWhitespace() && it != ',' && it != ')' && it != ']' && it != '}' },
+        )
+        return if (carModel.isNotBlank() && uuid.isNotBlank()) carModel to uuid else null
+    }
+
+    private fun parseAiDriverEvo(line: String): Pair<String, String>? {
+        val tail = substringAfterIgnoreCase(line, "Creating AiDriverEvo for car ") ?: return null
+        val open = tail.indexOf('(')
+        val close = tail.indexOf(')', startIndex = open + 1)
+        if (open < 0 || close <= open + 1) return null
+        val carModel = cleanCarId(tail.substring(0, open))
+        val uuid = normalizeUuid(tail.substring(open + 1, close))
+        return if (carModel.isNotBlank() && uuid.isNotBlank()) carModel to uuid else null
+    }
+
+    private fun parseRemoteCreatedSessionType(line: String): EvoSessionType? {
+        val createdIdx = line.lastIndexOf(" created", ignoreCase = true)
+        if (createdIdx < 0) return null
+        val tokens = tokenizeByWhitespace(line.substring(0, createdIdx))
+        if (tokens.size < 2) return null
+        val remoteToken = tokens[tokens.lastIndex - 1]
+        if (!remoteToken.endsWith("Remote", ignoreCase = true)) return null
+        return EvoSessionType.fromLogString(tokens.last())
+    }
+
+    private fun parseSelectedSessionType(line: String): EvoSessionType? {
+        val tail = substringAfterIgnoreCase(line, "Selected session ") ?: return null
+        val tokens = tokenizeByWhitespace(tail)
+        if (tokens.size < 3) return null
+        val currentToken = tokens[tokens.lastIndex - 1]
+        val trailingToken = tokens.last()
+        val isCurrentSession = currentToken.equals("true", ignoreCase = true)
+        if (!isBooleanToken(currentToken) || !isBooleanToken(trailingToken) || !isCurrentSession) {
+            return null
+        }
+        val type = tokens.subList(0, tokens.size - 2).joinToString(" ")
+        return EvoSessionType.fromLogString(type)
+    }
+
+    private fun parseGotoLoadingPageSessionType(line: String): EvoSessionType? {
+        val type = substringAfterIgnoreCase(line, "goto_loadingpage ")
+            ?.takeWhile { !it.isWhitespace() }
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: return null
+        return EvoSessionType.fromLogString(type)
+    }
+
+    private fun extractGameModeType(line: String): String? = extractIdentifierAfter(line, "GameModeType_")
+
+    private fun extractPhysicsTrackName(line: String): String? =
+        substringAfterIgnoreCase(line, "Creating physics track:")
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+
+    private fun parseTrackSlug(line: String): Pair<String, String?>? {
+        val tail = substringAfterIgnoreCase(line, "TRACK NAME") ?: return null
+        val tokens = tokenizeByWhitespace(tail)
+        if (tokens.isEmpty()) return null
+        return when {
+            tokens.size >= 2 -> tokens.dropLast(1).joinToString("_") to tokens.last()
+            else -> tokens.first() to null
+        }
+    }
+
+    private fun parseContainerTrack(line: String): Pair<String, String>? = parseTrackPath(
+        line = line,
+        folder = "containers",
+        fileExtension = ".scene",
+        layoutPrefix = "layout_",
+    )
+
+    private fun parseDynamicTrackPreset(line: String): Pair<String, String>? = parseTrackPath(
+        line = line,
+        folder = "dynamic_track",
+        fileExtension = ".dynamictrackpresetcompressed",
+    )
+
+    private fun parseLayoutTrackFile(line: String): Pair<String, String>? = parseTrackPath(
+        line = line,
+        folder = "layouts",
+        fileExtension = ".track_layout",
+        layoutPrefix = "layout_",
+    )
+
+    private fun parseTrackPath(
+        line: String,
+        folder: String,
+        fileExtension: String,
+        layoutPrefix: String = "",
+    ): Pair<String, String>? {
+        val tail = substringAfterIgnoreCase(normalizeSlashes(line), "content/tracks/") ?: return null
+        val segments = tail.split('/')
+        if (segments.size < 3) return null
+        if (!segments[1].equals(folder, ignoreCase = true)) return null
+        val fileName = segments[2]
+        if (!fileName.endsWith(fileExtension, ignoreCase = true)) return null
+        val layoutRaw = fileName.substring(0, fileName.length - fileExtension.length)
+        val layout = if (layoutPrefix.isNotEmpty() && layoutRaw.startsWith(layoutPrefix, ignoreCase = true)) {
+            layoutRaw.substring(layoutPrefix.length)
+        } else {
+            layoutRaw
+        }
+        val track = segments[0].trim()
+        return if (track.isNotBlank() && layout.isNotBlank()) track to layout else null
+    }
+
     private fun parsePlayerCar(line: String): Pair<String, CarSource>? {
-        RE_PLAYER_COMMAND.find(line)?.let { m ->
-            val carId = cleanCarId(m.groupValues[1])
-            return carId to CarSource.STRONGEST_PLAYER_COMMAND
+        if (line.contains("onSetPlayerCurrentCarCommand:", ignoreCase = true)) {
+            val carId = extractContentCarId(line)
+            if (!carId.isNullOrBlank()) {
+                return carId to CarSource.STRONGEST_PLAYER_COMMAND
+            }
         }
 
-        RE_DRIVER_ON_CAR.find(line)?.let { m ->
-            val carId = cleanCarId(m.groupValues[1])
-            return carId to CarSource.STRONGEST_DRIVER_ON_CAR
+        if (line.contains("Driver ", ignoreCase = true) && line.contains(" on car ", ignoreCase = true)) {
+            val carId = cleanCarId(substringAfterIgnoreCase(line, " on car ").orEmpty())
+            if (carId.isNotBlank()) {
+                return carId to CarSource.STRONGEST_DRIVER_ON_CAR
+            }
         }
 
-        RE_MY_CAR.find(line)?.let { m ->
-            val carId = cleanCarId(m.groupValues[1])
-            return carId to CarSource.STRONGEST_MY_CAR
+        substringAfterIgnoreCase(line, "my car:")?.let {
+            val carId = cleanCarId(it)
+            if (carId.isNotBlank()) {
+                return carId to CarSource.STRONGEST_MY_CAR
+            }
         }
 
-        RE_CAR_DISPLAY.find(line)?.let { m ->
-            val carId = cleanCarId(m.groupValues[1])
-            return carId to CarSource.MEDIUM_CAR_DISPLAY
+        substringAfterIgnoreCase(line, "CarDisplay.init:")?.let {
+            val carId = cleanCarId(it)
+            if (carId.isNotBlank()) {
+                return carId to CarSource.MEDIUM_CAR_DISPLAY
+            }
         }
 
         return null
+    }
+
+    private fun extractContentCarId(line: String): String? {
+        val tail = substringAfterIgnoreCase(normalizeSlashes(line), "content/cars/") ?: return null
+        val carId = cleanCarId(tail.substringBefore('/'))
+        return carId.takeIf { it.isNotBlank() }
     }
 
     private fun normalizeUuid(raw: String): String = raw.replace("-", "").lowercase().trim()
@@ -419,9 +610,9 @@ internal class AcEvoLogParser {
     }
 
     private fun normalizeToken(raw: String): String = raw.lowercase().trim()
-        .replace(Regex("\\s+"), "_")
-        .replace(Regex("[^a-z0-9_]"), "_")
-        .replace(Regex("_+"), "_")
+        .replace(RE_ONE_OR_MORE_WHITESPACE, "_")
+        .replace(RE_NON_ALNUM_UNDERSCORE, "_")
+        .replace(RE_ONE_OR_MORE_UNDERSCORES, "_")
         .trim('_')
 
     private fun cleanGameStartedTrack(raw: String): String {
@@ -430,7 +621,14 @@ internal class AcEvoLogParser {
         val cuts = listOf(" time attack", " practice", " qualifying", " race", " hotlap", " warmup")
         val cutIdx = cuts.mapNotNull { lower.indexOf(it).takeIf { i -> i >= 0 } }.minOrNull()
         return (if (cutIdx != null) noDate.substring(0, cutIdx) else noDate)
-            .replace(Regex("\\s+"), " ").trim()
+            .replace(RE_ONE_OR_MORE_WHITESPACE, " ").trim()
+    }
+
+    private fun isMainMenuTransition(line: String): Boolean {
+        val normalized = normalizeSlashes(line).lowercase()
+        return normalized.contains("goto menu.html,main/main") ||
+            normalized.contains("loading page menu.html main/main") ||
+            normalized.contains("init: menustate updated /menu.html main main")
     }
 
     private fun isHardBoundary(s: String): Boolean {
@@ -452,9 +650,8 @@ internal class AcEvoLogParser {
     }
 
     private fun parsePenalty(line: String): Penalty? {
-        RE_PENALTY_KEY.find(line)?.let { m ->
+        parsePenaltyKeyId(line)?.let { id ->
             val ts = parseTimestamp(line) ?: return null
-            val id = "penalty#${m.groupValues[1]}"
             updatePenaltyGroup(id, parseTimestampMs(ts))
             return Penalty(id, "Penalty added", ts)
         }
@@ -482,6 +679,16 @@ internal class AcEvoLogParser {
         return Penalty(groupedId, reason, ts)
     }
 
+    private fun parsePenaltyKeyId(line: String): String? {
+        val marker = "{PENALTY_ADDED_KEY}"
+        val start = line.indexOf(marker, ignoreCase = true)
+        if (start < 0) return null
+        val hash = line.indexOf('#', startIndex = start + marker.length)
+        if (hash < 0) return null
+        val digits = line.substring(hash + 1).takeWhile { it.isDigit() }
+        return digits.takeIf { it.isNotBlank() }?.let { "penalty#$it" }
+    }
+
     private fun groupPenaltyId(baseId: String, tsMs: Long?): String {
         if (tsMs == null) return "$baseId@unknown"
 
@@ -503,7 +710,13 @@ internal class AcEvoLogParser {
         penaltyGroupMs = tsMs ?: 0L
     }
 
-    private fun parseTimestamp(line: String): String? = RE_TIMESTAMP.find(line)?.groupValues?.get(1)
+    private fun parseTimestamp(line: String): String? {
+        val trimmed = line.trimStart()
+        if (!trimmed.startsWith('[')) return null
+        val end = trimmed.indexOf(']')
+        if (end <= 1) return null
+        return trimmed.substring(1, end).trim().takeIf { it.isNotBlank() }
+    }
 
     private fun parseTimestampMs(ts: String): Long? = runCatching {
         LocalDateTime.parse(ts, TS_FORMAT)
@@ -511,6 +724,44 @@ internal class AcEvoLogParser {
             .toInstant()
             .toEpochMilli()
     }.getOrNull()
+
+    private fun substringAfterIgnoreCase(value: String, marker: String): String? {
+        val idx = value.indexOf(marker, ignoreCase = true)
+        return if (idx >= 0) value.substring(idx + marker.length) else null
+    }
+
+    private fun extractIdentifierAfter(value: String, marker: String): String? {
+        val tail = substringAfterIgnoreCase(value, marker) ?: return null
+        val identifier = buildString {
+            for (ch in tail) {
+                if (ch.isLetterOrDigit() || ch == '_') append(ch) else break
+            }
+        }
+        return identifier.takeIf { it.isNotBlank() }
+    }
+
+    private fun tokenizeByWhitespace(value: String): List<String> {
+        val tokens = mutableListOf<String>()
+        val current = StringBuilder()
+        for (ch in value) {
+            if (ch.isWhitespace()) {
+                if (current.isNotEmpty()) {
+                    tokens += current.toString()
+                    current.setLength(0)
+                }
+            } else {
+                current.append(ch)
+            }
+        }
+        if (current.isNotEmpty()) {
+            tokens += current.toString()
+        }
+        return tokens
+    }
+
+    private fun isBooleanToken(value: String): Boolean = value.equals("true", true) || value.equals("false", true)
+
+    private fun normalizeSlashes(value: String): String = value.replace('\\', '/')
 
     private companion object {
         data class CandidateTrack(val id: String? = null, val layout: String? = null)
@@ -524,5 +775,9 @@ internal class AcEvoLogParser {
             .appendFraction(ChronoField.MILLI_OF_SECOND, 1, 9, false)
             .optionalEnd()
             .toFormatter(Locale.US)
+
+        val RE_ONE_OR_MORE_WHITESPACE = Regex("\\s+")
+        val RE_NON_ALNUM_UNDERSCORE = Regex("[^a-z0-9_]")
+        val RE_ONE_OR_MORE_UNDERSCORES = Regex("_+")
     }
 }

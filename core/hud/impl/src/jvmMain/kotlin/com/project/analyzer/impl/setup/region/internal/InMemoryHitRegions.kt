@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import java.util.concurrent.ConcurrentHashMap
 
-class InMemoryHitRegions : HitRegions {
+internal class InMemoryHitRegions : HitRegions {
 
     private val regions = ConcurrentHashMap<String, IntRect>()
     private val _changes = MutableStateFlow(0L)

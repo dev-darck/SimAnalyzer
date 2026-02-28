@@ -1,6 +1,7 @@
 <configuration>
 
     <property name="LOG_DIR" value="${LOG_DIR:-./logs}" />
+    <property name="ROOT_LEVEL" value="${ROOT_LEVEL:-INFO}" />
     <property name="CONSOLE_LEVEL" value="${CONSOLE_LEVEL:-OFF}" />
     <property name="FILE_LEVEL" value="${FILE_LEVEL:-INFO}" />
 
@@ -53,7 +54,7 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="${ROOT_LEVEL}">
         <appender-ref ref="CONSOLE" />
         <appender-ref ref="FILE" />
     </root>

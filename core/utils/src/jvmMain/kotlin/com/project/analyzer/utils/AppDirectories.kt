@@ -9,4 +9,6 @@ public interface AppDirectories {
     public val cacheDir: File
     public val logsDir: File
     public val userDataDir: File
+    public val runtimeDir: File
+    public val lockFile: File
 }

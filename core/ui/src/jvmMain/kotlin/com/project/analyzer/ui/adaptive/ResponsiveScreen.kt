@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.runtime.Composable
@@ -26,6 +28,11 @@ private enum class ResponsiveSize {
     Expanded,
 }
 
+public enum class ResponsiveGridMode {
+    Staggered,
+    Grid,
+}
+
 @Composable
 public fun ResponsiveScreen(
     modifier: Modifier = Modifier,
@@ -36,6 +43,7 @@ public fun ResponsiveScreen(
     mediumMaxWidth: Dp = 1250.dp,
     mediumColumns: Int = 2,
     expandedColumns: Int = 2,
+    gridMode: ResponsiveGridMode = ResponsiveGridMode.Staggered,
     backgroundColor: Color = Color.Transparent,
     content: ResponsiveScope.() -> Unit,
 ) {
@@ -77,27 +85,63 @@ public fun ResponsiveScreen(
             }
 
             ResponsiveSize.Medium -> {
-                LazyVerticalStaggeredGrid(
-                    modifier = Modifier.fillMaxSize(),
-                    columns = StaggeredGridCells.Fixed(mediumColumns.coerceAtLeast(1)),
-                    horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
-                    verticalItemSpacing = verticalSpacing,
-                    contentPadding = effectivePadding,
-                ) {
-                    GridScopeAdapter(this).currentContent()
-                }
+                ResponsiveGrid(
+                    columns = mediumColumns,
+                    gridMode = gridMode,
+                    effectivePadding = effectivePadding,
+                    verticalSpacing = verticalSpacing,
+                    horizontalSpacing = horizontalSpacing,
+                    content = currentContent,
+                )
             }
 
             ResponsiveSize.Expanded -> {
-                LazyVerticalStaggeredGrid(
-                    modifier = Modifier.fillMaxSize(),
-                    columns = StaggeredGridCells.Fixed(expandedColumns.coerceAtLeast(1)),
-                    horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
-                    verticalItemSpacing = verticalSpacing,
-                    contentPadding = effectivePadding,
-                ) {
-                    GridScopeAdapter(this).currentContent()
-                }
+                ResponsiveGrid(
+                    columns = expandedColumns,
+                    gridMode = gridMode,
+                    effectivePadding = effectivePadding,
+                    verticalSpacing = verticalSpacing,
+                    horizontalSpacing = horizontalSpacing,
+                    content = currentContent,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResponsiveGrid(
+    columns: Int,
+    gridMode: ResponsiveGridMode,
+    effectivePadding: PaddingValues,
+    verticalSpacing: Dp,
+    horizontalSpacing: Dp,
+    content: ResponsiveScope.() -> Unit,
+) {
+    val safeColumns = columns.coerceAtLeast(1)
+
+    when (gridMode) {
+        ResponsiveGridMode.Staggered -> {
+            LazyVerticalStaggeredGrid(
+                modifier = Modifier.fillMaxSize(),
+                columns = StaggeredGridCells.Fixed(safeColumns),
+                horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+                verticalItemSpacing = verticalSpacing,
+                contentPadding = effectivePadding,
+            ) {
+                StaggeredGridScopeAdapter(this).content()
+            }
+        }
+
+        ResponsiveGridMode.Grid -> {
+            LazyVerticalGrid(
+                modifier = Modifier.fillMaxSize(),
+                columns = GridCells.Fixed(safeColumns),
+                horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+                verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+                contentPadding = effectivePadding,
+            ) {
+                GridScopeAdapter(this).content()
             }
         }
     }

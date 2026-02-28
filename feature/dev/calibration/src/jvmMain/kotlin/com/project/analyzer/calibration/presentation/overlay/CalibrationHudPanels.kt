@@ -3,7 +3,6 @@ package com.project.analyzer.calibration.presentation.overlay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +16,7 @@ import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.hud.api.HudAnchor
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.HudScope
+import com.project.analyzer.theme.SimAnalyzerTheme
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -70,7 +70,7 @@ class CalibrationMiniMapHudPanel(private val overlayDebugBus: OverlayDebugBus) :
             ) {
                 Text(
                     text = "Waiting for telemetry",
-                    style = MaterialTheme.typography.bodySmall,
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = Color.White,
                 )
             }

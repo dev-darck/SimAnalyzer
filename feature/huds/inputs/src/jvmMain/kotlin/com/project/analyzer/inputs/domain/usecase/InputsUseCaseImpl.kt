@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
 @SingleIn(HudScope::class)
-class InputsUseCaseImpl(
+internal class InputsUseCaseImpl(
     private val telemetry: TelemetryLifecycle,
     private val settingsRepo: InputHudSettingsRepository,
 ) : InputsUseCase {

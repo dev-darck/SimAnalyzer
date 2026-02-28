@@ -9,7 +9,7 @@ import dev.zacsweers.metro.Inject
 import java.nio.file.Path
 
 @Inject
-class FileChooserUseCaseImpl(
+internal class FileChooserUseCaseImpl(
     private val repository: FileSystemRepository,
     private val treeManager: TreeManager,
 ) : FileChooserUseCase {

@@ -3,7 +3,7 @@ package com.project.analyzer.crash.domain.usecase
 import java.awt.Desktop
 import java.io.File
 
-class OpenFileUseCase {
+internal class OpenFileUseCase {
 
     operator fun invoke(path: String): Result<Unit> = runCatching {
         val file = File(path)

@@ -1,12 +1,26 @@
 package com.project.analyzer.devsettings.presentation
 
-internal data class DevSettingsState(
+data class DevSettingsState(
     val telemetry: TelemetryInspectorState = TelemetryInspectorState(),
     val hud: DevHudState = DevHudState(),
 )
 
-internal data class TelemetryInspectorState(
-    val status: String = "Waiting for telemetry",
+sealed interface TelemetryStatusUi {
+    data object WaitingForTelemetry : TelemetryStatusUi
+    data object SimConnected : TelemetryStatusUi
+    data object SimDisconnected : TelemetryStatusUi
+    data object SessionStarted : TelemetryStatusUi
+    data object SessionUpdated : TelemetryStatusUi
+    data object SessionPaused : TelemetryStatusUi
+    data object SessionResumed : TelemetryStatusUi
+    data object SessionEnded : TelemetryStatusUi
+    data object LapStarted : TelemetryStatusUi
+    data object LapFinished : TelemetryStatusUi
+    data class Raw(val value: String) : TelemetryStatusUi
+}
+
+data class TelemetryInspectorState(
+    val status: TelemetryStatusUi = TelemetryStatusUi.WaitingForTelemetry,
     val sessionType: String = "-",
     val trackLabel: String = "-",
     val carLabel: String = "-",
@@ -15,8 +29,8 @@ internal data class TelemetryInspectorState(
     val entries: List<TelemetryEntry> = emptyList(),
 )
 
-internal data class TelemetryEntry(val path: String, val value: String)
+data class TelemetryEntry(val path: String, val value: String)
 
-internal data class DevHudState(val hudEnabled: Boolean = true, val panels: List<DevHudPanelUi> = emptyList())
+data class DevHudState(val hudEnabled: Boolean = true, val panels: List<DevHudPanelUi> = emptyList())
 
-internal data class DevHudPanelUi(val id: String, val title: String, val description: String, val enabled: Boolean)
+data class DevHudPanelUi(val id: String, val enabled: Boolean)

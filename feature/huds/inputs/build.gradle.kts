@@ -1,6 +1,7 @@
 moduleImpl {
     metro()
     compose()
+    resources()
     logger()
     proto()
     test()

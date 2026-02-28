@@ -1,38 +1,33 @@
-@file:OptIn(ExperimentalPathApi::class)
-
 package com.project.analyzer.utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
 import java.nio.channels.OverlappingFileLockException
+import java.nio.file.DirectoryNotEmptyException
 import java.nio.file.Files
-import java.nio.file.Paths
+import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.deleteRecursively
 import kotlin.system.exitProcess
 
 public object SingleInstanceGuard {
 
     private var channel: FileChannel? = null
     private var lock: FileLock? = null
+    private var lockPath: Path? = null
 
-    private val lockPath = Paths.get(
-        System.getProperty("user.home"),
-        ".simanalyzer${if (BuildConfig.IS_DEBUG) "-debug" else ""}",
-        "app.lock",
-    )
-
-    public suspend fun acquireOrExit(): Unit = withContext(Dispatchers.IO) {
-        Files.createDirectories(lockPath.parent)
+    public suspend fun acquireOrExit(lockFile: File): Unit = withContext(Dispatchers.IO) {
+        val path = lockFile.toPath()
+        Files.createDirectories(path.parent)
 
         channel = FileChannel.open(
-            lockPath,
+            path,
             StandardOpenOption.CREATE,
             StandardOpenOption.WRITE,
         )
+        lockPath = path
 
         lock = try {
             channel!!.tryLock()
@@ -42,19 +37,30 @@ public object SingleInstanceGuard {
 
         if (lock == null) {
             channel?.close()
+            channel = null
+            lockPath = null
             exitProcess(0)
         }
     }
 
     public suspend fun release(): Unit = withContext(Dispatchers.IO) {
+        val currentLockPath = lockPath
         try {
             lock?.release()
         } catch (_: Throwable) {
         }
+        lock = null
         try {
             channel?.close()
         } catch (_: Throwable) {
         }
-        lockPath.parent.deleteRecursively()
+        channel = null
+        lockPath = null
+        if (currentLockPath == null) return@withContext
+        runCatching { Files.deleteIfExists(currentLockPath) }
+        try {
+            Files.deleteIfExists(currentLockPath.parent)
+        } catch (_: DirectoryNotEmptyException) {
+        }
     }
 }

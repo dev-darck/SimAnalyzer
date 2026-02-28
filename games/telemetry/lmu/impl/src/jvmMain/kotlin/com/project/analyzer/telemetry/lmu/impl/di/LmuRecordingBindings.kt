@@ -11,12 +11,14 @@ import dev.zacsweers.metro.Provides
 
 @ContributesTo(SessionScope::class)
 @BindingContainer
-object LmuRecordingBindings {
+interface LmuRecordingBindings {
+    companion object {
 
-    @Provides
-    private fun provideRecordingEmitter(impl: LmuTelemetryRecordingSource): LmuTelemetryRecordingEmitter = impl
+        @Provides
+        private fun provideRecordingEmitter(impl: LmuTelemetryRecordingSource): LmuTelemetryRecordingEmitter = impl
 
-    @Provides
-    @IntoSet
-    private fun provideRecordingSource(impl: LmuTelemetryRecordingSource): TelemetryRecordingSource = impl
+        @Provides
+        @IntoSet
+        private fun provideRecordingSource(impl: LmuTelemetryRecordingSource): TelemetryRecordingSource = impl
+    }
 }

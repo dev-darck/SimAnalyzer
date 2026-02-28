@@ -18,12 +18,16 @@ class GateCrossingDetector {
     fun detectCrossing(previousPose: CarPose, currentPose: CarPose, gate: Gate): GateCrossing? {
         val p0 = previousPose.position
         val p1 = currentPose.position
-        val dp = p1 - p0
+        val dpx = p1.x - p0.x
+        val dpy = p1.y - p0.y
 
-        if (dp.len2() < MIN_MOVEMENT_METERS * MIN_MOVEMENT_METERS) return null
+        if ((dpx * dpx + dpy * dpy) < MIN_MOVEMENT_METERS * MIN_MOVEMENT_METERS) return null
 
         val frame = gate.frame2D(fallbackForward = Vec2.Companion.Up)
-        val (a, b) = frame.segment()
+        val qDx = frame.normal.x * frame.halfWidthMeters
+        val qDy = frame.normal.y * frame.halfWidthMeters
+        val a = Vec2(frame.center.x + qDx, frame.center.y + qDy)
+        val b = Vec2(frame.center.x - qDx, frame.center.y - qDy)
 
         val hitParams = Geometry2D.intersectSegmentsParams(
             p0 = p0,
@@ -35,7 +39,10 @@ class GateCrossingDetector {
         ) ?: return null
 
         val t = hitParams.t.coerceIn(0f, 1f)
-        val hit = p0 + dp * t
+        val hit = Vec2(
+            x = p0.x + dpx * t,
+            y = p0.y + dpy * t,
+        )
 
         val isForward = Geometry2D.isForwardCrossing(
             p0 = p0,

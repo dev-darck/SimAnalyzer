@@ -10,7 +10,10 @@ internal data class SessionEvent(
     val reason: String? = null,
     val sessionType: String? = null,
     val carModel: String? = null,
+    val carName: String? = null,
+    val carId: Int? = null,
     val trackId: String? = null,
+    val trackName: String? = null,
     val payloadType: String? = null,
     val payloadSize: Int? = null,
 )

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class CrashViewModel(
+internal class CrashViewModel(
     private val copyReportUseCase: CopyReportUseCase,
     private val openFileUseCase: OpenFileUseCase,
     private val openLogsFolderUseCase: OpenLogsFolderUseCase,
@@ -41,31 +41,31 @@ class CrashViewModel(
 
     private fun copyReport() {
         copyReportUseCase(state.value.report.fullText)
-            .onSuccess { showSnackbar("Copied report to clipboard") }
-            .onFailure { showSnackbar("Copy failed: ${it.message ?: it}") }
+            .onSuccess { showSnackbar(CrashSnackbarMessage.ReportCopied) }
+            .onFailure { showSnackbar(CrashSnackbarMessage.CopyFailed(it.message ?: it.toString())) }
     }
 
     private fun copyStacktrace() {
         copyReportUseCase(state.value.report.stacktrace)
-            .onSuccess { showSnackbar("Copied stacktrace to clipboard") }
-            .onFailure { showSnackbar("Copy failed: ${it.message ?: it}") }
+            .onSuccess { showSnackbar(CrashSnackbarMessage.StacktraceCopied) }
+            .onFailure { showSnackbar(CrashSnackbarMessage.CopyFailed(it.message ?: it.toString())) }
     }
 
     private fun reportOnGitHub(githubRepo: String) {
         reportOnGitHubUseCase(state.value.report, githubRepo)
-            .onSuccess { showSnackbar("Full report copied. Opening GitHub…") }
-            .onFailure { showSnackbar("Failed to open browser: ${it.message ?: it}") }
+            .onSuccess { showSnackbar(CrashSnackbarMessage.ReportOpeningGitHub) }
+            .onFailure { showSnackbar(CrashSnackbarMessage.OpenBrowserFailed(it.message ?: it.toString())) }
     }
 
     private fun openLogsFolder() {
         openLogsFolderUseCase(state.value.report.logDir)
-            .onFailure { showSnackbar("Failed to open logs folder: ${it.message ?: it}") }
+            .onFailure { showSnackbar(CrashSnackbarMessage.OpenLogsFailed(it.message ?: it.toString())) }
     }
 
     private fun openCrashFile() {
         state.value.report.savedReportPath?.let {
             openFileUseCase(it)
-                .onFailure { showSnackbar("Failed to open crash file: ${it.message ?: it}") }
+                .onFailure { showSnackbar(CrashSnackbarMessage.OpenCrashFileFailed(it.message ?: it.toString())) }
         }
     }
 
@@ -73,7 +73,7 @@ class CrashViewModel(
         _state.update { it.copy(selectedTab = tab) }
     }
 
-    private fun showSnackbar(message: String) {
+    private fun showSnackbar(message: CrashSnackbarMessage) {
         viewModelScope.launch {
             _actions.emit(CrashScreenAction.ShowSnackbar(message))
         }

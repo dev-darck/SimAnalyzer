@@ -6,10 +6,8 @@ import com.project.analyzer.utils.AppDirectories
 import com.project.analyzer.utils.logger.logger
 import com.sun.management.HotSpotDiagnosticMXBean
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import dev.zacsweers.metro.binding
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -47,8 +45,7 @@ private val TIMESTAMP_FORMAT: DateTimeFormatter = DateTimeFormatter
 
 @Inject
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class, binding = binding<LeakCanaryController>())
-class LeakCanaryControllerImpl(
+internal class LeakCanaryControllerImpl(
     private val directories: AppDirectories,
     @param:IO private val ioDispatcher: CoroutineDispatcher,
 ) : LeakCanaryController {
@@ -58,7 +55,8 @@ class LeakCanaryControllerImpl(
     private val started = AtomicBoolean(false)
     private val analysisInProgress = AtomicBoolean(false)
     private val lastAnalysisUptimeMs = AtomicLong(0)
-    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
+    private val leakDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(1, "LeakCanaryController")
+    private val scope = CoroutineScope(SupervisorJob() + leakDispatcher)
 
     private val clock = UptimeClock
 
@@ -113,7 +111,7 @@ class LeakCanaryControllerImpl(
 
             retainedObjectTracker = ReferenceQueueRetainedObjectTracker(
                 clock = clock,
-                onObjectRetainedListener = {}
+                onObjectRetainedListener = {},
             )
         }
     }
@@ -154,7 +152,7 @@ class LeakCanaryControllerImpl(
 
         val analyzer = HeapAnalyzer(OnAnalysisProgressListener.NO_OP)
 
-        val analysis = withContext(ioDispatcher) {
+        val analysis = withContext(leakDispatcher) {
             heapDumpFile.openHeapGraph().use { graph ->
                 analyzer.analyze(
                     heapDumpFile = heapDumpFile,
@@ -262,8 +260,7 @@ class LeakCanaryControllerImpl(
         }
     }
 
-    private fun dumpDirectory(): File =
-        File(directories.cacheDir, config.dumpDirectoryName)
+    private fun dumpDirectory(): File = File(directories.cacheDir, config.dumpDirectoryName)
             .apply { mkdirs() }
 
     private fun newHeapDumpFile(): File {

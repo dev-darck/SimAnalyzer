@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.foundation.background
@@ -17,25 +19,46 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import org.jetbrains.compose.resources.stringResource
 
-internal data class ElectronicItemUi(val title: String, val value: String, val highlighted: Boolean = false)
+internal enum class ElectronicItemLabel {
+    TC,
+    ABS,
+    Map,
+    BrakeBias,
+    SlipMax,
+    Load,
+    TyreAverage,
+}
+
+internal data class ElectronicItemUi(
+    val label: ElectronicItemLabel,
+    val value: String,
+    val highlighted: Boolean = false,
+)
+
+internal enum class ElectronicsTitle {
+    Electronics,
+    Dynamics,
+    TcAbsActive,
+    TcActive,
+    AbsActive,
+}
 
 internal data class ElectronicsBlockUi(
-    val title: String = "Electronics",
+    val title: ElectronicsTitle = ElectronicsTitle.Electronics,
     val items: List<ElectronicItemUi> = emptyList(),
 )
 
 @Composable
 internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Modifier, gap: Dp = 12.dp) {
-    val tileShape = RoundedCornerShape(16.dp)
+    val tileShape = SimAnalyzerTheme.corners.card
 
     val cardBg = SimAnalyzerTheme.material.surface
     val tileBg = SimAnalyzerTheme.material.surfaceVariant
@@ -45,7 +68,11 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
     val muted = SimAnalyzerTheme.material.onSurfaceVariant
     val valueColor = SimAnalyzerTheme.material.onSurface
 
-    val isWarning = data.title.contains("⚠")
+    val isWarning = data.title in setOf(
+        ElectronicsTitle.TcAbsActive,
+        ElectronicsTitle.TcActive,
+        ElectronicsTitle.AbsActive,
+    )
     val headerColor = if (isWarning) SimAnalyzerTheme.extended.amber else titleColor
 
     Column(
@@ -55,10 +82,9 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
             .padding(22.dp),
     ) {
         Text(
-            text = data.title,
+            text = electronicsTitleText(data.title),
             color = headerColor,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.titleSmall,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -72,7 +98,7 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
                 horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
                 ElectronicsTile(
-                    item = data.items.getOrNull(0) ?: ElectronicItemUi("TC", "0"),
+                    item = data.items.getOrNull(0) ?: ElectronicItemUi(ElectronicItemLabel.TC, "0"),
                     tileShape = tileShape,
                     tileBg = tileBg,
                     highlightBg = highlightBg,
@@ -81,7 +107,7 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
                     modifier = Modifier.weight(1f),
                 )
                 ElectronicsTile(
-                    item = data.items.getOrNull(1) ?: ElectronicItemUi("ABS", "0"),
+                    item = data.items.getOrNull(1) ?: ElectronicItemUi(ElectronicItemLabel.ABS, "0"),
                     tileShape = tileShape,
                     tileBg = tileBg,
                     highlightBg = highlightBg,
@@ -96,7 +122,7 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
                 horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
                 ElectronicsTile(
-                    item = data.items.getOrNull(2) ?: ElectronicItemUi("MAP", "0"),
+                    item = data.items.getOrNull(2) ?: ElectronicItemUi(ElectronicItemLabel.Map, "0"),
                     tileShape = tileShape,
                     tileBg = tileBg,
                     highlightBg = highlightBg,
@@ -105,7 +131,7 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
                     modifier = Modifier.weight(1f),
                 )
                 ElectronicsTile(
-                    item = data.items.getOrNull(3) ?: ElectronicItemUi("BB", "0%"),
+                    item = data.items.getOrNull(3) ?: ElectronicItemUi(ElectronicItemLabel.BrakeBias, "0%"),
                     tileShape = tileShape,
                     tileBg = tileBg,
                     highlightBg = highlightBg,
@@ -140,10 +166,9 @@ private fun ElectronicsTile(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = item.title,
+            text = electronicsItemLabel(item.label),
             color = title,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.labelMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -153,13 +178,31 @@ private fun ElectronicsTile(
         Text(
             text = item.value,
             color = value,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.Monospace,
+            style = SimAnalyzerTheme.typography.labelLarge.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
     }
+}
+
+@Composable
+private fun electronicsTitleText(title: ElectronicsTitle): String = when (title) {
+    ElectronicsTitle.Electronics -> stringResource(Res.string.electronics_title)
+    ElectronicsTitle.Dynamics -> stringResource(Res.string.electronics_dynamics)
+    ElectronicsTitle.TcAbsActive -> stringResource(Res.string.electronics_warning_tc_abs)
+    ElectronicsTitle.TcActive -> stringResource(Res.string.electronics_warning_tc)
+    ElectronicsTitle.AbsActive -> stringResource(Res.string.electronics_warning_abs)
+}
+
+@Composable
+private fun electronicsItemLabel(label: ElectronicItemLabel): String = when (label) {
+    ElectronicItemLabel.TC -> stringResource(Res.string.electronics_item_tc)
+    ElectronicItemLabel.ABS -> stringResource(Res.string.electronics_item_abs)
+    ElectronicItemLabel.Map -> stringResource(Res.string.electronics_item_map)
+    ElectronicItemLabel.BrakeBias -> stringResource(Res.string.electronics_item_bb)
+    ElectronicItemLabel.SlipMax -> stringResource(Res.string.electronics_item_slip_max)
+    ElectronicItemLabel.Load -> stringResource(Res.string.electronics_item_load)
+    ElectronicItemLabel.TyreAverage -> stringResource(Res.string.electronics_item_tyre_avg)
 }
 
 @Preview
@@ -175,12 +218,12 @@ private fun ElectronicsBlockPreview() {
         ) {
             ElectronicsBlock(
                 data = ElectronicsBlockUi(
-                    title = "⚠ TC Active",
+                    title = ElectronicsTitle.TcActive,
                     items = listOf(
-                        ElectronicItemUi("TC", "5", highlighted = true),
-                        ElectronicItemUi("ABS", "3"),
-                        ElectronicItemUi("MAP", "2"),
-                        ElectronicItemUi("BB", "66.6%"),
+                        ElectronicItemUi(ElectronicItemLabel.TC, "5", highlighted = true),
+                        ElectronicItemUi(ElectronicItemLabel.ABS, "3"),
+                        ElectronicItemUi(ElectronicItemLabel.Map, "2"),
+                        ElectronicItemUi(ElectronicItemLabel.BrakeBias, "66.6%"),
                     ),
                 ),
                 modifier = Modifier.fillMaxWidth(),

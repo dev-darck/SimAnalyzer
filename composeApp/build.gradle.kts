@@ -4,6 +4,7 @@ app {
         packageName = "app"
     }
     logger()
+    resources()
 
     dependencies {
         projects.core.di.api.jvmImpl
@@ -16,9 +17,11 @@ app {
         projects.core.preference.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.feature.screens.settings.jvmImpl
+        projects.feature.screens.sessionDetails.jvmImpl
         projects.feature.crash.jvmImpl
         projects.core.ui.jvmImpl
         projects.core.utils.jvmImpl
+        projects.games.game.api.jvmImpl
 
         lib.metro.runtime.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

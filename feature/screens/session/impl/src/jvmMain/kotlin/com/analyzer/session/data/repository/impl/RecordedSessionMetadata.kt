@@ -6,9 +6,13 @@ import kotlinx.serialization.Serializable
 internal data class RecordedSessionMetadata(
     val sessionId: Long,
     val gameId: String,
+    val sessionGroupId: String? = null,
     val sessionType: String?,
     val carModel: String?,
+    val carName: String? = null,
+    val carId: Int? = null,
     val trackId: String?,
+    val trackName: String? = null,
     val airTempC: Float? = null,
     val trackTempC: Float? = null,
     val startedAtMs: Long,

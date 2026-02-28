@@ -4,6 +4,7 @@ package com.project.analyzer.navigation.impl
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.PointerMatcher
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.onClick
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -84,7 +85,9 @@ fun AppNavGraph(
         CompositionLocalProvider(LocalNavigator provides navigationState) {
             NavDisplay(
                 sceneState = sceneState,
-                modifier = modifier.bindMouseBackForward(mouseInput),
+                modifier = modifier
+                    .fillMaxSize()
+                    .bindMouseBackForward(mouseInput),
                 navigationEventState = gestureState,
                 transitionSpec = { fadeForward()(this) },
                 popTransitionSpec = { fadeBackward()(this) },

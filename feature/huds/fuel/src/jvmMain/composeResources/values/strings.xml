@@ -1,0 +1,49 @@
+<resources>
+    <string name="fuel_hud_title">Fuel / lap</string>
+    <string name="fuel_hud_reset_content_description">Reset fuel HUD state</string>
+    <string name="fuel_hud_overlay_waiting">Waiting in pits...</string>
+    <string name="fuel_hud_peak_label">Peak</string>
+    <string name="fuel_hud_summary_fuel_left">Fuel left</string>
+    <string name="fuel_hud_summary_laps_left">Laps left</string>
+    <string name="fuel_hud_summary_last_lap">Last lap</string>
+    <string name="fuel_hud_summary_basis">Basis</string>
+    <string name="fuel_hud_plan_title">Fuel plan</string>
+    <string name="fuel_hud_plan_horizon_time">Horizon • Time</string>
+    <string name="fuel_hud_plan_now">Now</string>
+    <string name="fuel_hud_plan_max">Max</string>
+    <string name="fuel_hud_plan_empty">Need more lap data to build a plan.</string>
+    <string name="fuel_hud_unit_laps">laps</string>
+    <string name="fuel_hud_demo_predictive_subtitle">Predictive • 55%</string>
+    <string name="fuel_hud_subtitle_waiting">Waiting in pits…</string>
+    <string name="fuel_hud_subtitle_warmup">Collecting data…</string>
+    <string name="fuel_hud_subtitle_predictive">Predictive</string>
+    <string name="fuel_hud_subtitle_per_lap">Per-lap</string>
+    <string name="fuel_hud_tooltip_title">Primary fuel estimator mode shown by this HUD block.</string>
+    <string name="fuel_hud_tooltip_reset">Reset all saved fuel calculations and clear the current HUD state.</string>
+    <string name="fuel_hud_tooltip_main_value">Current liters-per-lap estimate used for the Now column in the fuel plan
+        table.
+    </string>
+    <string name="fuel_hud_tooltip_peak_value">Conservative peak liters-per-lap estimate used for the Max column in the
+        plan table.
+    </string>
+    <string name="fuel_hud_tooltip_phase_waiting">Waiting in pits before fuel tracking can start.</string>
+    <string name="fuel_hud_tooltip_phase_warmup">Collecting initial driving data before the estimate stabilizes.
+    </string>
+    <string name="fuel_hud_tooltip_phase_predictive">Live predictive mode based on current real-time fuel flow.</string>
+    <string name="fuel_hud_tooltip_phase_per_lap">Stable per-lap mode based on completed measured laps.</string>
+    <string name="fuel_hud_tooltip_confidence_prefix">Confidence:</string>
+    <string name="fuel_hud_tooltip_fuel_left">Fuel currently left in the tank.</string>
+    <string name="fuel_hud_tooltip_laps_left">Estimated laps remaining using the current fuel-per-lap calculation.
+    </string>
+    <string name="fuel_hud_tooltip_last_lap">Most recent lap time. Invalid laps are highlighted in red.</string>
+    <string name="fuel_hud_tooltip_basis_approx">Approximate lap-time basis used to convert lap horizons into time.
+    </string>
+    <string name="fuel_hud_tooltip_basis_measured">Measured lap-time basis used to convert lap horizons into time.
+    </string>
+    <string name="fuel_hud_tooltip_plan_title">Fuel requirement table by lap horizon and translated session time.
+    </string>
+    <string name="fuel_hud_tooltip_plan_horizon_time">Target horizon shown as laps and the equivalent session time.
+    </string>
+    <string name="fuel_hud_tooltip_plan_now">Fuel required using the current working estimate.</string>
+    <string name="fuel_hud_tooltip_plan_max">Fuel required using the conservative peak estimate.</string>
+</resources>

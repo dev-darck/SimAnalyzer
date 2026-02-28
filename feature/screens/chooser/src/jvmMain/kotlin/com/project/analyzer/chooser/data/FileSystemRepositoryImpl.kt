@@ -15,7 +15,7 @@ import kotlin.io.path.isHidden
 import kotlin.io.path.name
 
 @Inject
-class FileSystemRepositoryImpl(
+internal class FileSystemRepositoryImpl(
     @param:IO
     private val coroutineDispatcher: CoroutineDispatcher,
 ) : FileSystemRepository {

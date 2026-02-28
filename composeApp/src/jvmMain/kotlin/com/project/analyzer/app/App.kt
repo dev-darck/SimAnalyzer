@@ -1,6 +1,5 @@
 package com.project.analyzer.app
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,13 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.window.WindowScope
 import com.project.analyzer.composeApp.Res.Res
 import com.project.analyzer.composeApp.Res.logo
+import com.project.analyzer.composeApp.Res.*
 import com.project.analyzer.navigation.api.EntryFactory
 import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
@@ -27,6 +26,7 @@ import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun WindowScope.App(
@@ -35,14 +35,12 @@ fun WindowScope.App(
     decorator: FrameDecoratorState,
     onCloseRequest: () -> Unit = {},
 ) {
-    val items = remember {
-        listOf(
-            NavItem(Root.Live, "Live", Icons.Filled.Live),
-            NavItem(Root.Session, "Session", Icons.Filled.Session),
+    val items = listOf(
+        NavItem(Root.Live, stringResource(Res.string.app_nav_live), Icons.Filled.Live),
+        NavItem(Root.Session, stringResource(Res.string.app_nav_session), Icons.Filled.Session),
 //            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
-            NavItem(Root.Settings, "Settings", Icons.Filled.Settings),
-        )
-    }
+        NavItem(Root.Settings, stringResource(Res.string.app_nav_settings), Icons.Filled.Settings),
+    )
 
     Column(
         modifier = Modifier
@@ -64,25 +62,21 @@ fun WindowScope.App(
                 .background(SimAnalyzerTheme.material.background)
                 .fillMaxSize(),
         ) {
-            AnimatedVisibility(
-                visible = navigationState.isCurrentRouteRoot,
-            ) {
-                Sidebar(
-                    modifier = Modifier.clipToBounds(),
-                    topIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.logo),
-                            contentDescription = "App logo",
-                        )
-                    },
-                    items = items,
-                    bottomItemsCount = 1,
-                    selectedKey = navigationState.currentTopLevel,
-                    onSelect = {
-                        navigationState.switchTopLevel(it.key)
-                    },
-                )
-            }
+            Sidebar(
+                modifier = Modifier.clipToBounds(),
+                topIcon = {
+                    Icon(
+                        painter = painterResource(Res.drawable.logo),
+                        contentDescription = stringResource(Res.string.app_logo_content_description),
+                    )
+                },
+                items = items,
+                bottomItemsCount = 1,
+                selectedKey = navigationState.currentTopLevel,
+                onSelect = {
+                    navigationState.switchTopLevel(it.key)
+                },
+            )
 
             Box(
                 modifier = Modifier

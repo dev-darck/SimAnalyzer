@@ -14,6 +14,8 @@ moduleImpl {
         projects.feature.dev.settings.jvmImpl
         projects.core.hud.api.jvmImpl
         projects.core.hud.impl.jvmImpl
+        projects.games.game.api.jvmImpl
+        projects.games.game.impl.jvmImpl
         projects.core.utils.jvmImpl
         projects.core.preference.api.jvmImpl
         projects.core.preference.impl.jvmImpl

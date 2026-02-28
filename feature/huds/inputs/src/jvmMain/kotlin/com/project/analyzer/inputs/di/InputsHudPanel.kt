@@ -48,6 +48,7 @@ class InputsHudPanel : HudPanel {
         InputsHudContent(
             state = demoState(sessionActive = true, inputHudSettings = state.settings),
             modifier = modifier,
+            isToolTipEnabled = true,
         )
     }
 

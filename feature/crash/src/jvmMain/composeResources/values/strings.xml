@@ -1,0 +1,34 @@
+<resources>
+    <string name="crash_dialog_title">SimAnalyzer crashed</string>
+    <string name="crash_dialog_handler_title">SimAnalyzer crashed (WindowExceptionHandler)</string>
+    <string name="crash_screen_title">SimAnalyzer has crashed</string>
+    <string name="crash_screen_subtitle">A crash report is ready. You can review and share it.</string>
+    <string name="crash_exit">Exit</string>
+    <string name="crash_tab_overview">Overview</string>
+    <string name="crash_tab_full_report">Full Report</string>
+    <string name="crash_tab_stacktrace">Stacktrace</string>
+    <string name="crash_overview_title">The app encountered an unexpected error.</string>
+    <string name="crash_overview_message">Crash report was saved locally. Please share it to help fix the issue
+        faster.
+    </string>
+    <string name="crash_metadata_title">Crash Metadata</string>
+    <string name="crash_metadata_time">Time</string>
+    <string name="crash_metadata_thread">Thread</string>
+    <string name="crash_metadata_app_version">App Version</string>
+    <string name="crash_metadata_os">OS</string>
+    <string name="crash_metadata_java">Java</string>
+    <string name="crash_actions_title">Actions</string>
+    <string name="crash_action_report_github">Report on GitHub</string>
+    <string name="crash_action_copy_report">Copy report</string>
+    <string name="crash_action_copy_stacktrace">Copy stacktrace</string>
+    <string name="crash_action_open_logs">Open logs folder</string>
+    <string name="crash_action_open_crash_file">Open crash file</string>
+    <string name="crash_code_panel_lines">%1$s • %2$d lines</string>
+    <string name="crash_snackbar_report_copied">Copied report to clipboard</string>
+    <string name="crash_snackbar_stacktrace_copied">Copied stacktrace to clipboard</string>
+    <string name="crash_snackbar_report_opening_github">Full report copied. Opening GitHub…</string>
+    <string name="crash_snackbar_copy_failed">Copy failed: %1$s</string>
+    <string name="crash_snackbar_open_browser_failed">Failed to open browser: %1$s</string>
+    <string name="crash_snackbar_open_logs_failed">Failed to open logs folder: %1$s</string>
+    <string name="crash_snackbar_open_file_failed">Failed to open crash file: %1$s</string>
+</resources>

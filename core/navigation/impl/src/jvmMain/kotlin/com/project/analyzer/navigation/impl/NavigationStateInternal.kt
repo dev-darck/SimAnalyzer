@@ -29,7 +29,7 @@ class NavigationStateInternal<T : Route>(
     }
 
     @Transient
-    private val forwardValidators: MutableMap<KClass<out T>, () -> Boolean> = mutableMapOf()
+    private val forwardValidators: MutableMap<KClass<out T>, (T) -> Boolean> = mutableMapOf()
 
     @Transient
     private val forwardActions: ArrayDeque<ForwardAction> = ArrayDeque()
@@ -45,7 +45,8 @@ class NavigationStateInternal<T : Route>(
 
                 is ForwardAction.PushRoute -> {
                     val validator = forwardValidators[nextAction.route::class]
-                    validator?.invoke() ?: true
+                    @Suppress("UNCHECKED_CAST")
+                    validator?.invoke(nextAction.route as T) ?: true
                 }
             }
         }
@@ -119,7 +120,7 @@ class NavigationStateInternal<T : Route>(
         stacks.getValue(tl).add(route)
     }
 
-    override fun registerForwardValidator(route: KClass<out T>, validator: () -> Boolean) {
+    override fun registerForwardValidator(route: KClass<out T>, validator: (T) -> Boolean) {
         forwardValidators[route] = validator
     }
 
@@ -151,7 +152,8 @@ class NavigationStateInternal<T : Route>(
 
         if (action is ForwardAction.PushRoute) {
             val validator = forwardValidators[action.route::class]
-            if (validator?.invoke() == false) {
+            @Suppress("UNCHECKED_CAST")
+            if (validator?.invoke(action.route as T) == false) {
                 forwardActions.removeLast()
                 return handleForward()
             }

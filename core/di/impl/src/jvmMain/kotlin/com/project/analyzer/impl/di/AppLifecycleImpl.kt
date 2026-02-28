@@ -7,10 +7,8 @@ import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingController
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import dev.zacsweers.metro.binding
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -23,8 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 @Inject
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class, binding = binding<AppLifecycle>())
-class AppLifecycleImpl(
+internal class AppLifecycleImpl(
     private val telemetryLifecycle: TelemetryLifecycle,
     private val telemetryRecordingController: TelemetryRecordingController,
     private val leakCanaryController: LeakCanaryController,
@@ -33,7 +30,8 @@ class AppLifecycleImpl(
 ) : AppLifecycle {
 
     private val started = AtomicBoolean(false)
-    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, _ -> })
+    private val lifecycleDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(2, "AppLifecycle")
+    private val scope = CoroutineScope(SupervisorJob() + lifecycleDispatcher + CoroutineExceptionHandler { _, _ -> })
     private var startupJob: Job? = null
 
     override suspend fun start() {

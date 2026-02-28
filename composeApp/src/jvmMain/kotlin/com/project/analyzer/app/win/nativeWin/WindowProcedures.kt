@@ -206,37 +206,37 @@ internal class ComposeWindowProcedure(
         runCatching {
             user32.SetClassLongPtr(windowHandle, -10, Pointer(hBrush))
         }.onSuccess {
-            logger.info { "Window background brush set" }
+            logger.debug { "Window background brush set" }
         }
     }
 
     private fun enableBorderAndShadow() {
         val dwm = runCatching { NativeLibrary.getInstance("dwmapi") }.getOrNull()
             ?: run {
-                logger.info { "dwmapi not available" }
+                logger.debug { "dwmapi not available" }
                 return
             }
 
         val extend = runCatching { dwm.getFunction("DwmExtendFrameIntoClientArea") }.getOrNull()
         extend?.let {
             runCatching { it.invoke(arrayOf(windowHandle, margins)) }
-                .onSuccess { logger.info { "DwmExtendFrameIntoClientArea applied (shadow enabled)" } }
-                .onFailure { logger.info { "DwmExtendFrameIntoClientArea failed: ${it.message}" } }
+                .onSuccess { logger.debug { "DwmExtendFrameIntoClientArea applied (shadow enabled)" } }
+                .onFailure { logger.debug { "DwmExtendFrameIntoClientArea failed: ${it.message}" } }
         }
 
         val setAttribute = runCatching { dwm.getFunction("DwmSetWindowAttribute") }.getOrNull()
         if (setAttribute != null) {
             val darkMode = IntByReference(1)
             runCatching { setAttribute.invoke(arrayOf(windowHandle, 20, darkMode.pointer, 4)) }
-                .onSuccess { logger.info { "DWMWA_USE_IMMERSIVE_DARK_MODE enabled" } }
+                .onSuccess { logger.debug { "DWMWA_USE_IMMERSIVE_DARK_MODE enabled" } }
 
             val cornerPref = IntByReference(2) // DWMWCP_ROUND
             runCatching { setAttribute.invoke(arrayOf(windowHandle, 33, cornerPref.pointer, 4)) }
-                .onSuccess { logger.info { "DWMWA_WINDOW_CORNER_PREFERENCE set to ROUND" } }
+                .onSuccess { logger.debug { "DWMWA_WINDOW_CORNER_PREFERENCE set to ROUND" } }
 
             val borderColor = IntByReference(0xFFFFFFFE.toInt()) // DWMWA_COLOR_NONE
             runCatching { setAttribute.invoke(arrayOf(windowHandle, 34, borderColor.pointer, 4)) }
-                .onSuccess { logger.info { "DWMWA_BORDER_COLOR set to NONE" } }
+                .onSuccess { logger.debug { "DWMWA_BORDER_COLOR set to NONE" } }
         }
     }
 

@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.foundation.background
@@ -8,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,8 +20,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun TimingBoardBlock(
@@ -52,7 +54,7 @@ internal fun TimingBoardBlock(
             TimingDivider()
 
             TimingRow(
-                type = "Current lap",
+                type = stringResource(Res.string.timing_board_current_lap),
                 time = currentLapTime,
                 delta = deltaCurrentTime,
                 deltaColor = if (!deltaCurrentIsPositive) positiveColor else negativeColor,
@@ -61,7 +63,7 @@ internal fun TimingBoardBlock(
             TimingDivider()
 
             TimingRow(
-                type = "Last lap",
+                type = stringResource(Res.string.timing_board_last_lap),
                 time = lastLapTime,
                 delta = deltaLastTime,
                 deltaColor = if (!deltaLastIsPositive) positiveColor else negativeColor,
@@ -70,9 +72,9 @@ internal fun TimingBoardBlock(
             TimingDivider()
 
             TimingRow(
-                type = "Best lap",
+                type = stringResource(Res.string.timing_board_best_lap),
                 time = bestLapTime,
-                delta = "-",
+                delta = stringResource(Res.string.timing_board_no_delta),
                 deltaColor = SimAnalyzerTheme.extended.surface50,
             )
         }
@@ -81,6 +83,10 @@ internal fun TimingBoardBlock(
 
 @Composable
 private fun TimingRow(type: String, time: String, delta: String, deltaColor: Color) {
+    val valueStyle = SimAnalyzerTheme.typography.titleSmall.copy(
+        fontFamily = SimAnalyzerTheme.fonts.mono,
+    )
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -90,21 +96,19 @@ private fun TimingRow(type: String, time: String, delta: String, deltaColor: Col
         Text(
             text = type,
             modifier = Modifier.weight(weight = 0.55f),
-            fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
+            style = SimAnalyzerTheme.typography.bodyMedium,
         )
 
         Text(
             text = time,
             modifier = Modifier.weight(weight = 0.30f),
-            fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.titleMedium,
+            style = valueStyle,
             textAlign = TextAlign.Center,
         )
 
@@ -112,10 +116,9 @@ private fun TimingRow(type: String, time: String, delta: String, deltaColor: Col
             text = delta,
             modifier = Modifier.weight(weight = 0.15f),
             color = deltaColor,
-            fontSize = 14.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleMedium,
+            style = valueStyle,
             textAlign = TextAlign.Center,
         )
     }
@@ -130,34 +133,31 @@ private fun TimingHeaderRow() {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "TYPE",
+            text = stringResource(Res.string.timing_board_header_type),
             modifier = Modifier.weight(weight = 0.55f),
-            fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
 
         Text(
-            text = "TIME",
+            text = stringResource(Res.string.timing_board_header_time),
             modifier = Modifier.weight(weight = 0.30f),
-            fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f),
-            style = MaterialTheme.typography.labelSmall,
+            style = SimAnalyzerTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
         )
 
         Text(
-            text = "DELTA",
+            text = stringResource(Res.string.timing_board_header_delta),
             modifier = Modifier.weight(weight = 0.15f),
-            fontSize = 12.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.45f),
-            style = MaterialTheme.typography.labelSmall,
+            style = SimAnalyzerTheme.typography.labelSmall,
             textAlign = TextAlign.Center,
         )
     }
@@ -181,18 +181,18 @@ private fun BlockHeader(lapCount: Int) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text = "Timing Board",
-            fontSize = 20.sp,
+            text = stringResource(Res.string.timing_board_title),
             maxLines = 1,
-            style = MaterialTheme.typography.labelMedium,
+            style = SimAnalyzerTheme.typography.labelMedium,
             color = SimAnalyzerTheme.material.onSurface,
         )
 
         Text(
-            text = "Lap $lapCount",
-            fontSize = 12.sp,
+            text = stringResource(Res.string.timing_board_lap, lapCount),
             maxLines = 1,
-            style = MaterialTheme.typography.bodyMedium,
+            style = SimAnalyzerTheme.typography.labelMedium.copy(
+                fontFamily = SimAnalyzerTheme.fonts.mono,
+            ),
             color = SimAnalyzerTheme.extended.surface50,
         )
     }

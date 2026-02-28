@@ -3,6 +3,8 @@ package com.project.analyzer.ui.adaptive
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.runtime.Composable
@@ -27,20 +29,42 @@ internal class ListScopeAdapter(private val scope: LazyListScope) : ResponsiveSc
     }
 }
 
-internal class GridScopeAdapter(private val scope: LazyStaggeredGridScope) : ResponsiveScope {
+internal class StaggeredGridScopeAdapter(private val scope: LazyStaggeredGridScope) : ResponsiveScope {
 
     override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
         val span = if (isContentFull) StaggeredGridItemSpan.FullLine else StaggeredGridItemSpan.SingleLane
 
         if (key != null) {
-            scope.item(key = key, span = span) { content(span == StaggeredGridItemSpan.FullLine) }
+            scope.item(key = key, span = span) { content(isContentFull) }
         } else {
-            scope.item(span = span) { content(span == StaggeredGridItemSpan.FullLine) }
+            scope.item(span = span) { content(isContentFull) }
         }
     }
 
     override fun spacer(height: Dp) {
         scope.item(span = StaggeredGridItemSpan.FullLine) {
+            Spacer(Modifier.height(height))
+        }
+    }
+}
+
+internal class GridScopeAdapter(private val scope: LazyGridScope) : ResponsiveScope {
+
+    override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
+        if (key != null) {
+            scope.item(
+                key = key,
+                span = { GridItemSpan(if (isContentFull) maxLineSpan else 1) },
+            ) { content(isContentFull) }
+        } else {
+            scope.item(
+                span = { GridItemSpan(if (isContentFull) maxLineSpan else 1) },
+            ) { content(isContentFull) }
+        }
+    }
+
+    override fun spacer(height: Dp) {
+        scope.item(span = { GridItemSpan(maxLineSpan) }) {
             Spacer(Modifier.height(height))
         }
     }

@@ -5,6 +5,7 @@ data class SessionRowUi(
     val dateLabel: String,
     val timeLabel: String,
     val gameLabel: String,
+    val sessionTypeLabel: String,
     val trackLabel: String,
     val carLabel: String,
     val lapsLabel: String,

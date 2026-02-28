@@ -10,10 +10,12 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(HudScope::class)
 @BindingContainer
-object HudBindings {
+interface HudBindings {
+    companion object {
 
-    @Provides
-    @IntoMap
-    @ViewModelKey(HudViewModel::class)
-    private fun provideHudViewModel(preferences: HudPreferences): ViewModel = HudViewModel(preferences)
+        @Provides
+        @IntoMap
+        @ViewModelKey(HudViewModel::class)
+        private fun provideHudViewModel(interactor: HudContainerUseCase): ViewModel = HudViewModel(interactor)
+    }
 }

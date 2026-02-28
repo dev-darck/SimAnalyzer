@@ -10,7 +10,7 @@ import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(ScreenScope::class)
-class BuildGateUseCase {
+internal class BuildGateUseCase {
 
     /**
      * Builds a [Gate] from a 2D pose.

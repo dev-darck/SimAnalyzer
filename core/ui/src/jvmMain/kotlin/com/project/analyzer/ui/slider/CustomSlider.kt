@@ -87,15 +87,26 @@ public fun SettingsSliderRow(
         ) {
             if (tooltip != null) {
                 Tooltip(tooltip = tooltip) {
-                    Text(text = title, color = SimAnalyzerTheme.material.onSurface, modifier = Modifier.weight(1f))
+                    Text(
+                        text = title,
+                        color = SimAnalyzerTheme.material.onSurface,
+                        style = SimAnalyzerTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             } else {
-                Text(text = title, color = SimAnalyzerTheme.material.onSurface, modifier = Modifier.weight(1f))
+                Text(
+                    text = title,
+                    color = SimAnalyzerTheme.material.onSurface,
+                    style = SimAnalyzerTheme.typography.bodyLarge,
+                    modifier = Modifier.weight(1f),
+                )
             }
 
             Text(
                 text = valueText(value),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
 

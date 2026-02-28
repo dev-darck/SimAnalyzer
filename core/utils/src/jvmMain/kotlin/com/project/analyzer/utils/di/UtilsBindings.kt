@@ -10,9 +10,11 @@ import dev.zacsweers.metro.SingleIn
 
 @ContributesTo(AppScope::class)
 @BindingContainer
-public object UtilsBindings {
+public interface UtilsBindings {
+    public companion object {
 
-    @Provides
-    @SingleIn(AppScope::class)
-    public fun provideAppDirectories(): AppDirectories = AppDirectoriesImpl()
+        @Provides
+        @SingleIn(AppScope::class)
+        public fun provideAppDirectories(appDirectories: AppDirectoriesImpl): AppDirectories = appDirectories
+    }
 }

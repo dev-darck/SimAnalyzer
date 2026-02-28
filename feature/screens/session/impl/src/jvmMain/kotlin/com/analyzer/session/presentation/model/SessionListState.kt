@@ -1,38 +1,51 @@
 package com.analyzer.session.presentation.model
 
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_NEWEST
+
+enum class SessionFilterKind {
+    Track,
+    Game,
+    Car,
+    Date,
+    Sort,
+}
+
+data class SessionFilterOptionUi(val id: String, val label: String? = null)
+
+data class SessionFilterUiModel(
+    val kind: SessionFilterKind,
+    val selectedId: String,
+    val options: List<SessionFilterOptionUi> = emptyList(),
+)
+
 data class SessionListState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val stats: SessionStatsUi = SessionStatsUi(),
-    val trackFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Track",
+    val trackFilter: SessionFilterUiModel = SessionFilterUiModel(
+        kind = SessionFilterKind.Track,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
-        options = listOf(DropdownOptionUi(FILTER_ALL_ID, "All")),
+        options = listOf(SessionFilterOptionUi(FILTER_ALL_ID)),
     ),
-    val gameFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Game",
+    val gameFilter: SessionFilterUiModel = SessionFilterUiModel(
+        kind = SessionFilterKind.Game,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
-        options = listOf(DropdownOptionUi(FILTER_ALL_ID, "All")),
+        options = listOf(SessionFilterOptionUi(FILTER_ALL_ID)),
     ),
-    val carFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Car",
+    val carFilter: SessionFilterUiModel = SessionFilterUiModel(
+        kind = SessionFilterKind.Car,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
-        options = listOf(DropdownOptionUi(FILTER_ALL_ID, "All")),
+        options = listOf(SessionFilterOptionUi(FILTER_ALL_ID)),
     ),
-    val dateFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Date",
+    val dateFilter: SessionFilterUiModel = SessionFilterUiModel(
+        kind = SessionFilterKind.Date,
         selectedId = FILTER_ALL_ID,
-        selectedLabel = "All",
-        options = listOf(DropdownOptionUi(FILTER_ALL_ID, "All")),
+        options = listOf(SessionFilterOptionUi(FILTER_ALL_ID)),
     ),
-    val sortFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Sort by",
-        selectedId = "best",
-        selectedLabel = "Best lap",
-        options = listOf(DropdownOptionUi("best", "Best lap")),
+    val sortFilter: SessionFilterUiModel = SessionFilterUiModel(
+        kind = SessionFilterKind.Sort,
+        selectedId = SESSION_LIST_SORT_NEWEST,
+        options = listOf(SessionFilterOptionUi(SESSION_LIST_SORT_NEWEST)),
     ),
     val searchQuery: String = "",
     val page: Int = 1,

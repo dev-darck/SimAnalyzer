@@ -57,7 +57,10 @@ class FileInfoExtractorStabilizer(
 
         val epochChanged = raw.sessionEpoch != stable.sessionEpoch
         if (epochChanged) {
-            stable = stable.copy(sessionEpoch = raw.sessionEpoch)
+            stable = stable.copy(
+                sessionEpoch = raw.sessionEpoch,
+                sessionEpochStartedFromMainMenu = raw.sessionEpochStartedFromMainMenu,
+            )
 
             resetPendingFromStable(now)
 

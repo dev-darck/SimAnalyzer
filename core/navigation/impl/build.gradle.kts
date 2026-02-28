@@ -1,6 +1,7 @@
 moduleImpl {
     metro()
     compose()
+    resources()
     dependencies {
         projects.core.navigation.api.jvmImpl
 

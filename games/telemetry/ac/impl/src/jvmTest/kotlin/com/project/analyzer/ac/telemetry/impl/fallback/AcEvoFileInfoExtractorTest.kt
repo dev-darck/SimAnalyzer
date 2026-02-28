@@ -231,6 +231,64 @@ class AcEvoFileInfoExtractorTest {
     }
 
     @Test
+    fun `real main menu marker marks the next session epoch as a new recording group`() {
+        val dir = Files.createTempDirectory("acevo-extractor-main-menu").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] Game Started! GameModeType_PRACTICE | Monza GP Practice 1200 seconds | ks_bmw_m4_gt3"
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val first = ex.poll()
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:05:00.000] UIGameModeEvent [object Object] goto menu.html,main/main",
+                "[2026-01-31 12:05:10.000] Game Started! GameModeType_QUALIFYING | Monza GP Qualifying 900 seconds | ks_bmw_m4_gt3",
+            )
+        )
+
+        val second = ex.poll()
+
+        assertTrue(second.sessionEpoch > first.sessionEpoch)
+        assertTrue(second.sessionEpochStartedFromMainMenu)
+        assertEquals(EvoSessionType.QUALIFYING, second.sessionType)
+    }
+
+    @Test
+    fun `stale tail does not force session type from previous run`() {
+        val dir = Files.createTempDirectory("acevo-extractor7-stale").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] InstantRaceRemote Race created"
+            )
+        )
+        assertTrue(
+            log.setLastModified(System.currentTimeMillis() - 10 * 60 * 1000),
+            "failed to set stale mtime for test log",
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals(EvoSessionType.UNKNOWN, info.sessionType)
+    }
+
+    @Test
     fun `track name refreshes from new track id after session boundary even without physics line`() {
         val dir = Files.createTempDirectory("acevo-extractor8").toFile()
         val log = File(dir, "log.txt")
@@ -262,5 +320,145 @@ class AcEvoFileInfoExtractorTest {
         val second = ex.poll()
         assertEquals("new_track_sprint", second.trackId)
         assertEquals("new_track_sprint", second.trackName)
+    }
+
+    @Test
+    fun `generic game started track does not downgrade precise stable track id after boundary`() {
+        val dir = Files.createTempDirectory("acevo-extractor-track-stability").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] Creating physics track: Donington Park",
+                "[2026-01-31 12:00:00.010] TRACK NAME donington_park national",
+            ),
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val first = ex.poll()
+        assertEquals("donington_park_national", first.trackId)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:05:00.000] Reset session requested",
+                "[2026-01-31 12:05:01.000] Game Started! | Donington National practice | ks_bmw_m4_gt3",
+            ),
+        )
+
+        val second = ex.poll()
+        assertEquals("donington_park_national", second.trackId)
+    }
+
+    @Test
+    fun `selected session lines drive weekend session transitions`() {
+        val dir = Files.createTempDirectory("acevo-extractor9").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] [gameface] [info] Selected session Practice true false",
+                "[2026-01-31 12:00:00.000] [gameface] [info] Selected session Qualifying false false",
+                "[2026-01-31 12:00:00.000] [gameface] [info] Selected session Race false false",
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val practice = ex.poll()
+        assertEquals(EvoSessionType.PRACTICE, practice.sessionType)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:05:00.000] [gameface] [info] Selected session Practice false true",
+                "[2026-01-31 12:05:00.000] [gameface] [info] Selected session Qualifying true false",
+                "[2026-01-31 12:05:00.000] [gameface] [info] Selected session Race false false",
+            ),
+        )
+
+        val qualifying = ex.poll()
+        assertEquals(EvoSessionType.QUALIFYING, qualifying.sessionType)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:10:00.000] [gameface] [info] Selected session Practice false true",
+                "[2026-01-31 12:10:00.000] [gameface] [info] Selected session Qualifying false true",
+                "[2026-01-31 12:10:00.000] [gameface] [info] Selected session Race true false",
+            ),
+        )
+
+        val race = ex.poll()
+        assertEquals(EvoSessionType.RACE, race.sessionType)
+    }
+
+    @Test
+    fun `goto_loadingpage lines update session type`() {
+        val dir = Files.createTempDirectory("acevo-extractor10").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] [gameface] [info] UIGameModeEvent [object Object] goto_loadingpage qualifying",
+            ),
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val qualifying = ex.poll()
+        assertEquals(EvoSessionType.QUALIFYING, qualifying.sessionType)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:01:00.000] [gameface] [info] UIGameModeEvent [object Object] goto_loadingpage race",
+            ),
+        )
+
+        val race = ex.poll()
+        assertEquals(EvoSessionType.RACE, race.sessionType)
+    }
+
+    @Test
+    fun `remote created session type is not downgraded by later goto loading page`() {
+        val dir = Files.createTempDirectory("acevo-extractor11").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:00:00.000] [gameface] [info] Selected session Practice true false",
+                "[2026-01-31 12:00:00.000] [gameface] [info] Selected session Qualifying false false",
+                "[2026-01-31 12:00:05.000] TimeAttackRemote Qualifying created",
+            ),
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val qualifying = ex.poll()
+        assertEquals(EvoSessionType.QUALIFYING, qualifying.sessionType)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-01-31 12:01:00.000] [gameface] [info] UIGameModeEvent [object Object] goto_loadingpage timeattack",
+            ),
+        )
+
+        val stillQualifying = ex.poll()
+        assertEquals(EvoSessionType.QUALIFYING, stillQualifying.sessionType)
     }
 }

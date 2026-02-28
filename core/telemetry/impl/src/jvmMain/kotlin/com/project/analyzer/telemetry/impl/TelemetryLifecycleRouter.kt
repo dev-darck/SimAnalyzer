@@ -1,10 +1,11 @@
 package com.project.analyzer.telemetry.impl
 
 import com.project.analyzer.api.di.IO
+import com.project.analyzer.game.api.GameDetectorFactory
 import com.project.analyzer.game.api.GameId
+import com.project.analyzer.game.api.GameProfiles
 import com.project.analyzer.game.api.GameSelection
-import com.project.analyzer.game.impl.GameDetector
-import com.project.analyzer.game.impl.GameProfiles
+import com.project.analyzer.game.api.GameWindowDetector
 import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.TelemetryGameSettings
@@ -19,6 +20,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -33,12 +35,19 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+/**
+ * Root telemetry orchestrator.
+ *
+ * Responsibilities:
+ * - chooses active game lifecycle (auto/manual mode)
+ * - forwards lifecycle events/frames to shared app streams
+ * - guarantees cleanup ordering on game switch / app stop
+ */
 @Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<TelemetryLifecycle>())
@@ -47,12 +56,25 @@ class TelemetryLifecycleRouter(
     private val gameLifecycles: Map<String, Lazy<TelemetryLifecycle>>,
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
+    gameDetectorFactory: GameDetectorFactory,
 ) : TelemetryLifecycle {
 
     private val logger = logger()
+    private val routerDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(
+        parallelism = 2,
+        name = "TelemetryRouter"
+    )
+    private val detectorDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(
+        parallelism = 1,
+        name = "GameDetectorTelemetry"
+    )
+    private val forwardDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(
+        parallelism = 2,
+        name = "TelemetryRouterForward"
+    )
 
     private val scope = CoroutineScope(
-        SupervisorJob() + ioDispatcher + CoroutineExceptionHandler { _, e ->
+        SupervisorJob() + routerDispatcher + CoroutineExceptionHandler { _, e ->
             logger.error(e) { "uncaught exception" }
         },
     )
@@ -70,10 +92,9 @@ class TelemetryLifecycleRouter(
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
 
-    private val autoDetector = GameDetector(
-        configs = GameProfiles.detectorConfigs(),
+    private val autoDetector: GameWindowDetector = gameDetectorFactory.create(
         requireForeground = false,
-        coroutineDispatcher = ioDispatcher.limitedParallelism(1, "GameDetector telemetry"),
+        coroutineDispatcher = detectorDispatcher,
     )
 
     private val stateMutex = Mutex()
@@ -82,11 +103,6 @@ class TelemetryLifecycleRouter(
     private var activeLifecycle: TelemetryLifecycle? = null
     private var activeGameId: GameId? = null
     private var activeSessionId: Long? = null
-
-    @Volatile
-    private var currentGameId: GameId? = null
-
-    private data class CleanupAction(val lifecycle: TelemetryLifecycle?, val forwardJob: Job?, val sessionId: Long?)
 
     override suspend fun launchTelemetry() {
         if (monitorJob != null) {
@@ -102,30 +118,28 @@ class TelemetryLifecycleRouter(
                 .observeSelection()
                 .distinctUntilChanged()
                 .collectLatest { selection ->
-                    logger.info { "selection changed: $selection" }
+                    logger.debug { "selection changed: $selection" }
 
                     autoJob?.cancelAndJoin()
                     autoJob = null
 
                     when (selection) {
                         GameSelection.Auto -> {
-                            logger.info { "mode=Auto, clearing active game and starting detector" }
+                            logger.debug { "mode=Auto, clearing active game and starting detector" }
                             switchTo(null)
 
                             autoJob = launch {
                                 autoGameIdFlow()
                                     .distinctUntilChanged()
-                                    .filter { gameId -> currentGameId != gameId }
                                     .collect { gameId ->
-                                        logger.info { "auto-detected game change: $currentGameId -> $gameId" }
-                                        currentGameId = gameId
+                                        logger.info { "auto-detected game change -> $gameId" }
                                         switchTo(gameId)
                                     }
                             }
                         }
 
                         is GameSelection.Manual -> {
-                            logger.info { "mode=Manual, switching to game=${selection.game}" }
+                            logger.debug { "mode=Manual, switching to game=${selection.game}" }
                             switchTo(selection.game)
                         }
                     }
@@ -137,14 +151,16 @@ class TelemetryLifecycleRouter(
         logger.info { "finishTelemetry: stopping" }
 
         val monitor = stateMutex.withLock {
-            val current = monitorJob
-            monitorJob = null
-            current
+            monitorJob.also { monitorJob = null }
         }
         monitor?.cancelAndJoin()
 
-        val cleanup = stateMutex.withLock { prepareCleanup() }
-        executeCleanup(cleanup)
+        val cleanup = stateMutex.withLock { prepareCleanupLocked() }
+        executeCleanup(
+            lifecycle = cleanup.first,
+            forwarder = cleanup.second,
+            sessionId = cleanup.third,
+        )
 
         scope.cancel()
         logger.info { "finishTelemetry: scope cancelled" }
@@ -163,10 +179,14 @@ class TelemetryLifecycleRouter(
                 return@withLock null
             }
             logger.info { "switchTo: $activeGameId -> $gameId, preparing cleanup" }
-            prepareCleanup()
+            prepareCleanupLocked()
         }
 
-        executeCleanup(cleanup)
+        executeCleanup(
+            lifecycle = cleanup?.first,
+            forwarder = cleanup?.second,
+            sessionId = cleanup?.third,
+        )
 
         if (gameId == null) {
             logger.debug { "switchTo: gameId=null, no new lifecycle to attach" }
@@ -196,12 +216,12 @@ class TelemetryLifecycleRouter(
         logger.info { "switchTo: launched telemetry for game=$gameId" }
     }
 
-    private fun prepareCleanup(): CleanupAction? {
-        val lifecycle = activeLifecycle ?: return null
+    private fun prepareCleanupLocked(): Triple<TelemetryLifecycle?, Job?, Long?> {
+        val lifecycle = activeLifecycle
         val forwarder = forwardJob
         val sessionId = activeSessionId
 
-        logger.info {
+        logger.debug {
             "prepareCleanup: game=$activeGameId sessionId=$sessionId " +
                 "forwardJob.active=${forwarder?.isActive}"
         }
@@ -211,66 +231,73 @@ class TelemetryLifecycleRouter(
         activeSessionId = null
         forwardJob = null
 
-        return CleanupAction(
-            lifecycle = lifecycle,
-            forwardJob = forwarder,
-            sessionId = sessionId,
-        )
+        return Triple(lifecycle, forwarder, sessionId)
     }
 
-    private suspend fun executeCleanup(action: CleanupAction?) {
-        if (action == null) return
+    private suspend fun executeCleanup(
+        lifecycle: TelemetryLifecycle?,
+        forwarder: Job?,
+        sessionId: Long?,
+    ) {
+        if (lifecycle == null && forwarder == null && sessionId == null) return
 
-        logger.info { "executeCleanup: finishing lifecycle, sessionId=${action.sessionId}" }
+        logger.debug { "executeCleanup: finishing lifecycle, sessionId=$sessionId" }
 
-        action.lifecycle?.finishTelemetry()
-        action.forwardJob?.cancelAndJoin()
+        lifecycle?.finishTelemetry()
+        forwarder?.cancelAndJoin()
 
-        val sessionId = action.sessionId
         if (sessionId != null) {
-            logger.info { "executeCleanup: emitting SessionEnded id=$sessionId reason=SIM_DISCONNECTED" }
-            _events.emit(SessionEnded(sessionId, SessionEndReason.SIM_DISCONNECTED))
+            logger.debug { "executeCleanup: emitting SessionEnded id=$sessionId reason=SIM_DISCONNECTED" }
+            emitEvent(SessionEnded(sessionId, SessionEndReason.SIM_DISCONNECTED))
         }
-        _events.emit(TelemetryLifecycleEvent.SimDisconnected)
-        logger.info { "executeCleanup: emitted SimDisconnected" }
+        emitEvent(TelemetryLifecycleEvent.SimDisconnected)
+        logger.debug { "executeCleanup: emitted SimDisconnected" }
     }
 
     private fun attachForwarders(source: TelemetryLifecycle) {
         forwardJob?.cancel()
         forwardJob = scope.launch {
-            logger.debug { "forwarders: started for source=$source" }
+            logger.debug {
+                "forwarders: started for source=$source " +
+                    "framesPolicy=TRY_DROP " +
+                    "eventsPolicy=SUSPEND"
+            }
 
-            launch {
+            launch(forwardDispatcher) {
                 var frameCount = 0L
                 source.frames.collect { frame ->
-                    val emitted = _frames.tryEmit(frame)
-                    frameCount++
-                    if (!emitted) {
-                        logger.atWarn(RATE_LIMITED) {
-                            message = "frame dropped by router buffer (total forwarded=$frameCount)"
+                    val emitted = try {
+                        emitFrame(frame)
+                    } catch (t: Throwable) {
+                        logger.atError(RATE_LIMITED) {
+                            message = "frame forwarding error"
+                            cause = t
                         }
+                        false
                     }
+                    frameCount++
                     if (frameCount % 5000 == 0L) {
                         logger.atDebug(RATE_LIMITED) {
                             message = "frame forwarding heartbeat: forwarded=$frameCount " +
                                 "subscribers=${_frames.subscriptionCount.value}"
                         }
                     }
+                    if (!emitted) Unit
                 }
             }
-            launch {
+            launch(forwardDispatcher) {
                 source.events.collect { event ->
                     logger.debug { "forwarders: received event=${event::class.simpleName}" }
                     handleLifecycleEvent(event)
                 }
-                logger.warn { "forwarders: event collection ended" }
+                logger.debug { "forwarders: event collection ended" }
             }
         }.also { job ->
             job.invokeOnCompletion { cause ->
-                if (cause != null) {
-                    logger.warn(cause) { "forwardJob completed with exception" }
-                } else {
-                    logger.info { "forwardJob completed normally" }
+                when (cause) {
+                    is CancellationException -> logger.debug { "forwardJob cancelled" }
+                    null -> logger.debug { "forwardJob completed normally" }
+                    else -> logger.warn(cause) { "forwardJob completed with exception" }
                 }
             }
         }
@@ -286,7 +313,7 @@ class TelemetryLifecycleRouter(
 
                 is TelemetryLifecycleEvent.SessionResumed -> {
                     activeSessionId = event.sessionId
-                    logger.info { "event: SessionResumed id=${event.sessionId}" }
+                    logger.debug { "event: SessionResumed id=${event.sessionId}" }
                 }
 
                 is SessionEnded -> {
@@ -304,6 +331,29 @@ class TelemetryLifecycleRouter(
                 }
             }
         }
+        try {
+            emitEvent(event)
+        } catch (t: Throwable) {
+            logger.atError(RATE_LIMITED) {
+                message = "event forwarding error event=${event::class.simpleName}"
+                cause = t
+            }
+            throw t
+        }
+    }
+
+    private suspend fun emitEvent(event: TelemetryLifecycleEvent) {
         _events.emit(event)
+    }
+
+    private fun emitFrame(frame: TelemetryFrame): Boolean {
+        val emitted = _frames.tryEmit(frame)
+        if (!emitted) {
+            logger.atWarn(RATE_LIMITED) {
+                message = "router sink dropped item sink=frames policy=TRY_DROP " +
+                    "subscribers=${_frames.subscriptionCount.value}"
+            }
+        }
+        return emitted
     }
 }

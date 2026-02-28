@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.LockOpen
@@ -33,7 +32,9 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.hud.api.HudStoredPosition
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.theme.SimAnalyzerTheme
@@ -43,6 +44,8 @@ import kotlin.math.roundToInt
 internal fun DraggableHudBox(
     panelId: String,
     offset: IntOffset,
+    containerSize: IntSize,
+    panelSize: IntSize?,
     hitRegions: HitRegions,
     overlayController: OverlayController,
     onIntent: (HudIntent) -> Unit,
@@ -90,7 +93,7 @@ internal fun DraggableHudBox(
         modifier = modifier
             .offset { localOffset }
             .hoverable(interactionSource)
-            .background(backdropColor, RoundedCornerShape(8.dp))
+            .background(backdropColor, SimAnalyzerTheme.corners.control)
             .onGloballyPositioned { coords ->
                 val p = coords.positionInRoot()
                 val s = coords.size
@@ -117,21 +120,24 @@ internal fun DraggableHudBox(
                     isDragging = false
                     lastRect?.let { hitRegions.put(panelId, it) }
                     overlayController.endDrag()
-                    onIntent(HudIntent.SavePosition(panelId, localOffset))
+                    val savedPosition = panelSize?.let { size ->
+                        normalizeDraggedOffset(localOffset, containerSize, size)
+                    } ?: HudStoredPosition.Absolute(localOffset)
+                    onIntent(HudIntent.SavePosition(panelId, savedPosition))
                 },
             ),
     ) {
         content()
 
         if (onToggleInputLock != null && (inputLocked || isHovered || isDragging)) {
-            val shape = RoundedCornerShape(6.dp)
+            val shape = SimAnalyzerTheme.corners.compact
             val accent = if (inputLocked) SimAnalyzerTheme.material.primary else SimAnalyzerTheme.material.onSurface
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(6.dp)
                     .clip(shape)
-                    .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.6f), shape)
+                    .background(SimAnalyzerTheme.chrome.fillOverlay, shape)
                     .clickable(onClick = onToggleInputLock)
                     .padding(4.dp),
             ) {
@@ -144,4 +150,21 @@ internal fun DraggableHudBox(
             }
         }
     }
+}
+
+private fun normalizeDraggedOffset(
+    offset: IntOffset,
+    containerSize: IntSize,
+    panelSize: IntSize,
+): HudStoredPosition.Normalized {
+    val maxX = (containerSize.width - panelSize.width).coerceAtLeast(0)
+    val maxY = (containerSize.height - panelSize.height).coerceAtLeast(0)
+
+    val xFraction = if (maxX == 0) 0f else offset.x.toFloat() / maxX.toFloat()
+    val yFraction = if (maxY == 0) 0f else offset.y.toFloat() / maxY.toFloat()
+
+    return HudStoredPosition.Normalized(
+        xFraction = xFraction.coerceIn(0f, 1f),
+        yFraction = yFraction.coerceIn(0f, 1f),
+    )
 }

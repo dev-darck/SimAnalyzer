@@ -11,21 +11,8 @@ internal fun Project.configureDesktopBuildConfig(
     spec: DesktopBuildConfigSpec
 ) {
     val buildType = detectDesktopBuildType()
-    val isDebug = buildType == DesktopBuildType.Debug
-    val isPortable = detectPortableFlag()
-
     val pkg = "com.project.analyzer.${spec.packageName ?: error("desktopBuildConfig: packageName is required")}"
-
-    val fields = buildList {
-        add(Field("String", "BUILD_TYPE", buildType.name.lowercase(Locale.US).asKotlinString()))
-        add(Field("Boolean", "IS_DEBUG", isDebug.toString()))
-        add(Field("Boolean", "IS_PORTABLE", isPortable.toString()))
-        add(Field("String", "APP_NAME", (if (isDebug) "SimAnalyzer-debug" else "SimAnalyzer").asKotlinString()))
-        add(Field("String", "VERSION_NAME", version.toString().asKotlinString()))
-
-        addAll(spec.common.fields)
-        addAll(if (isDebug) spec.debug.fields else spec.release.fields)
-    }.distinctBy { it.name }
+    val fields = desktopBuildConfigFields(buildType, spec)
 
     val outDir = layout.buildDirectory
         .dir("generated/desktopBuildConfig/${buildType.name.lowercase(Locale.US)}/jvmMain/kotlin")
@@ -96,12 +83,12 @@ internal class DesktopBuildConfigSpec {
 
 internal class Fields {
 
-    internal val fields = mutableListOf<Field>()
+    internal val entries = mutableListOf<Field>()
 
-    fun string(name: String, value: String) = fields.add(Field("String", name, value.asKotlinString()))
-    fun boolean(name: String, value: Boolean) = fields.add(Field("Boolean", name, value.toString()))
-    fun int(name: String, value: Int) = fields.add(Field("Int", name, value.toString()))
-    fun long(name: String, value: Long) = fields.add(Field("Long", name, "${value}L"))
+    fun string(name: String, value: String) = entries.add(Field("String", name, value.asKotlinString()))
+    fun boolean(name: String, value: Boolean) = entries.add(Field("Boolean", name, value.toString()))
+    fun int(name: String, value: Int) = entries.add(Field("Int", name, value.toString()))
+    fun long(name: String, value: Long) = entries.add(Field("Long", name, "${value}L"))
 }
 
 internal data class Field(
@@ -151,3 +138,42 @@ private fun String.asKotlinString(): String =
         }
         append('"')
     }
+
+private fun Project.appDisplayVersion(): String =
+    rootProject.extensions.extraProperties["appVersionDisplay"] as? String
+        ?: version.toString()
+
+private fun Project.appVersionBase(): String =
+    rootProject.extensions.extraProperties["appVersionBase"] as? String
+        ?: error("appVersionBase is not configured")
+
+private fun Project.appVersionBuild(): Int =
+    rootProject.extensions.extraProperties["appVersionBuild"] as? Int
+        ?: error("appVersionBuild is not configured")
+
+private fun Project.appVersionChannel(): String =
+    rootProject.extensions.extraProperties["appVersionChannel"] as? String
+        ?: error("appVersionChannel is not configured")
+
+private fun Project.desktopBuildConfigFields(
+    buildType: DesktopBuildType,
+    spec: DesktopBuildConfigSpec,
+): List<Field> {
+    val isDebug = buildType == DesktopBuildType.Debug
+    val selectedBuildFields = if (isDebug) spec.debug.entries else spec.release.entries
+
+    return buildList {
+        val versionChannel = appVersionChannel()
+        add(Field("String", "BUILD_TYPE", buildType.name.lowercase(Locale.US).asKotlinString()))
+        add(Field("Boolean", "IS_DEBUG", isDebug.toString()))
+        add(Field("Boolean", "IS_PORTABLE", detectPortableFlag().toString()))
+        add(Field("String", "APP_NAME", (if (isDebug) "SimAnalyzer-debug" else "SimAnalyzer").asKotlinString()))
+        add(Field("String", "VERSION_BASE", appVersionBase().asKotlinString()))
+        add(Field("Int", "VERSION_BUILD", appVersionBuild().toString()))
+        add(Field("String", "VERSION_CHANNEL", versionChannel.asKotlinString()))
+        add(Field("Boolean", "IS_DEV_VERSION", (versionChannel == "dev").toString()))
+        add(Field("String", "VERSION_NAME", appDisplayVersion().asKotlinString()))
+        addAll(spec.common.entries)
+        addAll(selectedBuildFields)
+    }.distinctBy(Field::name)
+}

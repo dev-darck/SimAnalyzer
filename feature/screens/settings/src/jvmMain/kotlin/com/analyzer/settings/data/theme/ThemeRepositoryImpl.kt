@@ -5,17 +5,14 @@ import com.project.analyzer.preference.api.UserPref
 import com.project.analyzer.preference.api.str
 import com.project.analyzer.theme.ThemeMode
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import dev.zacsweers.metro.binding
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Inject
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class, binding = binding<ThemeRepository>())
-class ThemeRepositoryImpl(
+internal class ThemeRepositoryImpl(
     @param:UserPref
     private val preference: Preference,
 ) : ThemeRepository {

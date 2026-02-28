@@ -1,148 +1,215 @@
 package com.analyzer.session.details.presentation.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.analyzer.session.details.presentation.model.DropdownFilterUi
-import com.analyzer.session.details.presentation.model.DropdownOptionUi
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_BEST
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS_DESC
+import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_TOTAL_DESC
 import com.analyzer.session.details.presentation.model.LapStatus
+import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
+import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
+import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
+import com.project.analyzer.feature.screens.sessionDetails.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
-import com.project.analyzer.ui.components.Pagination
+import com.project.analyzer.ui.components.SortablePagedTable
+import com.project.analyzer.ui.components.SortableTableColumn
+import com.project.analyzer.ui.components.TableCell
+import com.project.analyzer.ui.components.TableColumn
+import com.project.analyzer.ui.components.TableColumnAlign
+import com.project.analyzer.ui.components.TableRow
+import com.project.analyzer.ui.components.TableSortMapping
+import com.project.analyzer.ui.components.tableSortMappings
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun SessionDetailsLapTable(
     state: SessionDetailState,
     onPageChange: (Int) -> Unit,
+    onSortChange: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val dividerColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.2f)
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(SimAnalyzerTheme.shapes.large)
-            .background(SimAnalyzerTheme.material.surface)
-            .border(
-                1.dp,
-                SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.25f),
-                SimAnalyzerTheme.shapes.large,
-            ),
-    ) {
-        SessionDetailsTableHeader()
-        HorizontalDivider(color = dividerColor)
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .padding(16.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Text(
-                    text = "Loading laps...",
-                    color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp,
+    SortablePagedTable(
+        isLoading = state.isLoading,
+        isEmpty = state.visibleLaps.isEmpty(),
+        loadingMessage = stringResource(Res.string.session_details_table_loading),
+        emptyMessage = stringResource(Res.string.session_details_table_empty),
+        errorMessage = state.error,
+        page = state.page,
+        pageCount = state.pageCount,
+        onPageChange = onPageChange,
+        columns = sessionDetailsHeaderColumns(),
+        activeSort = SESSION_DETAILS_TABLE_SORTS.activeSort(state.sortFilter.selectedId),
+        onSortColumnClick = { sortColumn ->
+            onSortChange(SESSION_DETAILS_TABLE_SORTS.nextSortId(sortColumn, state.sortFilter.selectedId))
+        },
+        modifier = modifier,
+        dividerColor = dividerColor,
+        rowContent = {
+            state.visibleLaps.forEachIndexed { index, lap ->
+                SessionDetailsTableRow(
+                    rowIndex = index,
+                    lap = lap,
                 )
-            }
-        } else if (state.visibleLaps.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .padding(16.dp),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Text(
-                    text = state.error ?: "No laps recorded yet.",
-                    color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp,
-                )
-            }
-        } else {
-            Column {
-                state.visibleLaps.forEachIndexed { index, lap ->
-                    SessionDetailsTableRow(lap = lap, isEven = index % 2 == 0)
-                    if (index != state.visibleLaps.lastIndex) {
-                        HorizontalDivider(color = dividerColor)
-                    }
+                if (index != state.visibleLaps.lastIndex) {
+                    HorizontalDivider(color = dividerColor)
                 }
             }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            Pagination(
-                page = state.page,
-                pageCount = state.pageCount,
-                onPageChange = onPageChange,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SessionDetailsTableHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(SimAnalyzerTheme.material.secondary)
-            .height(44.dp)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        TableHeaderCell(text = "Lap", weight = 0.08f)
-        TableHeaderCell(text = "Total Time", weight = 0.16f)
-        TableHeaderCell(text = "S1", weight = 0.1f)
-        TableHeaderCell(text = "S2", weight = 0.1f)
-        TableHeaderCell(text = "S3", weight = 0.1f)
-        TableHeaderCell(text = "Incidents", weight = 0.12f)
-        TableHeaderCell(text = "Delta", weight = 0.14f)
-        TableHeaderCell(text = "Status", weight = 0.2f)
-    }
-}
-
-@Composable
-private fun RowScope.TableHeaderCell(text: String, weight: Float) {
-    Text(
-        text = text.uppercase(),
-        color = SimAnalyzerTheme.extended.onPrimaryContainer50,
-        fontSize = 11.sp,
-        fontWeight = FontWeight.SemiBold,
-        letterSpacing = 0.4.sp,
-        modifier = Modifier.weight(weight),
+        },
     )
 }
 
+private val SESSION_DETAILS_TABLE_SORTS = tableSortMappings(
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.Lap,
+        ascSortId = SESSION_DETAIL_SORT_LAP,
+        descSortId = SESSION_DETAIL_SORT_LAP_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.TotalTime,
+        ascSortId = SESSION_DETAIL_SORT_BEST,
+        descSortId = SESSION_DETAIL_SORT_TOTAL_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.S1,
+        ascSortId = SESSION_DETAIL_SORT_S1,
+        descSortId = SESSION_DETAIL_SORT_S1_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.S2,
+        ascSortId = SESSION_DETAIL_SORT_S2,
+        descSortId = SESSION_DETAIL_SORT_S2_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.S3,
+        ascSortId = SESSION_DETAIL_SORT_S3,
+        descSortId = SESSION_DETAIL_SORT_S3_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.Incidents,
+        ascSortId = SESSION_DETAIL_SORT_INCIDENTS,
+        descSortId = SESSION_DETAIL_SORT_INCIDENTS_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.Delta,
+        ascSortId = SESSION_DETAIL_SORT_DELTA,
+        descSortId = SESSION_DETAIL_SORT_DELTA_DESC,
+    ),
+    TableSortMapping(
+        sortKey = SessionDetailsSortColumn.Status,
+        ascSortId = SESSION_DETAIL_SORT_STATUS,
+        descSortId = SESSION_DETAIL_SORT_STATUS_DESC,
+    ),
+)
+
+private enum class SessionDetailsSortColumn {
+    Lap,
+    TotalTime,
+    S1,
+    S2,
+    S3,
+    Incidents,
+    Delta,
+    Status,
+}
+
 @Composable
-private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
-    val baseColor = if (isEven) {
+private fun sessionDetailsHeaderColumns(): List<SortableTableColumn<SessionDetailsSortColumn>> = listOf(
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_lap),
+            weight = 0.08f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.Lap,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_total_time),
+            weight = 0.18f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.TotalTime,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_s1),
+            weight = 0.1f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.S1,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_s2),
+            weight = 0.1f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.S2,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_s3),
+            weight = 0.1f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.S3,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_incidents),
+            weight = 0.12f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.Incidents,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_delta),
+            weight = 0.18f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.Delta,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = stringResource(Res.string.session_details_table_status),
+            weight = 0.14f,
+            align = TableColumnAlign.Center,
+        ),
+        sortKey = SessionDetailsSortColumn.Status,
+    ),
+)
+
+@Composable
+private fun SessionDetailsTableRow(rowIndex: Int, lap: SessionLapRowUi) {
+    val baseColor = if (rowIndex % 2 == 0) {
         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f)
     } else {
         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.12f)
@@ -153,37 +220,33 @@ private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
         else -> baseColor
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .background(rowColor)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    TableRow(
+        rowIndex = rowIndex,
+        backgroundColor = rowColor,
+        modifier = Modifier.height(56.dp),
     ) {
         TableCell(
             text = lap.lapLabel,
             weight = 0.08f,
+            align = TableColumnAlign.Center,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         TableCell(
             text = lap.totalTime,
-            weight = 0.16f,
-            color = if (lap.status ==
-                LapStatus.BestLap
-            ) {
+            weight = 0.18f,
+            align = TableColumnAlign.Center,
+            color = if (lap.status == LapStatus.BestLap) {
                 SimAnalyzerTheme.extended.purple
             } else {
                 SimAnalyzerTheme.material.onSurface
             },
-            fontWeight = FontWeight.SemiBold,
+            textStyle = SimAnalyzerTheme.typography.labelMedium,
         )
         TableCell(
             text = lap.s1,
             weight = 0.1f,
-            color = if (lap.status ==
-                LapStatus.BestLap
-            ) {
+            align = TableColumnAlign.Center,
+            color = if (lap.status == LapStatus.BestLap) {
                 SimAnalyzerTheme.extended.purple
             } else {
                 SimAnalyzerTheme.material.onSurface
@@ -192,9 +255,8 @@ private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
         TableCell(
             text = lap.s2,
             weight = 0.1f,
-            color = if (lap.status ==
-                LapStatus.BestLap
-            ) {
+            align = TableColumnAlign.Center,
+            color = if (lap.status == LapStatus.BestLap) {
                 SimAnalyzerTheme.extended.purple
             } else {
                 SimAnalyzerTheme.material.onSurface
@@ -203,9 +265,8 @@ private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
         TableCell(
             text = lap.s3,
             weight = 0.1f,
-            color = if (lap.status ==
-                LapStatus.BestLap
-            ) {
+            align = TableColumnAlign.Center,
+            color = if (lap.status == LapStatus.BestLap) {
                 SimAnalyzerTheme.extended.purple
             } else {
                 SimAnalyzerTheme.material.onSurface
@@ -214,9 +275,8 @@ private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
         TableCell(
             text = lap.incidents,
             weight = 0.12f,
-            color = if (lap.status ==
-                LapStatus.Invalid
-            ) {
+            align = TableColumnAlign.Center,
+            color = if (lap.status == LapStatus.Invalid) {
                 SimAnalyzerTheme.extended.red
             } else {
                 SimAnalyzerTheme.material.onSurfaceVariant
@@ -224,32 +284,17 @@ private fun SessionDetailsTableRow(lap: SessionLapRowUi, isEven: Boolean) {
         )
         TableCell(
             text = lap.delta,
-            weight = 0.14f,
+            weight = 0.18f,
+            align = TableColumnAlign.Center,
             color = deltaColor(delta = lap.delta, isPositive = lap.deltaIsPositive),
         )
         Box(
-            modifier = Modifier.weight(0.2f),
-            contentAlignment = Alignment.CenterStart,
+            modifier = Modifier.weight(0.14f),
+            contentAlignment = Alignment.Center,
         ) {
             StatusChip(status = lap.status)
         }
     }
-}
-
-@Composable
-private fun RowScope.TableCell(
-    text: String,
-    weight: Float,
-    color: Color = SimAnalyzerTheme.material.onSurface,
-    fontWeight: FontWeight = FontWeight.Medium,
-) {
-    Text(
-        text = text,
-        color = color,
-        fontSize = 12.sp,
-        fontWeight = fontWeight,
-        modifier = Modifier.weight(weight),
-    )
 }
 
 @Composable
@@ -266,17 +311,15 @@ private fun SessionDetailsLapTablePreview() {
             state = SessionDetailState(
                 header = SessionDetailHeaderUi(),
                 stats = SessionDetailStatsUi(),
-                sortFilter = DropdownFilterUi(
-                    label = "Sort by",
+                sortFilter = SessionDetailFilterUiModel(
+                    kind = SessionDetailFilterKind.Sort,
                     selectedId = "lap",
-                    selectedLabel = "Lap",
-                    options = listOf(DropdownOptionUi("lap", "Lap")),
+                    options = listOf(SessionDetailFilterOptionUi("lap")),
                 ),
-                showFilter = DropdownFilterUi(
-                    label = "Show",
+                showFilter = SessionDetailFilterUiModel(
+                    kind = SessionDetailFilterKind.Show,
                     selectedId = "all",
-                    selectedLabel = "All laps",
-                    options = listOf(DropdownOptionUi("all", "All laps")),
+                    options = listOf(SessionDetailFilterOptionUi("all")),
                 ),
                 page = 1,
                 pageCount = 4,
@@ -284,6 +327,7 @@ private fun SessionDetailsLapTablePreview() {
                     SessionLapRowUi(
                         lapNumber = 1,
                         lapLabel = "1",
+                        sessionTypeLabel = "Qualifying",
                         totalTimeMs = 121_253,
                         totalTime = "2:01.253",
                         s1 = "39.012",
@@ -297,6 +341,7 @@ private fun SessionDetailsLapTablePreview() {
                     SessionLapRowUi(
                         lapNumber = 2,
                         lapLabel = "2",
+                        sessionTypeLabel = "Qualifying",
                         totalTimeMs = 122_918,
                         totalTime = "2:02.918",
                         s1 = "39.412",

@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.calibration.presentation.verify.components
 
 import androidx.compose.foundation.background
@@ -13,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,7 +26,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
+import com.project.analyzer.feature.dev.calibration.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatDecimal
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 
 @Composable
@@ -133,12 +137,15 @@ private fun GateHeader(gate: GateDebugInfo) {
         Column {
             Text(
                 gate.name,
-                style = MaterialTheme.typography.bodyLarge,
+                style = SimAnalyzerTheme.typography.bodyLarge,
                 color = SimAnalyzerTheme.material.onSurface,
             )
             Text(
-                "Distance: ${"%.1f".format(gate.distanceMeters)}m",
-                style = MaterialTheme.typography.bodySmall,
+                stringResource(
+                    Res.string.calibration_gate_distance,
+                    formatDecimal(gate.distanceMeters, decimals = 1),
+                ),
+                style = SimAnalyzerTheme.typography.bodySmall,
                 color = when {
                     gate.distanceMeters < 5f -> SimAnalyzerTheme.extended.teal
                     gate.distanceMeters < 15f -> SimAnalyzerTheme.extended.amber
@@ -169,7 +176,10 @@ private fun GateActions(
     ) {
         if (showFlipButton && !isEditing) {
             OutlinedButton(onClick = onFlip) {
-                Text("Flip")
+                Text(
+                    text = stringResource(Res.string.calibration_gate_flip),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
             }
         }
 
@@ -178,7 +188,12 @@ private fun GateActions(
                 onClick = onCapture,
                 enabled = !isCapturing,
             ) {
-                Text(if (isCapturing) "Capturing..." else "Capture")
+                Text(
+                    text = stringResource(
+                        if (isCapturing) Res.string.calibration_gate_capturing else Res.string.calibration_capture,
+                    ),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
             }
             OutlinedTextField(
                 value = halfWidthMeters.toString(),
@@ -188,11 +203,17 @@ private fun GateActions(
                 modifier = Modifier.width(86.dp),
             )
             OutlinedButton(onClick = onCancel) {
-                Text("Cancel")
+                Text(
+                    text = stringResource(Res.string.calibration_gate_cancel),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
             }
         } else if (onEdit != null) {
             OutlinedButton(onClick = onEdit) {
-                Text("Edit")
+                Text(
+                    text = stringResource(Res.string.calibration_gate_edit),
+                    style = SimAnalyzerTheme.typography.labelMedium,
+                )
             }
         }
     }
@@ -202,10 +223,17 @@ private fun GateActions(
 private fun GateDirectionInfo(gate: GateDebugInfo) {
     val directionStatus = gate.directionDot?.let { dot ->
         when {
-            dot > 0.5f -> "Correct direction" to SimAnalyzerTheme.extended.teal
-            dot < -0.5f -> "Wrong direction" to SimAnalyzerTheme.extended.red
-            abs(dot) < 0.3f -> "Perpendicular" to SimAnalyzerTheme.extended.amber
-            else -> "Angled" to SimAnalyzerTheme.extended.yellow
+            dot > 0.5f -> stringResource(
+                Res.string.calibration_gate_correct_direction,
+            ) to SimAnalyzerTheme.extended.teal
+
+            dot < -0.5f -> stringResource(Res.string.calibration_gate_wrong_direction) to SimAnalyzerTheme.extended.red
+
+            abs(
+                dot,
+            ) < 0.3f -> stringResource(Res.string.calibration_gate_perpendicular) to SimAnalyzerTheme.extended.amber
+
+            else -> stringResource(Res.string.calibration_gate_angled) to SimAnalyzerTheme.extended.yellow
         }
     }
 
@@ -216,13 +244,20 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    "Gate fwd: (${"%.2f".format(gate.gateForward.x)}, ${"%.2f".format(gate.gateForward.y)})",
-                    style = MaterialTheme.typography.bodySmall,
+                    stringResource(
+                        Res.string.calibration_gate_forward,
+                        formatDecimal(gate.gateForward.x, decimals = 2),
+                        formatDecimal(gate.gateForward.y, decimals = 2),
+                    ),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
                 Text(
-                    "Dot: ${"%.2f".format(gate.directionDot)}",
-                    style = MaterialTheme.typography.bodySmall,
+                    stringResource(
+                        Res.string.calibration_gate_dot,
+                        formatDecimal(gate.directionDot, decimals = 2),
+                    ),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -230,24 +265,33 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
             Spacer(Modifier.height(2.dp))
 
             Text(
-                "isInside: ${gate.isInside}; margin: ${
-                    "%.2f".format(
-                        gate.margin,
-                    )
-                }, dParallel: ${"%.2f".format(gate.dParallel)}",
-                style = MaterialTheme.typography.bodySmall,
+                stringResource(
+                    Res.string.calibration_gate_inside,
+                    gate.isInside.toString(),
+                    formatDecimal(gate.margin, decimals = 2),
+                    formatDecimal(gate.dParallel, decimals = 2),
+                ),
+                style = SimAnalyzerTheme.typography.bodySmall,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
 
             gate.signedDistanceFromPlane?.let { signedDist ->
                 val positionText = when {
-                    signedDist > 1f -> "${"%.1f".format(signedDist)}m ahead of gate"
-                    signedDist < -1f -> "${"%.1f".format(-signedDist)}m behind gate"
-                    else -> "At gate line"
+                    signedDist > 1f -> stringResource(
+                        Res.string.calibration_gate_ahead,
+                        formatDecimal(signedDist, decimals = 1),
+                    )
+
+                    signedDist < -1f -> stringResource(
+                        Res.string.calibration_gate_behind,
+                        formatDecimal(-signedDist, decimals = 1),
+                    )
+
+                    else -> stringResource(Res.string.calibration_gate_at_line)
                 }
                 Text(
                     positionText,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -255,7 +299,7 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
             directionStatus?.let { (text, color) ->
                 Text(
                     text,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = color,
                 )
             }
@@ -267,8 +311,8 @@ private fun GateDirectionInfo(gate: GateDebugInfo) {
 private fun GateCrossedStatus(gate: GateDebugInfo) {
     if (gate.isCrossed && gate.lastCrossedTimeMs != null) {
         Text(
-            "Crossed",
-            style = MaterialTheme.typography.bodySmall,
+            stringResource(Res.string.calibration_gate_crossed),
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.extended.teal,
         )
     }

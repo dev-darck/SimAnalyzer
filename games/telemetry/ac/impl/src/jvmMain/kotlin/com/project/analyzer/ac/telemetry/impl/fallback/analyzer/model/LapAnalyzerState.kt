@@ -26,7 +26,7 @@ class LapAnalyzerState {
 
     var currentSectorIndex = 1
 
-    var completedLapsCount = 1
+    var completedLapsCount = 0
 
     var lastLapTimeMs: Int? = null
     var bestLapTimeMs: Int? = null
@@ -100,7 +100,7 @@ class LapAnalyzerState {
         lapStartTimeNs = 0L
         sectorStartTimeNs = 0L
         currentSectorIndex = 1
-        completedLapsCount = 1
+        completedLapsCount = 0
         lastLapTimeMs = null
         bestLapTimeMs = null
         lastSectorTimeMs = null
@@ -208,7 +208,7 @@ class LapAnalyzerState {
     fun syncToStartFinish(timestampNs: Long, interpolationFactor: Float) {
         startFinishSyncId += 1
         isSyncedToStartFinish = true
-        completedLapsCount = 1
+        completedLapsCount = 0
 
         lastLapTimeMs = null
         bestLapTimeMs = null

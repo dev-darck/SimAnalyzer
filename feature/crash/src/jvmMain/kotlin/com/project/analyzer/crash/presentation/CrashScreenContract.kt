@@ -15,5 +15,15 @@ sealed interface CrashScreenUiEvent {
 }
 
 sealed interface CrashScreenAction {
-    data class ShowSnackbar(val message: String) : CrashScreenAction
+    data class ShowSnackbar(val message: CrashSnackbarMessage) : CrashScreenAction
+}
+
+sealed interface CrashSnackbarMessage {
+    data object ReportCopied : CrashSnackbarMessage
+    data object StacktraceCopied : CrashSnackbarMessage
+    data object ReportOpeningGitHub : CrashSnackbarMessage
+    data class CopyFailed(val reason: String) : CrashSnackbarMessage
+    data class OpenBrowserFailed(val reason: String) : CrashSnackbarMessage
+    data class OpenLogsFailed(val reason: String) : CrashSnackbarMessage
+    data class OpenCrashFileFailed(val reason: String) : CrashSnackbarMessage
 }

@@ -37,8 +37,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.project.analyzer.chooser.domain.model.TreeNode
+import com.project.analyzer.feature.screens.chooser.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
 private val CHEVRON_ANIM_DURATION_MS = 150.milliseconds.inWholeMilliseconds.toInt()
@@ -63,9 +65,9 @@ fun FileTree(
     Box(modifier = modifier.fillMaxSize()) {
         if (nodes.isEmpty()) {
             Text(
-                text = "Select a drive to browse",
-                fontSize = 12.sp,
+                text = stringResource(Res.string.chooser_tree_select_drive),
                 color = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.5f),
+                style = SimAnalyzerTheme.typography.bodySmall,
                 modifier = Modifier.align(Alignment.Center),
             )
         } else {
@@ -111,7 +113,7 @@ private fun TreeRow(node: TreeNode, isSelected: Boolean, onToggle: () -> Unit, o
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .clip(SimAnalyzerTheme.corners.compact)
             .background(background)
             .onClick(onClick = {
                 onToggle()
@@ -130,7 +132,11 @@ private fun TreeRow(node: TreeNode, isSelected: Boolean, onToggle: () -> Unit, o
 
                 node.hasChildren -> Icon(
                     imageVector = Filled.ChevronRight,
-                    contentDescription = if (node.expanded) "Collapse" else "Expand",
+                    contentDescription = if (node.expanded) {
+                        stringResource(Res.string.chooser_tree_collapse)
+                    } else {
+                        stringResource(Res.string.chooser_tree_expand)
+                    },
                     modifier = Modifier.size(16.dp).rotate(chevronAngle),
                     tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.6f),
                 )
@@ -152,8 +158,8 @@ private fun TreeRow(node: TreeNode, isSelected: Boolean, onToggle: () -> Unit, o
             text = node.name,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            fontSize = 12.sp,
             color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f),
+            style = SimAnalyzerTheme.typography.bodySmall,
             modifier = Modifier.weight(1f),
         )
     }

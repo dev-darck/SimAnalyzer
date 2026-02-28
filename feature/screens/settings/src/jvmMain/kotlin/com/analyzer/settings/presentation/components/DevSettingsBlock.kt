@@ -1,17 +1,14 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.analyzer.settings.presentation.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,9 +16,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.settings.Res.Res
+import com.project.analyzer.feature.screens.settings.Res.developer_description
+import com.project.analyzer.feature.screens.settings.Res.developer_open
+import com.project.analyzer.feature.screens.settings.Res.developer_title
 import com.project.analyzer.theme.SimAnalyzerTheme
-import com.project.analyzer.ui.modifier.onClick
+import com.project.analyzer.ui.components.Button
+import com.project.analyzer.ui.components.SimAnalyzerButtonSize
+import com.project.analyzer.ui.components.SimAnalyzerButtonVariant
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun DevSettingsBlock(modifier: Modifier = Modifier, onOpen: () -> Unit = {}) {
@@ -32,10 +35,9 @@ internal fun DevSettingsBlock(modifier: Modifier = Modifier, onOpen: () -> Unit 
             .padding(16.dp),
     ) {
         Text(
-            text = "Developer",
+            text = stringResource(Res.string.developer_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 20.sp,
-            style = MaterialTheme.typography.titleMedium,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -46,40 +48,18 @@ internal fun DevSettingsBlock(modifier: Modifier = Modifier, onOpen: () -> Unit 
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Calibration, telemetry inspector, diagnostics",
+                    text = stringResource(Res.string.developer_description),
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 13.sp,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .widthIn(min = 86.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(SimAnalyzerTheme.material.primary.copy(alpha = 0.15f))
-                    .border(
-                        width = 1.dp,
-                        color = SimAnalyzerTheme.material.primary.copy(alpha = 0.35f),
-                        shape = RoundedCornerShape(10.dp),
-                    )
-                    .onClick(onClick = onOpen)
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "Open",
-                    color = SimAnalyzerTheme.material.onSurface,
-                    fontSize = 12.sp,
-                    style = MaterialTheme.typography.labelMedium,
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = ">",
-                    color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    fontSize = 12.sp,
-                )
-            }
+            Button(
+                text = stringResource(Res.string.developer_open),
+                onClick = onOpen,
+                variant = SimAnalyzerButtonVariant.Secondary,
+                size = SimAnalyzerButtonSize.Compact,
+            )
         }
     }
 }

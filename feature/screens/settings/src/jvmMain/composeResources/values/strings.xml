@@ -1,0 +1,63 @@
+<resources>
+    <string name="settings_select_storage_location_title">Select storage location</string>
+
+    <string name="appearance_title">Appearance</string>
+    <string name="appearance_theme_mode">Theme mode</string>
+    <string name="appearance_theme_light">Light</string>
+    <string name="appearance_theme_dark">Dark</string>
+    <string name="appearance_theme_system">System</string>
+
+    <string name="hud_setup_title">HUDs</string>
+    <string name="hud_setup_label">HUD setup</string>
+    <string name="hud_setup_edit">Edit</string>
+    <string name="hud_setup_display">Display HUDs</string>
+
+    <string name="developer_title">Developer</string>
+    <string name="developer_description">Calibration, telemetry inspector, diagnostics</string>
+    <string name="developer_open">Open</string>
+
+    <string name="telemetry_acquisition_title">Telemetry acquisition</string>
+    <string name="telemetry_recording_enabled">Recording enabled</string>
+    <string name="telemetry_sampling_rate">Sampling rate (Hz)</string>
+    <string name="telemetry_sampling_rate_value">%1$d Hz</string>
+    <string name="telemetry_sampling_rate_tick">%1$d Hz</string>
+    <string name="telemetry_max_recorded_laps">Max recorded laps</string>
+    <string name="telemetry_laps_unlimited">Unlimited</string>
+    <string name="telemetry_laps_value">%1$d laps</string>
+    <string name="telemetry_storage_location">Storage location</string>
+    <string name="telemetry_storage_placeholder">Select folder...</string>
+    <string name="telemetry_current_data_size">Current data size: %1$s</string>
+    <string name="telemetry_browse">Browse</string>
+    <string name="telemetry_warning_title">Storage warning</string>
+    <string name="telemetry_storage_size_unknown">—</string>
+    <string name="telemetry_storage_size_zero">0 B</string>
+    <string name="telemetry_storage_unit_b">B</string>
+    <string name="telemetry_storage_unit_kb">KB</string>
+    <string name="telemetry_storage_unit_mb">MB</string>
+    <string name="telemetry_storage_unit_gb">GB</string>
+    <string name="telemetry_storage_unit_tb">TB</string>
+    <string name="telemetry_warning_unlimited_high_rate">Unlimited laps at high Hz can create very large files.</string>
+    <string name="telemetry_warning_unlimited">Unlimited laps can create very large files.</string>
+    <string name="telemetry_warning_high_rate_many_laps">High Hz with many laps can create very large files.</string>
+    <string name="telemetry_warning_high_rate">High Hz recording can create large files.</string>
+    <string name="telemetry_warning_many_laps">Many recorded laps can create large files.</string>
+    <string name="telemetry_recording_notice_title">Recording is temporary until the session is saved</string>
+    <string name="telemetry_recording_notice_message">If you stop telemetry recording or close the app without saving
+        the session, the collected data is deleted.
+    </string>
+
+    <string name="game_selection_title">Game selection</string>
+    <string name="game_selection_description">Choose auto detection or lock telemetry to a single game.</string>
+    <string name="game_selection_select_game">Select game</string>
+    <string name="game_selection_auto_detect">Auto detect</string>
+    <string name="game_selection_auto_subtitle">Waits for a supported game window</string>
+    <string name="game_selection_manual_subtitle">Manual selection enabled</string>
+    <string name="game_selection_tag_auto">AUTO</string>
+    <string name="game_selection_tag_manual">MANUAL</string>
+    <string name="game_assetto_corsa">Assetto Corsa</string>
+    <string name="game_assetto_corsa_competizione">Assetto Corsa Competizione</string>
+    <string name="game_assetto_corsa_evo">Assetto Corsa Evo</string>
+
+    <string name="telemetry_preview_storage_location">/sdcard/telemetry</string>
+    <string name="telemetry_preview_storage_size">12.3 MB</string>
+</resources>

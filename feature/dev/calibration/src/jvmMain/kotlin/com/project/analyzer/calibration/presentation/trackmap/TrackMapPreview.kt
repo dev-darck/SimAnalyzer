@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,7 +44,7 @@ fun TrackMapPreview(
             Text(
                 text = "Start recording to build the map",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
+                style = SimAnalyzerTheme.typography.bodySmall,
                 modifier = Modifier.align(Alignment.Center),
             )
         } else {
@@ -81,28 +80,28 @@ private fun TrackMapStatus(state: TrackMapRecorderState, modifier: Modifier = Mo
         Text(
             text = if (state.recording) "Recording" else "Idle",
             color = statusColor,
-            style = MaterialTheme.typography.labelMedium,
+            style = SimAnalyzerTheme.typography.labelMedium,
         )
         Text(
             text = "Points: ${state.pointCount}",
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.labelSmall,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
         Text(
             text = "Distance: %.1f m".format(state.totalDistanceMeters),
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.labelSmall,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
         Text(
             text = "Width: %.1f m".format(state.averageTrackWidthMeters),
             color = SimAnalyzerTheme.material.onSurface,
-            style = MaterialTheme.typography.labelSmall,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
         state.guidanceText?.let { hint ->
             Text(
                 text = hint,
                 color = SimAnalyzerTheme.extended.amber,
-                style = MaterialTheme.typography.labelSmall,
+                style = SimAnalyzerTheme.typography.labelSmall,
             )
         }
     }

@@ -16,7 +16,7 @@ public object TelemetryAcquisitionDefaults {
     public val KEY_SAMPLING_RATE: IntPrefKey = "telemetry_settings_rate".int
     public val KEY_STORAGE_LOCATION: StringPrefKey = "telemetry_settings_location".str
 
-    public const val DEFAULT_RECORDING_ENABLED: Boolean = true
+    public const val DEFAULT_RECORDING_ENABLED: Boolean = false
     public const val MIN_MAX_RECORDED_LAPS: Int = 0
     public const val MAX_MAX_RECORDED_LAPS: Int = 200
     public const val DEFAULT_MAX_RECORDED_LAPS: Int = 0

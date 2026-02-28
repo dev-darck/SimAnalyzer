@@ -25,7 +25,7 @@ data class GateCaptureResult(
 
 @Inject
 @SingleIn(ScreenScope::class)
-class CaptureGateOnStandstillUseCase(
+internal class CaptureGateOnStandstillUseCase(
     private val provider: TelemetrySampleProvider,
     private val buildGate: BuildGateUseCase,
 ) {

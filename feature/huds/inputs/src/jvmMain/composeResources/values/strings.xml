@@ -1,0 +1,50 @@
+<resources>
+    <string name="inputs_hud_title">Inputs</string>
+    <string name="inputs_hud_graph_tooltip">Scrolling input history graph. T = throttle, B = brake, C = clutch, S =
+        steering.
+    </string>
+    <string name="inputs_hud_header_tooltip">Live input HUD showing pedal traces and steering movement over time.
+    </string>
+    <string name="inputs_hud_active_tooltip">Session is active. Graph and values are updating from live telemetry.
+    </string>
+    <string name="inputs_hud_idle_tooltip">No active session. HUD is waiting for live telemetry input.</string>
+    <string name="inputs_hud_values_tooltip">Current live pedal values: throttle, brake and clutch as percentages.
+    </string>
+    <string name="inputs_hud_values">T %1$s B %2$s C %3$s</string>
+    <string name="inputs_hud_percent">%1$s</string>
+    <string name="inputs_graph_axis_100">100</string>
+    <string name="inputs_graph_axis_50">50</string>
+    <string name="inputs_graph_axis_0">0</string>
+
+    <string name="inputs_legend_t">T</string>
+    <string name="inputs_legend_b">B</string>
+    <string name="inputs_legend_c">C</string>
+    <string name="inputs_legend_s">S</string>
+    <string name="inputs_legend_tooltip_throttle">Throttle line. Shows accelerator pedal input as a percentage from 0 to
+        100.
+    </string>
+    <string name="inputs_legend_tooltip_brake">Brake line. Shows brake pedal pressure as a percentage from 0 to 100.
+    </string>
+    <string name="inputs_legend_tooltip_clutch">Clutch line. Shows clutch input as a percentage from 0 to 100.</string>
+    <string name="inputs_legend_tooltip_steering">Steering line. Shows normalized steering input around the center line
+        from left to right.
+    </string>
+
+    <string name="inputs_settings_throttle_line">Throttle line</string>
+    <string name="inputs_settings_brake_line">Brake line</string>
+    <string name="inputs_settings_clutch_line">Clutch line</string>
+    <string name="inputs_settings_steering_line">Steering line</string>
+    <string name="inputs_settings_header">Header</string>
+    <string name="inputs_settings_legend">Legend</string>
+    <string name="inputs_settings_width">Width</string>
+    <string name="inputs_settings_width_tooltip">Panel width in dp.</string>
+    <string name="inputs_settings_graph_height">Graph height</string>
+    <string name="inputs_settings_graph_height_tooltip">Graph area height in dp.</string>
+    <string name="inputs_settings_value_suffix_dp">dp</string>
+    <string name="inputs_settings_history_tooltip">How many seconds of past inputs are visible in the graph.
+        Shorter = more responsive (sharper). Longer = smoother, longer tail.
+        Example: 2s shows only recent changes, 5s shows a longer trace.
+    </string>
+    <string name="inputs_settings_history">History</string>
+    <string name="inputs_settings_history_value">%1$ss</string>
+</resources>

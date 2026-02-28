@@ -1,0 +1,44 @@
+<resources>
+    <string name="dev_settings_title">Developer settings</string>
+    <string name="dev_settings_subtitle">Calibration tools, telemetry diagnostics, and dev HUDs.</string>
+    <string name="dev_settings_nav_calibration_title">Calibration</string>
+    <string name="dev_settings_nav_calibration_subtitle">Capture start/finish and sector gates</string>
+    <string name="dev_settings_nav_track_map_title">Track map</string>
+    <string name="dev_settings_nav_track_map_subtitle">Capture and save the track layout</string>
+    <string name="dev_settings_nav_track_maps_title">Track maps</string>
+    <string name="dev_settings_nav_track_maps_subtitle">Browse saved track layouts</string>
+    <string name="dev_settings_nav_telemetry_title">Telemetry inspector</string>
+    <string name="dev_settings_nav_telemetry_subtitle">Live frame values without auto-scroll</string>
+    <string name="dev_settings_nav_hud_title">Calibration HUD</string>
+    <string name="dev_settings_nav_hud_subtitle">Debug overlays and minimap</string>
+    <string name="dev_settings_hud_title">Calibration HUD overlays</string>
+    <string name="dev_settings_hud_subtitle">Dev-only panels for gate capture and telemetry debug.</string>
+    <string name="dev_settings_hud_disabled_title">HUD disabled</string>
+    <string name="dev_settings_hud_disabled_subtitle">Enable the telemetry HUD in Settings to make overlays visible.
+    </string>
+    <string name="dev_settings_hud_panels_title">Panels</string>
+    <string name="dev_settings_hud_no_panels">No dev HUD panels registered.</string>
+    <string name="dev_settings_status_waiting_for_telemetry">Waiting for telemetry</string>
+    <string name="dev_settings_status_sim_connected">Sim connected</string>
+    <string name="dev_settings_status_sim_disconnected">Sim disconnected</string>
+    <string name="dev_settings_status_session_started">Session started</string>
+    <string name="dev_settings_status_session_updated">Session updated</string>
+    <string name="dev_settings_status_session_paused">Session paused</string>
+    <string name="dev_settings_status_session_resumed">Session resumed</string>
+    <string name="dev_settings_status_session_ended">Session ended</string>
+    <string name="dev_settings_status_lap_started">Lap started</string>
+    <string name="dev_settings_status_lap_finished">Lap finished</string>
+    <string name="dev_settings_telemetry_status">Status: %1$s</string>
+    <string name="dev_settings_telemetry_session">Session: %1$s</string>
+    <string name="dev_settings_telemetry_track">Track: %1$s</string>
+    <string name="dev_settings_telemetry_car">Car: %1$s</string>
+    <string name="dev_settings_telemetry_frame">Frame: %1$s</string>
+    <string name="dev_settings_telemetry_fields">Fields: %1$d</string>
+    <string name="dev_settings_telemetry_updated">Updated: %1$s</string>
+    <string name="dev_settings_hud_panel_calibration_debug_title">Calibration Debug</string>
+    <string name="dev_settings_hud_panel_calibration_debug_description">Debug telemetry</string>
+    <string name="dev_settings_hud_panel_calibration_minimap_title">Calibration MiniMap</string>
+    <string name="dev_settings_hud_panel_calibration_minimap_description">Live minimap</string>
+    <string name="dev_settings_hud_panel_track_map_builder_title">Track Map Builder</string>
+    <string name="dev_settings_hud_panel_track_map_builder_description">Track map capture overlay</string>
+</resources>

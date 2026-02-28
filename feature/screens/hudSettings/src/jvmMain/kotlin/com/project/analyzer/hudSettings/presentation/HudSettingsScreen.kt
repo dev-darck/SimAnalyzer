@@ -19,13 +19,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,17 +35,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.hud.api.DefaultHudBackgroundOpacity
 import com.project.analyzer.hud.api.HudPanel
+import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
+import com.project.analyzer.feature.screens.hudSettings.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.slider.SettingsSliderRow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import org.jetbrains.compose.resources.stringResource
+import java.util.Locale
 
 @Composable
 internal fun HudSettingsScreen() {
     val viewModel: HudSettingsViewModel = metroViewModel()
     val state by viewModel.state.collectAsState()
 
-    val dispatch = viewModel::dispatch
+    val dispatch: (HudSettingsIntent) -> Unit = viewModel::dispatch
     Screen(state, dispatch)
 }
 
@@ -68,24 +72,38 @@ private fun Screen(state: HudUiState = HudUiState(panels = emptyList()), dispatc
 
         HudMonitorPanel(
             panel = state.panel,
+            hudOpacity = state.hudOpacity,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight(),
         )
 
-        HudListPanel(
-            panels = state.panels,
-            visibleIds = state.visiblePanels.keys,
-            onClick = {
-                dispatch(HudSettingsIntent.OnShowPanel(it))
-            },
-            onToggle = { id, enable ->
-                dispatch(HudSettingsIntent.TogglePanel(id, enable))
-            },
+        Column(
             modifier = Modifier
                 .widthIn(min = 280.dp, max = 360.dp)
                 .fillMaxHeight(),
-        )
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            HudListPanel(
+                panels = state.panels,
+                visibleIds = state.visiblePanels.keys,
+                onClick = {
+                    dispatch(HudSettingsIntent.OnShowPanel(it))
+                },
+                onToggle = { id, enable ->
+                    dispatch(HudSettingsIntent.TogglePanel(id, enable))
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            )
+
+            HudCommonSettingsPanel(
+                hudOpacity = state.hudOpacity,
+                onHudOpacityChange = { dispatch(HudSettingsIntent.UpdateHudOpacity(it)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
 
@@ -99,34 +117,41 @@ private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
             .padding(16.dp),
     ) {
         Text(
-            text = "Settings",
+            text = stringResource(Res.string.hud_settings_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(Modifier.height(12.dp))
 
         if (panel == null) {
             Text(
-                text = "Select a HUD from the list to edit its settings.",
+                text = stringResource(Res.string.hud_settings_select_hint),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             return
         }
 
-        Text(text = panel.id, color = SimAnalyzerTheme.material.onSurface, fontSize = 14.sp)
+        Text(
+            text = panel.id,
+            color = SimAnalyzerTheme.material.onSurface,
+            style = SimAnalyzerTheme.typography.labelLarge,
+        )
         Spacer(Modifier.height(4.dp))
-        Text(text = panel.description, color = SimAnalyzerTheme.material.onSurfaceVariant, fontSize = 12.sp)
+        Text(
+            text = panel.description,
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
+            style = SimAnalyzerTheme.typography.bodySmall,
+        )
 
         Spacer(Modifier.height(12.dp))
 
         if (!panel.hasSettings) {
             Text(
-                text = "This HUD has no configurable settings.",
+                text = stringResource(Res.string.hud_settings_no_configurable),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             return
         }
@@ -150,15 +175,17 @@ private fun HudListPanel(
             .padding(16.dp),
     ) {
         Text(
-            text = "HUDs",
+            text = stringResource(Res.string.hud_settings_huds_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             items(panels, key = { it.id }) { panel ->
                 val enabled = panel.id in visibleIds
                 HudListItem(
@@ -183,7 +210,7 @@ private fun HudListItem(
 ) {
     Row(
         modifier = Modifier
-            .clip(shape = RoundedCornerShape(12.dp))
+            .clip(shape = SimAnalyzerTheme.corners.field)
             .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.25f))
             .clickable(
                 onClick = {
@@ -197,13 +224,13 @@ private fun HudListItem(
             Text(
                 text = id,
                 color = SimAnalyzerTheme.material.onSurface,
-                fontSize = 14.sp,
+                style = SimAnalyzerTheme.typography.labelLarge,
             )
             Spacer(Modifier.height(4.dp))
             Text(
                 text = description,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
         Switch(
@@ -220,17 +247,54 @@ private fun HudListItem(
 }
 
 @Composable
-private fun HudMonitorPanel(panel: HudPanel? = null, modifier: Modifier = Modifier) {
+private fun HudCommonSettingsPanel(
+    hudOpacity: Float,
+    onHudOpacityChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .clip(SimAnalyzerTheme.shapes.large)
+            .background(SimAnalyzerTheme.material.surface)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(
+            text = stringResource(Res.string.hud_settings_common_title),
+            color = SimAnalyzerTheme.material.onSurface,
+            style = SimAnalyzerTheme.typography.titleMedium,
+        )
+
+        Text(
+            text = stringResource(Res.string.hud_settings_common_description),
+            color = SimAnalyzerTheme.material.onSurfaceVariant,
+            style = SimAnalyzerTheme.typography.bodySmall,
+        )
+
+        SettingsSliderRow(
+            title = stringResource(Res.string.hud_settings_opacity_title),
+            tooltip = stringResource(Res.string.hud_settings_opacity_tooltip),
+            value = hudOpacity.coerceIn(0f, 1f),
+            valueRange = 0f..1f,
+            snapStep = 0.05f,
+            valueText = { value -> String.format(Locale.US, "%.2f", value) },
+            onPreviewChange = onHudOpacityChange,
+            onCommit = {},
+        )
+    }
+}
+
+@Composable
+private fun HudMonitorPanel(panel: HudPanel? = null, hudOpacity: Float = 1f, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(color = SimAnalyzerTheme.material.surface, shape = SimAnalyzerTheme.shapes.large)
             .padding(all = 16.dp),
     ) {
         Text(
-            text = "Preview",
+            text = stringResource(Res.string.hud_settings_preview_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 16.sp,
-            style = MaterialTheme.typography.titleMedium,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(Modifier.height(12.dp))
@@ -239,12 +303,12 @@ private fun HudMonitorPanel(panel: HudPanel? = null, modifier: Modifier = Modifi
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .clip(shape = RoundedCornerShape(16.dp))
+                .clip(shape = SimAnalyzerTheme.corners.card)
                 .background(SimAnalyzerTheme.material.background)
                 .border(
                     width = 1.dp,
                     color = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = SimAnalyzerTheme.corners.card,
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -266,7 +330,11 @@ private fun HudMonitorPanel(panel: HudPanel? = null, modifier: Modifier = Modifi
                 }
             }
 
-            panel?.DemoContent(Modifier)
+            CompositionLocalProvider(
+                LocalHudBackgroundOpacity provides hudOpacity.coerceIn(0f, 1f),
+            ) {
+                panel?.DemoContent(Modifier)
+            }
         }
     }
 }
@@ -281,7 +349,11 @@ private fun HudSettingsScreenPreview() {
 
                 @Composable
                 override fun DemoContent(modifier: Modifier) {
-                    Text("Fuel HUD", modifier = modifier.size(120.dp, 60.dp))
+                    Text(
+                        text = stringResource(Res.string.hud_settings_preview_fuel),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                        modifier = modifier.size(120.dp, 60.dp),
+                    )
                 }
             },
             object : HudPanel {
@@ -289,7 +361,11 @@ private fun HudSettingsScreenPreview() {
 
                 @Composable
                 override fun DemoContent(modifier: Modifier) {
-                    Text("Timing HUD", modifier = modifier.size(140.dp, 60.dp))
+                    Text(
+                        text = stringResource(Res.string.hud_settings_preview_timing),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                        modifier = modifier.size(140.dp, 60.dp),
+                    )
                 }
             },
             object : HudPanel {
@@ -297,7 +373,11 @@ private fun HudSettingsScreenPreview() {
 
                 @Composable
                 override fun DemoContent(modifier: Modifier) {
-                    Text("Electronics HUD", modifier = modifier.size(140.dp, 60.dp))
+                    Text(
+                        text = stringResource(Res.string.hud_settings_preview_electronics),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                        modifier = modifier.size(140.dp, 60.dp),
+                    )
                 }
             },
         )
@@ -308,6 +388,7 @@ private fun HudSettingsScreenPreview() {
             state = HudUiState(
                 panels = demoPanels,
                 visiblePanels = mapOf("fuel" to 0, "timing" to 0, "electronics" to 0),
+                hudOpacity = DefaultHudBackgroundOpacity,
             ),
         )
     }

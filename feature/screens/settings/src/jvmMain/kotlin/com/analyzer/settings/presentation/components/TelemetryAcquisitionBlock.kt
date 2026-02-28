@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.analyzer.settings.presentation.components
 
 import androidx.compose.foundation.background
@@ -10,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Switch
@@ -25,17 +26,49 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.analyzer.settings.domain.model.TelemetrySettings
+import com.analyzer.settings.presentation.RecordingWarningKind
+import com.project.analyzer.feature.screens.settings.Res.Res
+import com.project.analyzer.feature.screens.settings.Res.telemetry_acquisition_title
+import com.project.analyzer.feature.screens.settings.Res.telemetry_browse
+import com.project.analyzer.feature.screens.settings.Res.telemetry_current_data_size
+import com.project.analyzer.feature.screens.settings.Res.telemetry_laps_unlimited
+import com.project.analyzer.feature.screens.settings.Res.telemetry_laps_value
+import com.project.analyzer.feature.screens.settings.Res.telemetry_max_recorded_laps
+import com.project.analyzer.feature.screens.settings.Res.telemetry_preview_storage_location
+import com.project.analyzer.feature.screens.settings.Res.telemetry_recording_enabled
+import com.project.analyzer.feature.screens.settings.Res.telemetry_sampling_rate
+import com.project.analyzer.feature.screens.settings.Res.telemetry_sampling_rate_tick
+import com.project.analyzer.feature.screens.settings.Res.telemetry_sampling_rate_value
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_location
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_placeholder
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_size_unknown
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_size_zero
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_unit_b
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_unit_gb
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_unit_kb
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_unit_mb
+import com.project.analyzer.feature.screens.settings.Res.telemetry_storage_unit_tb
+import com.project.analyzer.feature.screens.settings.Res.telemetry_warning_high_rate
+import com.project.analyzer.feature.screens.settings.Res.telemetry_warning_high_rate_many_laps
+import com.project.analyzer.feature.screens.settings.Res.telemetry_warning_many_laps
+import com.project.analyzer.feature.screens.settings.Res.telemetry_warning_title
+import com.project.analyzer.feature.screens.settings.Res.telemetry_warning_unlimited
+import com.project.analyzer.feature.screens.settings.Res.telemetry_warning_unlimited_high_rate
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.components.Button
+import com.project.analyzer.ui.components.InfoBar
+import com.project.analyzer.ui.components.InfoBarSeverity
+import com.project.analyzer.ui.components.SimAnalyzerButtonSize
+import com.project.analyzer.ui.components.SimAnalyzerButtonVariant
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.slider.CustomSlider
 import com.project.analyzer.ui.slider.THUMB_RADIUS
 import com.project.analyzer.ui.textField.TextField
+import org.jetbrains.compose.resources.stringResource
+import java.util.Locale
 import kotlin.math.roundToInt
 
 private const val MIN_RATE = TelemetrySettings.MIN_SAMPLING_RATE_HZ
@@ -47,16 +80,15 @@ private const val MAX_LAPS = TelemetrySettings.MAX_MAX_RECORDED_LAPS
 private const val MID_LAPS = (MIN_LAPS + MAX_LAPS) / 2
 
 private val STORAGE_FIELD_HEIGHT = 36.dp
-private val STORAGE_FIELD_RADIUS = 8.dp
 
 @Composable
 internal fun TelemetryAcquisitionBlock(
     samplingRateHz: Int,
     storageLocation: String,
     storageLocationError: String?,
-    storageSizeLabel: String,
+    storageSizeBytes: Long?,
     recordingEnabled: Boolean,
-    recordingWarning: String?,
+    recordingWarning: RecordingWarningKind?,
     maxRecordedLaps: Int,
     modifier: Modifier = Modifier,
     onSamplingRateChange: (Int) -> Unit = {},
@@ -72,10 +104,9 @@ internal fun TelemetryAcquisitionBlock(
             .padding(all = 16.dp),
     ) {
         Text(
-            text = "Telemetry acquisition",
+            text = stringResource(Res.string.telemetry_acquisition_title),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.titleMedium,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -102,10 +133,10 @@ internal fun TelemetryAcquisitionBlock(
         val warning = recordingWarning
         if (warning != null) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = warning,
-                color = SimAnalyzerTheme.extended.orange,
-                fontSize = 12.sp,
+            InfoBar(
+                title = stringResource(Res.string.telemetry_warning_title),
+                message = recordingWarningText(warning),
+                severity = InfoBarSeverity.Warning,
             )
         }
 
@@ -114,7 +145,7 @@ internal fun TelemetryAcquisitionBlock(
         StorageLocationSection(
             storageLocation = storageLocation,
             error = storageLocationError,
-            storageSizeLabel = storageSizeLabel,
+            storageSizeBytes = storageSizeBytes,
             onStorageLocationChange = onStorageLocationChange,
             onBrowseClick = onBrowseClick,
         )
@@ -129,10 +160,9 @@ private fun RecordingEnabledSection(enabled: Boolean, onEnabledChange: (Boolean)
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Recording enabled",
+            text = stringResource(Res.string.telemetry_recording_enabled),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            style = SimAnalyzerTheme.typography.bodyLarge,
         )
 
         Switch(
@@ -161,10 +191,9 @@ private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int)
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Sampling rate (Hz)",
+                text = stringResource(Res.string.telemetry_sampling_rate),
                 color = SimAnalyzerTheme.material.onSurface,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                style = SimAnalyzerTheme.typography.bodyLarge,
             )
 
             Box(
@@ -174,10 +203,12 @@ private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int)
                     .padding(horizontal = 14.dp, vertical = 8.dp),
             ) {
                 Text(
-                    text = "${sliderPosition.roundToInt()} Hz",
+                    text = stringResource(
+                        Res.string.telemetry_sampling_rate_value,
+                        sliderPosition.roundToInt(),
+                    ),
                     color = SimAnalyzerTheme.material.primary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = SimAnalyzerTheme.typography.labelLarge,
                 )
             }
         }
@@ -203,19 +234,19 @@ private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int)
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "$MIN_RATE Hz",
+                text = stringResource(Res.string.telemetry_sampling_rate_tick, MIN_RATE),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
-                text = "$MID_RATE Hz",
+                text = stringResource(Res.string.telemetry_sampling_rate_tick, MID_RATE),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
-                text = "$MAX_RATE Hz",
+                text = stringResource(Res.string.telemetry_sampling_rate_tick, MAX_RATE),
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
     }
@@ -234,14 +265,17 @@ private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "Max recorded laps",
+                text = stringResource(Res.string.telemetry_max_recorded_laps),
                 color = SimAnalyzerTheme.material.onSurface,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
+                style = SimAnalyzerTheme.typography.bodyLarge,
             )
 
             val laps = sliderPosition.roundToInt()
-            val label = if (laps == 0) "Unlimited" else "$laps laps"
+            val label = if (laps == 0) {
+                stringResource(Res.string.telemetry_laps_unlimited)
+            } else {
+                stringResource(Res.string.telemetry_laps_value, laps)
+            }
             Box(
                 modifier = Modifier
                     .clip(SimAnalyzerTheme.shapes.small)
@@ -251,8 +285,7 @@ private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange
                 Text(
                     text = label,
                     color = SimAnalyzerTheme.material.primary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
             }
         }
@@ -280,17 +313,17 @@ private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange
             Text(
                 text = "$MIN_LAPS",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
                 text = "$MID_LAPS",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
             Text(
                 text = "$MAX_LAPS",
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
     }
@@ -300,16 +333,15 @@ private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange
 private fun StorageLocationSection(
     storageLocation: String,
     error: String?,
-    storageSizeLabel: String,
+    storageSizeBytes: Long?,
     onStorageLocationChange: (String) -> Unit,
     onBrowseClick: () -> Unit,
 ) {
     Column {
         Text(
-            text = "Storage location",
+            text = stringResource(Res.string.telemetry_storage_location),
             color = SimAnalyzerTheme.material.onSurface,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
+            style = SimAnalyzerTheme.typography.bodyLarge,
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -321,7 +353,7 @@ private fun StorageLocationSection(
         ) {
             StoragePathField(
                 value = storageLocation,
-                placeholder = "Select folder...",
+                placeholder = stringResource(Res.string.telemetry_storage_placeholder),
                 onValueChange = onStorageLocationChange,
                 onClick = onBrowseClick,
                 modifier = Modifier.weight(1f),
@@ -338,15 +370,18 @@ private fun StorageLocationSection(
             Text(
                 text = error,
                 color = SimAnalyzerTheme.material.error,
-                fontSize = 12.sp,
+                style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
 
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Current data size: $storageSizeLabel",
+            text = stringResource(
+                Res.string.telemetry_current_data_size,
+                storageSizeLabel(storageSizeBytes),
+            ),
             color = SimAnalyzerTheme.material.onSurfaceVariant,
-            fontSize = 12.sp,
+            style = SimAnalyzerTheme.typography.bodySmall,
         )
     }
 }
@@ -373,34 +408,62 @@ private fun StoragePathField(
             onValueChange(it.trim())
         },
         singleLine = true,
-        textStyle = TextStyle(
-            color = textColor,
-            fontSize = 12.sp,
-        ),
+        textStyle = SimAnalyzerTheme.typography.labelMedium.copy(color = textColor),
         modifier = modifier.onClick(onClick = onClick),
     )
 }
 
 @Composable
 private fun BrowseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(
+    Button(
+        text = stringResource(Res.string.telemetry_browse),
+        onClick = onClick,
         modifier = modifier
             .height(STORAGE_FIELD_HEIGHT)
-            .widthIn(min = 64.dp)
-            .onClick(onClick = onClick)
-            .background(
-                color = SimAnalyzerTheme.material.primary.copy(alpha = 0.7f),
-                shape = RoundedCornerShape(STORAGE_FIELD_RADIUS),
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "Browse",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = SimAnalyzerTheme.material.onSurface,
-        )
+            .widthIn(min = 72.dp),
+        size = SimAnalyzerButtonSize.Compact,
+        variant = SimAnalyzerButtonVariant.Secondary,
+    )
+}
+
+@Composable
+private fun recordingWarningText(kind: RecordingWarningKind): String = when (kind) {
+    RecordingWarningKind.UnlimitedHighRate -> stringResource(Res.string.telemetry_warning_unlimited_high_rate)
+    RecordingWarningKind.Unlimited -> stringResource(Res.string.telemetry_warning_unlimited)
+    RecordingWarningKind.HighRateManyLaps -> stringResource(Res.string.telemetry_warning_high_rate_many_laps)
+    RecordingWarningKind.HighRate -> stringResource(Res.string.telemetry_warning_high_rate)
+    RecordingWarningKind.ManyLaps -> stringResource(Res.string.telemetry_warning_many_laps)
+}
+
+@Composable
+private fun storageSizeLabel(bytes: Long?): String {
+    val units = listOf(
+        stringResource(Res.string.telemetry_storage_unit_b),
+        stringResource(Res.string.telemetry_storage_unit_kb),
+        stringResource(Res.string.telemetry_storage_unit_mb),
+        stringResource(Res.string.telemetry_storage_unit_gb),
+        stringResource(Res.string.telemetry_storage_unit_tb),
+    )
+    val unknown = stringResource(Res.string.telemetry_storage_size_unknown)
+    val zero = stringResource(Res.string.telemetry_storage_size_zero)
+
+    val value = bytes ?: return unknown
+    if (value <= 0) return zero
+
+    var size = value.toDouble()
+    var unitIndex = 0
+    while (size >= 1024 && unitIndex < units.lastIndex) {
+        size /= 1024
+        unitIndex += 1
     }
+
+    val format = when {
+        size >= 100 -> "%.0f"
+        size >= 10 -> "%.1f"
+        else -> "%.2f"
+    }
+
+    return String.format(Locale.US, "$format ${units[unitIndex]}", size)
 }
 
 @Preview
@@ -409,11 +472,11 @@ private fun TelemetryAcquisitionBlockPreview() {
     SimAnalyzerTheme {
         TelemetryAcquisitionBlock(
             samplingRateHz = 50,
-            storageLocation = "/sdcard/telemetry",
+            storageLocation = stringResource(Res.string.telemetry_preview_storage_location),
             storageLocationError = null,
-            storageSizeLabel = "12.3 MB",
+            storageSizeBytes = 12_300_000L,
             recordingEnabled = true,
-            recordingWarning = "Unlimited laps at high Hz can create very large files.",
+            recordingWarning = RecordingWarningKind.UnlimitedHighRate,
             maxRecordedLaps = 25,
         )
     }

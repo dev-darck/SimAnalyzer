@@ -13,6 +13,9 @@ public interface NavigationState<T : Route> {
     public fun navigate(route: T)
     public fun handleBack(): Boolean
     public fun handleForward(): Boolean
-    public fun registerForwardValidator(route: KClass<out T>, validator: () -> Boolean)
+    public fun registerForwardValidator(route: KClass<out T>, validator: (T) -> Boolean)
+    public fun registerForwardValidator(route: KClass<out T>, validator: () -> Boolean) {
+        registerForwardValidator(route) { _ -> validator() }
+    }
     public fun unregisterForwardValidator(route: KClass<out T>)
 }

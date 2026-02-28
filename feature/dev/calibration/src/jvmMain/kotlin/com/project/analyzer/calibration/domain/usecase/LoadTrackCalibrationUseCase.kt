@@ -5,7 +5,7 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import dev.zacsweers.metro.Inject
 
 @Inject
-class LoadTrackCalibrationUseCase(private val repo: TrackCalibrationRepository) {
+internal class LoadTrackCalibrationUseCase(private val repo: TrackCalibrationRepository) {
 
     suspend fun load(trackId: String): TrackCalibration? = repo.load(trackId)
 }

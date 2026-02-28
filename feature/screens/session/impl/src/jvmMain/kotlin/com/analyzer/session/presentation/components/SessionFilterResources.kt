@@ -1,0 +1,77 @@
+package com.analyzer.session.presentation.components
+
+import androidx.compose.runtime.Composable
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST_DESC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_CAR_ASC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_CAR_DESC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_GAME_ASC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_GAME_DESC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_LAPS_ASC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_LAPS_DESC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_NEWEST
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_OLDEST
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_ASC
+import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_DESC
+import com.analyzer.session.presentation.model.FILTER_ALL_ID
+import com.analyzer.session.presentation.model.SessionFilterKind
+import com.analyzer.session.presentation.model.SessionFilterOptionUi
+import com.analyzer.session.presentation.model.SessionFilterUiModel
+import com.project.analyzer.feature.screens.session.impl.Res.*
+import com.project.analyzer.ui.components.DropdownFilterUi
+import com.project.analyzer.ui.components.DropdownOptionUi
+import org.jetbrains.compose.resources.stringResource
+
+@Composable
+internal fun SessionFilterUiModel.asDropdownFilter(): DropdownFilterUi {
+    val dropdownOptions = options.map { option ->
+        DropdownOptionUi(
+            id = option.id,
+            label = sessionFilterOptionLabel(kind = kind, option = option),
+        )
+    }
+    val selectedLabel = dropdownOptions.firstOrNull { it.id == selectedId }?.label
+        ?: dropdownOptions.firstOrNull()?.label
+        ?: sessionFilterLabel(kind)
+
+    return DropdownFilterUi(
+        label = sessionFilterLabel(kind),
+        selectedId = selectedId,
+        selectedLabel = selectedLabel,
+        options = dropdownOptions,
+    )
+}
+
+@Composable
+internal fun sessionFilterLabel(kind: SessionFilterKind): String = when (kind) {
+    SessionFilterKind.Game -> stringResource(Res.string.session_filter_game)
+    SessionFilterKind.Track -> stringResource(Res.string.session_filter_track)
+    SessionFilterKind.Car -> stringResource(Res.string.session_filter_car)
+    SessionFilterKind.Date -> stringResource(Res.string.session_filter_date)
+    SessionFilterKind.Sort -> stringResource(Res.string.session_filter_sort)
+}
+
+@Composable
+private fun sessionFilterOptionLabel(kind: SessionFilterKind, option: SessionFilterOptionUi): String = when {
+    option.id == FILTER_ALL_ID -> stringResource(Res.string.session_filter_all)
+    kind == SessionFilterKind.Sort -> sessionSortLabel(option.id)
+    !option.label.isNullOrBlank() -> option.label
+    else -> option.id
+}
+
+@Composable
+internal fun sessionSortLabel(sortId: String): String = when (sortId) {
+    SESSION_LIST_SORT_NEWEST -> stringResource(Res.string.session_sort_newest)
+    SESSION_LIST_SORT_OLDEST -> stringResource(Res.string.session_sort_oldest)
+    SESSION_LIST_SORT_GAME_ASC -> stringResource(Res.string.session_sort_game_asc)
+    SESSION_LIST_SORT_GAME_DESC -> stringResource(Res.string.session_sort_game_desc)
+    SESSION_LIST_SORT_TRACK_ASC -> stringResource(Res.string.session_sort_track_asc)
+    SESSION_LIST_SORT_TRACK_DESC -> stringResource(Res.string.session_sort_track_desc)
+    SESSION_LIST_SORT_CAR_ASC -> stringResource(Res.string.session_sort_car_asc)
+    SESSION_LIST_SORT_CAR_DESC -> stringResource(Res.string.session_sort_car_desc)
+    SESSION_LIST_SORT_LAPS_ASC -> stringResource(Res.string.session_sort_laps_asc)
+    SESSION_LIST_SORT_LAPS_DESC -> stringResource(Res.string.session_sort_laps_desc)
+    SESSION_LIST_SORT_BEST -> stringResource(Res.string.session_sort_best_asc)
+    SESSION_LIST_SORT_BEST_DESC -> stringResource(Res.string.session_sort_best_desc)
+    else -> sortId
+}

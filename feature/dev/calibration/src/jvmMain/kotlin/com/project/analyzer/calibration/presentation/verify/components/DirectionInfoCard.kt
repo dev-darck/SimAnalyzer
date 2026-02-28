@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.calibration.presentation.verify.components
 
 import androidx.compose.foundation.background
@@ -6,14 +8,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.feature.dev.calibration.Res.*
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatDecimal
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun DirectionInfoCard(forward: Vec2?, headingDegrees: Float) {
@@ -27,26 +31,33 @@ fun DirectionInfoCard(forward: Vec2?, headingDegrees: Float) {
     ) {
         Column {
             Text(
-                "Car direction",
-                style = MaterialTheme.typography.titleSmall,
+                stringResource(Res.string.calibration_direction_title),
+                style = SimAnalyzerTheme.typography.titleSmall,
                 color = SimAnalyzerTheme.material.onSurface,
             )
             forward?.let {
                 Text(
-                    "Forward: (${"%.2f".format(it.x)}, ${"%.2f".format(it.y)})",
-                    style = MaterialTheme.typography.bodySmall,
+                    stringResource(
+                        Res.string.calibration_direction_forward,
+                        formatDecimal(it.x, decimals = 2),
+                        formatDecimal(it.y, decimals = 2),
+                    ),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
             Text(
-                "Heading: ${"%.1f".format(headingDegrees)} deg",
-                style = MaterialTheme.typography.bodySmall,
+                stringResource(
+                    Res.string.calibration_direction_heading,
+                    formatDecimal(headingDegrees, decimals = 0),
+                ),
+                style = SimAnalyzerTheme.typography.bodySmall,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
             )
         }
         Text(
             text = getDirectionArrow(headingDegrees),
-            style = MaterialTheme.typography.headlineLarge,
+            style = SimAnalyzerTheme.typography.headlineLarge,
             color = SimAnalyzerTheme.material.primary,
         )
     }

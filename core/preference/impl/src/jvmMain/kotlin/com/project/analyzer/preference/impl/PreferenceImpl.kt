@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.map
 import java.io.File
 import java.io.IOException
 
-class PreferenceImpl(private val directories: AppDirectories, preferenceName: String) : Preference {
+internal class PreferenceImpl(private val directories: AppDirectories, preferenceName: String) : Preference {
 
     private val dataStore: DataStore<Preferences> by lazy {
         PreferenceDataStoreFactory.create(

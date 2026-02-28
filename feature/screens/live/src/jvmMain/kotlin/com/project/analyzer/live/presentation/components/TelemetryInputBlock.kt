@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.foundation.Canvas
@@ -11,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,12 +23,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatPercent
+import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
 @Composable
@@ -55,16 +56,15 @@ fun TelemetryInputsBlock(
             .padding(22.dp),
     ) {
         Text(
-            text = "Inputs",
+            text = stringResource(Res.string.inputs_title),
             color = textPrimary,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.titleSmall,
         )
 
         Spacer(Modifier.height(16.dp))
 
         HorizontalInputBar(
-            label = "THR",
+            label = stringResource(Res.string.inputs_thr),
             progress = throttle,
             fillColor = throttleColor,
             barBg = barBg,
@@ -75,7 +75,7 @@ fun TelemetryInputsBlock(
         Spacer(Modifier.height(8.dp))
 
         HorizontalInputBar(
-            label = "BRK",
+            label = stringResource(Res.string.inputs_brk),
             progress = brake,
             fillColor = brakeColor,
             barBg = barBg,
@@ -86,7 +86,7 @@ fun TelemetryInputsBlock(
         Spacer(Modifier.height(8.dp))
 
         HorizontalInputBar(
-            label = "CLT",
+            label = stringResource(Res.string.inputs_clt),
             progress = clutch,
             fillColor = clutchColor,
             barBg = barBg,
@@ -117,7 +117,7 @@ private fun HorizontalInputBar(
     modifier: Modifier = Modifier,
 ) {
     val p = progress.coerceIn(0f, 1f)
-    val shape = RoundedCornerShape(8.dp)
+    val shape = SimAnalyzerTheme.corners.control
     val barHeight = 24.dp
 
     Row(
@@ -127,8 +127,7 @@ private fun HorizontalInputBar(
         Text(
             text = label,
             color = textMuted,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.labelMedium,
             modifier = Modifier.width(36.dp),
         )
 
@@ -152,11 +151,9 @@ private fun HorizontalInputBar(
         }
 
         Text(
-            text = "${(p * 100f).roundToInt()}%",
+            text = stringResource(Res.string.inputs_percent, formatPercent((p * 100f).roundToInt())),
             color = textPrimary,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.Monospace,
+            style = SimAnalyzerTheme.typography.labelMedium.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
             modifier = Modifier
                 .width(42.dp)
                 .padding(start = 8.dp),
@@ -177,9 +174,21 @@ private fun SteeringSlider(
 
     Column(modifier) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("L", color = textMuted, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-            Text("${s.roundToInt()}°", color = textMuted, fontSize = 11.sp, fontWeight = FontWeight.Medium)
-            Text("R", color = textMuted, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+            Text(
+                stringResource(Res.string.inputs_left),
+                color = textMuted,
+                style = SimAnalyzerTheme.typography.labelSmall,
+            )
+            Text(
+                stringResource(Res.string.inputs_steer_value, s.roundToInt()),
+                color = textMuted,
+                style = SimAnalyzerTheme.typography.labelSmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
+            )
+            Text(
+                stringResource(Res.string.inputs_right),
+                color = textMuted,
+                style = SimAnalyzerTheme.typography.labelSmall,
+            )
         }
 
         Spacer(Modifier.height(6.dp))

@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_nav_live">Live</string>
+    <string name="app_nav_session">Session</string>
+    <string name="app_nav_settings">Settings</string>
+    <string name="app_logo_content_description">App logo</string>
+    <string name="app_titlebar_minimize">Minimize</string>
+    <string name="app_titlebar_maximize">Maximize</string>
+    <string name="app_titlebar_close">Close</string>
+    <string name="app_titlebar_back">Back</string>
+    <string name="app_titlebar_forward">Forward</string>
+</resources>

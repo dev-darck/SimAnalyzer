@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.atan2
 
 @Inject
-class CalibrationViewModel(
+internal class CalibrationViewModel(
     private val captureGate: CaptureGateOnStandstillUseCase,
     private val saveUseCase: SaveTrackCalibrationUseCase,
     private val sampleProvider: TelemetrySampleProvider,
@@ -301,7 +301,7 @@ class CalibrationViewModel(
             
             FL: ${fmt(w?.fl)}   FR: ${fmt(w?.fr)}
             RL: ${fmt(w?.rl)}   RR: ${fmt(w?.rr)}
-        """.trimIndent()
+            """.trimIndent()
     }
 
     private fun slugify(text: String): String = text

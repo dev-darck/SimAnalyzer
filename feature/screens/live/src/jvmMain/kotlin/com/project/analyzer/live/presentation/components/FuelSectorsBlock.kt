@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.foundation.Image
@@ -10,24 +12,22 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.project.analyzer.feature.screens.live.Res.Res
-import com.project.analyzer.feature.screens.live.Res.fuel
+import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatDecimal
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 internal data class Sector(val index: Int, val value: String, val status: ValueStatus)
 
@@ -47,16 +47,15 @@ internal fun FuelSectorsBlock(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(cardBg)
-            .padding(22.dp),
+            .padding(horizontal = 18.dp, vertical = 16.dp),
     ) {
         Text(
-            text = "Race Info",
+            text = stringResource(Res.string.race_info_title),
             color = titleColor,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.titleSmall,
         )
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -67,21 +66,18 @@ internal fun FuelSectorsBlock(
                 contentDescription = null,
             )
 
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(12.dp))
 
             Column {
                 Text(
-                    text = "Fuel",
+                    text = stringResource(Res.string.race_info_fuel),
                     color = mutedColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
                 Text(
-                    text = String.format("%.1f L", fuelLiters),
+                    text = stringResource(Res.string.race_info_fuel_value, formatDecimal(fuelLiters, decimals = 1)),
                     color = titleColor,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Monospace,
+                    style = SimAnalyzerTheme.typography.titleSmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
                 )
             }
 
@@ -90,47 +86,41 @@ internal fun FuelSectorsBlock(
             if (fuelPerLap > 0f) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "L/lap",
+                        text = stringResource(Res.string.race_info_fuel_per_lap),
                         color = mutedColor,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
+                        style = SimAnalyzerTheme.typography.labelMedium,
                     )
                     Text(
-                        text = String.format("%.2f", fuelPerLap),
+                        text = formatDecimal(fuelPerLap, decimals = 2),
                         color = titleColor,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.Monospace,
+                        style = SimAnalyzerTheme.typography.titleSmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
                     )
                 }
 
-                Spacer(Modifier.width(24.dp))
+                Spacer(Modifier.width(18.dp))
             }
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "Est. laps",
+                    text = stringResource(Res.string.race_info_est_laps),
                     color = mutedColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
+                    style = SimAnalyzerTheme.typography.labelMedium,
                 )
                 Text(
-                    text = String.format("%.1f", estLaps),
+                    text = formatDecimal(estLaps, decimals = 1),
                     color = titleColor,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Monospace,
+                    style = SimAnalyzerTheme.typography.titleSmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
                 )
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
 
         HorizontalDivider(
             color = SimAnalyzerTheme.material.outlineVariant,
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(10.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -148,22 +138,22 @@ internal fun FuelSectorsBlock(
 
 @Composable
 private fun SectorItem(sector: Sector, modifier: Modifier = Modifier) {
-    val tileShape = RoundedCornerShape(16.dp)
+    val tileShape = SimAnalyzerTheme.corners.card
     val tileBg = SimAnalyzerTheme.material.surfaceVariant
     val mutedColor = SimAnalyzerTheme.material.onSurfaceVariant
 
     Column(
         modifier = modifier
+            .heightIn(min = 58.dp)
             .clip(tileShape)
             .background(tileBg)
             .padding(vertical = 10.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "S${sector.index}",
+            text = stringResource(Res.string.race_info_sector, sector.index),
             color = mutedColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.labelMedium,
         )
 
         Spacer(Modifier.height(2.dp))
@@ -171,9 +161,7 @@ private fun SectorItem(sector: Sector, modifier: Modifier = Modifier) {
         Text(
             text = sector.value,
             color = sector.status.statusColor(),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.SemiBold,
-            fontFamily = FontFamily.Monospace,
+            style = SimAnalyzerTheme.typography.titleSmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
         )
     }
 }

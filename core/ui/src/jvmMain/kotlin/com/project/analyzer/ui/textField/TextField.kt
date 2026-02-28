@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -35,7 +34,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
@@ -55,7 +53,7 @@ public fun TextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    textStyle: TextStyle = TextStyle(fontSize = 12.sp),
+    textStyle: TextStyle = SimAnalyzerTheme.typography.labelMedium,
 ) {
     var focused by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -63,15 +61,15 @@ public fun TextField(
     val borderColor = when {
         !enabled -> SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.25f)
         isError -> SimAnalyzerTheme.material.error
-        focused -> SimAnalyzerTheme.material.primary.copy(alpha = 0.75f)
-        else -> SimAnalyzerTheme.material.primary.copy(alpha = 0.45f)
+        focused -> SimAnalyzerTheme.chrome.borderInteractiveStrong
+        else -> SimAnalyzerTheme.chrome.borderSecondary
     }
 
     val bgColor =
         if (enabled) {
             SimAnalyzerTheme.material.background
         } else {
-            SimAnalyzerTheme.material.background.copy(alpha = 0.6f)
+            SimAnalyzerTheme.chrome.fillDisabled
         }
 
     val clickable =
@@ -87,9 +85,9 @@ public fun TextField(
     Row(
         modifier = modifier
             .height(36.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(SimAnalyzerTheme.corners.control)
             .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(8.dp))
+            .border(1.dp, borderColor, SimAnalyzerTheme.corners.control)
             .then(clickable)
             .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

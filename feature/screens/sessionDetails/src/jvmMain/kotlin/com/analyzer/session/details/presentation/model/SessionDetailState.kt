@@ -1,21 +1,38 @@
 package com.analyzer.session.details.presentation.model
 
+enum class SessionDetailFilterKind {
+    Sort,
+    Show,
+    SessionType,
+}
+
+data class SessionDetailFilterOptionUi(val id: String, val label: String? = null)
+
+data class SessionDetailFilterUiModel(
+    val kind: SessionDetailFilterKind,
+    val selectedId: String,
+    val options: List<SessionDetailFilterOptionUi> = emptyList(),
+)
+
 data class SessionDetailState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val header: SessionDetailHeaderUi = SessionDetailHeaderUi(),
     val stats: SessionDetailStatsUi = SessionDetailStatsUi(),
-    val sortFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Sort by",
+    val sortFilter: SessionDetailFilterUiModel = SessionDetailFilterUiModel(
+        kind = SessionDetailFilterKind.Sort,
         selectedId = "lap",
-        selectedLabel = "Lap",
-        options = listOf(DropdownOptionUi("lap", "Lap")),
+        options = listOf(SessionDetailFilterOptionUi("lap")),
     ),
-    val showFilter: DropdownFilterUi = DropdownFilterUi(
-        label = "Show",
+    val showFilter: SessionDetailFilterUiModel = SessionDetailFilterUiModel(
+        kind = SessionDetailFilterKind.Show,
         selectedId = "all",
-        selectedLabel = "All laps",
-        options = listOf(DropdownOptionUi("all", "All laps")),
+        options = listOf(SessionDetailFilterOptionUi("all")),
+    ),
+    val sessionTypeFilter: SessionDetailFilterUiModel = SessionDetailFilterUiModel(
+        kind = SessionDetailFilterKind.SessionType,
+        selectedId = "all_session_types",
+        options = listOf(SessionDetailFilterOptionUi("all_session_types")),
     ),
     val page: Int = 1,
     val pageCount: Int = 1,

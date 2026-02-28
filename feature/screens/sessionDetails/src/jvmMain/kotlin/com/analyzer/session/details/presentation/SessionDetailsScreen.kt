@@ -1,32 +1,26 @@
 package com.analyzer.session.details.presentation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.session.details.presentation.components.SessionDetailsHeader
 import com.analyzer.session.details.presentation.components.SessionDetailsLapTable
 import com.analyzer.session.details.presentation.components.SessionDetailsStatsRow
-import com.analyzer.session.details.presentation.model.DropdownFilterUi
-import com.analyzer.session.details.presentation.model.DropdownOptionUi
 import com.analyzer.session.details.presentation.model.LapStatus
+import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
+import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
+import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
 import com.analyzer.session.details.presentation.model.SessionDetailIntent
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.components.ScrollableScreenColumn
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
 @Composable
@@ -35,7 +29,7 @@ internal fun SessionDetailsScreen(sessionId: Long) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(sessionId) {
-        viewModel.setSession(sessionId)
+        viewModel.dispatch(SessionDetailIntent.BindSession(sessionId))
     }
 
     SessionDetailsContent(
@@ -50,14 +44,7 @@ internal fun SessionDetailsContent(
     onIntent: (SessionDetailIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
+    ScrollableScreenColumn(modifier = modifier) {
         SessionDetailsStatsRow(
             stats = state.stats,
             modifier = Modifier.fillMaxWidth(),
@@ -66,14 +53,17 @@ internal fun SessionDetailsContent(
             header = state.header,
             sortFilter = state.sortFilter,
             showFilter = state.showFilter,
+            sessionTypeFilter = state.sessionTypeFilter,
             modifier = Modifier.fillMaxWidth(),
             onSortSelect = { onIntent(SessionDetailIntent.ChangeSort(it)) },
             onShowSelect = { onIntent(SessionDetailIntent.ChangeFilter(it)) },
+            onSessionTypeSelect = { onIntent(SessionDetailIntent.ChangeSessionTypeFilter(it)) },
         )
         SessionDetailsLapTable(
             state = state,
             modifier = Modifier.fillMaxWidth(),
             onPageChange = { onIntent(SessionDetailIntent.ChangePage(it)) },
+            onSortChange = { onIntent(SessionDetailIntent.ChangeSort(it)) },
         )
     }
 }
@@ -91,42 +81,50 @@ private fun SessionDetailsContentPreview() {
 
 private fun previewState(): SessionDetailState {
     val sortOptions = listOf(
-        DropdownOptionUi(id = "lap", label = "Lap"),
-        DropdownOptionUi(id = "best", label = "Best lap"),
+        SessionDetailFilterOptionUi(id = "lap"),
+        SessionDetailFilterOptionUi(id = "best"),
     )
     val showOptions = listOf(
-        DropdownOptionUi(id = "all", label = "All laps"),
-        DropdownOptionUi(id = "valid", label = "Valid laps"),
-        DropdownOptionUi(id = "invalid", label = "Invalid laps"),
+        SessionDetailFilterOptionUi(id = "all"),
+        SessionDetailFilterOptionUi(id = "valid"),
+        SessionDetailFilterOptionUi(id = "invalid"),
+    )
+    val typeOptions = listOf(
+        SessionDetailFilterOptionUi(id = "all_session_types"),
+        SessionDetailFilterOptionUi(id = "practice", label = "Practice"),
+        SessionDetailFilterOptionUi(id = "qualifying", label = "Qualifying"),
+        SessionDetailFilterOptionUi(id = "race", label = "Race"),
     )
 
     return SessionDetailState(
         isLoading = false,
         header = SessionDetailHeaderUi(
-            title = "Session",
             subtitle = "",
-            chips = listOf(
-                "Air: 00°C / Track: 00°C",
-                "Car Name",
-                "Location",
-            ),
+            sessionTypeLabel = "Qualifying",
+            airTempLabel = "00°C",
+            trackTempLabel = "00°C",
+            carLabel = "Car Name",
+            trackLabel = "Location",
         ),
         stats = SessionDetailStatsUi(
             bestLapLabel = "0:00.000",
             averageLapLabel = "0:00.000",
             incidentsCount = 0,
         ),
-        sortFilter = DropdownFilterUi(
-            label = "Sort by",
+        sortFilter = SessionDetailFilterUiModel(
+            kind = SessionDetailFilterKind.Sort,
             selectedId = "lap",
-            selectedLabel = "Lap",
             options = sortOptions,
         ),
-        showFilter = DropdownFilterUi(
-            label = "Show",
+        showFilter = SessionDetailFilterUiModel(
+            kind = SessionDetailFilterKind.Show,
             selectedId = "all",
-            selectedLabel = "All laps",
             options = showOptions,
+        ),
+        sessionTypeFilter = SessionDetailFilterUiModel(
+            kind = SessionDetailFilterKind.SessionType,
+            selectedId = "race",
+            options = typeOptions,
         ),
         page = 1,
         pageCount = 4,
@@ -209,6 +207,7 @@ private fun lap(
 ): SessionLapRowUi = SessionLapRowUi(
     lapNumber = number,
     lapLabel = number.toString(),
+    sessionTypeLabel = "Qualifying",
     totalTimeMs = null,
     totalTime = total,
     s1 = s1,

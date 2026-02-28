@@ -1,6 +1,6 @@
 package com.project.analyzer.impl.setup.game
 
-import com.project.analyzer.game.impl.GameWindowInfo
+import com.project.analyzer.game.api.GameWindowInfo
 import java.awt.Rectangle
 
 data class OverlayState(

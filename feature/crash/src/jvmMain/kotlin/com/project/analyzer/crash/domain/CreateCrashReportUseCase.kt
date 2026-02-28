@@ -9,7 +9,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-class CreateCrashReportUseCase {
+internal class CreateCrashReportUseCase {
 
     private val logger = LoggerFactory.getLogger("CrashReporter")
 

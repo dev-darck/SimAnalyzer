@@ -13,26 +13,21 @@ import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectEntry
 import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectPath
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleExpand
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleHidden
-import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 
 @Inject
-class FileChooserViewModel(private val useCase: FileChooserUseCase) : LeakAwareViewModel() {
-
-    private val _uiState = MutableStateFlow(FileUiState())
-    val state: StateFlow<FileUiState> = _uiState.asStateFlow()
+internal class FileChooserViewModel(
+    private val useCase: FileChooserUseCase,
+) : LeakAwareMviViewModel<FileChooserIntent, FileUiState>(FileUiState()) {
 
     init {
         loadSidebar()
     }
 
-    fun dispatch(intent: FileChooserIntent) {
+    override suspend fun handleIntent(intent: FileChooserIntent) {
         when (intent) {
             is Init -> handleInit(intent)
             is ClickDrive -> handleOpenDrive(intent.drive)
@@ -48,24 +43,25 @@ class FileChooserViewModel(private val useCase: FileChooserUseCase) : LeakAwareV
 
     private fun loadSidebar() = launch {
         val data = useCase.loadSidebar()
-        updateState { copy(drives = data.drives, places = data.places) }
+        updateState { copy(drives = data.drives, places = data.places, error = null) }
     }
 
-    private fun handleInit(intent: Init) {
+    private suspend fun handleInit(intent: Init) {
         updateState {
             copy(
                 selectionMode = intent.selectionMode,
+                error = null,
             )
         }
         intent.startPath?.let { handleOpenPath(it) }
     }
 
-    private fun handleOpenDrive(drive: File) = launch {
+    private suspend fun handleOpenDrive(drive: File) {
         val result = useCase.openDrive(drive.path, drive.label, currentShowHidden)
         applyTreeResult(result, currentDir = drive.path, selectedDrive = drive.path)
     }
 
-    private fun handleToggleExpand(dirPath: String) = launch {
+    private suspend fun handleToggleExpand(dirPath: String) {
         val result = useCase.toggleExpand(dirPath, currentShowHidden)
         val drive = resolveDrive(dirPath)
         applyTreeResult(result, currentDir = dirPath, selectedDrive = drive)
@@ -79,9 +75,9 @@ class FileChooserViewModel(private val useCase: FileChooserUseCase) : LeakAwareV
         }
     }
 
-    private fun handleOpenPath(targetPath: String) = launch {
-        val state = _uiState.value
-        val drive = findDriveFor(targetPath, state.drives) ?: return@launch
+    private suspend fun handleOpenPath(targetPath: String) {
+        val state = currentState
+        val drive = findDriveFor(targetPath, state.drives) ?: return
 
         val result = useCase.openPath(
             targetPath = targetPath,
@@ -92,16 +88,17 @@ class FileChooserViewModel(private val useCase: FileChooserUseCase) : LeakAwareV
         applyTreeResult(result, currentDir = targetPath, selectedDrive = drive.path)
     }
 
-    private fun handleToggleHidden() {
-        updateState { copy(showHidden = !showHidden) }
+    private suspend fun handleToggleHidden() {
+        updateState { copy(showHidden = !showHidden, error = null) }
         handleRefresh()
     }
 
-    private fun handleRefresh() = launch {
+    private suspend fun handleRefresh() {
         val result = useCase.refreshTree(currentShowHidden)
         updateState {
             copy(
                 treeNodes = result.nodes,
+                error = null,
             )
         }
     }
@@ -114,24 +111,21 @@ class FileChooserViewModel(private val useCase: FileChooserUseCase) : LeakAwareV
                 currentDir = currentDir,
                 selectedDrive = selectedDrive,
                 selected = "",
+                error = null,
             )
         }
     }
 
     private fun resolveDrive(path: String): String {
-        val drives = _uiState.value.drives
+        val drives = currentState.drives
         return drives
             .map { it.path }
             .filter { path.startsWith(it) }
             .maxByOrNull { it.length }
-            ?: _uiState.value.selectedDrive
+            ?: currentState.selectedDrive
     }
 
-    private val currentShowHidden: Boolean get() = _uiState.value.showHidden
-
-    private inline fun updateState(crossinline block: FileUiState.() -> FileUiState) {
-        _uiState.update { it.block() }
-    }
+    private val currentShowHidden: Boolean get() = currentState.showHidden
 
     private fun launch(block: suspend () -> Unit) {
         viewModelScope.launch {

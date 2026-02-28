@@ -1,6 +1,10 @@
 package com.project.analyzer.game.impl
 
 import com.project.analyzer.game.api.GameConfig
+import com.project.analyzer.game.api.GameWindowDetector
+import com.project.analyzer.game.api.GameWindowInfo
+import com.project.analyzer.game.api.GraphicsDeviceInfo
+import com.project.analyzer.game.api.user32Ex
 import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.Psapi
 import com.sun.jna.platform.win32.User32
@@ -29,7 +33,7 @@ class GameDetector(
     private val pollIntervalMs: Long = 200.milliseconds.inWholeMilliseconds,
     private val requireForeground: Boolean = true,
     private val coroutineDispatcher: CoroutineDispatcher,
-) {
+) : GameWindowDetector {
 
     private val user32 = User32.INSTANCE
     private val kernel32 = Kernel32.INSTANCE
@@ -42,11 +46,11 @@ class GameDetector(
     @Volatile
     private var overlayHwnd: HWND? = null
 
-    fun setOverlayHwnd(hwnd: HWND?) {
+    override fun setOverlayHwnd(hwnd: HWND?) {
         overlayHwnd = hwnd
     }
 
-    fun observeGameWindow(): Flow<GameWindowInfo?> = flow {
+    override fun observeGameWindow(): Flow<GameWindowInfo?> = flow {
         var cachedGameHwnd: HWND? = null
         var lastEmittedInfo: GameWindowInfo? = null
         var lostFocusCounter = 0
@@ -132,7 +136,8 @@ class GameDetector(
 
         val bounds = getWindowBounds(hwnd) ?: return null
         val monitor = findMonitorForWindow(bounds)
-        val isFullscreen = isWindowFullscreen(bounds, monitor)
+        val displayBounds = findDisplayBoundsForWindow(bounds)
+        val isFullscreen = isWindowFullscreen(bounds, displayBounds)
 
         return GameWindowInfo(hwnd, title, processName, className, bounds, isFullscreen, monitor)
     }
@@ -236,6 +241,21 @@ class GameDetector(
         )
     }
 
+    private fun findDisplayBoundsForWindow(windowBounds: Rectangle): Rectangle {
+        val devices = GraphicsEnvironment.getLocalGraphicsEnvironment().screenDevices
+        val intersectingBounds = devices.map { it.defaultConfiguration.bounds }
+            .filter { deviceBounds ->
+                val intersection = deviceBounds.intersection(windowBounds)
+                !intersection.isEmpty
+            }
+
+        if (intersectingBounds.isEmpty()) {
+            return findMonitorForWindow(windowBounds).bounds
+        }
+
+        return intersectingBounds.reduce { acc, bounds -> acc.union(bounds) }
+    }
+
     private fun getClientBoundsPhysical(hwnd: HWND): Rectangle? {
         val rc = WinDef.RECT()
         if (!user32.GetClientRect(hwnd, rc)) return null
@@ -244,11 +264,11 @@ class GameDetector(
         return Rectangle(pt.x, pt.y, rc.right - rc.left, rc.bottom - rc.top)
     }
 
-    private fun isWindowFullscreen(windowBounds: Rectangle, monitor: GraphicsDeviceInfo): Boolean {
+    private fun isWindowFullscreen(windowBounds: Rectangle, displayBounds: Rectangle): Boolean {
         val tolerance = 15
-        return abs(windowBounds.x - monitor.bounds.x) <= tolerance &&
-            abs(windowBounds.y - monitor.bounds.y) <= tolerance &&
-            abs(windowBounds.width - monitor.bounds.width) <= tolerance &&
-            abs(windowBounds.height - monitor.bounds.height) <= tolerance
+        return abs(windowBounds.x - displayBounds.x) <= tolerance &&
+            abs(windowBounds.y - displayBounds.y) <= tolerance &&
+            abs(windowBounds.width - displayBounds.width) <= tolerance &&
+            abs(windowBounds.height - displayBounds.height) <= tolerance
     }
 }

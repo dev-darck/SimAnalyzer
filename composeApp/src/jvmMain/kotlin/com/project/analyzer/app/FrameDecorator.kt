@@ -29,10 +29,10 @@ fun WindowScope.FrameDecorator(content: @Composable (FrameDecoratorState) -> Uni
     }
 
     DisposableEffect(winController) {
-        logger.info { "WindowsFrameController.install()" }
+        logger.debug { "WindowsFrameController.install()" }
         winController.install()
         onDispose {
-            logger.info { "WindowsFrameController.dispose()" }
+            logger.debug { "WindowsFrameController.dispose()" }
             winController.dispose()
         }
     }

@@ -1,0 +1,58 @@
+<resources>
+    <string name="pagination_previous_page">Previous page</string>
+    <string name="pagination_next_page">Next page</string>
+
+    <string name="dropdown_preview_label_game">Game</string>
+    <string name="dropdown_preview_all_games">All games</string>
+    <string name="dropdown_preview_assetto_corsa_competizione">Assetto Corsa Competizione</string>
+    <string name="dropdown_preview_assetto_corsa">Assetto Corsa</string>
+    <string name="dropdown_preview_automobilista_2">Automobilista 2</string>
+    <string name="dropdown_preview_rfactor_2">rFactor 2</string>
+    <string name="dropdown_preview_iracing">iRacing</string>
+    <string name="dropdown_preview_le_mans_ultimate">Le Mans Ultimate</string>
+    <string name="dropdown_preview_ea_sports_wrc">EA Sports WRC</string>
+    <string name="dropdown_preview_f1_24">F1 24</string>
+
+    <string name="paged_table_preview_date">Date</string>
+    <string name="paged_table_preview_track">Track</string>
+    <string name="paged_table_preview_best_lap">Best Lap</string>
+    <string name="paged_table_preview_loading_sessions">Loading sessions...</string>
+    <string name="paged_table_preview_no_sessions">No sessions recorded yet.</string>
+    <string name="paged_table_preview_spa">Spa</string>
+    <string name="paged_table_preview_monza">Monza</string>
+    <string name="paged_table_preview_suzuka">Suzuka</string>
+
+    <string name="screen_layout_preview_distance">Distance</string>
+    <string name="screen_layout_preview_distance_value">489 km</string>
+    <string name="screen_layout_preview_sessions">Sessions</string>
+    <string name="screen_layout_preview_sessions_value">17</string>
+    <string name="screen_layout_preview_track">Track</string>
+    <string name="screen_layout_preview_track_value">Spa</string>
+    <string name="screen_layout_preview_favorite_car">Favorite Car</string>
+    <string name="screen_layout_preview_favorite_car_value">Porsche 992 GT3 R</string>
+
+    <string name="session_stat_card_preview_title">Total Distance (km)</string>
+    <string name="session_stat_card_preview_value">1234.56</string>
+
+    <string name="stats_row_preview_total_distance">Total Distance</string>
+    <string name="stats_row_preview_total_distance_value">321.9 km</string>
+    <string name="stats_row_preview_sessions">Sessions</string>
+    <string name="stats_row_preview_sessions_value">24</string>
+    <string name="stats_row_preview_incidents">Incidents</string>
+    <string name="stats_row_preview_incidents_value">4</string>
+
+    <string name="responsive_panel_card_preview_title">Fastest Lap</string>
+    <string name="responsive_panel_card_preview_value">1:42.381</string>
+
+    <string name="info_bar_preview_info_title">Session synced</string>
+    <string name="info_bar_preview_info_message">Latest telemetry batch was saved successfully.</string>
+    <string name="info_bar_preview_success_title">Export complete</string>
+    <string name="info_bar_preview_success_message">CSV package is ready for sharing.</string>
+    <string name="info_bar_preview_warning_title">Detector offline</string>
+    <string name="info_bar_preview_warning_message">Game window is not focused, live data may pause.</string>
+    <string name="info_bar_preview_error_title">Overlay failed</string>
+    <string name="info_bar_preview_error_message">HUD injection could not be initialized for this game.</string>
+    <string name="info_bar_action_retry">Retry</string>
+    <string name="info_bar_action_details">Details</string>
+    <string name="info_bar_dismiss">Dismiss</string>
+</resources>

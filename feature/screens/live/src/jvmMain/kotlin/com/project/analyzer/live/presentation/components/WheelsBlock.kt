@@ -1,5 +1,7 @@
 @file:OptIn(ExperimentalFoundationApi::class)
 
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.live.presentation.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -22,21 +24,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.tooltip.Tooltip
+import org.jetbrains.compose.resources.stringResource
 import java.util.Locale
 
-enum class WheelPos(val badge: String) {
-    FL("FL"),
-    FR("FR"),
-    RL("RL"),
-    RR("RR"),
+enum class WheelPos {
+    FL,
+    FR,
+    RL,
+    RR,
 }
 
 data class WheelUi(
@@ -49,33 +50,10 @@ data class WheelUi(
     val brakeTempC: Float = 0f,
 )
 
-private object WheelTooltips {
-
-    const val PSI = "Tyre Pressure (PSI)\n" +
-        "Affects grip and tyre wear.\n" +
-        "Green = optimal pressure."
-
-    const val SLIP = "Wheel Slip Ratio (0-1)\n" +
-        "Shows traction loss.\n" +
-        "Orange >0.05, red >0.15."
-
-    const val SUS = "Suspension Travel (mm)\n" +
-        "Current damper compression.\n" +
-        "High values = bottoming out."
-
-    const val BRK = "Brake Disc Temperature (°C)\n" +
-        "Affects braking efficiency.\n" +
-        "Orange >400°C, red >600°C."
-
-    const val TY = "Tyre Core Temperature (°C)\n" +
-        "Affects grip and degradation.\n" +
-        "Optimal 80-100°C for slicks."
-}
-
 @Composable
 fun WheelsBlock(wheels: List<WheelUi>, modifier: Modifier = Modifier, tileHeight: Dp = 108.dp, gap: Dp = 22.dp) {
-    val tileShape = RoundedCornerShape(26.dp)
-    val badgeShape = RoundedCornerShape(18.dp)
+    val tileShape = SimAnalyzerTheme.corners.display
+    val badgeShape = SimAnalyzerTheme.corners.badge
 
     val surface = SimAnalyzerTheme.material.surface
     val tileBg = SimAnalyzerTheme.material.surfaceVariant
@@ -95,10 +73,9 @@ fun WheelsBlock(wheels: List<WheelUi>, modifier: Modifier = Modifier, tileHeight
             .padding(22.dp),
     ) {
         Text(
-            text = "Wheels",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
+            text = stringResource(Res.string.wheels_title),
             color = titleColor,
+            style = SimAnalyzerTheme.typography.titleSmall,
         )
 
         Spacer(Modifier.height(gap))
@@ -207,51 +184,50 @@ private fun WheelWideTile(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = wheel.pos.badge,
+                text = wheelBadge(wheel.pos),
                 color = valueColor,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = SimAnalyzerTheme.typography.titleSmall,
             )
         }
 
         InfoBlock(
-            label = "PSI",
+            label = stringResource(Res.string.wheel_metric_psi),
             value = psiText,
             labelColor = labelColor,
             valueColor = psiColor,
-            tooltip = WheelTooltips.PSI,
+            tooltip = stringResource(Res.string.wheel_tooltip_psi),
         )
 
         InfoBlock(
-            label = "SLIP",
+            label = stringResource(Res.string.wheel_metric_slip),
             value = slipText,
             labelColor = labelColor,
             valueColor = slipColor,
-            tooltip = WheelTooltips.SLIP,
+            tooltip = stringResource(Res.string.wheel_tooltip_slip),
         )
 
         InfoBlock(
-            label = "SUS",
-            value = "${wheel.susMm}mm",
+            label = stringResource(Res.string.wheel_metric_sus),
+            value = stringResource(Res.string.wheel_suspension_value, wheel.susMm),
             labelColor = labelColor,
             valueColor = subLineColor,
-            tooltip = WheelTooltips.SUS,
+            tooltip = stringResource(Res.string.wheel_tooltip_sus),
         )
 
         InfoBlock(
-            label = "BRK",
-            value = "$brakeText°",
+            label = stringResource(Res.string.wheel_metric_brk),
+            value = stringResource(Res.string.wheel_degree_value, brakeText),
             labelColor = labelColor,
             valueColor = brakeColor,
-            tooltip = WheelTooltips.BRK,
+            tooltip = stringResource(Res.string.wheel_tooltip_brk),
         )
 
         InfoBlock(
-            label = "TY",
-            value = "$tyText°",
+            label = stringResource(Res.string.wheel_metric_ty),
+            value = stringResource(Res.string.wheel_degree_value, tyText),
             labelColor = labelColor,
             valueColor = valueColor,
-            tooltip = WheelTooltips.TY,
+            tooltip = stringResource(Res.string.wheel_tooltip_ty),
         )
     }
 }
@@ -265,18 +241,23 @@ private fun InfoBlock(label: String, value: String, labelColor: Color, valueColo
             Text(
                 text = label,
                 color = labelColor,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = SimAnalyzerTheme.typography.labelMedium,
             )
             Text(
                 text = value,
                 color = valueColor,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = FontFamily.Monospace,
+                style = SimAnalyzerTheme.typography.titleSmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
             )
         }
     }
+}
+
+@Composable
+private fun wheelBadge(pos: WheelPos): String = when (pos) {
+    WheelPos.FL -> stringResource(Res.string.wheel_position_fl)
+    WheelPos.FR -> stringResource(Res.string.wheel_position_fr)
+    WheelPos.RL -> stringResource(Res.string.wheel_position_rl)
+    WheelPos.RR -> stringResource(Res.string.wheel_position_rr)
 }
 
 @Preview

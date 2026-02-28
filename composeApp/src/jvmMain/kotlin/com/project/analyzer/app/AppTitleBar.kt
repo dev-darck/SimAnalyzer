@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowScope
+import com.project.analyzer.composeApp.Res.*
 import com.project.analyzer.app.win.hittest.winCaptionBarRect
 import com.project.analyzer.app.win.hittest.winCloseButtonRect
 import com.project.analyzer.app.win.hittest.winExcludeFromCaption
@@ -46,6 +47,7 @@ import com.project.analyzer.app.win.hittest.winMinimizeButtonRect
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.utils.logger.logger
+import org.jetbrains.compose.resources.stringResource
 import java.awt.Frame
 import java.awt.event.WindowStateListener
 
@@ -80,14 +82,14 @@ fun WindowScope.AppTitleBar(
     }
 
     fun minimize() {
-        logger.info { "Window: minimize" }
+        logger.debug { "Window: minimize" }
         frame?.extendedState = (frame.extendedState or Frame.ICONIFIED)
     }
 
     fun toggleMaximize() {
         val f = frame ?: return
         val max = (f.extendedState and Frame.MAXIMIZED_BOTH) != 0
-        logger.info { "Window: toggleMaximize (wasMax=$max)" }
+        logger.debug { "Window: toggleMaximize (wasMax=$max)" }
         f.extendedState = if (max) Frame.NORMAL else Frame.MAXIMIZED_BOTH
     }
 
@@ -107,7 +109,11 @@ fun WindowScope.AppTitleBar(
         ) {
             Spacer(Modifier.width(10.dp))
 
-            Text(text = appName, color = m.onSurface, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = appName,
+                color = m.onSurface,
+                style = SimAnalyzerTheme.typography.titleSmall,
+            )
 
             Spacer(Modifier.weight(1f))
 
@@ -118,11 +124,11 @@ fun WindowScope.AppTitleBar(
                     canGoBack = canGoBack,
                     canGoForward = canGoForward,
                     onBack = {
-                        logger.info { "TitleBar: back" }
+                        logger.debug { "TitleBar: back" }
                         onBack()
                     },
                     onForward = {
-                        logger.info { "TitleBar: forward" }
+                        logger.debug { "TitleBar: forward" }
                         onForward()
                     },
                 )
@@ -141,7 +147,12 @@ fun WindowScope.AppTitleBar(
                     iconTint = m.onSurfaceVariant,
                     modifier = Modifier.winMinimizeButtonRect(reg, key = "minBtn"),
                 ) {
-                    Icon(Icons.Outlined.Remove, "Minimize", tint = it, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.Outlined.Remove,
+                        stringResource(Res.string.app_titlebar_minimize),
+                        tint = it,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
 
                 TitleBarWinButton(
@@ -153,7 +164,7 @@ fun WindowScope.AppTitleBar(
                 ) {
                     Icon(
                         imageVector = if (isMaximized) Icons.Outlined.FilterNone else Icons.Outlined.CropSquare,
-                        contentDescription = "Maximize",
+                        contentDescription = stringResource(Res.string.app_titlebar_maximize),
                         tint = it,
                         modifier = Modifier.size(18.dp),
                     )
@@ -162,14 +173,19 @@ fun WindowScope.AppTitleBar(
                 TitleBarWinButton(
                     enabled = true,
                     onClick = {
-                        logger.info { "Window: close" }
+                        logger.debug { "Window: close" }
                         onCloseRequest()
                     },
                     hoverBg = m.error.copy(alpha = 0.22f),
                     iconTint = m.onSurface,
                     modifier = Modifier.winCloseButtonRect(reg, key = "closeBtn"),
                 ) {
-                    Icon(Icons.Outlined.Close, "Close", tint = it, modifier = Modifier.size(18.dp))
+                    Icon(
+                        Icons.Outlined.Close,
+                        stringResource(Res.string.app_titlebar_close),
+                        tint = it,
+                        modifier = Modifier.size(18.dp),
+                    )
                 }
             }
         }
@@ -189,7 +205,7 @@ private fun NavButtons(canGoBack: Boolean, canGoForward: Boolean, onBack: () -> 
         TitleBarPillButton(enabled = canGoBack, onClick = onBack) { tint ->
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "Back",
+                contentDescription = stringResource(Res.string.app_titlebar_back),
                 tint = tint,
                 modifier = Modifier.size(18.dp),
             )
@@ -200,7 +216,7 @@ private fun NavButtons(canGoBack: Boolean, canGoForward: Boolean, onBack: () -> 
         TitleBarPillButton(enabled = canGoForward, onClick = onForward) { tint ->
             Icon(
                 imageVector = Icons.AutoMirrored.Outlined.ArrowForward,
-                contentDescription = "Forward",
+                contentDescription = stringResource(Res.string.app_titlebar_forward),
                 tint = tint,
                 modifier = Modifier.size(18.dp),
             )
@@ -237,7 +253,7 @@ private fun TitleBarPillButton(enabled: Boolean, onClick: () -> Unit, icon: @Com
     Box(
         modifier = Modifier
             .size(38.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(SimAnalyzerTheme.corners.item)
             .background(bg)
             .hoverable(interaction)
             .onClick(enabled = enabled, onClick = onClick),
@@ -274,7 +290,7 @@ private fun TitleBarWinButton(
     Box(
         modifier = modifier
             .size(width = 42.dp, height = 38.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(SimAnalyzerTheme.corners.item)
             .background(bg)
             .hoverable(interaction)
             .onClick(enabled = enabled, onClick = onClick),

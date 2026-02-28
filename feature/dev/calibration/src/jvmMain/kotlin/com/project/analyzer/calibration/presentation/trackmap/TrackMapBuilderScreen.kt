@@ -1,3 +1,5 @@
+@file:Suppress("WildcardImport", "NoWildcardImports")
+
 package com.project.analyzer.calibration.presentation.trackmap
 
 import androidx.compose.foundation.background
@@ -14,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,16 +23,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.components.CalibrationSectionCard
 import com.project.analyzer.calibration.presentation.components.ReferencePointDropdown
 import com.project.analyzer.calibration.trackmap.TrackMapRecorderState
+import com.project.analyzer.feature.dev.calibration.Res.*
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.format.formatDecimal
+import com.project.analyzer.ui.format.formatPercent
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import org.jetbrains.compose.resources.stringResource
 
 private const val MIN_POINTS_TO_SAVE_UI = 50
 
@@ -74,8 +78,8 @@ private fun TrackMapBuilderContent(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CalibrationSectionCard(
-            title = "Track map builder",
-            subtitle = "Record a clean lap and save the track line.",
+            title = stringResource(Res.string.track_map_builder_title),
+            subtitle = stringResource(Res.string.track_map_builder_subtitle),
         ) {
             val detectedTrack = listOfNotNull(
                 state.trackName.takeIf { it.isNotBlank() },
@@ -85,27 +89,50 @@ private fun TrackMapBuilderContent(
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 val gameLabel = state.gameLabel.ifBlank { state.gameId }
                 if (gameLabel.isNotBlank()) {
-                    InfoRow(label = "Game", value = gameLabel)
+                    InfoRow(label = stringResource(Res.string.track_map_game), value = gameLabel)
                 }
-                InfoRow(label = "Detected track", value = detectedTrack)
-                InfoRow(label = "Track id", value = state.trackId.ifBlank { "-" })
-                state.layoutId?.let { InfoRow(label = "Layout", value = it) }
-                InfoRow(label = "Lap", value = state.lapIndex?.toString() ?: "-")
-                InfoRow(label = "Laps recorded", value = state.lapsRecorded.toString())
-                InfoRow(label = "Pit lane", value = if (state.isInPitLane) "Yes" else "No")
-                InfoRow(label = "Pit source", value = if (state.pitOverrideActive) "Manual" else "Auto")
-                InfoRow(label = "Pit entry", value = if (state.pitEntryPoint != null) "Set" else "-")
-                InfoRow(label = "Pit exit", value = if (state.pitExitPoint != null) "Set" else "-")
-                InfoRow(label = "Pit points", value = state.pitPointCount.toString())
-                InfoRow(label = "Points", value = state.pointCount.toString())
-                InfoRow(label = "Distance", value = "%.1f m".format(state.totalDistanceMeters))
-                InfoRow(label = "Avg width", value = "%.1f m".format(state.averageTrackWidthMeters))
+                InfoRow(label = stringResource(Res.string.track_map_detected_track), value = detectedTrack)
+                InfoRow(label = stringResource(Res.string.track_map_track_id), value = state.trackId.ifBlank { "-" })
+                state.layoutId?.let { InfoRow(label = stringResource(Res.string.track_map_layout), value = it) }
+                InfoRow(label = stringResource(Res.string.track_map_lap), value = state.lapIndex?.toString() ?: "-")
                 InfoRow(
-                    label = "Width coverage",
-                    value = "L %.0f%% / R %.0f%%".format(
-                        state.leftCoverageRatio * 100f,
-                        state.rightCoverageRatio * 100f,
+                    label = stringResource(Res.string.track_map_laps_recorded),
+                    value = state.lapsRecorded.toString(),
+                )
+                InfoRow(
+                    label = stringResource(Res.string.track_map_pit_lane),
+                    value = stringResource(
+                        if (state.isInPitLane) Res.string.track_map_yes else Res.string.track_map_no,
                     ),
+                )
+                InfoRow(
+                    label = stringResource(Res.string.track_map_pit_source),
+                    value = stringResource(
+                        if (state.pitOverrideActive) Res.string.track_map_manual else Res.string.track_map_auto,
+                    ),
+                )
+                InfoRow(
+                    label = stringResource(Res.string.track_map_pit_entry),
+                    value = if (state.pitEntryPoint != null) stringResource(Res.string.track_map_set) else "-",
+                )
+                InfoRow(
+                    label = stringResource(Res.string.track_map_pit_exit),
+                    value = if (state.pitExitPoint != null) stringResource(Res.string.track_map_set) else "-",
+                )
+                InfoRow(label = stringResource(Res.string.track_map_pit_points), value = state.pitPointCount.toString())
+                InfoRow(label = stringResource(Res.string.track_map_points), value = state.pointCount.toString())
+                InfoRow(
+                    label = stringResource(Res.string.track_map_distance),
+                    value = "${formatDecimal(state.totalDistanceMeters, decimals = 1)} m",
+                )
+                InfoRow(
+                    label = stringResource(Res.string.track_map_avg_width),
+                    value = "${formatDecimal(state.averageTrackWidthMeters, decimals = 1)} m",
+                )
+                InfoRow(
+                    label = stringResource(Res.string.track_map_width_coverage),
+                    value = "L ${formatPercent((state.leftCoverageRatio * 100f).toInt())} / " +
+                        "R ${formatPercent((state.rightCoverageRatio * 100f).toInt())}",
                 )
             }
 
@@ -113,12 +140,14 @@ private fun TrackMapBuilderContent(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatusPill(
-                    label = if (state.recording) "Recording" else "Idle",
+                    label = stringResource(
+                        if (state.recording) Res.string.track_map_status_recording else Res.string.track_map_status_idle,
+                    ),
                     accent = if (state.recording) SimAnalyzerTheme.extended.teal else SimAnalyzerTheme.material.onSurfaceVariant,
                 )
                 if (state.lastSavedTrackId != null) {
                     StatusPill(
-                        label = "Saved: ${state.lastSavedTrackId}",
+                        label = stringResource(Res.string.track_map_status_saved, state.lastSavedTrackId),
                         accent = SimAnalyzerTheme.material.primary,
                     )
                 }
@@ -126,41 +155,55 @@ private fun TrackMapBuilderContent(
         }
 
         CalibrationSectionCard(
-            title = "Capture settings",
-            subtitle = "Reference point and sampling rules.",
+            title = stringResource(Res.string.calibration_capture_settings_title),
+            subtitle = stringResource(Res.string.calibration_capture_settings_subtitle),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
-                    text = "Reference point",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(Res.string.calibration_reference_point),
+                    style = SimAnalyzerTheme.typography.bodyMedium,
                     color = SimAnalyzerTheme.material.onSurface,
                 )
                 ReferencePointDropdown(selected = state.referencePoint, onSelected = onReferencePoint)
 
                 Text(
-                    text = "Sampling: min ${state.minSpacingMeters}m, max ${state.maxSpacingMeters}m, " +
-                        "turn ${state.minAngleDeg} deg, speed >= ${state.minSpeedKmh} km/h",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(
+                        Res.string.track_map_sampling,
+                        formatDecimal(state.minSpacingMeters, decimals = 1),
+                        formatDecimal(state.maxSpacingMeters, decimals = 1),
+                        formatDecimal(state.minAngleDeg, decimals = 0),
+                        formatDecimal(state.minSpeedKmh, decimals = 0),
+                    ),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { onFallbackHalfWidth(state.fallbackHalfWidthMeters - 0.5f) }) {
-                        Text("Width -")
+                        Text(
+                            text = stringResource(Res.string.track_map_width_minus),
+                            style = SimAnalyzerTheme.typography.labelMedium,
+                        )
                     }
                     OutlinedButton(onClick = { onFallbackHalfWidth(state.fallbackHalfWidthMeters + 0.5f) }) {
-                        Text("Width +")
+                        Text(
+                            text = stringResource(Res.string.track_map_width_plus),
+                            style = SimAnalyzerTheme.typography.labelMedium,
+                        )
                     }
                     Text(
-                        text = "Fallback half-width: %.1fm".format(state.fallbackHalfWidthMeters),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(
+                            Res.string.track_map_fallback_half_width,
+                            formatDecimal(state.fallbackHalfWidthMeters, decimals = 1),
+                        ),
+                        style = SimAnalyzerTheme.typography.bodySmall,
                         color = SimAnalyzerTheme.material.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.CenterVertically),
                     )
                 }
                 state.guidanceText?.let { hint ->
                     Text(
-                        text = "Guidance: $hint",
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(Res.string.track_map_guidance, hint),
+                        style = SimAnalyzerTheme.typography.bodySmall,
                         color = SimAnalyzerTheme.extended.amber,
                     )
                 }
@@ -168,8 +211,8 @@ private fun TrackMapBuilderContent(
         }
 
         CalibrationSectionCard(
-            title = "Build preview",
-            subtitle = "Live track map while recording.",
+            title = stringResource(Res.string.track_map_build_preview_title),
+            subtitle = stringResource(Res.string.track_map_build_preview_subtitle),
         ) {
             TrackMapPreview(
                 state = state,
@@ -181,8 +224,8 @@ private fun TrackMapBuilderContent(
         }
 
         CalibrationSectionCard(
-            title = "Actions",
-            subtitle = "Start/stop recording and save the map.",
+            title = stringResource(Res.string.track_map_actions_title),
+            subtitle = stringResource(Res.string.track_map_actions_subtitle),
         ) {
             val canSave = !state.recording && !state.isSaving && state.pointCount >= MIN_POINTS_TO_SAVE_UI
 
@@ -191,28 +234,42 @@ private fun TrackMapBuilderContent(
                     onClick = onStart,
                     enabled = !state.recording && !state.isSaving,
                 ) {
-                    Text("Start")
+                    Text(
+                        text = stringResource(Res.string.track_map_start),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
 
                 Button(
                     onClick = onStop,
                     enabled = state.recording,
                 ) {
-                    Text("Stop")
+                    Text(
+                        text = stringResource(Res.string.track_map_stop),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
 
                 OutlinedButton(
                     onClick = onReset,
                     enabled = !state.isSaving,
                 ) {
-                    Text("Reset")
+                    Text(
+                        text = stringResource(Res.string.calibration_reset),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
 
                 Button(
                     onClick = onSave,
                     enabled = canSave,
                 ) {
-                    Text(if (state.isSaving) "Saving..." else "Save")
+                    Text(
+                        text = stringResource(
+                            if (state.isSaving) Res.string.track_map_saving else Res.string.track_map_save,
+                        ),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
             }
 
@@ -223,21 +280,27 @@ private fun TrackMapBuilderContent(
                     onClick = onPitEntry,
                     enabled = state.recording,
                 ) {
-                    Text("Mark pit entry")
+                    Text(
+                        text = stringResource(Res.string.track_map_mark_pit_entry),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
                 OutlinedButton(
                     onClick = onPitExit,
                     enabled = state.recording,
                 ) {
-                    Text("Mark pit exit")
+                    Text(
+                        text = stringResource(Res.string.track_map_mark_pit_exit),
+                        style = SimAnalyzerTheme.typography.labelMedium,
+                    )
                 }
             }
 
             if (state.pointCount < MIN_POINTS_TO_SAVE_UI) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Need at least $MIN_POINTS_TO_SAVE_UI points to save.",
-                    style = MaterialTheme.typography.bodySmall,
+                    text = stringResource(Res.string.track_map_need_points, MIN_POINTS_TO_SAVE_UI),
+                    style = SimAnalyzerTheme.typography.bodySmall,
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             }
@@ -259,14 +322,13 @@ private fun InfoRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurfaceVariant,
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = SimAnalyzerTheme.material.onSurface,
-            fontWeight = FontWeight.Medium,
         )
     }
 }
@@ -288,8 +350,7 @@ private fun StatusPill(label: String, accent: androidx.compose.ui.graphics.Color
         Text(
             text = label,
             color = accent,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.SemiBold,
+            style = SimAnalyzerTheme.typography.labelSmall,
         )
     }
 }
@@ -307,7 +368,7 @@ private fun MessageBanner(message: String) {
     ) {
         Text(
             text = message,
-            style = MaterialTheme.typography.bodySmall,
+            style = SimAnalyzerTheme.typography.bodySmall,
             color = accent,
         )
     }

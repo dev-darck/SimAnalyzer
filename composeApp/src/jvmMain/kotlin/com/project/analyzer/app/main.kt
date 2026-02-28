@@ -22,21 +22,24 @@ import com.project.analyzer.crash.presentation.CrashBoundary
 import com.project.analyzer.impl.compose.OverlayWindow
 import com.project.analyzer.impl.di.AppComponent
 import com.project.analyzer.impl.di.createAppComponent
+import com.project.analyzer.impl.di.createFeatureComponents
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.impl.rememberNavigationState
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.theme.ThemeMode
 import com.project.analyzer.utils.SingleInstanceGuard
 import com.project.analyzer.utils.logger.LogbackConfigurator
+import com.project.analyzer.utils.resolveAppDirectories
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
 import java.awt.SystemTray
 
 suspend fun main() {
-    SingleInstanceGuard.acquireOrExit()
-    val appGraph = createAppComponent()
-    LogbackConfigurator.configure()
+    val appDirectories = resolveAppDirectories()
+    SingleInstanceGuard.acquireOrExit(appDirectories.lockFile)
+    val appGraph = createAppComponent(appDirectories)
+    LogbackConfigurator.configure(appDirectories.logsDir)
     try {
         appGraph.appLifecycle.start()
         awaitApplication {
@@ -58,9 +61,10 @@ suspend fun main() {
 
 @Composable
 private fun ApplicationScope.App(appGraph: AppComponent) {
+    val features = remember(appGraph) { appGraph.createFeatureComponents() }
     var showAppWindow by remember { mutableStateOf(true) }
     val showHud by appGraph.hudPreferences.observeHudEnabled().collectAsState(true)
-    var showOverlay by remember { mutableStateOf(appGraph.hudPanels.isNotEmpty()) }
+    var showOverlay by remember { mutableStateOf(features.hud.hudPanels.isNotEmpty()) }
     val isSystemTraySupported = remember { SystemTray.isSupported() }
     val navigationState = rememberNavigationState()
 
@@ -79,35 +83,38 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
         },
     )
 
-    Window(
-        visible = showAppWindow,
-        onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
-        title = BuildConfig.APP_NAME,
-        icon = painterResource(Res.drawable.app_icon),
-        state = appState,
-    ) {
-        val density = LocalDensity.current
-        LaunchedEffect(density) {
-            val minW = with(density) { 800.dp.roundToPx() }
-            val minH = with(density) { 600.dp.roundToPx() }
+    if (showAppWindow) {
+        Window(
+            visible = true,
+            onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
+            title = BuildConfig.APP_NAME,
+            icon = painterResource(Res.drawable.app_icon),
+            state = appState,
+        ) {
+            val density = LocalDensity.current
+            LaunchedEffect(density) {
+                val minW = with(density) { 800.dp.roundToPx() }
+                val minH = with(density) { 600.dp.roundToPx() }
 
-            window.minimumSize = Dimension(minW, minH)
-        }
+                window.minimumSize = Dimension(minW, minH)
+            }
 
-        FrameDecorator { decorator ->
-            App(
-                providerFactory = appGraph.entryProviderFactory,
-                navigationState = navigationState,
-                decorator = decorator,
-                onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
-            )
+            FrameDecorator { decorator ->
+                App(
+                    providerFactory = features.navigation.entryProviderFactory,
+                    navigationState = navigationState,
+                    decorator = decorator,
+                    onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
+                )
+            }
         }
     }
 
     OverlayWindow(
         visible = showHud && showOverlay,
         onCloseRequest = { showOverlay = false },
-        panels = appGraph.hudPanels,
+        panels = features.hud.hudPanels,
+        gameDetectorFactory = features.gameDetector.gameDetectorFactory,
         state = rememberWindowState(),
     )
 }

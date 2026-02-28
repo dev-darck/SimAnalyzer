@@ -6,16 +6,15 @@ data class FuelHudUiState(
     val isShow: Boolean = false,
     val isSessionActive: Boolean = false,
     val phase: FuelPhase = FuelPhase.PIT_WAITING,
-
-    val title: String = "Fuel / lap",
     val mainValue: String = "—",
     val peakValue: String = "—",
-    val subtitle: String = "Waiting in pits…",
 
     val fuelLeftText: String = "—",
-    val lapsRemainingText: String = "—",
+    val lapsRemainingCount: Int? = null,
+    val lapsRemainingIsApprox: Boolean = true,
     val lastLapTimeText: String = "",
     val lapBasisText: String = "—",
+    val displayLapNumber: Int = 1,
 
     val planRows: List<PlanRowUi> = emptyList(),
 
@@ -29,4 +28,4 @@ data class FuelHudUiState(
     val confidence: Double = 0.0,
 )
 
-data class PlanRowUi(val label: String, val timeText: String, val fuelText: String, val peakFuelText: String = "—")
+data class PlanRowUi(val laps: Int, val timeText: String, val fuelText: String, val peakFuelText: String = "—")

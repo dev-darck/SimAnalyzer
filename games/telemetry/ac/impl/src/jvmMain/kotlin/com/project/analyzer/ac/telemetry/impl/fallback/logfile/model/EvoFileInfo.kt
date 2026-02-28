@@ -9,7 +9,8 @@ enum class EvoSessionType(val shmValue: Int) {
     TIME_ATTACK(4),
     DRIFT(5),
     DRAG(6),
-    WARMUP(7);
+    WARMUP(7),
+    ;
 
     companion object {
 
@@ -40,6 +41,7 @@ data class EvoFileInfo(
     val layoutId: String? = null,
     val carModel: String? = null,
     val sessionEpoch: Long = 0L,
+    val sessionEpochStartedFromMainMenu: Boolean = false,
     val driverName: String? = null,
     val driverSteamId: String? = null,
     val penaltyId: String? = null,

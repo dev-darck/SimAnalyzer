@@ -17,15 +17,13 @@ internal data class LeakCanaryConfig(
 
     companion object {
 
-        fun fromSystemProperties(): LeakCanaryConfig {
-            return LeakCanaryConfig(
-                enabled = BuildConfig.IS_DEBUG,
-                watchDelayMillis = DEFAULT_WATCH_DELAY_MS,
-                analysisCooldownMillis = DEFAULT_ANALYSIS_COOLDOWN_MS,
-                maxStoredHeapDumps = DEFAULT_MAX_DUMPS,
-                retainHeapDumpOnNoLeaks = false,
-                dumpDirectoryName = "leakcanary",
-            )
-        }
+        fun fromSystemProperties(): LeakCanaryConfig = LeakCanaryConfig(
+            enabled = BuildConfig.IS_DEBUG,
+            watchDelayMillis = DEFAULT_WATCH_DELAY_MS,
+            analysisCooldownMillis = DEFAULT_ANALYSIS_COOLDOWN_MS,
+            maxStoredHeapDumps = DEFAULT_MAX_DUMPS,
+            retainHeapDumpOnNoLeaks = false,
+            dumpDirectoryName = "leakcanary",
+        )
     }
 }

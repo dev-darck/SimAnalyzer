@@ -3,6 +3,7 @@ package com.analyzer.session.details.presentation.model
 data class SessionLapRowUi(
     val lapNumber: Int,
     val lapLabel: String,
+    val sessionTypeLabel: String,
     val totalTimeMs: Int?,
     val totalTime: String,
     val s1: String,
