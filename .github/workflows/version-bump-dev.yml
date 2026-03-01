@@ -10,8 +10,7 @@ on:
       - "version.properties"
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: version-bump-${{ github.ref }}
@@ -23,9 +22,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.VERSION_BUMP_APP_ID }}
+          private-key: ${{ secrets.VERSION_BUMP_APP_PRIVATE_KEY }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
           fetch-depth: 0
           ref: ${{ github.ref_name }}
 
@@ -66,33 +74,26 @@ jobs:
           fi
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      - name: Create version bump PR
-        if: steps.diff.outputs.changed == 'true' && github.ref_protected
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          base: ${{ github.ref_name }}
-          branch: github-actions/version-bump/${{ github.ref_name }}
-          delete-branch: true
-          add-paths: |
-            version.properties
-          commit-message:
-            chore: bump build to ${{ steps.bump.outputs.current_build }} for ${{ steps.bump.outputs.current_dev }} on ${{ github.ref_name }} [skip ci]
-          title:
-            chore: bump build to ${{ steps.bump.outputs.current_build }} for ${{ steps.bump.outputs.current_dev }} on ${{ github.ref_name }}
-          body: |
-            Automated version bump for `${{ github.ref_name }}`.
-
-            - build: `${{ steps.bump.outputs.current_build }}`
-            - version: `${{ steps.bump.outputs.current_dev }}`
-
-      - name: Commit version bump
-        if: steps.diff.outputs.changed == 'true' && !github.ref_protected
+      - name: Resolve app bot identity
+        if: steps.diff.outputs.changed == 'true'
+        id: app-bot
         shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "user_id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit version bump
+        if: steps.diff.outputs.changed == 'true'
+        shell: bash
+        env:
+          GIT_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          git remote set-url origin "https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git"
+          git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
+          git config user.email "${{ steps.app-bot.outputs.user_id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
           git add version.properties
           git commit -m "chore: bump build to ${{ steps.bump.outputs.current_build }} for ${{ steps.bump.outputs.current_dev }} on ${{ github.ref_name }} [skip ci]"
           git push origin HEAD:${{ github.ref_name }}
