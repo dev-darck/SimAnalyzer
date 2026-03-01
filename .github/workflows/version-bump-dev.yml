@@ -6,9 +6,12 @@ on:
       - "dev"
       - "release"
       - "release/**"
+    paths-ignore:
+      - "version.properties"
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: version-bump-${{ github.ref }}
@@ -51,15 +54,43 @@ jobs:
           set -euo pipefail
           kotlinc -script .github/scripts/version.main.kts bump build version.properties
 
-      - name: Commit version bump
+      - name: Detect version bump changes
+        id: diff
         shell: bash
         run: |
           set -euo pipefail
           if git diff --quiet -- version.properties; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No version change detected"
             exit 0
           fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
 
+      - name: Create version bump PR
+        if: steps.diff.outputs.changed == 'true' && github.ref_protected
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          base: ${{ github.ref_name }}
+          branch: github-actions/version-bump/${{ github.ref_name }}
+          delete-branch: true
+          add-paths: |
+            version.properties
+          commit-message:
+            chore: bump build to ${{ steps.bump.outputs.current_build }} for ${{ steps.bump.outputs.current_dev }} on ${{ github.ref_name }} [skip ci]
+          title:
+            chore: bump build to ${{ steps.bump.outputs.current_build }} for ${{ steps.bump.outputs.current_dev }} on ${{ github.ref_name }}
+          body: |
+            Automated version bump for `${{ github.ref_name }}`.
+
+            - build: `${{ steps.bump.outputs.current_build }}`
+            - version: `${{ steps.bump.outputs.current_dev }}`
+
+      - name: Commit version bump
+        if: steps.diff.outputs.changed == 'true' && !github.ref_protected
+        shell: bash
+        run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add version.properties
