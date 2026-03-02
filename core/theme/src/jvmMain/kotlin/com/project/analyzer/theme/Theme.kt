@@ -29,6 +29,9 @@ import com.project.analyzer.theme.typography.simAnalyzerTypography
 public val LocalExtendedColors: ProvidableCompositionLocal<ExtendedColors> =
     staticCompositionLocalOf { LightExtendedColors }
 
+public val LocalDarkTheme: ProvidableCompositionLocal<Boolean> =
+    staticCompositionLocalOf { false }
+
 @Immutable
 public data class SimAnalyzerCornerTokens(
     val indicator: RoundedCornerShape = RoundedCornerShape(4.dp),
@@ -129,7 +132,8 @@ public fun SimAnalyzerTheme(
     val animatedTheme = targetTheme.animated()
 
     CompositionLocalProvider(
-        value = LocalExtendedColors provides animatedTheme,
+        LocalExtendedColors provides animatedTheme,
+        LocalDarkTheme provides darkTheme,
     ) {
         MaterialTheme(
             colorScheme = animatedTheme.material,
