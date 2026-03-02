@@ -7,6 +7,9 @@ import com.analyzer.session.domain.model.SessionListResult
 import com.analyzer.session.presentation.mapper.SessionListUiStateMapper
 import com.analyzer.session.presentation.model.SessionListIntent
 import com.analyzer.session.presentation.model.SessionListState
+import com.analyzer.session.presentation.model.SessionRowUi
+import com.analyzer.session.presentation.usecase.SessionTrackMapUseCase
+import com.project.analyzer.ui.components.TrackMapData
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 
@@ -14,10 +17,12 @@ import dev.zacsweers.metro.Inject
 internal class SessionListViewModel(
     private val manager: SessionListManager,
     private val uiStateMapper: SessionListUiStateMapper,
+    private val sessionTrackMapUseCase: SessionTrackMapUseCase,
 ) : LeakAwareMviViewModel<SessionListIntent, SessionListState>(SessionListState()) {
 
     private var dataset = SessionListDataset()
     private var query = SessionListQuery()
+    private var trackMapsByKey: Map<String, TrackMapData> = emptyMap()
     private var hasLoadedOnce = false
 
     override suspend fun handleIntent(intent: SessionListIntent) {
@@ -47,7 +52,13 @@ internal class SessionListViewModel(
         } else {
             updateState { copy(error = null) }
         }
-        applyInteractorResult(manager.refresh(query))
+        val result = manager.refresh(query)
+        val trackMapRequests = result.dataset.items
+            .asSequence()
+            .mapNotNull { item -> sessionTrackMapUseCase.request(item.gameId, item.trackId) }
+            .toSet()
+        trackMapsByKey = sessionTrackMapUseCase.loadTrackMapsByRequest(trackMapRequests)
+        applyInteractorResult(result)
     }
 
     private suspend fun updateQuery(mutator: SessionListQuery.() -> SessionListQuery) {
@@ -76,12 +87,24 @@ internal class SessionListViewModel(
         dataset = result.dataset
         query = result.query
         hasLoadedOnce = true
+        val mapped = uiStateMapper.map(
+            dataset = result.dataset,
+            projection = result.projection,
+            query = result.query,
+        )
         setState(
-            uiStateMapper.map(
-                dataset = result.dataset,
-                projection = result.projection,
-                query = result.query,
+            mapped.copy(
+                sessions = mapped.sessions.map(::mapTrackMap),
+                visibleSessions = mapped.visibleSessions.map(::mapTrackMap),
             ),
         )
     }
+
+    private fun mapTrackMap(row: SessionRowUi): SessionRowUi = row.copy(
+        trackMap = sessionTrackMapUseCase.resolveTrackMap(
+            trackMapsByKey = trackMapsByKey,
+            gameId = row.gameId,
+            trackId = row.trackId,
+        ),
+    )
 }

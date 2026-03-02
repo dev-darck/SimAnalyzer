@@ -91,6 +91,8 @@ class SessionListUiStateMapper {
         sessionId = sessionId,
         dateLabel = dateLabel,
         timeLabel = timeLabel,
+        gameId = gameId,
+        trackId = trackId,
         gameLabel = gameLabel,
         sessionTypeLabel = sessionTypeLabel,
         trackLabel = trackLabel,
@@ -98,5 +100,6 @@ class SessionListUiStateMapper {
         lapsLabel = lapsLabel,
         bestLapLabel = bestLapLabel,
         isSaved = isSaved,
+        trackMap = null,
     )
 }

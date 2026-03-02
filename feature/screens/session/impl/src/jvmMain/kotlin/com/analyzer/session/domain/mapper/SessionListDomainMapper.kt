@@ -41,7 +41,9 @@ class SessionListDomainMapper(
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
     private val zoneId = ZoneId.systemDefault()
 
-    suspend fun map(sessions: List<RecordedSessionSummary>): SessionListDataset = withContext(default) {
+    suspend fun map(
+        sessions: List<RecordedSessionSummary>,
+    ): SessionListDataset = withContext(default) {
         val items = sessions.map(::mapItem)
         SessionListDataset(
             items = items,
@@ -67,7 +69,9 @@ class SessionListDomainMapper(
         )
     }
 
-    private fun mapItem(session: RecordedSessionSummary): SessionListDomainItem {
+    private fun mapItem(
+        session: RecordedSessionSummary,
+    ): SessionListDomainItem {
         val gameId = normalizeGameId(session.gameId)
         val gameLabel = gameLabel(gameId)
         val sessionTypeLabel = session.sessionType.toSessionTypeLabel()

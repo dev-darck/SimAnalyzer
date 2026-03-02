@@ -54,8 +54,7 @@ class TrackMapStoreRepository(appDirectories: AppDirectories) : TrackMapReposito
         val normalizedLayout = map.layoutId?.trim().orEmpty()
         val normalizedPoints = map.points.map(::sanitizePoint)
         val normalizedPitPoints = map.pitPoints.map(::sanitizePoint)
-        val normalizedBounds = map.bounds ?: computeBounds(normalizedPoints)
-        ?: TrackMapBounds(0f, 0f, 0f, 0f)
+        val normalizedBounds = map.bounds ?: computeBounds(normalizedPoints) ?: TrackMapBounds(0f, 0f, 0f, 0f)
         val maxIndex = normalizedPoints.lastIndex
         val pitEntry = map.pitEntryIndex.takeIf { it in 0..maxIndex } ?: -1
         val pitExit = map.pitExitIndex.takeIf { it in 0..maxIndex } ?: -1
