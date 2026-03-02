@@ -15,6 +15,7 @@ import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.channelFlow
@@ -54,18 +55,32 @@ class FuelConsumptionUseCaseImpl(
             )
 
             inputs.collect { input ->
-                val out: FuelResult? = when (input) {
-                    is Input.Frame -> onFrame(input.frame)
-
-                    is Input.Event -> onLifecycleEvent(input.event)
-
-                    Input.ManualReset -> {
-                        onManualReset()
-                        FuelResult.Reset
-                    }
+                val inputName = when (input) {
+                    is Input.Frame -> "frame"
+                    is Input.Event -> "event"
+                    Input.ManualReset -> "manualReset"
                 }
 
-                if (out != null) send(out)
+                val out: FuelResult = runCatching {
+                    when (input) {
+                        is Input.Frame -> onFrame(input.frame)
+
+                        is Input.Event -> onLifecycleEvent(input.event)
+
+                        Input.ManualReset -> {
+                            onManualReset()
+                            FuelResult.Reset
+                        }
+                    }
+                }.onFailure { error ->
+                    if (error is CancellationException) throw error
+                }.onFailure { error ->
+                    logger.error(error) {
+                        "Fuel pipeline failed on input=$inputName. Keeping stream alive."
+                    }
+                }.getOrNull() ?: FuelResult.NoData
+
+                send(out)
             }
         }
 
