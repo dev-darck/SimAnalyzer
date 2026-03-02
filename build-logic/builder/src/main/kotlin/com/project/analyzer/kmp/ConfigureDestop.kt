@@ -41,6 +41,7 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
                     "java.instrument",
                     "java.naming",
                     "jdk.unsupported",
+                    "jdk.management"
                 )
             }
 
