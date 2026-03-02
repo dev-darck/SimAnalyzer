@@ -1,0 +1,333 @@
+name: Compose Desktop Build (Windows)
+
+on:
+  workflow_call:
+    inputs:
+      build_flavor:
+        description: "What to build (auto|release|dev|both)"
+        required: false
+        type: string
+        default: auto
+      artifacts:
+        description: "Which artifacts to upload (both|msi|portable)"
+        required: false
+        type: string
+        default: both
+      version_channel:
+        description: "How release build should be versioned inside the app (auto|release|dev)"
+        required: false
+        type: string
+        default: auto
+      checkout_ref:
+        description: "Optional git ref (branch/tag/SHA) to checkout for build"
+        required: false
+        type: string
+        default: ""
+    outputs:
+      dev_artifact_version:
+        description: "Resolved DEV artifact version"
+        value: ${{ jobs.windows.outputs.dev_artifact_version }}
+      release_artifact_version:
+        description: "Resolved RELEASE artifact version"
+        value: ${{ jobs.windows.outputs.release_artifact_version }}
+
+  push:
+    branches:
+      - "dev"
+      - "release"
+      - "release/**"
+
+  workflow_dispatch:
+    inputs:
+      build_flavor:
+        description: "What to build"
+        type: choice
+        required: true
+        default: release
+        options:
+          - release
+          - dev
+          - both
+      artifacts:
+        description: "Which artifacts to upload"
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - msi
+          - portable
+      version_channel:
+        description: "How release build should be versioned inside the app"
+        type: choice
+        required: true
+        default: auto
+        options:
+          - auto
+          - release
+          - dev
+      checkout_ref:
+        description: "Optional git ref (branch/tag/SHA) to checkout for build"
+        type: string
+        required: false
+        default: ""
+
+concurrency:
+  group: windows-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows:
+    if: github.event_name != 'push' || !endsWith(github.actor, '[bot]')
+    runs-on: windows-latest
+    outputs:
+      dev_artifact_version: ${{ steps.dev_version.outputs.artifact_version }}
+      release_artifact_version: ${{ steps.release_version.outputs.artifact_version }}
+
+    steps:
+      - name: Resolve checkout ref
+        id: checkout_ref
+        shell: bash
+        run: |
+          set -euo pipefail
+          requested_ref=""
+          if [[ "${{ github.event_name }}" == "workflow_call" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            requested_ref="${{ inputs.checkout_ref }}"
+          fi
+
+          if [[ -n "${requested_ref}" ]]; then
+            echo "ref=${requested_ref}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "ref=${GITHUB_REF_NAME}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.checkout_ref.outputs.ref }}
+
+      - name: Resolve build options
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" || "${{ github.event_name }}" == "workflow_call" ]]; then
+            build_flavor_input="${{ inputs.build_flavor }}"
+            build_artifacts="${{ inputs.artifacts }}"
+            version_channel_input="${{ inputs.version_channel }}"
+          else
+            build_flavor_input="auto"
+            build_artifacts="both"
+            version_channel_input="auto"
+          fi
+
+          if [[ -z "${build_flavor_input}" || "${build_flavor_input}" == "auto" ]]; then
+            if [[ "${GITHUB_REF_NAME}" == "release" || "${GITHUB_REF_NAME}" == release/* ]]; then
+              build_flavor="release"
+            else
+              build_flavor="dev"
+            fi
+          else
+            build_flavor="${build_flavor_input}"
+          fi
+
+          if [[ "${version_channel_input}" == "auto" ]]; then
+            if [[ "${build_flavor}" == "release" || "${build_flavor}" == "both" ]]; then
+              if [[ "${GITHUB_REF_NAME}" == "release" || "${GITHUB_REF_NAME}" == release/* ]]; then
+                version_channel="release"
+              else
+                version_channel="dev"
+              fi
+            else
+              version_channel="dev"
+            fi
+          else
+            version_channel="${version_channel_input}"
+          fi
+
+          {
+            echo "BUILD_FLAVOR=${build_flavor}"
+            echo "BUILD_ARTIFACTS=${build_artifacts}"
+            echo "VERSION_CHANNEL=${version_channel}"
+          } >> "${GITHUB_ENV}"
+
+      - name: Show selected build options
+        shell: pwsh
+        run: |
+          Write-Host "CHECKOUT_REF=${{ steps.checkout_ref.outputs.ref }}"
+          Write-Host "BUILD_FLAVOR=$env:BUILD_FLAVOR"
+          Write-Host "BUILD_ARTIFACTS=$env:BUILD_ARTIFACTS"
+          Write-Host "VERSION_CHANNEL=$env:VERSION_CHANNEL"
+
+      - name: Install WiX Toolset
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          choco install wixtoolset --no-progress -y
+          candle.exe -? | Select-Object -First 1
+          light.exe -?  | Select-Object -First 1
+
+      - name: Install JetBrains Runtime (JBR) 21 SDK
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $jbrUrl = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.9-windows-x64-b1163.86.zip"
+          $zip = Join-Path $env:RUNNER_TEMP "jbrsdk.zip"
+          Invoke-WebRequest -Uri $jbrUrl -OutFile $zip
+
+          $dest = Join-Path $env:RUNNER_TEMP "jbr"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Expand-Archive -Path $zip -DestinationPath $dest -Force
+
+          $jbrHome = (Get-ChildItem $dest | Where-Object { $_.PSIsContainer } | Select-Object -First 1).FullName
+          "JAVA_HOME=$jbrHome" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "$jbrHome\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+          java -version
+
+      - name: Setup Kotlin CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          KOTLIN_VERSION="$(grep '^kotlin = "' gradle/libs.versions.toml | sed -E 's/^kotlin = "([^"]+)"/\1/')"
+          ZIP_PATH="$RUNNER_TEMP/kotlin-compiler.zip"
+          DEST_DIR="$RUNNER_TEMP/kotlin-cli"
+          curl -fsSL "https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip" -o "$ZIP_PATH"
+          unzip -q "$ZIP_PATH" -d "$DEST_DIR"
+          echo "$DEST_DIR/kotlinc/bin" >> "$GITHUB_PATH"
+          "$DEST_DIR/kotlinc/bin/kotlinc" -version
+
+      - name: Resolve DEV version metadata
+        if: env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both'
+        id: dev_version
+        shell: bash
+        run: |
+          set -euo pipefail
+          kotlinc -script .github/scripts/version.main.kts describe dev version.properties
+
+      - name: Resolve RELEASE version metadata
+        if: env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both'
+        id: release_version
+        shell: bash
+        run: |
+          set -euo pipefail
+          kotlinc -script .github/scripts/version.main.kts describe "${VERSION_CHANNEL}" version.properties
+
+      - name: Setup Gradle (cache)
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Suggest runtime modules
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ./gradlew -q :composeApp:tasks --all | grep -q "suggestRuntimeModules"; then
+            ./gradlew --no-daemon :composeApp:suggestRuntimeModules
+          else
+            ./gradlew --no-daemon :composeApp:suggestModules
+          fi
+
+      - name: Build DEV
+        if: env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Building DEV (BUILD_ARTIFACTS=${BUILD_ARTIFACTS})"
+
+          if [[ "${BUILD_ARTIFACTS}" == "portable" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug -PversionChannel=dev -PisPortable=true :composeApp:createDistributable
+          elif [[ "${BUILD_ARTIFACTS}" == "msi" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug -PversionChannel=dev -PisPortable=false :composeApp:packageMsi
+          else
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug -PversionChannel=dev -PisPortable=false :composeApp:packageMsi
+            ./gradlew --no-daemon --stacktrace -PbuildType=debug -PversionChannel=dev -PisPortable=true :composeApp:createDistributable
+          fi
+
+      - name: Prepare DEV portable folder
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both')
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $src = "composeApp\build\compose\binaries\main\app"
+          if (-not (Test-Path $src)) { throw "DEV app image not found: $src" }
+
+          $dest = "dist\portable-dev"
+          if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+          Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force
+          Write-Host "DEV portable prepared: $dest"
+
+      - name: Upload DEV MSI
+        if: env.BUILD_ARTIFACTS != 'portable' && (env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msi-dev-${{ steps.dev_version.outputs.artifact_version }}
+          path: composeApp/build/compose/binaries/main/msi/*.msi
+          if-no-files-found: error
+          retention-days: 4
+
+      - name: Upload DEV portable
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'dev' || env.BUILD_FLAVOR == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-dev-${{ steps.dev_version.outputs.artifact_version }}
+          path: dist/portable-dev/**
+          if-no-files-found: error
+          retention-days: 4
+
+      - name: Build RELEASE
+        if: env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Building RELEASE (BUILD_ARTIFACTS=${BUILD_ARTIFACTS}, VERSION_CHANNEL=${VERSION_CHANNEL})"
+
+          if ./gradlew -q :composeApp:tasks --all | grep -q "packageReleaseDistributable"; then
+            DIST_TASK=":composeApp:packageReleaseDistributable"
+          else
+            DIST_TASK=":composeApp:createReleaseDistributable"
+          fi
+          echo "Using distributable task: ${DIST_TASK}"
+
+          if [[ "${BUILD_ARTIFACTS}" == "portable" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=release -PversionChannel="${VERSION_CHANNEL}" -PisPortable=true ${DIST_TASK}
+          elif [[ "${BUILD_ARTIFACTS}" == "msi" ]]; then
+            ./gradlew --no-daemon --stacktrace -PbuildType=release -PversionChannel="${VERSION_CHANNEL}" -PisPortable=false :composeApp:packageReleaseMsi
+          else
+            ./gradlew --no-daemon --stacktrace -PbuildType=release -PversionChannel="${VERSION_CHANNEL}" -PisPortable=false :composeApp:packageReleaseMsi
+            ./gradlew --no-daemon --stacktrace -PbuildType=release -PversionChannel="${VERSION_CHANNEL}" -PisPortable=true ${DIST_TASK}
+          fi
+
+      - name: Prepare RELEASE portable folder
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both')
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $src = "composeApp\build\compose\binaries\main-release\app"
+          if (-not (Test-Path $src)) { throw "RELEASE app image not found: $src" }
+
+          $dest = "dist\portable-release"
+          if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+
+          Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force
+          Write-Host "RELEASE portable prepared: $dest"
+
+      - name: Upload RELEASE MSI
+        if: env.BUILD_ARTIFACTS != 'portable' && (env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msi-release-${{ steps.release_version.outputs.artifact_version }}
+          path: composeApp/build/compose/binaries/main-release/msi/*.msi
+          if-no-files-found: error
+          retention-days: 4
+
+      - name: Upload RELEASE portable
+        if: env.BUILD_ARTIFACTS != 'msi' && (env.BUILD_FLAVOR == 'release' || env.BUILD_FLAVOR == 'both')
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-release-${{ steps.release_version.outputs.artifact_version }}
+          path: dist/portable-release/**
+          if-no-files-found: error
+          retention-days: 4

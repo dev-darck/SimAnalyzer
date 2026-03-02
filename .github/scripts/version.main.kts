@@ -35,9 +35,9 @@ data class AppVersion(
     fun bump(part: String): AppVersion =
         when (part) {
             "build" -> copy(build = build + 1)
-            "patch" -> copy(patch = patch + 1, build = 0)
-            "minor" -> copy(minor = minor + 1, patch = 0, build = 0)
-            "major" -> copy(major = major + 1, minor = 0, patch = 0, build = 0)
+            "patch" -> copy(patch = patch + 1)
+            "minor" -> copy(minor = minor + 1, patch = 0)
+            "major" -> copy(major = major + 1, minor = 0, patch = 0)
             else -> error("Unsupported version part `$part`")
         }
 }
