@@ -43,6 +43,7 @@ import com.sun.jna.platform.win32.WinUser
 import com.sun.jna.ptr.IntByReference
 import org.jetbrains.skiko.SkiaLayer
 import java.awt.Window
+import kotlin.math.roundToInt
 
 typealias WindowProcedure = WinUser.WindowProc
 
@@ -53,6 +54,7 @@ internal class ComposeWindowProcedure(
 ) : WindowProcedure {
 
     private val logger = logger()
+    private val awtWindow = window
     private val windowPointer = (window as? ComposeWindow)?.windowHandle?.let(::Pointer)
         ?: Native.getWindowPointer(window)
 
@@ -88,25 +90,39 @@ internal class ComposeWindowProcedure(
             skiaLayer = it,
             hitTest = { x, y ->
                 updateWindowInfo()
+                val logicalX = toLogicalX(x)
+                val logicalY = toLogicalY(y)
 
                 val horizontalPadding = frameX
                 val verticalPadding = frameY
 
                 hitResult = when {
-                    isMaximized -> hitTest(x, y)
-                    x <= horizontalPadding && y > verticalPadding && y < height - verticalPadding -> HTLEFT
-                    x <= horizontalPadding && y <= verticalPadding -> HTTOPLEFT
-                    x <= horizontalPadding -> HTBOTTOMLEFT
-                    y <= verticalPadding && x > horizontalPadding && x < width - horizontalPadding -> HTTOP
-                    y <= verticalPadding && x <= horizontalPadding -> HTTOPLEFT
-                    y <= verticalPadding -> HTTOPRIGHT
-                    x >= width - horizontalPadding && y > verticalPadding && y < height - verticalPadding -> HTRIGHT
-                    x >= width - horizontalPadding && y <= verticalPadding -> HTTOPRIGHT
-                    x >= width - horizontalPadding -> HTBOTTOMRIGHT
-                    y >= height - verticalPadding && x > horizontalPadding && x < width - horizontalPadding -> HTBOTTOM
-                    y >= height - verticalPadding && x <= horizontalPadding -> HTBOTTOMLEFT
-                    y >= height - verticalPadding -> HTBOTTOMRIGHT
-                    else -> hitTest(x, y)
+                    isMaximized -> hitTest(logicalX, logicalY)
+                    logicalX <= horizontalPadding &&
+                        logicalY > verticalPadding &&
+                        logicalY < height - verticalPadding -> HTLEFT
+
+                    logicalX <= horizontalPadding && logicalY <= verticalPadding -> HTTOPLEFT
+                    logicalX <= horizontalPadding -> HTBOTTOMLEFT
+                    logicalY <= verticalPadding &&
+                        logicalX > horizontalPadding &&
+                        logicalX < width - horizontalPadding -> HTTOP
+
+                    logicalY <= verticalPadding && logicalX <= horizontalPadding -> HTTOPLEFT
+                    logicalY <= verticalPadding -> HTTOPRIGHT
+                    logicalX >= width - horizontalPadding &&
+                        logicalY > verticalPadding &&
+                        logicalY < height - verticalPadding -> HTRIGHT
+
+                    logicalX >= width - horizontalPadding && logicalY <= verticalPadding -> HTTOPRIGHT
+                    logicalX >= width - horizontalPadding -> HTBOTTOMRIGHT
+                    logicalY >= height - verticalPadding &&
+                        logicalX > horizontalPadding &&
+                        logicalX < width - horizontalPadding -> HTBOTTOM
+
+                    logicalY >= height - verticalPadding && logicalX <= horizontalPadding -> HTBOTTOMLEFT
+                    logicalY >= height - verticalPadding -> HTBOTTOMRIGHT
+                    else -> hitTest(logicalX, logicalY)
                 }
 
                 hitResult
@@ -129,11 +145,11 @@ internal class ComposeWindowProcedure(
                     callDefaultProc(user32, hWnd, uMsg, wParam, lParam)
                 } else {
                     dpi = user32.GetDpiForWindow(hWnd)
-                    frameX = user32.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
-                    frameY = user32.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
-                    edgeX = user32.GetSystemMetricsForDpi(WinUser.SM_CXEDGE, dpi)
-                    edgeY = user32.GetSystemMetricsForDpi(WinUser.SM_CYEDGE, dpi)
-                    padding = user32.GetSystemMetricsForDpi(WinUser.SM_CXPADDEDBORDER, dpi)
+                    frameX = toLogicalX(user32.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi))
+                    frameY = toLogicalY(user32.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi))
+                    edgeX = toLogicalX(user32.GetSystemMetricsForDpi(WinUser.SM_CXEDGE, dpi))
+                    edgeY = toLogicalY(user32.GetSystemMetricsForDpi(WinUser.SM_CYEDGE, dpi))
+                    padding = toLogicalX(user32.GetSystemMetricsForDpi(WinUser.SM_CXPADDEDBORDER, dpi))
                     isMaximized = user32.isWindowInMaximized(hWnd)
 
                     val insets = WindowInsets(
@@ -175,17 +191,37 @@ internal class ComposeWindowProcedure(
     private fun updateWindowInfo() {
         User32Extend.instance?.apply {
             dpi = GetDpiForWindow(windowHandle)
-            frameX = GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
-            frameY = GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
+            frameX = toLogicalX(GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi))
+            frameY = toLogicalY(GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi))
 
             val rect = RECT()
             if (GetWindowRect(windowHandle, rect)) {
                 rect.read()
-                width = rect.right - rect.left
-                height = rect.bottom - rect.top
+                width = toLogicalX(rect.right - rect.left)
+                height = toLogicalY(rect.bottom - rect.top)
             }
             rect.clear()
         }
+    }
+
+    private fun toLogicalX(value: Int): Int {
+        val scaleX = awtWindow.graphicsConfiguration?.defaultTransform?.scaleX ?: 1.0
+        return if (scaleX > 0.0) (value / scaleX).roundToInt() else value
+    }
+
+    private fun toLogicalY(value: Int): Int {
+        val scaleY = awtWindow.graphicsConfiguration?.defaultTransform?.scaleY ?: 1.0
+        return if (scaleY > 0.0) (value / scaleY).roundToInt() else value
+    }
+
+    private fun toLogicalX(value: Float): Float {
+        val scaleX = awtWindow.graphicsConfiguration?.defaultTransform?.scaleX ?: 1.0
+        return if (scaleX > 0.0) (value / scaleX).toFloat() else value
+    }
+
+    private fun toLogicalY(value: Float): Float {
+        val scaleY = awtWindow.graphicsConfiguration?.defaultTransform?.scaleY ?: 1.0
+        return if (scaleY > 0.0) (value / scaleY).toFloat() else value
     }
 
     private fun enableResizability() {
