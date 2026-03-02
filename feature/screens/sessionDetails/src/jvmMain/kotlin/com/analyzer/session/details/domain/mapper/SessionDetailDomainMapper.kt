@@ -63,7 +63,11 @@ class SessionDetailDomainMapper(
             }
 
             SessionDetailDataset(
-                header = buildHeader(details, sessionTypeLabel, thumbnail),
+                header = buildHeader(
+                    details = details,
+                    sessionTypeLabel = sessionTypeLabel,
+                    thumbnail = thumbnail,
+                ),
                 stats = SessionDetailDomainStats(
                     bestLapLabel = bestLapMs?.fromMsToLapTime() ?: "0:00.000",
                     averageLapLabel = averageLapMs?.fromMsToLapTime() ?: "0:00.000",

@@ -24,7 +24,8 @@ import com.analyzer.session.presentation.model.SessionFilterOptionUi
 import com.analyzer.session.presentation.model.SessionFilterUiModel
 import com.analyzer.session.presentation.model.SessionListIntent
 import com.analyzer.session.presentation.model.SessionListState
-import com.project.analyzer.feature.screens.session.impl.Res.*
+import com.project.analyzer.feature.screens.session.impl.Res.Res
+import com.project.analyzer.feature.screens.session.impl.Res.session_search_placeholder
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard

@@ -23,10 +23,11 @@
     <string name="session_stats_incidents">Total Incidents</string>
     <string name="session_stats_favorite_car">Favorite Car</string>
     <string name="session_table_loading">Loading sessions...</string>
-    <string name="session_table_empty">No sessions recorded yet.</string>
+    <string name="session_table_empty">No sessions recorded yet</string>
     <string name="session_table_header_date">Date</string>
     <string name="session_table_header_game">Game</string>
     <string name="session_table_header_track">Track</string>
+    <string name="session_table_header_map">Map</string>
     <string name="session_table_header_car_model">Car Model</string>
     <string name="session_table_header_laps">Laps</string>
     <string name="session_table_header_best_lap">Best Lap</string>

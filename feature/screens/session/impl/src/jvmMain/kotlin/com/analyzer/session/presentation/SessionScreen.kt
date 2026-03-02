@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.analyzer.session.presentation.components.previewTrackMapData
 import com.analyzer.session.presentation.components.SessionScreenHeader
 import com.analyzer.session.presentation.components.SessionScreenStatsRow
 import com.analyzer.session.presentation.components.SessionScreenTable
@@ -151,10 +152,13 @@ private fun previewState(): SessionListState = SessionListState(
 )
 
 private fun previewSessions(): List<SessionRowUi> = List(size = 8) { index ->
+    val trackMap = previewTrackMapData()
     SessionRowUi(
         sessionId = (index + 1).toLong(),
         dateLabel = "Oct 24, 2025",
         timeLabel = "20:40",
+        gameId = "acc",
+        trackId = "spa",
         gameLabel = "ACC",
         sessionTypeLabel = if (index % 3 == 0) {
             "Practice"
@@ -168,5 +172,6 @@ private fun previewSessions(): List<SessionRowUi> = List(size = 8) { index ->
         lapsLabel = "0",
         bestLapLabel = "0:00.000",
         isSaved = index % 3 == 0,
+        trackMap = trackMap,
     )
 }

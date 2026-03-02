@@ -31,7 +31,7 @@
     <string name="session_details_stats_average_lap">Avg Lap (Valid)</string>
     <string name="session_details_stats_incidents">Total Incidents</string>
     <string name="session_details_table_loading">Loading laps...</string>
-    <string name="session_details_table_empty">No laps recorded yet.</string>
+    <string name="session_details_table_empty">No laps recorded yet</string>
     <string name="session_details_table_lap">Lap</string>
     <string name="session_details_table_total_time">Total Time</string>
     <string name="session_details_table_s1">S1</string>

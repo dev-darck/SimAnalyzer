@@ -12,6 +12,7 @@ moduleImpl {
         projects.core.theme.jvmImpl
         projects.core.ui.jvmImpl
         projects.core.utils.jvmImpl
+        projects.games.telemetry.ac.api.jvmImpl
         projects.feature.screens.session.api.jvmImpl
 
         lib.metro.metrox.viewmodel.compose.jvmImpl

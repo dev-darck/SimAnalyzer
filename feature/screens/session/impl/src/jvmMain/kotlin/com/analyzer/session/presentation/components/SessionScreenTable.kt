@@ -3,16 +3,16 @@
 package com.analyzer.session.presentation.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.ChevronRight
@@ -24,9 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST
@@ -48,16 +50,29 @@ import com.analyzer.session.presentation.model.SessionFilterUiModel
 import com.analyzer.session.presentation.model.SessionListIntent
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
-import com.project.analyzer.feature.screens.session.impl.Res.*
+import com.project.analyzer.feature.screens.session.impl.Res.Res
+import com.project.analyzer.feature.screens.session.impl.Res.session_action_delete
+import com.project.analyzer.feature.screens.session.impl.Res.session_action_open_details
+import com.project.analyzer.feature.screens.session.impl.Res.session_action_save
+import com.project.analyzer.feature.screens.session.impl.Res.session_action_saved
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_empty
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_best_lap
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_car_model
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_date
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_game
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_laps
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_map
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_header_track
+import com.project.analyzer.feature.screens.session.impl.Res.session_table_loading
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.SortablePagedTable
 import com.project.analyzer.ui.components.SortableTableColumn
-import com.project.analyzer.ui.components.TableCell
 import com.project.analyzer.ui.components.TableColumn
 import com.project.analyzer.ui.components.TableColumnAlign
 import com.project.analyzer.ui.components.TableHeaderSortOrder
 import com.project.analyzer.ui.components.TableRow
 import com.project.analyzer.ui.components.TableSortMapping
+import com.project.analyzer.ui.components.TrackMap
 import com.project.analyzer.ui.components.tableSortMappings
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.tooltip.Tooltip
@@ -70,11 +85,10 @@ internal fun SessionScreenTable(
     onIntent: (SessionListIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val showGame = state.gameFilter.options.size > 1
-    val weights = sessionTableWeights(showGame)
+    val weights = sessionTableWeights()
     val dividerColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.2f)
 
-    val headerColumns = sessionTableHeaderColumns(showGame = showGame, weights = weights)
+    val headerColumns = sessionTableHeaderColumns(showGame = true, weights = weights)
     SortablePagedTable(
         isLoading = state.isLoading,
         isEmpty = state.visibleSessions.isEmpty(),
@@ -104,7 +118,7 @@ internal fun SessionScreenTable(
                     onSave = { onIntent(SessionListIntent.SaveSession(it)) },
                     onDelete = { onIntent(SessionListIntent.DeleteSession(it)) },
                     weights = weights,
-                    showGame = showGame,
+                    showGame = true,
                 )
                 if (index != state.visibleSessions.lastIndex) {
                     HorizontalDivider(color = dividerColor)
@@ -155,7 +169,11 @@ private fun sessionTableHeaderColumns(
 ): List<SortableTableColumn<SessionTableSortColumn>> = buildList {
     add(
         SortableTableColumn(
-            column = TableColumn(title = stringResource(Res.string.session_table_header_date), weight = weights.date),
+            column = TableColumn(
+                title = stringResource(Res.string.session_table_header_date),
+                weight = weights.date,
+                align = TableColumnAlign.Start,
+            ),
             sortKey = SessionTableSortColumn.Date,
         ),
     )
@@ -165,6 +183,7 @@ private fun sessionTableHeaderColumns(
                 column = TableColumn(
                     title = stringResource(Res.string.session_table_header_game),
                     weight = weights.game,
+                    align = TableColumnAlign.Center,
                 ),
                 sortKey = SessionTableSortColumn.Game,
             ),
@@ -172,8 +191,21 @@ private fun sessionTableHeaderColumns(
     }
     add(
         SortableTableColumn(
-            column = TableColumn(title = stringResource(Res.string.session_table_header_track), weight = weights.track),
+            column = TableColumn(
+                title = stringResource(Res.string.session_table_header_track),
+                weight = weights.track,
+                align = TableColumnAlign.Center,
+            ),
             sortKey = SessionTableSortColumn.Track,
+        ),
+    )
+    add(
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_table_header_map),
+                weight = weights.map,
+                align = TableColumnAlign.Center,
+            ),
         ),
     )
     add(
@@ -181,6 +213,7 @@ private fun sessionTableHeaderColumns(
             column = TableColumn(
                 title = stringResource(Res.string.session_table_header_car_model),
                 weight = weights.car,
+                align = TableColumnAlign.Center,
             ),
             sortKey = SessionTableSortColumn.Car,
         ),
@@ -208,7 +241,7 @@ private fun sessionTableHeaderColumns(
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_actions),
+                title = "",
                 weight = weights.actions,
                 align = TableColumnAlign.Center,
             ),
@@ -261,56 +294,66 @@ private fun SessionTableRow(
         }
 
         if (showGame) {
-            TableCell(
+            CenteredSessionCell(
                 text = session.gameLabel,
                 weight = weights.game,
-                align = TableColumnAlign.Start,
             )
         }
-        TableCell(
+        CenteredSessionCell(
             text = session.trackLabel,
             weight = weights.track,
-            align = TableColumnAlign.Start,
         )
-        TableCell(
+        Box(
+            modifier = Modifier.weight(weights.map),
+            contentAlignment = Alignment.Center,
+        ) {
+            TrackMap(
+                trackMap = session.trackMap,
+                scale = 1.12f,
+                lineColor = SimAnalyzerTheme.material.primary,
+                modifier = Modifier
+                    .width(66.dp)
+                    .height(32.dp),
+            )
+        }
+        CenteredSessionCell(
             text = session.carLabel,
             weight = weights.car,
-            align = TableColumnAlign.Start,
         )
-        TableCell(
+        CenteredSessionCell(
             text = session.lapsLabel,
             weight = weights.laps,
-            align = TableColumnAlign.Center,
         )
-        TableCell(
+        CenteredSessionCell(
             text = session.bestLapLabel,
             weight = weights.best,
-            align = TableColumnAlign.Center,
             textStyle = SimAnalyzerTheme.typography.labelMedium,
         )
 
         Row(
-            modifier = Modifier.weight(weights.actions),
-            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .weight(weights.actions)
+                .padding(end = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (session.isSaved) {
                 SessionActionButton(
                     icon = Icons.Filled.Bookmark,
-                    tint = SimAnalyzerTheme.extended.lightGreen,
+                    tint = SimAnalyzerTheme.extended.teal,
                     tooltip = stringResource(Res.string.session_action_saved),
                 )
             } else {
                 SessionActionButton(
                     icon = Icons.Outlined.BookmarkBorder,
-                    tint = SimAnalyzerTheme.material.primary,
+                    tint = SimAnalyzerTheme.extended.teal,
                     tooltip = stringResource(Res.string.session_action_save),
                     onClick = { onSave(session.sessionId) },
                 )
             }
             SessionActionButton(
                 icon = Icons.Outlined.Delete,
-                tint = SimAnalyzerTheme.material.error,
+                tint = SimAnalyzerTheme.extended.red,
                 tooltip = stringResource(Res.string.session_action_delete),
                 onClick = { onDelete(session.sessionId) },
             )
@@ -325,21 +368,35 @@ private fun SessionTableRow(
 }
 
 @Composable
+private fun RowScope.CenteredSessionCell(
+    text: String,
+    weight: Float,
+    textStyle: TextStyle = SimAnalyzerTheme.typography.labelMedium,
+    color: Color = SimAnalyzerTheme.material.onSurface,
+) {
+    Box(
+        modifier = Modifier.weight(weight),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = textStyle,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
 private fun SessionActionButton(icon: ImageVector, tint: Color, tooltip: String, onClick: (() -> Unit)? = null) {
     Tooltip(tooltip = tooltip) {
         val clickable = onClick != null
-        val background = tint.copy(alpha = if (clickable) 0.18f else 0.1f)
         Box(
             modifier = Modifier
-                .padding(horizontal = 4.dp)
-                .size(30.dp)
-                .clip(SimAnalyzerTheme.shapes.small)
-                .background(background)
-                .border(
-                    width = 1.dp,
-                    color = tint.copy(alpha = if (clickable) 0.45f else 0.2f),
-                    shape = SimAnalyzerTheme.shapes.small,
-                )
+                .size(24.dp)
                 .then(if (clickable) Modifier.onClick { onClick.invoke() } else Modifier),
             contentAlignment = Alignment.Center,
         ) {
@@ -347,7 +404,7 @@ private fun SessionActionButton(icon: ImageVector, tint: Color, tooltip: String,
                 imageVector = icon,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(16.dp),
+                modifier = Modifier.size(18.dp),
             )
         }
     }
@@ -357,33 +414,24 @@ private data class SessionTableWeights(
     val date: Float,
     val game: Float,
     val track: Float,
+    val map: Float,
     val car: Float,
     val laps: Float,
     val best: Float,
     val actions: Float,
 )
 
-private fun sessionTableWeights(showGame: Boolean): SessionTableWeights = if (showGame) {
+private fun sessionTableWeights(): SessionTableWeights =
     SessionTableWeights(
-        date = 0.17f,
-        game = 0.11f,
-        track = 0.18f,
-        car = 0.20f,
-        laps = 0.08f,
-        best = 0.11f,
-        actions = 0.15f,
+        date = .1f,
+        game = .1f,
+        track = .1f,
+        map = .1f,
+        car = .1f,
+        laps = .1f,
+        best = .1f,
+        actions = .1f,
     )
-} else {
-    SessionTableWeights(
-        date = 0.19f,
-        game = 0f,
-        track = 0.22f,
-        car = 0.22f,
-        laps = 0.08f,
-        best = 0.11f,
-        actions = 0.18f,
-    )
-}
 
 @Preview
 @Composable
@@ -419,6 +467,8 @@ private fun SessionScreenTablePreview() {
             sessionId = 1L,
             dateLabel = "Oct 24, 2025",
             timeLabel = "20:40",
+            gameId = "acc",
+            trackId = "spa",
             gameLabel = "ACC",
             sessionTypeLabel = "Qualifying",
             trackLabel = "Location",
@@ -426,11 +476,14 @@ private fun SessionScreenTablePreview() {
             lapsLabel = "0",
             bestLapLabel = "0:00.000",
             isSaved = true,
+            trackMap = previewTrackMapData(),
         ),
         SessionRowUi(
             sessionId = 2L,
             dateLabel = "Oct 24, 2025",
             timeLabel = "20:40",
+            gameId = "acc",
+            trackId = "spa",
             gameLabel = "ACC",
             sessionTypeLabel = "Race",
             trackLabel = "Location",
@@ -438,6 +491,7 @@ private fun SessionScreenTablePreview() {
             lapsLabel = "0",
             bestLapLabel = "0:00.000",
             isSaved = false,
+            trackMap = previewTrackMapData(),
         ),
     )
 

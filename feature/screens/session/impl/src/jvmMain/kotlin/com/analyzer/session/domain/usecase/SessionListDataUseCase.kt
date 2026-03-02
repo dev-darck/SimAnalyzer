@@ -14,7 +14,10 @@ class SessionListDataUseCase(
     private val domainMapper: SessionListDomainMapper,
 ) {
 
-    suspend fun loadDataset(): SessionListDataset = domainMapper.map(repository.loadSessions())
+    suspend fun loadDataset(): SessionListDataset {
+        val sessions = repository.loadSessions()
+        return domainMapper.map(sessions)
+    }
 
     suspend fun saveSession(sessionId: Long): Boolean = repository.saveSession(sessionId)
 

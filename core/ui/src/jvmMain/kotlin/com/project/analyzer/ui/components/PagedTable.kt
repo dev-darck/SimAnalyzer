@@ -307,38 +307,67 @@ public fun RowScope.TableHeaderCell(
             ),
         contentAlignment = contentAlignment,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = if (isSortable) 4.dp else 0.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = text,
-                color = if (sortOrder != null) {
-                    SimAnalyzerTheme.material.primary
-                } else {
-                    SimAnalyzerTheme.extended.onPrimaryContainer50
-                },
-                style = SimAnalyzerTheme.typography.labelSmall,
-                textAlign = textAlign,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (isSortable) {
+        val textColor = if (sortOrder != null) {
+            SimAnalyzerTheme.material.primary
+        } else {
+            SimAnalyzerTheme.extended.onPrimaryContainer50
+        }
+        val iconTint = if (sortOrder != null) {
+            SimAnalyzerTheme.material.primary
+        } else {
+            SimAnalyzerTheme.extended.onPrimaryContainer50.copy(alpha = 0.65f)
+        }
+        val iconVector = when (sortOrder) {
+            TableHeaderSortOrder.Asc -> Icons.Filled.ArrowUpward
+            TableHeaderSortOrder.Desc -> Icons.Filled.ArrowDownward
+            null -> Icons.Filled.UnfoldMore
+        }
+
+        if (isSortable && align == TableColumnAlign.Center) {
+            Row(
+                modifier = Modifier.padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = text,
+                    color = textColor,
+                    style = SimAnalyzerTheme.typography.labelSmall,
+                    textAlign = textAlign,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
-                    imageVector = when (sortOrder) {
-                        TableHeaderSortOrder.Asc -> Icons.Filled.ArrowUpward
-                        TableHeaderSortOrder.Desc -> Icons.Filled.ArrowDownward
-                        null -> Icons.Filled.UnfoldMore
-                    },
+                    imageVector = iconVector,
                     contentDescription = null,
-                    tint = if (sortOrder != null) {
-                        SimAnalyzerTheme.material.primary
-                    } else {
-                        SimAnalyzerTheme.extended.onPrimaryContainer50.copy(alpha = 0.65f)
-                    },
+                    tint = iconTint,
                     modifier = Modifier.size(12.dp),
                 )
+            }
+        } else {
+            Row(
+                modifier = Modifier.padding(horizontal = if (isSortable) 4.dp else 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = text,
+                    color = textColor,
+                    style = SimAnalyzerTheme.typography.labelSmall,
+                    textAlign = textAlign,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (isSortable) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = null,
+                        tint = iconTint,
+                        modifier = Modifier.size(12.dp),
+                    )
+                }
             }
         }
     }
@@ -468,7 +497,7 @@ private fun EmptyStateMessage(text: String) {
             .fillMaxWidth()
             .height(220.dp)
             .padding(16.dp),
-        contentAlignment = Alignment.CenterStart,
+        contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
