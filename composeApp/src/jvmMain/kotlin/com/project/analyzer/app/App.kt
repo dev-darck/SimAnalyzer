@@ -1,5 +1,6 @@
 package com.project.analyzer.app
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.window.WindowScope
 import com.project.analyzer.composeApp.Res.Res
+import com.project.analyzer.composeApp.Res.app_logo_content_description
+import com.project.analyzer.composeApp.Res.app_nav_live
+import com.project.analyzer.composeApp.Res.app_nav_session
+import com.project.analyzer.composeApp.Res.app_nav_settings
 import com.project.analyzer.composeApp.Res.logo
-import com.project.analyzer.composeApp.Res.*
 import com.project.analyzer.navigation.api.EntryFactory
 import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
@@ -62,21 +66,25 @@ fun WindowScope.App(
                 .background(SimAnalyzerTheme.material.background)
                 .fillMaxSize(),
         ) {
-            Sidebar(
-                modifier = Modifier.clipToBounds(),
-                topIcon = {
-                    Icon(
-                        painter = painterResource(Res.drawable.logo),
-                        contentDescription = stringResource(Res.string.app_logo_content_description),
-                    )
-                },
-                items = items,
-                bottomItemsCount = 1,
-                selectedKey = navigationState.currentTopLevel,
-                onSelect = {
-                    navigationState.switchTopLevel(it.key)
-                },
-            )
+            AnimatedVisibility(
+                visible = navigationState.isCurrentRouteRoot,
+            ) {
+                Sidebar(
+                    modifier = Modifier.clipToBounds(),
+                    topIcon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.logo),
+                            contentDescription = stringResource(Res.string.app_logo_content_description),
+                        )
+                    },
+                    items = items,
+                    bottomItemsCount = 1,
+                    selectedKey = navigationState.currentTopLevel,
+                    onSelect = {
+                        navigationState.switchTopLevel(it.key)
+                    },
+                )
+            }
 
             Box(
                 modifier = Modifier
