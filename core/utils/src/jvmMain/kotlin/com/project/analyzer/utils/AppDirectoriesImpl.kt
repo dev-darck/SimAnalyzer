@@ -7,25 +7,26 @@ import java.io.File
 import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
+import kotlin.LazyThreadSafetyMode.NONE
 
 public class AppDirectoriesImpl internal constructor(
     override val dataDir: File,
 ) : AppDirectories {
 
-    override val preferencesDir: File = File(dataDir, "preferences")
-    override val logsDir: File = File(dataDir, "logs")
-    override val userDataDir: File = File(dataDir, "user")
-    override val cacheDir: File = File(dataDir, "cache")
-    override val runtimeDir: File = File(dataDir, "runtime")
-    override val lockFile: File = File(runtimeDir, "app.lock")
+    override val preferencesDir: File by lazy(NONE) { File(dataDir, "preferences") }
+    override val logsDir: File by lazy(NONE) { File(dataDir, "logs") }
+    override val userDataDir: File by lazy(NONE) { File(dataDir, "user") }
+    override val cacheDir: File by lazy(NONE) { File(dataDir, "cache") }
+    override val runtimeDir: File by lazy(NONE) { File(dataDir, "runtime") }
+    override val lockFile: File by lazy(NONE) { File(runtimeDir, "app.lock") }
 
     internal fun ensureStructure(): AppDirectoriesImpl = apply {
-        dataDir.ensureExists()
-        preferencesDir.ensureExists()
-        logsDir.ensureExists()
-        userDataDir.ensureExists()
-        cacheDir.ensureExists()
-        runtimeDir.ensureExists()
+        dataDir.ensureWritableDirectory()
+        preferencesDir.ensureWritableDirectory()
+        logsDir.ensureWritableDirectory()
+        userDataDir.ensureWritableDirectory()
+        cacheDir.ensureWritableDirectory()
+        runtimeDir.ensureWritableDirectory()
     }
 }
 
@@ -84,7 +85,7 @@ private fun detectInstallationRootDirWindows(codeSourceRootDir: File): File? {
 
 private fun resolveInstalledDataDir(installationRootDir: File?): File {
     val configuredPath = readConfiguredDataRoot(installationRootDir)
-    return File(configuredPath ?: defaultInstalledDataRootPath(installationRootDir)).ensureExists()
+    return File(configuredPath ?: defaultInstalledDataRootPath(installationRootDir)).ensureWritableDirectory()
 }
 
 private fun defaultInstalledDataRootPath(installationRootDir: File?): String {
@@ -198,10 +199,23 @@ private fun looksLikePackagedAppRoot(dir: File): Boolean {
 }
 
 private fun File.isWritableDirectory(): Boolean {
-    if (exists()) return isDirectory && canWrite()
-    return mkdirs() && canWrite()
+    if (!exists() || !isDirectory || !canWrite()) return false
+    return canWriteProbe()
 }
 
-private fun File.ensureExists(): File = apply {
-    if (!exists()) mkdirs()
+private fun File.ensureWritableDirectory(): File = apply {
+    if (exists()) {
+        check(isDirectory) { "Path is not a directory: $absolutePath" }
+    } else {
+        check(mkdirs()) { "Failed to create directory: $absolutePath" }
+    }
+    check(canWriteProbe()) {
+        "Directory is not writable: $absolutePath. Reinstall SimAnalyzer into a user-writable folder."
+    }
 }
+
+private fun File.canWriteProbe(): Boolean = runCatching {
+    val probe = File(this, ".simanalyzer-write-test-${System.nanoTime()}.tmp")
+    probe.writeText("")
+    probe.delete()
+}.isSuccess
