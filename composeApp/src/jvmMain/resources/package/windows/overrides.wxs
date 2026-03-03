@@ -2,6 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
     <Fragment>
         <Binary Id="UninstallCleanupVBS" SourceFile="uninstall-cleanup.vbs" />
+        <Binary Id="ValidateInstallDirVBS" SourceFile="validate-install-dir.vbs" />
 
         <CustomAction
             Id="CA_UninstallCleanup"
@@ -10,8 +11,33 @@
             Execute="immediate"
             Return="ignore"
         />
+        <CustomAction
+            Id="CA_ValidateInstallDir"
+            BinaryKey="ValidateInstallDirVBS"
+            VBScriptCall="ValidateInstallDir"
+            Execute="immediate"
+            Return="check"
+        />
+        <CustomAction
+            Id="CA_BlockInvalidInstallDir"
+            Error="SimAnalyzer must be installed into a folder writable by the current user. Choose another folder."
+        />
 
+        <InstallUISequence>
+            <Custom Action="CA_ValidateInstallDir" Before="ExecuteAction">
+                NOT Installed AND NOT REMOVE~="ALL"
+            </Custom>
+            <Custom Action="CA_BlockInvalidInstallDir" After="CA_ValidateInstallDir">
+                NOT Installed AND NOT REMOVE~="ALL" AND SIMANALYZER_INSTALLDIR_WRITABLE &lt;&gt; "1"
+            </Custom>
+        </InstallUISequence>
         <InstallExecuteSequence>
+            <Custom Action="CA_ValidateInstallDir" Before="InstallValidate">
+                NOT Installed AND NOT REMOVE~="ALL"
+            </Custom>
+            <Custom Action="CA_BlockInvalidInstallDir" After="CA_ValidateInstallDir">
+                NOT Installed AND NOT REMOVE~="ALL" AND SIMANALYZER_INSTALLDIR_WRITABLE &lt;&gt; "1"
+            </Custom>
             <Custom Action="CA_UninstallCleanup" After="InstallInitialize">
                 REMOVE="ALL" AND NOT UPGRADINGPRODUCTCODE
             </Custom>

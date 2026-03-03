@@ -34,6 +34,8 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
 
                 windows {
                     iconFile.set(rootProject.file("app-icons/app.ico"))
+                    // App data lives next to the installed app, so keep installs per-user and validate custom paths in WiX.
+                    perUserInstall = true
                     dirChooser = true
                 }
 
