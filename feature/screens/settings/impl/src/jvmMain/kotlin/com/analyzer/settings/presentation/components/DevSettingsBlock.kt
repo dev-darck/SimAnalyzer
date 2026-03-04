@@ -16,10 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.settings.Res.Res
-import com.project.analyzer.feature.screens.settings.Res.developer_description
-import com.project.analyzer.feature.screens.settings.Res.developer_open
-import com.project.analyzer.feature.screens.settings.Res.developer_title
+import com.project.analyzer.feature.screens.settings.impl.Res.Res
+import com.project.analyzer.feature.screens.settings.impl.Res.developer_description
+import com.project.analyzer.feature.screens.settings.impl.Res.developer_open
+import com.project.analyzer.feature.screens.settings.impl.Res.developer_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.Button
 import com.project.analyzer.ui.components.SimAnalyzerButtonSize

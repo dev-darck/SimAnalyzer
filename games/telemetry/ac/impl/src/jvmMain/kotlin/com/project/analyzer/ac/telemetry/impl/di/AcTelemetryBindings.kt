@@ -42,7 +42,7 @@ interface AcTelemetryBindings {
 
         @Provides
         @SingleIn(SessionScope::class)
-        fun providePollConfig(): AcPollConfig = AcPollConfig()
+        private fun providePollConfig(): AcPollConfig = AcPollConfig()
 
         @Provides
         fun provideShmNames(): AcShmNames = AcShmNames()

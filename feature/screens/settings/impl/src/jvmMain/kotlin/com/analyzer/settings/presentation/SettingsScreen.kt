@@ -29,7 +29,7 @@ import com.analyzer.settings.presentation.components.TelemetryGameSelectionBlock
 import com.project.analyzer.chooser.FileChooserDialog
 import com.project.analyzer.chooser.SelectionMode
 import com.project.analyzer.chooser.rememberFileChooserState
-import com.project.analyzer.feature.screens.settings.Res.*
+import com.project.analyzer.feature.screens.settings.impl.Res.*
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.settings.BuildConfig

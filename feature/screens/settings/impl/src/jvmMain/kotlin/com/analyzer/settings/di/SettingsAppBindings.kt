@@ -1,5 +1,6 @@
 package com.analyzer.settings.di
 
+import com.analyzer.settings.api.ThemeRepository as PublicThemeRepository
 import com.analyzer.settings.data.theme.ThemeRepository
 import com.analyzer.settings.data.theme.ThemeRepositoryImpl
 import dev.zacsweers.metro.AppScope
@@ -14,5 +15,8 @@ interface SettingsAppBindings {
 
         @Provides
         private fun provideThemeRepository(impl: ThemeRepositoryImpl): ThemeRepository = impl
+
+        @Provides
+        private fun providePublicThemeRepository(repo: ThemeRepository): PublicThemeRepository = repo
     }
 }
