@@ -1,6 +1,6 @@
 package com.project.analyzer.impl.di
 
-import com.analyzer.settings.data.theme.ThemeRepository
+import com.analyzer.settings.api.ThemeRepository
 import com.project.analyzer.api.di.AppLifecycle
 import com.project.analyzer.game.api.GameDetectorGraph
 import com.project.analyzer.game.impl.createGameDetectorComponent

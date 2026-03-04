@@ -23,7 +23,8 @@ moduleImpl {
         projects.core.leak.impl.jvmImpl
         projects.feature.huds.fuel.jvmImpl
         projects.feature.screens.setup.jvmImpl
-        projects.feature.screens.settings.jvmImpl
+        projects.feature.screens.settings.api.jvmImpl
+        projects.feature.screens.settings.impl.jvmImpl
         projects.feature.screens.live.jvmImpl
         projects.feature.screens.hudSettings.jvmImpl
         projects.feature.huds.inputs.jvmImpl

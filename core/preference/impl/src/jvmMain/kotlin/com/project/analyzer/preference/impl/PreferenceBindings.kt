@@ -21,7 +21,7 @@ interface PreferenceBindings {
         @Provides
         @UserPref
         @SingleIn(AppScope::class)
-        fun provideUserPref(directories: AppDirectories): Preference = PreferenceImpl(
+        private fun provideUserPref(directories: AppDirectories): Preference = PreferenceImpl(
             directories = directories,
             preferenceName = USER_PREF_NAME,
         )
@@ -29,7 +29,7 @@ interface PreferenceBindings {
         @Provides
         @SessionPref
         @SingleIn(AppScope::class)
-        fun provideSessionPref(directories: AppDirectories): Preference = PreferenceImpl(
+        private fun provideSessionPref(directories: AppDirectories): Preference = PreferenceImpl(
             directories = directories,
             preferenceName = SESSION_PREF_NAME,
         )
