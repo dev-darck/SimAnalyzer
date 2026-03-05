@@ -347,7 +347,10 @@ private fun DevHudSettingsScreen(
             )
         }
 
-        SectionCard(title = stringResource(Res.string.dev_settings_hud_panels_title)) {
+        SectionCard(
+            title = stringResource(Res.string.dev_settings_hud_panels_title),
+            showContent = true,
+        ) {
             if (state.panels.isEmpty()) {
                 Text(
                     text = stringResource(Res.string.dev_settings_hud_no_panels),
@@ -410,8 +413,9 @@ private fun DevHudPanelRow(panel: DevHudPanelUi, onToggle: (Boolean) -> Unit, mo
 @Composable
 private fun SectionCard(
     title: String,
-    subtitle: String? = null,
-    content: @Composable (ColumnScope.() -> Unit)? = null,
+    subtitle: String = "",
+    showContent: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit = {},
 ) {
     Column(
         modifier = Modifier
@@ -425,7 +429,7 @@ private fun SectionCard(
             color = SimAnalyzerTheme.material.onSurface,
             style = SimAnalyzerTheme.typography.titleMedium,
         )
-        if (subtitle != null) {
+        if (subtitle.isNotBlank()) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = subtitle,
@@ -433,7 +437,7 @@ private fun SectionCard(
                 style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
-        if (content != null) {
+        if (showContent) {
             Spacer(modifier = Modifier.height(12.dp))
             content()
         }

@@ -342,6 +342,7 @@ private fun SessionTableRow(
                     icon = Icons.Filled.Bookmark,
                     tint = SimAnalyzerTheme.extended.teal,
                     tooltip = stringResource(Res.string.session_action_saved),
+                    onClickEnabled = false,
                 )
             } else {
                 SessionActionButton(
@@ -391,13 +392,19 @@ private fun RowScope.CenteredSessionCell(
 }
 
 @Composable
-private fun SessionActionButton(icon: ImageVector, tint: Color, tooltip: String, onClick: (() -> Unit)? = null) {
+private fun SessionActionButton(
+    icon: ImageVector,
+    tint: Color,
+    tooltip: String,
+    onClickEnabled: Boolean = true,
+    onClick: () -> Unit = {},
+) {
     Tooltip(tooltip = tooltip) {
-        val clickable = onClick != null
+        val clickable = onClickEnabled
         Box(
             modifier = Modifier
                 .size(24.dp)
-                .then(if (clickable) Modifier.onClick { onClick.invoke() } else Modifier),
+                .then(if (clickable) Modifier.onClick(onClick = onClick) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

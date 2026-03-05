@@ -40,31 +40,31 @@ internal class CrashViewModel(
     }
 
     private fun copyReport() {
-        copyReportUseCase(state.value.report.fullText)
+        copyReportUseCase.copyReport(state.value.report.fullText)
             .onSuccess { showSnackbar(CrashSnackbarMessage.ReportCopied) }
             .onFailure { showSnackbar(CrashSnackbarMessage.CopyFailed(it.message ?: it.toString())) }
     }
 
     private fun copyStacktrace() {
-        copyReportUseCase(state.value.report.stacktrace)
+        copyReportUseCase.copyReport(state.value.report.stacktrace)
             .onSuccess { showSnackbar(CrashSnackbarMessage.StacktraceCopied) }
             .onFailure { showSnackbar(CrashSnackbarMessage.CopyFailed(it.message ?: it.toString())) }
     }
 
     private fun reportOnGitHub(githubRepo: String) {
-        reportOnGitHubUseCase(state.value.report, githubRepo)
+        reportOnGitHubUseCase.reportOnGitHub(state.value.report, githubRepo)
             .onSuccess { showSnackbar(CrashSnackbarMessage.ReportOpeningGitHub) }
             .onFailure { showSnackbar(CrashSnackbarMessage.OpenBrowserFailed(it.message ?: it.toString())) }
     }
 
     private fun openLogsFolder() {
-        openLogsFolderUseCase(state.value.report.logDir)
+        openLogsFolderUseCase.openLogsFolder(state.value.report.logDir)
             .onFailure { showSnackbar(CrashSnackbarMessage.OpenLogsFailed(it.message ?: it.toString())) }
     }
 
     private fun openCrashFile() {
         state.value.report.savedReportPath?.let {
-            openFileUseCase(it)
+            openFileUseCase.openFile(it)
                 .onFailure { showSnackbar(CrashSnackbarMessage.OpenCrashFileFailed(it.message ?: it.toString())) }
         }
     }

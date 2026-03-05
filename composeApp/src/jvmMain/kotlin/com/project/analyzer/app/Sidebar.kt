@@ -49,9 +49,10 @@ fun Sidebar(
     selectedKey: Root,
     items: List<NavItem>,
     modifier: Modifier = Modifier,
-    topIcon: @Composable (() -> Unit)? = null,
     bottomItemsCount: Int = 0,
+    showTopIcon: Boolean = false,
     onSelect: (NavItem) -> Unit = {},
+    topIcon: @Composable () -> Unit = {},
 ) {
     val sidebarBg = SimAnalyzerTheme.material.surface
     val selectedPill = SimAnalyzerTheme.material.secondaryContainer
@@ -79,7 +80,7 @@ fun Sidebar(
                 .padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (topIcon != null) {
+            if (showTopIcon) {
                 Box(
                     modifier = Modifier
                         .size(56.dp)

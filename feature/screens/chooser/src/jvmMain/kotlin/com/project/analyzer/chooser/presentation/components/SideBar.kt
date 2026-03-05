@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Icon
@@ -31,10 +30,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.project.analyzer.chooser.domain.model.File
-import com.project.analyzer.feature.screens.chooser.Res.*
 import com.project.analyzer.chooser.presentation.FileChooserIntent
+import com.project.analyzer.feature.screens.chooser.Res.Res
+import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_quick_access
+import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_this_pc
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import org.jetbrains.compose.resources.stringResource

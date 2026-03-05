@@ -71,6 +71,7 @@ fun WindowScope.App(
             ) {
                 Sidebar(
                     modifier = Modifier.clipToBounds(),
+                    showTopIcon = true,
                     topIcon = {
                         Icon(
                             painter = painterResource(Res.drawable.logo),

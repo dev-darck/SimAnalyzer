@@ -29,7 +29,10 @@ import com.analyzer.settings.presentation.components.TelemetryGameSelectionBlock
 import com.project.analyzer.chooser.FileChooserDialog
 import com.project.analyzer.chooser.SelectionMode
 import com.project.analyzer.chooser.rememberFileChooserState
-import com.project.analyzer.feature.screens.settings.impl.Res.*
+import com.project.analyzer.feature.screens.settings.impl.Res.Res
+import com.project.analyzer.feature.screens.settings.impl.Res.settings_select_storage_location_title
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_recording_notice_message
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_recording_notice_title
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.settings.BuildConfig
@@ -133,15 +136,18 @@ private fun Screen(
                     samplingRateHz = state.samplingRateHz,
                     storageLocation = state.storageLocation,
                     storageLocationError = state.storageLocationError,
-                    storageSizeBytes = state.storageSizeBytes,
+                    storageSizeInfo = state.storageSizeInfo,
                     recordingEnabled = state.recordingEnabled,
                     recordingWarning = state.recordingWarning,
                     maxRecordedLaps = state.maxRecordedLaps,
                     onSamplingRateChange = {
                         dispatch(SettingsIntent.ChangeSamplingRate(it))
                     },
-                    onStorageLocationChange = {
-                        dispatch(SettingsIntent.ChangeStorageLocation(it))
+                    onStorageLocationInputChange = {
+                        dispatch(SettingsIntent.ChangeStorageLocationInput(it))
+                    },
+                    onStorageLocationCommit = {
+                        dispatch(SettingsIntent.CommitStorageLocationInput)
                     },
                     onRecordingEnabledChange = {
                         dispatch(SettingsIntent.ChangeRecordingEnabled(it))

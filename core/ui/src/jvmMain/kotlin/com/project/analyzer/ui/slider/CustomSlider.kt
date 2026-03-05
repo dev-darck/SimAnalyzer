@@ -37,7 +37,7 @@ public val THUMB_RADIUS: Dp = 18.dp
 @Composable
 public fun SettingsIntSliderRow(
     title: String,
-    tooltip: String? = null,
+    tooltip: String = "",
     value: Int,
     range: IntRange,
     step: Int = 1,
@@ -69,7 +69,7 @@ public fun SettingsIntSliderRow(
 @Composable
 public fun SettingsSliderRow(
     title: String,
-    tooltip: String? = null,
+    tooltip: String = "",
     value: Float,
     valueRange: ClosedFloatingPointRange<Float>,
     snapStep: Float = 1f,
@@ -85,7 +85,7 @@ public fun SettingsSliderRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            if (tooltip != null) {
+            if (tooltip.isNotBlank()) {
                 Tooltip(tooltip = tooltip) {
                     Text(
                         text = title,

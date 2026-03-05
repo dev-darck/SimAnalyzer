@@ -38,7 +38,34 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.setup.CalibrationIntent
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_add_sector
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture_radius
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture_radius_hint
+import com.project.analyzer.feature.dev.calibration.Res.calibration_car
+import com.project.analyzer.feature.dev.calibration.Res.calibration_detected
+import com.project.analyzer.feature.dev.calibration.Res.calibration_extra_sectors_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_extra_sectors_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_flip
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_details
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_not_captured
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_track_id
+import com.project.analyzer.feature.dev.calibration.Res.calibration_no_extra_sectors
+import com.project.analyzer.feature.dev.calibration.Res.calibration_recapture
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reference_point
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reference_point_car_center
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reference_point_front_axle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reference_point_rear_axle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_remove_sector
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reset
+import com.project.analyzer.feature.dev.calibration.Res.calibration_save
+import com.project.analyzer.feature.dev.calibration.Res.calibration_sector_finish
+import com.project.analyzer.feature.dev.calibration.Res.calibration_sector_start_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_sector_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_select_reference_point
+import com.project.analyzer.feature.dev.calibration.Res.calibration_start_finish
+import com.project.analyzer.feature.dev.calibration.Res.calibration_track_name
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
@@ -50,7 +77,7 @@ import java.awt.datatransfer.StringSelection
 @Composable
 fun CalibrationSectionCard(
     title: String,
-    subtitle: String? = null,
+    subtitle: String = "",
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
@@ -66,7 +93,7 @@ fun CalibrationSectionCard(
             color = SimAnalyzerTheme.material.onSurface,
             style = SimAnalyzerTheme.typography.titleMedium,
         )
-        if (subtitle != null) {
+        if (subtitle.isNotBlank()) {
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = subtitle,
@@ -149,6 +176,7 @@ fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit)
                     gate = state.sectorStart(i),
                     enabled = !state.isBusy,
                     onClick = { dispatch(CalibrationIntent.CaptureSectorStart(i)) },
+                    showFlipAction = true,
                     onFlip = { dispatch(CalibrationIntent.FlipSectorStartDirection(i)) },
                 )
 
@@ -288,7 +316,14 @@ internal fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (Refer
 }
 
 @Composable
-fun GateRow(title: String, gate: Gate?, enabled: Boolean, onClick: () -> Unit, onFlip: (() -> Unit)? = null) {
+fun GateRow(
+    title: String,
+    gate: Gate?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    showFlipAction: Boolean = false,
+    onFlip: () -> Unit = {},
+) {
     val shape = SimAnalyzerTheme.shapes.medium
     val background = SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.22f)
     val border = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f)
@@ -328,7 +363,7 @@ fun GateRow(title: String, gate: Gate?, enabled: Boolean, onClick: () -> Unit, o
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (gate != null && onFlip != null) {
+            if (gate != null && showFlipAction) {
                 OutlinedButton(onClick = onFlip) {
                     Text(
                         text = stringResource(Res.string.calibration_flip),

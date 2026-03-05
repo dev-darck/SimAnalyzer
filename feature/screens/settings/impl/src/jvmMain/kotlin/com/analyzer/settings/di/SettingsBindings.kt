@@ -3,7 +3,8 @@ package com.analyzer.settings.di
 import androidx.lifecycle.ViewModel
 import com.analyzer.settings.data.telemetry.SettingsRepository
 import com.analyzer.settings.data.telemetry.SettingsRepositoryImpl
-import com.analyzer.settings.domain.interactor.SettingsUseCase
+import com.analyzer.settings.domain.usecase.SettingsUseCase
+import com.analyzer.settings.domain.usecase.SettingsUseCaseImpl
 import com.analyzer.settings.presentation.SettingsViewModel
 import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.BindingContainer
@@ -19,6 +20,9 @@ interface SettingsBindings {
 
         @Provides
         private fun provideTelemetrySettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository = impl
+
+        @Provides
+        private fun provideSettingsUseCase(impl: SettingsUseCaseImpl): SettingsUseCase = impl
 
         @Provides
         @IntoMap
