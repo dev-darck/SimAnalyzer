@@ -13,7 +13,10 @@ import androidx.compose.ui.window.WindowExceptionHandler
 import androidx.compose.ui.window.WindowExceptionHandlerFactory
 import com.project.analyzer.crash.domain.CrashReport
 import com.project.analyzer.crash.domain.CreateCrashReportUseCase
-import com.project.analyzer.feature.crash.Res.*
+import com.project.analyzer.crash.domain.CreateCrashReportUseCaseImpl
+import com.project.analyzer.feature.crash.Res.Res
+import com.project.analyzer.feature.crash.Res.crash_dialog_handler_title
+import com.project.analyzer.feature.crash.Res.crash_dialog_title
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.getString
 import java.awt.Dimension
@@ -28,13 +31,13 @@ private val crashDialogShown = AtomicBoolean(false)
 
 @Composable
 fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) {
-    val createCrashReport = remember { CreateCrashReportUseCase() }
+    val createCrashReport: CreateCrashReportUseCase = remember { CreateCrashReportUseCaseImpl() }
     val handlerTitle = remember { runBlocking { getString(Res.string.crash_dialog_handler_title) } }
 
     CompositionLocalProvider(
         LocalWindowExceptionHandlerFactory provides WindowExceptionHandlerFactory { window ->
             WindowExceptionHandler { throwable ->
-                val report = createCrashReport(
+                val report = createCrashReport.createReport(
                     throwable = throwable,
                     thread = Thread.currentThread(),
                     title = handlerTitle,

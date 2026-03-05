@@ -39,21 +39,23 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 @Composable
 public fun TextField(
     value: String,
+    onValueChange: (String) -> Unit = {},
+    onFocusChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
     placeholder: String = "",
-    onValueChange: (String) -> Unit = {},
     enabled: Boolean = true,
     readOnly: Boolean = false,
     isError: Boolean = false,
     singleLine: Boolean = true,
     leadingIcon: ImageVector? = null,
-    trailing: (@Composable (() -> Unit))? = null,
-    onClick: (() -> Unit) = {},
+    showTrailing: Boolean = false,
+    onClick: () -> Unit = {},
     valueSanitizer: (String) -> String = { it },
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     textStyle: TextStyle = SimAnalyzerTheme.typography.labelMedium,
+    trailing: @Composable () -> Unit = {},
 ) {
     var focused by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -116,7 +118,10 @@ public fun TextField(
             interactionSource = interactionSource,
             modifier = Modifier
                 .weight(1f)
-                .onFocusChanged { focused = it.isFocused },
+                .onFocusChanged {
+                    focused = it.isFocused
+                    onFocusChanged(it.isFocused)
+                },
             decorationBox = { inner ->
                 Box(Modifier.fillMaxWidth()) {
                     if (value.isBlank() && placeholder.isNotEmpty()) {
@@ -133,7 +138,7 @@ public fun TextField(
             },
         )
 
-        if (trailing != null) {
+        if (showTrailing) {
             Spacer(Modifier.width(12.dp))
             trailing()
         }

@@ -35,7 +35,35 @@ import com.project.analyzer.calibration.presentation.components.SectorsBlock
 import com.project.analyzer.calibration.presentation.components.SettingsBlock
 import com.project.analyzer.calibration.presentation.components.TrackNameBlock
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_actions_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_actions_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture_settings_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture_settings_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_capture_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_capture_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_car
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_detected_track
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_override_note
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_track_id
+import com.project.analyzer.feature.dev.calibration.Res.calibration_live_telemetry_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_live_telemetry_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_no_saved_yet
+import com.project.analyzer.feature.dev.calibration.Res.calibration_saved_calibrations_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_saved_calibrations_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_start_finish
+import com.project.analyzer.feature.dev.calibration.Res.calibration_status_capturing
+import com.project.analyzer.feature.dev.calibration.Res.calibration_status_not_ready
+import com.project.analyzer.feature.dev.calibration.Res.calibration_status_ready_to_save
+import com.project.analyzer.feature.dev.calibration.Res.calibration_status_sectors
+import com.project.analyzer.feature.dev.calibration.Res.calibration_status_start_finish_missing
+import com.project.analyzer.feature.dev.calibration.Res.calibration_status_start_finish_ready
+import com.project.analyzer.feature.dev.calibration.Res.calibration_track_identity_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_track_identity_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last_saved
 import com.project.analyzer.theme.SimAnalyzerTheme
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -95,6 +123,7 @@ private fun CalibrationContent(
                 gate = state.startFinish,
                 enabled = !state.isBusy,
                 onClick = { dispatchEvent(CalibrationIntent.CaptureStartFinish) },
+                showFlipAction = true,
                 onFlip = { dispatchEvent(CalibrationIntent.FlipStartFinishDirection) },
             )
             Spacer(modifier = Modifier.height(10.dp))

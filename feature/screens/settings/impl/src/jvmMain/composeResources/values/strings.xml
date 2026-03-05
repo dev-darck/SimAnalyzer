@@ -26,6 +26,11 @@
     <string name="telemetry_laps_value">%1$d laps</string>
     <string name="telemetry_storage_location">Storage location</string>
     <string name="telemetry_storage_placeholder">Select folder...</string>
+    <string name="telemetry_storage_error_empty">Storage path cannot be empty.</string>
+    <string name="telemetry_storage_error_not_absolute">Use an absolute path (e.g. C:\Data\telemetry).</string>
+    <string name="telemetry_storage_error_not_directory">Selected path is not a directory.</string>
+    <string name="telemetry_storage_error_not_writable">Selected directory is not writable.</string>
+    <string name="telemetry_storage_error_cannot_create">Unable to create the selected directory.</string>
     <string name="telemetry_current_data_size">Current data size: %1$s</string>
     <string name="telemetry_browse">Browse</string>
     <string name="telemetry_warning_title">Storage warning</string>

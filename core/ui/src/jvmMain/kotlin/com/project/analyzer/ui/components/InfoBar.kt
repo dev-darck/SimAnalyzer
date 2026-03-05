@@ -70,8 +70,10 @@ public fun InfoBar(
     modifier: Modifier = Modifier,
     severity: InfoBarSeverity = InfoBarSeverity.Info,
     compact: Boolean = false,
-    action: (@Composable RowScope.() -> Unit)? = null,
-    onDismiss: (() -> Unit)? = null,
+    showDismiss: Boolean = false,
+    onDismiss: () -> Unit = {},
+    showAction: Boolean = false,
+    action: @Composable RowScope.() -> Unit = {},
 ) {
     val palette = infoBarPalette(severity)
     val containerShape = if (compact) SimAnalyzerTheme.corners.item else SimAnalyzerTheme.corners.field
@@ -151,7 +153,7 @@ public fun InfoBar(
                     )
                 }
 
-                if (onDismiss != null) {
+                if (showDismiss) {
                     InfoBarDismissButton(
                         accentColor = palette.accentColor,
                         compact = compact,
@@ -160,7 +162,7 @@ public fun InfoBar(
                 }
             }
 
-            if (action != null) {
+            if (showAction) {
                 Row(
                     modifier = Modifier.padding(start = actionIndent),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -253,13 +255,17 @@ public fun InfoBarSnackbarHost(hostState: SnackbarHostState, modifier: Modifier 
         val visuals = data.visuals as? InfoBarSnackbarVisuals
         val severity = visuals?.severity ?: InfoBarSeverity.Info
         val palette = infoBarPalette(severity)
+        val actionLabel = data.visuals.actionLabel
         InfoBar(
             title = visuals?.title.orEmpty(),
             message = data.visuals.message,
             severity = severity,
             compact = true,
-            action = data.visuals.actionLabel?.let { actionLabel ->
-                {
+            showDismiss = data.visuals.withDismissAction,
+            onDismiss = { data.dismiss() },
+            showAction = !actionLabel.isNullOrBlank(),
+            action = {
+                if (!actionLabel.isNullOrBlank()) {
                     Text(
                         text = actionLabel,
                         color = palette.accentColor,
@@ -267,11 +273,6 @@ public fun InfoBarSnackbarHost(hostState: SnackbarHostState, modifier: Modifier 
                         modifier = Modifier.clickable(onClick = data::performAction),
                     )
                 }
-            },
-            onDismiss = if (data.visuals.withDismissAction) {
-                { data.dismiss() }
-            } else {
-                null
             },
         )
     }
@@ -358,6 +359,7 @@ private fun InfoBarPreview() {
                 title = stringResource(Res.string.info_bar_preview_info_title),
                 message = stringResource(Res.string.info_bar_preview_info_message),
                 severity = InfoBarSeverity.Info,
+                showDismiss = true,
                 onDismiss = {},
             )
             InfoBar(
@@ -369,6 +371,7 @@ private fun InfoBarPreview() {
                 title = stringResource(Res.string.info_bar_preview_warning_title),
                 message = stringResource(Res.string.info_bar_preview_warning_message),
                 severity = InfoBarSeverity.Warning,
+                showAction = true,
                 action = {
                     Text(
                         text = stringResource(Res.string.info_bar_action_details),
@@ -381,6 +384,7 @@ private fun InfoBarPreview() {
                 title = stringResource(Res.string.info_bar_preview_error_title),
                 message = stringResource(Res.string.info_bar_preview_error_message),
                 severity = InfoBarSeverity.Error,
+                showAction = true,
                 action = {
                     Text(
                         text = stringResource(Res.string.info_bar_action_retry),

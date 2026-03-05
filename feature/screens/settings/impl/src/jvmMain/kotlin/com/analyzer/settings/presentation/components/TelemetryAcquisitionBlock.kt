@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Switch
@@ -26,10 +28,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.analyzer.settings.data.telemetry.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
 import com.analyzer.settings.presentation.RecordingWarningKind
+import com.analyzer.settings.presentation.StorageSizeInfo
+import com.analyzer.settings.presentation.StorageSizeUnit
 import com.project.analyzer.feature.screens.settings.impl.Res.Res
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_acquisition_title
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_browse
@@ -42,6 +48,11 @@ import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_recordin
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_sampling_rate
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_sampling_rate_tick
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_sampling_rate_value
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_error_cannot_create
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_error_empty
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_error_not_absolute
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_error_not_directory
+import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_error_not_writable
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_location
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_placeholder
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_storage_size_unknown
@@ -85,14 +96,15 @@ private val STORAGE_FIELD_HEIGHT = 36.dp
 internal fun TelemetryAcquisitionBlock(
     samplingRateHz: Int,
     storageLocation: String,
-    storageLocationError: String?,
-    storageSizeBytes: Long?,
+    storageLocationError: StorageValidationResult?,
+    storageSizeInfo: StorageSizeInfo,
     recordingEnabled: Boolean,
     recordingWarning: RecordingWarningKind?,
     maxRecordedLaps: Int,
     modifier: Modifier = Modifier,
     onSamplingRateChange: (Int) -> Unit = {},
-    onStorageLocationChange: (String) -> Unit = {},
+    onStorageLocationInputChange: (String) -> Unit = {},
+    onStorageLocationCommit: () -> Unit = {},
     onBrowseClick: () -> Unit = {},
     onRecordingEnabledChange: (Boolean) -> Unit = {},
     onMaxRecordedLapsChange: (Int) -> Unit = {},
@@ -116,39 +128,41 @@ internal fun TelemetryAcquisitionBlock(
             onEnabledChange = onRecordingEnabledChange,
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        if (recordingEnabled) {
+            Spacer(modifier = Modifier.height(12.dp))
 
-        SamplingRateSection(
-            samplingRateHz = samplingRateHz,
-            onSamplingRateChange = onSamplingRateChange,
-        )
+            SamplingRateSection(
+                samplingRateHz = samplingRateHz,
+                onSamplingRateChange = onSamplingRateChange,
+            )
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        MaxRecordedLapsSection(
-            maxRecordedLaps = maxRecordedLaps,
-            onMaxRecordedLapsChange = onMaxRecordedLapsChange,
-        )
+            MaxRecordedLapsSection(
+                maxRecordedLaps = maxRecordedLaps,
+                onMaxRecordedLapsChange = onMaxRecordedLapsChange,
+            )
 
-        val warning = recordingWarning
-        if (warning != null) {
-            Spacer(modifier = Modifier.height(8.dp))
-            InfoBar(
-                title = stringResource(Res.string.telemetry_warning_title),
-                message = recordingWarningText(warning),
-                severity = InfoBarSeverity.Warning,
+            if (recordingWarning != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                InfoBar(
+                    title = stringResource(Res.string.telemetry_warning_title),
+                    message = recordingWarningText(recordingWarning),
+                    severity = InfoBarSeverity.Warning,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            StorageLocationSection(
+                storageLocation = storageLocation,
+                error = storageLocationError?.toDisplayMessage(),
+                storageSizeInfo = storageSizeInfo,
+                onStorageLocationInputChange = onStorageLocationInputChange,
+                onStorageLocationCommit = onStorageLocationCommit,
+                onBrowseClick = onBrowseClick,
             )
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        StorageLocationSection(
-            storageLocation = storageLocation,
-            error = storageLocationError,
-            storageSizeBytes = storageSizeBytes,
-            onStorageLocationChange = onStorageLocationChange,
-            onBrowseClick = onBrowseClick,
-        )
     }
 }
 
@@ -333,8 +347,9 @@ private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange
 private fun StorageLocationSection(
     storageLocation: String,
     error: String?,
-    storageSizeBytes: Long?,
-    onStorageLocationChange: (String) -> Unit,
+    storageSizeInfo: StorageSizeInfo,
+    onStorageLocationInputChange: (String) -> Unit,
+    onStorageLocationCommit: () -> Unit,
     onBrowseClick: () -> Unit,
 ) {
     Column {
@@ -354,7 +369,9 @@ private fun StorageLocationSection(
             StoragePathField(
                 value = storageLocation,
                 placeholder = stringResource(Res.string.telemetry_storage_placeholder),
-                onValueChange = onStorageLocationChange,
+                isError = error != null,
+                onValueChange = onStorageLocationInputChange,
+                onCommit = onStorageLocationCommit,
                 onClick = onBrowseClick,
                 modifier = Modifier.weight(1f),
             )
@@ -378,7 +395,7 @@ private fun StorageLocationSection(
         Text(
             text = stringResource(
                 Res.string.telemetry_current_data_size,
-                storageSizeLabel(storageSizeBytes),
+                storageSizeText(storageSizeInfo),
             ),
             color = SimAnalyzerTheme.material.onSurfaceVariant,
             style = SimAnalyzerTheme.typography.bodySmall,
@@ -390,24 +407,34 @@ private fun StorageLocationSection(
 private fun StoragePathField(
     value: String,
     placeholder: String,
-    onValueChange: (String) -> Unit,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isError: Boolean = false,
+    onValueChange: (String) -> Unit = {},
+    onCommit: () -> Unit = {},
+    onClick: () -> Unit = {},
 ) {
-    val textColor = SimAnalyzerTheme.material.onSurface
-        .copy(alpha = 0.85f)
-
-    var text by remember(value) { mutableStateOf(value) }
+    val textColor = SimAnalyzerTheme.material.onSurface.copy(alpha = 0.85f)
+    var wasFocused by remember { mutableStateOf(false) }
 
     TextField(
-        value = text,
+        value = value,
         placeholder = placeholder,
         leadingIcon = Icons.Filled.Folder,
-        onValueChange = {
-            text = it.trim()
-            onValueChange(it.trim())
+        onValueChange = onValueChange,
+        isError = isError,
+        onFocusChanged = { focused ->
+            if (wasFocused && !focused) {
+                onCommit()
+            }
+            wasFocused = focused
         },
         singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                onCommit()
+            },
+        ),
         textStyle = SimAnalyzerTheme.typography.labelMedium.copy(color = textColor),
         modifier = modifier.onClick(onClick = onClick),
     )
@@ -436,7 +463,7 @@ private fun recordingWarningText(kind: RecordingWarningKind): String = when (kin
 }
 
 @Composable
-private fun storageSizeLabel(bytes: Long?): String {
+private fun storageSizeText(info: StorageSizeInfo): String {
     val units = listOf(
         stringResource(Res.string.telemetry_storage_unit_b),
         stringResource(Res.string.telemetry_storage_unit_kb),
@@ -447,35 +474,64 @@ private fun storageSizeLabel(bytes: Long?): String {
     val unknown = stringResource(Res.string.telemetry_storage_size_unknown)
     val zero = stringResource(Res.string.telemetry_storage_size_zero)
 
-    val value = bytes ?: return unknown
-    if (value <= 0) return zero
+    return when (info) {
+        StorageSizeInfo.Unknown -> unknown
+        StorageSizeInfo.Zero -> zero
 
-    var size = value.toDouble()
-    var unitIndex = 0
-    while (size >= 1024 && unitIndex < units.lastIndex) {
-        size /= 1024
-        unitIndex += 1
+        is StorageSizeInfo.Value -> {
+            val unitIndex = when (info.unit) {
+                StorageSizeUnit.B -> 0
+                StorageSizeUnit.KB -> 1
+                StorageSizeUnit.MB -> 2
+                StorageSizeUnit.GB -> 3
+                StorageSizeUnit.TB -> 4
+            }
+            val format = when (info.fractionDigits) {
+                0 -> "%.0f"
+                1 -> "%.1f"
+                else -> "%.2f"
+            }
+            String.format(Locale.US, "$format ${units[unitIndex]}", info.size)
+        }
     }
+}
 
-    val format = when {
-        size >= 100 -> "%.0f"
-        size >= 10 -> "%.1f"
-        else -> "%.2f"
-    }
-
-    return String.format(Locale.US, "$format ${units[unitIndex]}", size)
+@Composable
+private fun StorageValidationResult.toDisplayMessage(): String = when (this) {
+    StorageValidationResult.Valid -> ""
+    StorageValidationResult.Empty -> stringResource(Res.string.telemetry_storage_error_empty)
+    StorageValidationResult.NotAbsolutePath -> stringResource(Res.string.telemetry_storage_error_not_absolute)
+    StorageValidationResult.NotADirectory -> stringResource(Res.string.telemetry_storage_error_not_directory)
+    StorageValidationResult.NotWritable -> stringResource(Res.string.telemetry_storage_error_not_writable)
+    StorageValidationResult.CannotCreate -> stringResource(Res.string.telemetry_storage_error_cannot_create)
 }
 
 @Preview
 @Composable
-private fun TelemetryAcquisitionBlockPreview() {
+private fun TelemetryAcquisitionBlockEnablePreview() {
     SimAnalyzerTheme {
         TelemetryAcquisitionBlock(
             samplingRateHz = 50,
             storageLocation = stringResource(Res.string.telemetry_preview_storage_location),
             storageLocationError = null,
-            storageSizeBytes = 12_300_000L,
+            storageSizeInfo = StorageSizeInfo.Value(size = 11.73, fractionDigits = 2, unit = StorageSizeUnit.MB),
             recordingEnabled = true,
+            recordingWarning = RecordingWarningKind.UnlimitedHighRate,
+            maxRecordedLaps = 25,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TelemetryAcquisitionBlockDisablePreview() {
+    SimAnalyzerTheme {
+        TelemetryAcquisitionBlock(
+            samplingRateHz = 50,
+            storageLocation = stringResource(Res.string.telemetry_preview_storage_location),
+            storageLocationError = null,
+            storageSizeInfo = StorageSizeInfo.Value(size = 11.73, fractionDigits = 2, unit = StorageSizeUnit.MB),
+            recordingEnabled = false,
             recordingWarning = RecordingWarningKind.UnlimitedHighRate,
             maxRecordedLaps = 25,
         )

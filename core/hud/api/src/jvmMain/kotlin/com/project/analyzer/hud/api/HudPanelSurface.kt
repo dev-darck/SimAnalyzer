@@ -13,5 +13,8 @@ public val LocalHudBackgroundOpacity: ProvidableCompositionLocal<Float> =
 @Composable
 public fun hudPanelSurfaceColor(
     color: Color,
-    alpha: Float? = null,
-): Color = color.copy(alpha = (alpha ?: LocalHudBackgroundOpacity.current).coerceIn(0f, 1f))
+    alpha: Float = Float.NaN,
+): Color {
+    val resolvedAlpha = if (alpha.isNaN()) LocalHudBackgroundOpacity.current else alpha
+    return color.copy(alpha = resolvedAlpha.coerceIn(0f, 1f))
+}

@@ -1,13 +1,15 @@
 package com.analyzer.settings.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.analyzer.settings.domain.interactor.SettingsUseCase
+import com.analyzer.settings.data.telemetry.StorageValidationResult
+import com.analyzer.settings.domain.usecase.SettingsUseCase
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.nio.file.Path
 
 @Inject
 internal class SettingsViewModel(private val useCase: SettingsUseCase) :
@@ -15,6 +17,8 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
 
     private var storageSizeJob: Job? = null
     private var lastStorageLocation: String? = null
+    private var storageLocationValidationRequestId: Long = 0
+    private var storageLocationInputDirty: Boolean = false
 
     init {
         observeTheme()
@@ -30,6 +34,8 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
             is SettingsIntent.ChangeTheme -> handleChangeTheme(intent.mode)
             is SettingsIntent.ChangeSamplingRate -> handleChangeSamplingRate(intent.hz)
             is SettingsIntent.ChangeStorageLocation -> handleChangeStorageLocation(intent.path)
+            is SettingsIntent.ChangeStorageLocationInput -> handleChangeStorageLocationInput(intent.path)
+            SettingsIntent.CommitStorageLocationInput -> commitStorageLocationInput()
             is SettingsIntent.ChangeHudEnabled -> handleChangeHudEnabled(intent.enabled)
             is SettingsIntent.ChangeRecordingEnabled -> handleChangeRecordingEnabled(intent.enabled)
             SettingsIntent.DismissRecordingEnabledNotice -> handleDismissRecordingEnabledNotice()
@@ -82,7 +88,7 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
                     shouldPersistNoticeShown = shouldShowRecordingNotice
                     copy(
                         samplingRateHz = settings.samplingRateHz,
-                        storageLocation = settings.storageLocation,
+                        storageLocation = if (storageLocationInputDirty) storageLocation else settings.storageLocation,
                         recordingEnabled = settings.recordingEnabled,
                         maxRecordedLaps = settings.maxRecordedLaps,
                         gameSelection = settings.gameSelection,
@@ -134,8 +140,65 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
     }
 
     private fun handleChangeStorageLocation(path: String) {
+        val normalized = path.trim()
+        storageLocationInputDirty = true
+        updateState {
+            copy(
+                storageLocation = normalized,
+                storageLocationError = null,
+                isStorageLocationValid = true,
+            )
+        }
+        validateStorageLocation(normalized)
+    }
+
+    private fun handleChangeStorageLocationInput(path: String) {
+        storageLocationInputDirty = true
+        updateState {
+            copy(
+                storageLocation = path,
+                storageLocationError = null,
+                isStorageLocationValid = true,
+            )
+        }
+    }
+
+    private fun commitStorageLocationInput() {
+        val normalized = state.value.storageLocation.trim()
+        updateState { copy(storageLocation = normalized) }
+        validateStorageLocation(normalized)
+    }
+
+    private fun validateStorageLocation(path: String) {
+        val normalizedPath = path.trim()
+        val requestId = ++storageLocationValidationRequestId
         viewModelScope.launch {
-            useCase.updateStorageLocationIfValid(path)
+            val result = useCase.updateStorageLocationIfValid(normalizedPath)
+            if (requestId != storageLocationValidationRequestId) return@launch
+
+            when (result) {
+                StorageValidationResult.Valid -> {
+                    val resolvedPath = resolveTelemetryStoragePath(normalizedPath)
+                    storageLocationInputDirty = false
+                    updateState {
+                        copy(
+                            storageLocation = resolvedPath,
+                            isStorageLocationValid = true,
+                            storageLocationError = null,
+                        )
+                    }
+                    updateStorageSize(resolvedPath)
+                }
+
+                else -> {
+                    updateState {
+                        copy(
+                            isStorageLocationValid = false,
+                            storageLocationError = result,
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -145,7 +208,7 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
         if (path.isBlank()) {
             updateState {
                 copy(
-                    storageSizeBytes = null,
+                    storageSizeInfo = StorageSizeInfo.Unknown,
                 )
             }
             return
@@ -156,9 +219,56 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
             val size = useCase.getStorageSizeBytes(path)
             updateState {
                 copy(
-                    storageSizeBytes = size,
+                    storageSizeInfo = size.toStorageSizeInfo(),
                 )
             }
         }
+    }
+
+    private fun Long?.toStorageSizeInfo(): StorageSizeInfo {
+        val value = this ?: return StorageSizeInfo.Unknown
+        if (value <= 0L) return StorageSizeInfo.Zero
+
+        var size = value.toDouble()
+        var unitIndex = 0
+        while (size >= 1024.0 && unitIndex < 4) {
+            size /= 1024.0
+            unitIndex += 1
+        }
+
+        val fractionDigits = when {
+            size >= 100 -> 0
+            size >= 10 -> 1
+            else -> 2
+        }
+
+        val unit = when (unitIndex) {
+            0 -> StorageSizeUnit.B
+            1 -> StorageSizeUnit.KB
+            2 -> StorageSizeUnit.MB
+            3 -> StorageSizeUnit.GB
+            else -> StorageSizeUnit.TB
+        }
+
+        return StorageSizeInfo.Value(
+            size = size,
+            fractionDigits = fractionDigits,
+            unit = unit,
+        )
+    }
+
+    private fun resolveTelemetryStoragePath(path: String): String {
+        val basePath = Path.of(path.trim()).normalize()
+        val lastSegment = basePath.fileName?.toString()
+        return if (lastSegment != null && lastSegment.equals(TELEMETRY_DIRECTORY_NAME, ignoreCase = true)) {
+            basePath.toString()
+        } else {
+            basePath.resolve(TELEMETRY_DIRECTORY_NAME).toString()
+        }
+    }
+
+    private companion object {
+
+        const val TELEMETRY_DIRECTORY_NAME = "telemetry"
     }
 }

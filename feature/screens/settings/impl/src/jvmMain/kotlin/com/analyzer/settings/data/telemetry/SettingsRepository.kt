@@ -14,6 +14,7 @@ interface SettingsRepository {
     suspend fun loadSettings(): TelemetrySettings
     suspend fun updateSamplingRate(hz: Int)
     suspend fun updateHudEnabled(enabled: Boolean)
+    suspend fun copyFromOldDir(currentTelemetryPath: String, targetTelemetryPath: String): Boolean
     suspend fun updateStorageLocation(path: String)
     suspend fun updateRecordingEnabled(enabled: Boolean)
     suspend fun markRecordingNoticeShown()
@@ -22,5 +23,5 @@ interface SettingsRepository {
     suspend fun updateGameSelectionVariant(gameId: GameId?)
     suspend fun getStorageSizeBytes(path: String): Long?
     fun getDefaultStorageLocation(): String
-    fun validateStorageLocation(path: String): StorageValidationResult
+    suspend fun validateStorageLocation(path: String): StorageValidationResult
 }

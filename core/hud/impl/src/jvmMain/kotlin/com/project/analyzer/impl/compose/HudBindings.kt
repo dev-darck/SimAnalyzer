@@ -14,6 +14,9 @@ interface HudBindings {
     companion object {
 
         @Provides
+        private fun provideHudContainerUseCase(impl: HudContainerUseCaseImpl): HudContainerUseCase = impl
+
+        @Provides
         @IntoMap
         @ViewModelKey(HudViewModel::class)
         private fun provideHudViewModel(interactor: HudContainerUseCase): ViewModel = HudViewModel(interactor)

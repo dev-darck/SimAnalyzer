@@ -4,6 +4,16 @@ import androidx.lifecycle.ViewModel
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.TelemetrySampleProviderImpl
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
+import com.project.analyzer.calibration.domain.interactor.TrackMapLibraryUseCase
+import com.project.analyzer.calibration.domain.interactor.TrackMapLibraryUseCaseImpl
+import com.project.analyzer.calibration.domain.usecase.BuildGateUseCase
+import com.project.analyzer.calibration.domain.usecase.BuildGateUseCaseImpl
+import com.project.analyzer.calibration.domain.usecase.CaptureGateOnStandstillUseCase
+import com.project.analyzer.calibration.domain.usecase.CaptureGateOnStandstillUseCaseImpl
+import com.project.analyzer.calibration.domain.usecase.LoadTrackCalibrationUseCase
+import com.project.analyzer.calibration.domain.usecase.LoadTrackCalibrationUseCaseImpl
+import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCase
+import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCaseImpl
 import com.project.analyzer.calibration.presentation.setup.CalibrationViewModel
 import com.project.analyzer.calibration.presentation.trackmap.TrackMapBuilderViewModel
 import com.project.analyzer.calibration.presentation.trackmap.TrackMapLibraryViewModel
@@ -21,6 +31,27 @@ interface CalibrationBindings {
 
         @Provides
         private fun provideTelemetrySampleProvider(impl: TelemetrySampleProviderImpl): TelemetrySampleProvider = impl
+
+        @Provides
+        private fun provideBuildGateUseCase(impl: BuildGateUseCaseImpl): BuildGateUseCase = impl
+
+        @Provides
+        private fun provideCaptureGateOnStandstillUseCase(
+            impl: CaptureGateOnStandstillUseCaseImpl,
+        ): CaptureGateOnStandstillUseCase = impl
+
+        @Provides
+        private fun provideLoadTrackCalibrationUseCase(
+            impl: LoadTrackCalibrationUseCaseImpl,
+        ): LoadTrackCalibrationUseCase = impl
+
+        @Provides
+        private fun provideSaveTrackCalibrationUseCase(
+            impl: SaveTrackCalibrationUseCaseImpl,
+        ): SaveTrackCalibrationUseCase = impl
+
+        @Provides
+        private fun provideTrackMapLibraryUseCase(impl: TrackMapLibraryUseCaseImpl): TrackMapLibraryUseCase = impl
 
         @Provides
         @IntoMap

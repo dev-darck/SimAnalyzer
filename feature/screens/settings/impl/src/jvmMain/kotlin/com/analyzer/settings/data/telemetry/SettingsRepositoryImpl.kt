@@ -14,6 +14,7 @@ import com.project.analyzer.preference.api.str
 import com.project.analyzer.telemetry.api.contract.TelemetryGameDefaults
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionDefaults
 import com.project.analyzer.utils.AppDirectories
+import com.project.analyzer.utils.file.copyDirectoryWithRollback
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
@@ -22,7 +23,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.IOException
 
 @Inject
 @SingleIn(ScreenScope::class)
@@ -129,17 +129,25 @@ internal class SettingsRepositoryImpl(
         userPreferences.put(TELEMETRY_HUD_ENABLED.bool to enabled)
     }
 
+    override suspend fun copyFromOldDir(currentTelemetryPath: String, targetTelemetryPath: String): Boolean =
+        withContext(ioDispatcher) {
+            val currentTelemetryDir = File(currentTelemetryPath)
+            val targetTelemetryDir = File(targetTelemetryPath)
+            currentTelemetryDir.copyDirectoryWithRollback(targetTelemetryDir)
+        }
+
     override suspend fun updateStorageLocation(path: String) {
         val target = withContext(ioDispatcher) {
-            val dir = File("$path/$TELEMETRY_TARGET")
-            try {
-                if (!dir.exists()) {
-                    dir.mkdir()
-                }
-                dir.path
-            } catch (e: IOException) {
-                path
+            val baseDirectory = File(path)
+            val telemetryDirectory = if (baseDirectory.name.equals(TELEMETRY_TARGET, ignoreCase = true)) {
+                baseDirectory
+            } else {
+                File(baseDirectory, TELEMETRY_TARGET)
             }
+            runCatching {
+                if (!telemetryDirectory.exists()) telemetryDirectory.mkdirs()
+                telemetryDirectory.path
+            }.getOrNull() ?: path
         }
         userPreferences.put(TelemetryAcquisitionDefaults.KEY_STORAGE_LOCATION to target)
     }
@@ -181,30 +189,31 @@ internal class SettingsRepositoryImpl(
 
     override fun getDefaultStorageLocation(): String = appDirectories.cacheDir.absolutePath
 
-    override fun validateStorageLocation(path: String): StorageValidationResult {
-        if (path.isBlank()) {
-            return StorageValidationResult.Empty
-        }
+    override suspend fun validateStorageLocation(path: String): StorageValidationResult =
+        withContext(ioDispatcher) {
+            if (path.isBlank()) return@withContext StorageValidationResult.Empty
 
-        val file = File(path)
+            val file = File(path)
+            if (!file.isAbsolute) return@withContext StorageValidationResult.NotAbsolutePath
 
-        return when {
-            !file.exists() -> {
-                val created = runCatching { file.mkdirs() }.getOrDefault(false)
-                if (created) StorageValidationResult.Valid else StorageValidationResult.CannotCreate
+            return@withContext when {
+                !file.exists() -> {
+                    val created = runCatching { file.mkdirs() }.getOrDefault(false)
+                    if (created) StorageValidationResult.Valid else StorageValidationResult.CannotCreate
+                }
+
+                !file.isDirectory -> StorageValidationResult.NotADirectory
+
+                !file.canWrite() -> StorageValidationResult.NotWritable
+
+                else -> StorageValidationResult.Valid
             }
-
-            !file.isDirectory -> StorageValidationResult.NotADirectory
-
-            !file.canWrite() -> StorageValidationResult.NotWritable
-
-            else -> StorageValidationResult.Valid
         }
-    }
 
     private fun toGameId(raw: String): GameId? = runCatching { GameId.valueOf(raw) }.getOrNull()
 
     private companion object {
+
         const val TELEMETRY_HUD_ENABLED = "telemetry_hud_enabled"
         const val TELEMETRY_TARGET = "telemetry"
         const val KEY_RECORDING_NOTICE_SHOWN = "telemetry_recording_notice_shown"

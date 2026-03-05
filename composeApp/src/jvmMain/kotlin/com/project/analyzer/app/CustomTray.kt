@@ -416,6 +416,7 @@ private fun TrayMenuContent(
                 hoverColor = hoverPill,
                 textColor = textPrimary,
                 iconTint = textSecondary,
+                showTrailing = true,
                 trailing = {
                     StatusPill(
                         text = if (overlayVisible) "ON" else "OFF",
@@ -457,7 +458,8 @@ private fun TrayMenuItem(
     hoverColor: Color,
     textColor: Color,
     iconTint: Color,
-    trailing: (@Composable () -> Unit)? = null,
+    showTrailing: Boolean = false,
+    trailing: @Composable () -> Unit = {},
 ) {
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -496,7 +498,7 @@ private fun TrayMenuItem(
             modifier = Modifier.weight(1f),
         )
 
-        if (trailing != null) {
+        if (showTrailing) {
             Spacer(Modifier.width(10.dp))
             trailing()
         }

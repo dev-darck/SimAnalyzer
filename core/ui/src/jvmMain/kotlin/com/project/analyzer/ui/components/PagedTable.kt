@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -221,7 +222,8 @@ public fun TableHeader(
     contentPadding: Dp = 16.dp,
     sortableColumnIndices: Set<Int> = emptySet(),
     sortOrderByColumnIndex: Map<Int, TableHeaderSortOrder> = emptyMap(),
-    onColumnClick: ((Int) -> Unit)? = null,
+    onColumnClickEnabled: Boolean = false,
+    onColumnClick: (Int) -> Unit = {},
 ) {
     val headerCells = remember(columns, sortableColumnIndices, sortOrderByColumnIndex) {
         buildTableHeaderCells(
@@ -237,6 +239,7 @@ public fun TableHeader(
         backgroundColor = backgroundColor,
         height = height,
         contentPadding = contentPadding,
+        onColumnClickEnabled = onColumnClickEnabled,
         onColumnClick = onColumnClick,
     )
 }
@@ -248,7 +251,8 @@ public fun TableHeader(
     backgroundColor: Color = SimAnalyzerTheme.material.secondaryContainer,
     height: Dp = 48.dp,
     contentPadding: Dp = 16.dp,
-    onColumnClick: ((Int) -> Unit)? = null,
+    onColumnClickEnabled: Boolean = false,
+    onColumnClick: (Int) -> Unit = {},
 ) {
     Row(
         modifier = modifier
@@ -265,11 +269,8 @@ public fun TableHeader(
                 align = cell.align,
                 isSortable = cell.isSortable,
                 sortOrder = cell.sortOrder,
-                onClick = if (onColumnClick != null && cell.isSortable) {
-                    { onColumnClick(index) }
-                } else {
-                    null
-                },
+                onClickEnabled = onColumnClickEnabled && cell.isSortable,
+                onClick = { onColumnClick(index) },
             )
         }
     }
@@ -282,7 +283,8 @@ public fun RowScope.TableHeaderCell(
     align: TableColumnAlign,
     isSortable: Boolean = false,
     sortOrder: TableHeaderSortOrder? = null,
-    onClick: (() -> Unit)? = null,
+    onClickEnabled: Boolean = false,
+    onClick: () -> Unit = {},
 ) {
     val contentAlignment = when (align) {
         TableColumnAlign.Start -> Alignment.CenterStart
@@ -299,7 +301,7 @@ public fun RowScope.TableHeaderCell(
         modifier = Modifier
             .weight(weight)
             .then(
-                if (onClick != null) {
+                if (onClickEnabled) {
                     Modifier.onClick(onClick = onClick)
                 } else {
                     Modifier
@@ -422,6 +424,7 @@ public fun <SortKey> SortablePagedTable(
                 backgroundColor = headerBackgroundColor,
                 height = headerHeight,
                 contentPadding = headerContentPadding,
+                onColumnClickEnabled = true,
                 onColumnClick = { columnIndex ->
                     headerPresentation.sortKeyByColumnIndex[columnIndex]?.let(onSortColumnClick)
                 },
@@ -435,12 +438,14 @@ public fun <SortKey> SortablePagedTable(
 public fun TableRow(
     rowIndex: Int,
     modifier: Modifier = Modifier,
-    backgroundColor: Color? = null,
+    backgroundColor: Color = Color.Unspecified,
     contentPadding: Dp = 16.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
     val baseColor = SimAnalyzerTheme.chrome.tableRowEven
-    val rowColor = backgroundColor ?: if (rowIndex % 2 == 0) {
+    val rowColor = if (backgroundColor.isSpecified) {
+        backgroundColor
+    } else if (rowIndex % 2 == 0) {
         baseColor
     } else {
         SimAnalyzerTheme.chrome.tableRowOdd
