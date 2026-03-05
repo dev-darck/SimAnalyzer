@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -29,11 +31,57 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.components.CalibrationSectionCard
 import com.project.analyzer.calibration.presentation.components.ReferencePointDropdown
 import com.project.analyzer.calibration.trackmap.TrackMapRecorderState
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture_settings_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture_settings_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reference_point
+import com.project.analyzer.feature.dev.calibration.Res.calibration_reset
+import com.project.analyzer.feature.dev.calibration.Res.track_map_actions_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.track_map_actions_title
+import com.project.analyzer.feature.dev.calibration.Res.track_map_auto
+import com.project.analyzer.feature.dev.calibration.Res.track_map_avg_width
+import com.project.analyzer.feature.dev.calibration.Res.track_map_build_preview_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.track_map_build_preview_title
+import com.project.analyzer.feature.dev.calibration.Res.track_map_builder_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.track_map_builder_title
+import com.project.analyzer.feature.dev.calibration.Res.track_map_detected_track
+import com.project.analyzer.feature.dev.calibration.Res.track_map_distance
+import com.project.analyzer.feature.dev.calibration.Res.track_map_fallback_half_width
+import com.project.analyzer.feature.dev.calibration.Res.track_map_game
+import com.project.analyzer.feature.dev.calibration.Res.track_map_guidance
+import com.project.analyzer.feature.dev.calibration.Res.track_map_lap
+import com.project.analyzer.feature.dev.calibration.Res.track_map_laps_recorded
+import com.project.analyzer.feature.dev.calibration.Res.track_map_layout
+import com.project.analyzer.feature.dev.calibration.Res.track_map_manual
+import com.project.analyzer.feature.dev.calibration.Res.track_map_mark_pit_entry
+import com.project.analyzer.feature.dev.calibration.Res.track_map_mark_pit_exit
+import com.project.analyzer.feature.dev.calibration.Res.track_map_need_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_no
+import com.project.analyzer.feature.dev.calibration.Res.track_map_pit_entry
+import com.project.analyzer.feature.dev.calibration.Res.track_map_pit_exit
+import com.project.analyzer.feature.dev.calibration.Res.track_map_pit_lane
+import com.project.analyzer.feature.dev.calibration.Res.track_map_pit_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_pit_source
+import com.project.analyzer.feature.dev.calibration.Res.track_map_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_sampling
+import com.project.analyzer.feature.dev.calibration.Res.track_map_save
+import com.project.analyzer.feature.dev.calibration.Res.track_map_saving
+import com.project.analyzer.feature.dev.calibration.Res.track_map_set
+import com.project.analyzer.feature.dev.calibration.Res.track_map_start
+import com.project.analyzer.feature.dev.calibration.Res.track_map_status_idle
+import com.project.analyzer.feature.dev.calibration.Res.track_map_status_recording
+import com.project.analyzer.feature.dev.calibration.Res.track_map_status_saved
+import com.project.analyzer.feature.dev.calibration.Res.track_map_stop
+import com.project.analyzer.feature.dev.calibration.Res.track_map_track_id
+import com.project.analyzer.feature.dev.calibration.Res.track_map_width_coverage
+import com.project.analyzer.feature.dev.calibration.Res.track_map_width_minus
+import com.project.analyzer.feature.dev.calibration.Res.track_map_width_plus
+import com.project.analyzer.feature.dev.calibration.Res.track_map_yes
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
 import com.project.analyzer.ui.format.formatPercent
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -69,14 +117,21 @@ private fun TrackMapBuilderContent(
     onPitEntry: () -> Unit,
     onPitExit: () -> Unit,
 ) {
-    Column(
+    val screenScrollState = rememberScrollState()
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(screenScrollState)
+                .padding(16.dp)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         CalibrationSectionCard(
             title = stringResource(Res.string.track_map_builder_title),
             subtitle = stringResource(Res.string.track_map_builder_subtitle),
@@ -310,6 +365,14 @@ private fun TrackMapBuilderContent(
                 MessageBanner(message)
             }
         }
+        }
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 6.dp),
+            adapter = rememberScrollbarAdapter(screenScrollState),
+        )
     }
 }
 

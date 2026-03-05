@@ -7,9 +7,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.onClick
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -35,8 +38,35 @@ import com.project.analyzer.calibration.presentation.components.copyToClipboard
 import com.project.analyzer.calibration.presentation.components.formatMs
 import com.project.analyzer.calibration.presentation.verify.components.DirectionInfoCard
 import com.project.analyzer.calibration.presentation.verify.components.GateDebugSection
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_header_track_id
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_back
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_best
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_cur
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_direction_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_direction_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_label_suffix
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_lap
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_lap_timing_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_lap_timing_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last_event
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_no_events
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_recent_events_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_recent_events_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_reset_session
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_running
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_sector
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_snapshot_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_snapshot_title
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_speed
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_start
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_status
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_stop
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_stopped
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_title
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -49,14 +79,21 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         viewModel.start(trackId)
     }
 
-    Column(
+    val screenScrollState = rememberScrollState()
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .background(SimAnalyzerTheme.material.background),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(screenScrollState)
+                .padding(16.dp)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         CalibrationSectionCard(
             title = stringResource(Res.string.calibration_verify_title),
             subtitle = state.calibration?.trackName ?: trackId,
@@ -208,26 +245,47 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     color = SimAnalyzerTheme.material.onSurfaceVariant,
                 )
             } else {
-                Column(
+                val eventsScrollState = rememberScrollState()
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 140.dp, max = 220.dp)
                         .clip(SimAnalyzerTheme.shapes.medium)
                         .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.2f))
-                        .padding(10.dp)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                        .padding(10.dp),
                 ) {
-                    state.events.forEach { event ->
-                        Text(
-                            text = event,
-                            style = SimAnalyzerTheme.typography.bodySmall,
-                            color = SimAnalyzerTheme.material.onSurface,
-                        )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(eventsScrollState)
+                            .padding(end = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        state.events.forEach { event ->
+                            Text(
+                                text = event,
+                                style = SimAnalyzerTheme.typography.bodySmall,
+                                color = SimAnalyzerTheme.material.onSurface,
+                            )
+                        }
                     }
+                    AppVerticalScrollbar(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .fillMaxHeight(),
+                        adapter = rememberScrollbarAdapter(eventsScrollState),
+                    )
                 }
             }
         }
+        }
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 6.dp),
+            adapter = rememberScrollbarAdapter(screenScrollState),
+        )
     }
 }
 

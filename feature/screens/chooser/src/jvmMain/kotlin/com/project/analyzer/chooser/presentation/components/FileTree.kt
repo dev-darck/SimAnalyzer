@@ -2,7 +2,6 @@ package com.project.analyzer.chooser.presentation.components
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons.Filled
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Folder
@@ -35,11 +33,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.project.analyzer.chooser.domain.model.TreeNode
-import com.project.analyzer.feature.screens.chooser.Res.*
+import com.project.analyzer.feature.screens.chooser.Res.Res
+import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_collapse
+import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_expand
+import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_select_drive
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -87,8 +88,11 @@ fun FileTree(
             }
         }
 
-        VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
             adapter = rememberScrollbarAdapter(listState),
         )
     }

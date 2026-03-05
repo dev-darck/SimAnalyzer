@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +31,7 @@ import com.project.analyzer.feature.screens.session.impl.Res.session_search_plac
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard
+import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -87,36 +90,48 @@ private fun SessionFiltersStrip(
     onIntent: (SessionListIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        FilterDropdown(
-            filter = state.gameFilter.asDropdownFilter(),
-            onSelect = { onIntent(SessionListIntent.ChangeGame(it)) },
-        )
-        FilterDropdown(
-            filter = state.trackFilter.asDropdownFilter(),
-            onSelect = { onIntent(SessionListIntent.ChangeTrack(it)) },
-        )
-        FilterDropdown(
-            filter = state.carFilter.asDropdownFilter(),
-            onSelect = { onIntent(SessionListIntent.ChangeCar(it)) },
-        )
-        FilterDropdown(
-            filter = state.dateFilter.asDropdownFilter(),
-            onSelect = { onIntent(SessionListIntent.ChangeDate(it)) },
-        )
-        Box(
+    val scrollState = rememberScrollState()
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        Row(
             modifier = Modifier
-                .height(28.dp)
-                .width(1.dp)
-                .background(dividerColor),
-        )
-        FilterDropdown(
-            filter = state.sortFilter.asDropdownFilter(),
-            onSelect = { onIntent(SessionListIntent.ChangeSort(it)) },
+                .horizontalScroll(scrollState)
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FilterDropdown(
+                filter = state.gameFilter.asDropdownFilter(),
+                onSelect = { onIntent(SessionListIntent.ChangeGame(it)) },
+            )
+            FilterDropdown(
+                filter = state.trackFilter.asDropdownFilter(),
+                onSelect = { onIntent(SessionListIntent.ChangeTrack(it)) },
+            )
+            FilterDropdown(
+                filter = state.carFilter.asDropdownFilter(),
+                onSelect = { onIntent(SessionListIntent.ChangeCar(it)) },
+            )
+            FilterDropdown(
+                filter = state.dateFilter.asDropdownFilter(),
+                onSelect = { onIntent(SessionListIntent.ChangeDate(it)) },
+            )
+            Box(
+                modifier = Modifier
+                    .height(28.dp)
+                    .width(1.dp)
+                    .background(dividerColor),
+            )
+            FilterDropdown(
+                filter = state.sortFilter.asDropdownFilter(),
+                onSelect = { onIntent(SessionListIntent.ChangeSort(it)) },
+            )
+        }
+        AppHorizontalScrollbar(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
+            adapter = rememberScrollbarAdapter(scrollState),
         )
     }
 }

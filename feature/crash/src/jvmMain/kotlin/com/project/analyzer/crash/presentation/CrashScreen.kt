@@ -6,15 +6,18 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -52,8 +55,38 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.crash.di.CrashGraph
 import com.project.analyzer.crash.domain.CrashReport
-import com.project.analyzer.feature.crash.Res.*
+import com.project.analyzer.feature.crash.Res.Res
+import com.project.analyzer.feature.crash.Res.crash_action_copy_report
+import com.project.analyzer.feature.crash.Res.crash_action_copy_stacktrace
+import com.project.analyzer.feature.crash.Res.crash_action_open_crash_file
+import com.project.analyzer.feature.crash.Res.crash_action_open_logs
+import com.project.analyzer.feature.crash.Res.crash_action_report_github
+import com.project.analyzer.feature.crash.Res.crash_actions_title
+import com.project.analyzer.feature.crash.Res.crash_code_panel_lines
+import com.project.analyzer.feature.crash.Res.crash_exit
+import com.project.analyzer.feature.crash.Res.crash_metadata_app_version
+import com.project.analyzer.feature.crash.Res.crash_metadata_java
+import com.project.analyzer.feature.crash.Res.crash_metadata_os
+import com.project.analyzer.feature.crash.Res.crash_metadata_thread
+import com.project.analyzer.feature.crash.Res.crash_metadata_time
+import com.project.analyzer.feature.crash.Res.crash_metadata_title
+import com.project.analyzer.feature.crash.Res.crash_overview_message
+import com.project.analyzer.feature.crash.Res.crash_overview_title
+import com.project.analyzer.feature.crash.Res.crash_screen_subtitle
+import com.project.analyzer.feature.crash.Res.crash_screen_title
+import com.project.analyzer.feature.crash.Res.crash_snackbar_copy_failed
+import com.project.analyzer.feature.crash.Res.crash_snackbar_open_browser_failed
+import com.project.analyzer.feature.crash.Res.crash_snackbar_open_file_failed
+import com.project.analyzer.feature.crash.Res.crash_snackbar_open_logs_failed
+import com.project.analyzer.feature.crash.Res.crash_snackbar_report_copied
+import com.project.analyzer.feature.crash.Res.crash_snackbar_report_opening_github
+import com.project.analyzer.feature.crash.Res.crash_snackbar_stacktrace_copied
+import com.project.analyzer.feature.crash.Res.crash_tab_full_report
+import com.project.analyzer.feature.crash.Res.crash_tab_overview
+import com.project.analyzer.feature.crash.Res.crash_tab_stacktrace
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metro.createGraph
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -199,46 +232,61 @@ internal fun CrashScreenContent(
 
 @Composable
 private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> Unit) {
-    Column(
+    val scrollState = rememberScrollState()
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Card(
-            colors = CardDefaults.cardColors(
-                containerColor = SimAnalyzerTheme.material.errorContainer.copy(alpha = 0.32f),
-            ),
-            border = BorderStroke(1.dp, SimAnalyzerTheme.material.error.copy(alpha = 0.4f)),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(20.dp)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Top,
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = SimAnalyzerTheme.material.errorContainer.copy(alpha = 0.32f),
+                ),
+                border = BorderStroke(1.dp, SimAnalyzerTheme.material.error.copy(alpha = 0.4f)),
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Warning,
-                    contentDescription = null,
-                    tint = SimAnalyzerTheme.material.error,
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = stringResource(Res.string.crash_overview_title),
-                        style = SimAnalyzerTheme.typography.titleSmall,
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Warning,
+                        contentDescription = null,
+                        tint = SimAnalyzerTheme.material.error,
                     )
-                    Text(
-                        text = stringResource(Res.string.crash_overview_message),
-                        style = SimAnalyzerTheme.typography.bodyMedium,
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(Res.string.crash_overview_title),
+                            style = SimAnalyzerTheme.typography.titleSmall,
+                        )
+                        Text(
+                            text = stringResource(Res.string.crash_overview_message),
+                            style = SimAnalyzerTheme.typography.bodyMedium,
+                        )
+                    }
                 }
             }
-        }
 
-        CrashMetadata(report = report)
-        CrashActions(onEvent = onEvent)
+            CrashMetadata(report = report)
+            CrashActions(onEvent = onEvent)
+        }
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 8.dp),
+            adapter = rememberScrollbarAdapter(scrollState),
+        )
     }
 }
 
@@ -394,17 +442,34 @@ private fun CodePanel(text: String, title: String) {
             color = SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.24f),
         ) {
             SelectionContainer {
-                Text(
-                    text = text,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(vScroll)
-                        .horizontalScroll(hScroll)
-                        .padding(16.dp),
-                    color = SimAnalyzerTheme.material.onSurface,
-                    style = SimAnalyzerTheme.typography.bodySmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
-                    softWrap = false,
-                )
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = text,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(vScroll)
+                            .horizontalScroll(hScroll)
+                            .padding(16.dp)
+                            .padding(end = 10.dp, bottom = 10.dp),
+                        color = SimAnalyzerTheme.material.onSurface,
+                        style = SimAnalyzerTheme.typography.bodySmall.copy(fontFamily = SimAnalyzerTheme.fonts.mono),
+                        softWrap = false,
+                    )
+                    AppVerticalScrollbar(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .fillMaxHeight()
+                            .padding(vertical = 6.dp),
+                        adapter = rememberScrollbarAdapter(vScroll),
+                    )
+                    AppHorizontalScrollbar(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                            .padding(end = 12.dp, start = 6.dp),
+                        adapter = rememberScrollbarAdapter(hScroll),
+                    )
+                }
             }
         }
     }
