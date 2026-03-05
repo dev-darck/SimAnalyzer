@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,10 +19,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -64,14 +64,19 @@ import com.project.analyzer.core.ui.Res.dropdown_preview_label_game
 import com.project.analyzer.core.ui.Res.dropdown_preview_le_mans_ultimate
 import com.project.analyzer.core.ui.Res.dropdown_preview_rfactor_2
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import org.jetbrains.compose.resources.stringResource
 
 private const val DROPDOWN_FIELD_MAX_WIDTH = 220
 private const val DROPDOWN_FIELD_TEXT_MAX_WIDTH = 180
 private const val DROPDOWN_POPUP_MAX_HEIGHT = 320
-private const val DROPDOWN_POPUP_MAX_WIDTH = 280
+private const val DROPDOWN_POPUP_MIN_WIDTH = 112
 private const val DROPDOWN_POPUP_CONTENT_PADDING = 8
+private const val DROPDOWN_POPUP_ITEM_SPACING = 4
+private const val DROPDOWN_POPUP_SCROLLBAR_GUTTER = 10
+private const val DROPDOWN_POPUP_TEXT_WIDTH_BUFFER = 28
 private const val DROPDOWN_ITEM_HORIZONTAL_PADDING = 12
+private const val DROPDOWN_ITEM_MIN_HEIGHT = 38
 private const val DROPDOWN_ITEM_SPACING = 8
 private const val DROPDOWN_ITEM_TRAILING_ICON_SIZE = 18
 
@@ -161,16 +166,16 @@ private fun DropdownSelectorAnchor(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val listState = rememberLazyListState()
+    val scrollState = rememberScrollState()
     val density = LocalDensity.current
-    val popupWidth = rememberDropdownPopupWidth(presentation = presentation)
     val popupPositionProvider = remember(density) {
         DropdownPopupPositionProvider(verticalOffset = density.run { 6.dp.roundToPx() })
     }
 
     LaunchedEffect(expanded, presentation.selectedIndex, presentation.options) {
         if (expanded && presentation.options.isNotEmpty()) {
-            listState.scrollToItem(presentation.selectedIndex)
+            val itemHeightPx = density.run { (DROPDOWN_ITEM_MIN_HEIGHT + DROPDOWN_POPUP_ITEM_SPACING).dp.roundToPx() }
+            scrollState.scrollTo((presentation.selectedIndex * itemHeightPx).coerceAtLeast(0))
         }
     }
 
@@ -193,8 +198,7 @@ private fun DropdownSelectorAnchor(
             ) {
                 DropdownPopupPanel(
                     presentation = presentation,
-                    listState = listState,
-                    popupWidth = popupWidth,
+                    scrollState = scrollState,
                     onSelect = { selectedId ->
                         expanded = false
                         onSelect(selectedId)
@@ -253,33 +257,43 @@ private fun DropdownTriggerField(
 @Composable
 private fun DropdownPopupPanel(
     presentation: DropdownFilterPresentation,
-    listState: LazyListState,
-    popupWidth: Dp,
+    scrollState: androidx.compose.foundation.ScrollState,
     onSelect: (String) -> Unit,
 ) {
+    val needsScrollbar = remember(presentation.options.size) { dropdownPopupNeedsScrollbar(presentation.options.size) }
+
     Surface(
-        modifier = Modifier.width(popupWidth),
         shape = DropdownPopupShape,
         color = SimAnalyzerTheme.material.surface,
         border = BorderStroke(1.dp, SimAnalyzerTheme.material.outlineVariant),
         shadowElevation = 10.dp,
     ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(max = DROPDOWN_POPUP_MAX_HEIGHT.dp)
-                .padding(DROPDOWN_POPUP_CONTENT_PADDING.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+        Box(
+            modifier = Modifier.heightIn(max = DROPDOWN_POPUP_MAX_HEIGHT.dp),
         ) {
-            items(
-                items = presentation.options,
-                key = DropdownOptionUi::id,
-            ) { option ->
-                DropdownPopupItem(
-                    option = option,
-                    selected = option.id == presentation.selectedId,
-                    onClick = { onSelect(option.id) },
+            Column(
+                modifier = Modifier
+                    .width(IntrinsicSize.Max)
+                    .verticalScroll(scrollState)
+                    .padding(DROPDOWN_POPUP_CONTENT_PADDING.dp)
+                    .padding(end = if (needsScrollbar) DROPDOWN_POPUP_SCROLLBAR_GUTTER.dp else 0.dp),
+                verticalArrangement = Arrangement.spacedBy(DROPDOWN_POPUP_ITEM_SPACING.dp),
+            ) {
+                presentation.options.forEach { option ->
+                    DropdownPopupItem(
+                        option = option,
+                        selected = option.id == presentation.selectedId,
+                        onClick = { onSelect(option.id) },
+                    )
+                }
+            }
+            if (needsScrollbar) {
+                AppVerticalScrollbar(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .matchParentSize()
+                        .padding(vertical = 8.dp),
+                    adapter = rememberScrollbarAdapter(scrollState),
                 )
             }
         }
@@ -287,7 +301,12 @@ private fun DropdownPopupPanel(
 }
 
 @Composable
-private fun DropdownPopupItem(option: DropdownOptionUi, selected: Boolean, onClick: () -> Unit) {
+private fun DropdownPopupItem(
+    option: DropdownOptionUi,
+    selected: Boolean,
+    onClick: () -> Unit,
+    fillWidth: Boolean = true,
+) {
     val containerColor = if (selected) {
         SimAnalyzerTheme.material.secondaryContainer
     } else {
@@ -300,8 +319,8 @@ private fun DropdownPopupItem(option: DropdownOptionUi, selected: Boolean, onCli
     }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
+        modifier = (if (fillWidth) Modifier.fillMaxWidth() else Modifier)
+            .heightIn(min = DROPDOWN_ITEM_MIN_HEIGHT.dp)
             .clip(DropdownItemShape)
             .background(containerColor)
             .clickable(onClick = onClick)
@@ -315,7 +334,7 @@ private fun DropdownPopupItem(option: DropdownOptionUi, selected: Boolean, onCli
             style = SimAnalyzerTheme.typography.labelMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
+            modifier = if (fillWidth) Modifier.weight(1f) else Modifier,
         )
         Box(
             modifier = Modifier.size(DROPDOWN_ITEM_TRAILING_ICON_SIZE.dp),
@@ -348,8 +367,9 @@ private fun rememberDropdownPopupWidth(presentation: DropdownFilterPresentation)
     val density = LocalDensity.current
     val textStyle = SimAnalyzerTheme.typography.labelMedium
     val labelCandidates = remember(presentation) { dropdownPopupLabelCandidates(presentation) }
+    val needsScrollbar = remember(presentation.options.size) { dropdownPopupNeedsScrollbar(presentation.options.size) }
 
-    return remember(labelCandidates, density, textMeasurer, textStyle) {
+    return remember(labelCandidates, density, textMeasurer, textStyle, needsScrollbar) {
         val longestLabelWidthPx = labelCandidates
             .maxOfOrNull { label ->
                 textMeasurer.measure(
@@ -362,11 +382,13 @@ private fun rememberDropdownPopupWidth(presentation: DropdownFilterPresentation)
         with(density) {
             (
                 longestLabelWidthPx.toDp() +
+                    DROPDOWN_POPUP_TEXT_WIDTH_BUFFER.dp +
                     (DROPDOWN_POPUP_CONTENT_PADDING * 2).dp +
+                    if (needsScrollbar) DROPDOWN_POPUP_SCROLLBAR_GUTTER.dp else 0.dp +
                     (DROPDOWN_ITEM_HORIZONTAL_PADDING * 2).dp +
                     DROPDOWN_ITEM_SPACING.dp +
                     DROPDOWN_ITEM_TRAILING_ICON_SIZE.dp
-                ).coerceAtMost(DROPDOWN_POPUP_MAX_WIDTH.dp)
+                ).coerceAtLeast(DROPDOWN_POPUP_MIN_WIDTH.dp)
         }
     }
 }
@@ -385,6 +407,19 @@ private fun dropdownPopupLabelCandidates(presentation: DropdownFilterPresentatio
     add(presentation.selectedLabel)
     addAll(presentation.options.map(DropdownOptionUi::label))
 }.filter(String::isNotBlank)
+
+private fun dropdownPopupNeedsScrollbar(optionCount: Int): Boolean =
+    dropdownPopupContentHeight(optionCount) > DROPDOWN_POPUP_MAX_HEIGHT
+
+private fun dropdownPopupContentHeight(optionCount: Int): Int {
+    if (optionCount <= 0) {
+        return DROPDOWN_POPUP_CONTENT_PADDING * 2
+    }
+
+    return (DROPDOWN_POPUP_CONTENT_PADDING * 2) +
+        (optionCount * DROPDOWN_ITEM_MIN_HEIGHT) +
+        ((optionCount - 1) * DROPDOWN_POPUP_ITEM_SPACING)
+}
 
 private class DropdownPopupPositionProvider(private val verticalOffset: Int) : PopupPositionProvider {
 
@@ -443,10 +478,7 @@ private fun DropdownPopupPanelPreview() {
     SimAnalyzerTheme {
         DropdownPopupPanel(
             presentation = buildDropdownFilterPresentation(previewDropdownFilter()),
-            listState = rememberLazyListState(),
-            popupWidth = rememberDropdownPopupWidth(
-                presentation = buildDropdownFilterPresentation(previewDropdownFilter()),
-            ),
+            scrollState = rememberScrollState(),
             onSelect = {},
         )
     }

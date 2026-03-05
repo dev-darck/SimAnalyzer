@@ -2,12 +2,15 @@ package com.analyzer.session.details.presentation.components
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeviceThermostat
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -26,10 +29,15 @@ import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
-import com.project.analyzer.feature.screens.sessionDetails.Res.*
+import com.project.analyzer.feature.screens.sessionDetails.Res.Res
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_chip_air_prefix
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_chip_track_prefix
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_chip_type_prefix
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard
+import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -108,26 +116,38 @@ private fun SessionDetailsTitleBlock(header: SessionDetailHeaderUi) {
 
 @Composable
 private fun SessionDetailsInfoRow(header: SessionDetailHeaderUi, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        SessionInfoItem(
-            icon = Icons.Filled.Flag,
-            text = "${stringResource(Res.string.session_details_chip_type_prefix)} ${header.sessionTypeLabel}",
-        )
-        SessionInfoItem(
-            icon = Icons.Filled.DeviceThermostat,
-            text = "${stringResource(Res.string.session_details_chip_air_prefix)} ${header.airTempLabel} / " +
-                "${stringResource(Res.string.session_details_chip_track_prefix)} ${header.trackTempLabel}",
-        )
-        if (header.carLabel.isNotBlank()) {
-            SessionInfoItem(icon = Icons.Filled.DirectionsCar, text = header.carLabel)
+    val scrollState = rememberScrollState()
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scrollState)
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            SessionInfoItem(
+                icon = Icons.Filled.Flag,
+                text = "${stringResource(Res.string.session_details_chip_type_prefix)} ${header.sessionTypeLabel}",
+            )
+            SessionInfoItem(
+                icon = Icons.Filled.DeviceThermostat,
+                text = "${stringResource(Res.string.session_details_chip_air_prefix)} ${header.airTempLabel} / " +
+                    "${stringResource(Res.string.session_details_chip_track_prefix)} ${header.trackTempLabel}",
+            )
+            if (header.carLabel.isNotBlank()) {
+                SessionInfoItem(icon = Icons.Filled.DirectionsCar, text = header.carLabel)
+            }
+            if (header.trackLabel.isNotBlank()) {
+                SessionInfoItem(icon = Icons.Filled.LocationOn, text = header.trackLabel)
+            }
         }
-        if (header.trackLabel.isNotBlank()) {
-            SessionInfoItem(icon = Icons.Filled.LocationOn, text = header.trackLabel)
-        }
+        AppHorizontalScrollbar(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
+            adapter = rememberScrollbarAdapter(scrollState),
+        )
     }
 }
 
@@ -161,22 +181,34 @@ private fun SessionDetailsFiltersRow(
     onShowSelect: (String) -> Unit,
     onSessionTypeSelect: (String) -> Unit,
 ) {
-    Row(
-        modifier = Modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        FilterDropdown(
-            filter = sortFilter.asDropdownFilter(),
-            onSelect = onSortSelect,
-        )
-        FilterDropdown(
-            filter = showFilter.asDropdownFilter(),
-            onSelect = onShowSelect,
-        )
-        FilterDropdown(
-            filter = sessionTypeFilter.asDropdownFilter(),
-            onSelect = onSessionTypeSelect,
+    val scrollState = rememberScrollState()
+
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .horizontalScroll(scrollState)
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            FilterDropdown(
+                filter = sortFilter.asDropdownFilter(),
+                onSelect = onSortSelect,
+            )
+            FilterDropdown(
+                filter = showFilter.asDropdownFilter(),
+                onSelect = onShowSelect,
+            )
+            FilterDropdown(
+                filter = sessionTypeFilter.asDropdownFilter(),
+                onSelect = onSessionTypeSelect,
+            )
+        }
+        AppHorizontalScrollbar(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth(),
+            adapter = rememberScrollbarAdapter(scrollState),
         )
     }
 }

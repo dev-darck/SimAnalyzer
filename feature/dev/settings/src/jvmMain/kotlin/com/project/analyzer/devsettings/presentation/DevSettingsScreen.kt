@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +21,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -83,6 +86,8 @@ import com.project.analyzer.feature.dev.settings.Res.dev_settings_telemetry_upda
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -206,19 +211,31 @@ private fun DevSettingsNavRow(
     onSelect: (DevSettingsSection) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .horizontalScroll(rememberScrollState())
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        items.forEach { item ->
-            DevSettingsNavChip(
-                item = item,
-                selected = item.section == selected,
-                onClick = { onSelect(item.section) },
-            )
+    val horizontalScrollState = rememberScrollState()
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(horizontalScrollState)
+                .padding(bottom = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items.forEach { item ->
+                DevSettingsNavChip(
+                    item = item,
+                    selected = item.section == selected,
+                    onClick = { onSelect(item.section) },
+                )
+            }
         }
+        AppHorizontalScrollbar(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .padding(end = 6.dp),
+            adapter = rememberScrollbarAdapter(horizontalScrollState),
+        )
     }
 }
 
@@ -329,45 +346,60 @@ private fun DevHudSettingsScreen(
     onToggleHudPanel: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    val scrollState = rememberScrollState()
+
+    Box(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        SectionCard(
-            title = stringResource(Res.string.dev_settings_hud_title),
-            subtitle = stringResource(Res.string.dev_settings_hud_subtitle),
-        )
-
-        if (!state.hudEnabled) {
-            SectionCard(
-                title = stringResource(Res.string.dev_settings_hud_disabled_title),
-                subtitle = stringResource(Res.string.dev_settings_hud_disabled_subtitle),
-            )
-        }
-
-        SectionCard(
-            title = stringResource(Res.string.dev_settings_hud_panels_title),
-            showContent = true,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            if (state.panels.isEmpty()) {
-                Text(
-                    text = stringResource(Res.string.dev_settings_hud_no_panels),
-                    color = SimAnalyzerTheme.material.onSurfaceVariant,
-                    style = SimAnalyzerTheme.typography.bodySmall,
+            SectionCard(
+                title = stringResource(Res.string.dev_settings_hud_title),
+                subtitle = stringResource(Res.string.dev_settings_hud_subtitle),
+            )
+
+            if (!state.hudEnabled) {
+                SectionCard(
+                    title = stringResource(Res.string.dev_settings_hud_disabled_title),
+                    subtitle = stringResource(Res.string.dev_settings_hud_disabled_subtitle),
                 )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    state.panels.forEach { panel ->
-                        DevHudPanelRow(
-                            panel = panel,
-                            onToggle = { enabled -> onToggleHudPanel(panel.id, enabled) },
-                        )
+            }
+
+            SectionCard(
+                title = stringResource(Res.string.dev_settings_hud_panels_title),
+                showContent = true,
+            ) {
+                if (state.panels.isEmpty()) {
+                    Text(
+                        text = stringResource(Res.string.dev_settings_hud_no_panels),
+                        color = SimAnalyzerTheme.material.onSurfaceVariant,
+                        style = SimAnalyzerTheme.typography.bodySmall,
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        state.panels.forEach { panel ->
+                            DevHudPanelRow(
+                                panel = panel,
+                                onToggle = { enabled -> onToggleHudPanel(panel.id, enabled) },
+                            )
+                        }
                     }
                 }
             }
         }
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 6.dp),
+            adapter = rememberScrollbarAdapter(scrollState),
+        )
     }
 }
 
@@ -446,18 +478,34 @@ private fun SectionCard(
 
 @Composable
 private fun TelemetryInspectorScreen(state: TelemetryInspectorState, modifier: Modifier = Modifier) {
+    val listState = rememberLazyListState()
+
     Column(modifier = modifier.fillMaxSize()) {
         TelemetryInspectorHeader(state)
         Spacer(modifier = Modifier.height(12.dp))
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+        Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
-            items(state.entries, key = { it.path }) { entry ->
-                TelemetryEntryRow(entry = entry)
+            LazyColumn(
+                state = listState,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 10.dp),
+            ) {
+                items(state.entries, key = { it.path }) { entry ->
+                    TelemetryEntryRow(entry = entry)
+                }
             }
+            AppVerticalScrollbar(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight()
+                    .padding(vertical = 4.dp),
+                adapter = rememberScrollbarAdapter(listState),
+            )
         }
     }
 }

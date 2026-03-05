@@ -5,14 +5,18 @@ package com.project.analyzer.calibration.presentation.trackmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,9 +31,22 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.components.CalibrationSectionCard
 import com.project.analyzer.calibration.trackmap.TrackMapRecorderState
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_distance
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_empty_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_empty_title
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_hide_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_more_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_pit
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_show_points
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_subtitle
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_title
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_total
+import com.project.analyzer.feature.dev.calibration.Res.track_map_library_width
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 import java.time.Instant
@@ -65,15 +82,30 @@ fun TrackMapLibraryScreen() {
                 subtitle = stringResource(Res.string.track_map_library_empty_subtitle),
             )
         } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+            val listState = rememberLazyListState()
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
             ) {
-                items(items, key = { it.map.gameId + it.map.trackId + it.map.layoutId.orEmpty() }) { item ->
-                    TrackMapLibraryCard(item)
+                LazyColumn(
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(end = 10.dp),
+                ) {
+                    items(items, key = { it.map.gameId + it.map.trackId + it.map.layoutId.orEmpty() }) { item ->
+                        TrackMapLibraryCard(item)
+                    }
                 }
+                AppVerticalScrollbar(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .fillMaxHeight()
+                        .padding(vertical = 4.dp),
+                    adapter = rememberScrollbarAdapter(listState),
+                )
             }
         }
     }

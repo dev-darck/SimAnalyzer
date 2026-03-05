@@ -1,6 +1,5 @@
 package com.project.analyzer.chooser.presentation.components
 
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +36,7 @@ import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_quick_ac
 import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_this_pc
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -111,8 +111,11 @@ private fun PlacesList(places: List<File>, selectedPath: String, onPlaceClick: (
             }
         }
 
-        VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
             adapter = rememberScrollbarAdapter(listState),
         )
     }
@@ -163,8 +166,11 @@ private fun DrivesList(drives: List<File>, selectedDrive: String, onDriveClick: 
             }
         }
 
-        VerticalScrollbar(
-            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(),
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
             adapter = rememberScrollbarAdapter(listState),
         )
     }

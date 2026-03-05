@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
@@ -65,6 +67,7 @@ import com.project.analyzer.feature.dev.calibration.Res.calibration_track_identi
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last_saved
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -86,14 +89,21 @@ private fun CalibrationContent(
     dispatchEvent: (CalibrationIntent) -> Unit,
     onVerify: (String) -> Unit,
 ) {
-    Column(
+    val screenScrollState = rememberScrollState()
+
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(screenScrollState)
+                .padding(16.dp)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
         CalibrationHeader(state)
 
         CalibrationSectionCard(
@@ -195,6 +205,14 @@ private fun CalibrationContent(
                 }
             }
         }
+        }
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 6.dp),
+            adapter = rememberScrollbarAdapter(screenScrollState),
+        )
     }
 }
 

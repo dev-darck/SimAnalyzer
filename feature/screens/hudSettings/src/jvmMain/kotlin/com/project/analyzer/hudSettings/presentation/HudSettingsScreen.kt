@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,7 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -35,11 +38,24 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.feature.screens.hudSettings.Res.Res
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_common_description
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_common_title
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_huds_title
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_no_configurable
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_opacity_title
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_opacity_tooltip
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_preview_electronics
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_preview_fuel
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_preview_timing
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_preview_title
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_select_hint
+import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_title
 import com.project.analyzer.hud.api.DefaultHudBackgroundOpacity
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
-import com.project.analyzer.feature.screens.hudSettings.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import com.project.analyzer.ui.slider.SettingsSliderRow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -109,54 +125,69 @@ private fun Screen(state: HudUiState = HudUiState(panels = emptyList()), dispatc
 
 @Composable
 private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
-    Column(
+    val scrollState = rememberScrollState()
+
+    Box(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
             .background(SimAnalyzerTheme.material.surface)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
     ) {
-        Text(
-            text = stringResource(Res.string.hud_settings_title),
-            color = SimAnalyzerTheme.material.onSurface,
-            style = SimAnalyzerTheme.typography.titleMedium,
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        if (panel == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+                .padding(end = 10.dp),
+        ) {
             Text(
-                text = stringResource(Res.string.hud_settings_select_hint),
+                text = stringResource(Res.string.hud_settings_title),
+                color = SimAnalyzerTheme.material.onSurface,
+                style = SimAnalyzerTheme.typography.titleMedium,
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            if (panel == null) {
+                Text(
+                    text = stringResource(Res.string.hud_settings_select_hint),
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
+                    style = SimAnalyzerTheme.typography.bodySmall,
+                )
+                return
+            }
+
+            Text(
+                text = panel.id,
+                color = SimAnalyzerTheme.material.onSurface,
+                style = SimAnalyzerTheme.typography.labelLarge,
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = panel.description,
                 color = SimAnalyzerTheme.material.onSurfaceVariant,
                 style = SimAnalyzerTheme.typography.bodySmall,
             )
-            return
+
+            Spacer(Modifier.height(12.dp))
+
+            if (!panel.hasSettings) {
+                Text(
+                    text = stringResource(Res.string.hud_settings_no_configurable),
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
+                    style = SimAnalyzerTheme.typography.bodySmall,
+                )
+                return
+            }
+
+            panel.SettingsContent(Modifier.fillMaxWidth())
         }
-
-        Text(
-            text = panel.id,
-            color = SimAnalyzerTheme.material.onSurface,
-            style = SimAnalyzerTheme.typography.labelLarge,
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 6.dp),
+            adapter = rememberScrollbarAdapter(scrollState),
         )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = panel.description,
-            color = SimAnalyzerTheme.material.onSurfaceVariant,
-            style = SimAnalyzerTheme.typography.bodySmall,
-        )
-
-        Spacer(Modifier.height(12.dp))
-
-        if (!panel.hasSettings) {
-            Text(
-                text = stringResource(Res.string.hud_settings_no_configurable),
-                color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = SimAnalyzerTheme.typography.bodySmall,
-            )
-            return
-        }
-
-        panel.SettingsContent(Modifier.fillMaxWidth())
     }
 }
 
@@ -182,20 +213,33 @@ private fun HudListPanel(
 
         Spacer(Modifier.height(12.dp))
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            items(panels, key = { it.id }) { panel ->
-                val enabled = panel.id in visibleIds
-                HudListItem(
-                    id = panel.id,
-                    description = panel.description,
-                    enabled = enabled,
-                    onClick = onClick,
-                    onToggle = { onToggle(panel.id, !enabled) },
-                )
+        val listState = rememberLazyListState()
+        Box(modifier = Modifier.fillMaxSize()) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(end = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                items(panels, key = { it.id }) { panel ->
+                    val enabled = panel.id in visibleIds
+                    HudListItem(
+                        id = panel.id,
+                        description = panel.description,
+                        enabled = enabled,
+                        onClick = onClick,
+                        onToggle = { onToggle(panel.id, !enabled) },
+                    )
+                }
             }
+            AppVerticalScrollbar(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight()
+                    .padding(vertical = 4.dp),
+                adapter = rememberScrollbarAdapter(listState),
+            )
         }
     }
 }

@@ -3,6 +3,7 @@ package com.project.analyzer.chooser.presentation
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Button
@@ -46,6 +48,7 @@ import com.project.analyzer.feature.screens.chooser.Res.chooser_hidden_on
 import com.project.analyzer.feature.screens.chooser.Res.chooser_no_folder_selected
 import com.project.analyzer.feature.screens.chooser.Res.chooser_no_selection
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
 import com.project.analyzer.ui.textField.TextField
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -180,19 +183,28 @@ private fun ViewerPanel(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             val scrollState = rememberScrollState()
-            Text(
-                modifier = Modifier
-                    .weight(1f)
-                    .horizontalScroll(scrollState),
-                text = currentDir.ifEmpty { stringResource(Res.string.chooser_no_folder_selected) },
-                color = if (currentDir.isNotEmpty()) {
-                    SimAnalyzerTheme.material.primary.copy(alpha = 0.95f)
-                } else {
-                    SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.5f)
-                },
-                style = SimAnalyzerTheme.typography.bodySmall,
-                maxLines = 1,
-            )
+            Box(modifier = Modifier.weight(1f)) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(scrollState)
+                        .padding(bottom = 8.dp),
+                    text = currentDir.ifEmpty { stringResource(Res.string.chooser_no_folder_selected) },
+                    color = if (currentDir.isNotEmpty()) {
+                        SimAnalyzerTheme.material.primary.copy(alpha = 0.95f)
+                    } else {
+                        SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.5f)
+                    },
+                    style = SimAnalyzerTheme.typography.bodySmall,
+                    maxLines = 1,
+                )
+                AppHorizontalScrollbar(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth(),
+                    adapter = rememberScrollbarAdapter(scrollState),
+                )
+            }
 
             Spacer(Modifier.width(8.dp))
 

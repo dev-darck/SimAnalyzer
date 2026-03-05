@@ -2,15 +2,19 @@ package com.project.analyzer.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -25,6 +29,7 @@ import com.project.analyzer.core.ui.Res.screen_layout_preview_sessions_value
 import com.project.analyzer.core.ui.Res.screen_layout_preview_track
 import com.project.analyzer.core.ui.Res.screen_layout_preview_track_value
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -36,15 +41,28 @@ public fun ScrollableScreenColumn(
 ) {
     val scrollState = rememberScrollState()
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background)
-            .verticalScroll(scrollState)
-            .padding(contentPadding),
-        verticalArrangement = Arrangement.spacedBy(verticalSpacing),
-        content = content,
-    )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(contentPadding)
+                .padding(end = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+            content = content,
+        )
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            adapter = rememberScrollbarAdapter(scrollState),
+        )
+    }
 }
 
 @Composable

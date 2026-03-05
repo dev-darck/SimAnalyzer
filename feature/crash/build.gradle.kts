@@ -6,6 +6,7 @@ moduleImpl {
 
     dependencies {
         projects.core.theme.jvmImpl
+        projects.core.ui.jvmImpl
         projects.core.leak.api.jvmImpl
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
