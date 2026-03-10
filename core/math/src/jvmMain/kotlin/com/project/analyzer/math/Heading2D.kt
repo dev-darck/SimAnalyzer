@@ -37,13 +37,13 @@ public object Heading2D {
     }
 
     /**
-     * PoseExtractor historically uses TWO candidates:
+     * Reference-point pose extraction historically uses TWO candidates:
      *  A = (sin(rad), cos(rad))
      *  B = (-sin(rad), cos(rad))   <-- intentionally preserved even though it's not the exact opposite.
      *
      * Keep this function to avoid changing existing behavior.
      */
-    public fun resolveFromRadiansPoseExtractor(headingRad: Float, prefer: Vec2?, fallback: Vec2 = Vec2.Up): Vec2 {
+    public fun resolveFromMirroredHeadingRad(headingRad: Float, prefer: Vec2?, fallback: Vec2 = Vec2.Up): Vec2 {
         val a = Vec2(sin(headingRad), cos(headingRad)).safeNormalized(fallback)
         val b = Vec2(-sin(headingRad), cos(headingRad)).safeNormalized(fallback)
         val ref = prefer?.safeNormalized(fallback) ?: return a

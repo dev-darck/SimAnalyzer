@@ -5,9 +5,7 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 
 @Inject
-class HudContainerUseCaseImpl(
-    private val repository: HudPreferencesRepository,
-) : HudContainerUseCase {
+class HudContainerUseCaseImpl(private val repository: HudPreferencesRepository) : HudContainerUseCase {
 
     override fun observeVisiblePanels(): Flow<Set<String>> = repository.observeVisiblePanels()
 

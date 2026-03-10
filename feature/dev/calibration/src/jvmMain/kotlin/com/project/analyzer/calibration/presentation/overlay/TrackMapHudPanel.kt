@@ -16,8 +16,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.project.analyzer.calibration.presentation.trackmap.TrackMapPreview
-import com.project.analyzer.calibration.trackmap.TrackMapRecorder
+import com.analyzer.trackmap.domain.TrackMapCaptureController
+import com.analyzer.trackmap.presentation.TrackMapPreview
+import com.analyzer.trackmap.presentation.toTrackMapPreviewUi
 import com.project.analyzer.hud.api.HudAnchor
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.HudScope
@@ -29,7 +30,8 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
-class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
+@Suppress("unused")
+class TrackMapHudPanel(private val controller: TrackMapCaptureController) : HudPanel {
 
     override val id: String = "track_map_builder"
     override val description: String = "Track map capture overlay"
@@ -40,10 +42,10 @@ class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by recorder.state.collectAsStateWithLifecycle()
+        val state by controller.state.collectAsStateWithLifecycle()
         Box(modifier = modifier.size(420.dp)) {
             TrackMapPreview(
-                state = state,
+                state = state.toTrackMapPreviewUi(),
                 modifier = Modifier.matchParentSize(),
                 backgroundAlpha = 0.7f,
                 borderAlpha = 0.5f,
@@ -60,14 +62,14 @@ class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (state.recording) {
-                    Button(onClick = recorder::stop) {
+                    Button(onClick = controller::stop) {
                         Text(
                             text = "Stop",
                             style = SimAnalyzerTheme.typography.labelMedium,
                         )
                     }
                 } else {
-                    Button(onClick = recorder::start) {
+                    Button(onClick = controller::start) {
                         Text(
                             text = "Start",
                             style = SimAnalyzerTheme.typography.labelMedium,
@@ -76,7 +78,7 @@ class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
                 }
 
                 Button(
-                    onClick = recorder::markPitEntry,
+                    onClick = controller::markPitEntry,
                     enabled = state.recording,
                 ) {
                     Text(
@@ -86,7 +88,7 @@ class TrackMapHudPanel(private val recorder: TrackMapRecorder) : HudPanel {
                 }
 
                 Button(
-                    onClick = recorder::markPitExit,
+                    onClick = controller::markPitExit,
                     enabled = state.recording,
                 ) {
                     Text(

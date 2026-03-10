@@ -17,8 +17,7 @@ import com.project.analyzer.crash.domain.CreateCrashReportUseCaseImpl
 import com.project.analyzer.feature.crash.Res.Res
 import com.project.analyzer.feature.crash.Res.crash_dialog_handler_title
 import com.project.analyzer.feature.crash.Res.crash_dialog_title
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import java.awt.Dimension
 import java.awt.Window
 import javax.swing.JDialog
@@ -32,7 +31,8 @@ private val crashDialogShown = AtomicBoolean(false)
 @Composable
 fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) {
     val createCrashReport: CreateCrashReportUseCase = remember { CreateCrashReportUseCaseImpl() }
-    val handlerTitle = remember { runBlocking { getString(Res.string.crash_dialog_handler_title) } }
+    val handlerTitle = stringResource(Res.string.crash_dialog_handler_title)
+    val dialogTitle = stringResource(Res.string.crash_dialog_title)
 
     CompositionLocalProvider(
         LocalWindowExceptionHandlerFactory provides WindowExceptionHandlerFactory { window ->
@@ -54,12 +54,14 @@ fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) 
                     showCrashDialog(
                         owner = window,
                         crashReport = report,
+                        dialogTitle = dialogTitle,
                     )
                 } else {
                     SwingUtilities.invokeLater {
                         showCrashDialog(
                             owner = window,
                             crashReport = report,
+                            dialogTitle = dialogTitle,
                         )
                     }
                 }
@@ -70,9 +72,8 @@ fun CrashBoundary(appVersion: String? = "dev", content: @Composable () -> Unit) 
     }
 }
 
-private fun showCrashDialog(owner: Window, crashReport: CrashReport) {
+private fun showCrashDialog(owner: Window, crashReport: CrashReport, dialogTitle: String) {
     val b = owner.graphicsConfiguration.bounds
-    val dialogTitle = runBlocking { getString(Res.string.crash_dialog_title) }
 
     val desiredW = 980
     val desiredH = 720

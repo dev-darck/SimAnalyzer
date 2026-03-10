@@ -1,12 +1,12 @@
 package com.analyzer.settings.di
 
-import com.analyzer.settings.api.ThemeRepository as PublicThemeRepository
 import com.analyzer.settings.data.theme.ThemeRepository
 import com.analyzer.settings.data.theme.ThemeRepositoryImpl
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
+import com.analyzer.settings.api.ThemeRepository as PublicThemeRepository
 
 @ContributesTo(AppScope::class)
 @BindingContainer

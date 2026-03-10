@@ -11,7 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.analyzer.session.details.presentation.model.LapStatus
-import com.project.analyzer.feature.screens.sessionDetails.Res.*
+import com.project.analyzer.feature.screens.sessionDetails.Res.Res
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_status_best_lap
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_status_clean
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_status_dirty
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_status_invalid
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_status_out_lap
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_status_pit_in
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.stringResource
 

@@ -13,6 +13,7 @@ import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent.LapFinished
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent.LapStarted
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
+import com.project.analyzer.telemetry.api.model.session.SessionFrame
 import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
 
@@ -44,12 +45,14 @@ internal class AcSessionTracker {
         val carChanged: Boolean,
         val carIdChanged: Boolean,
         val trackChanged: Boolean,
+        val layoutChanged: Boolean,
         val sessionTypeBoundary: Boolean,
         val sessionIndexBoundary: Boolean,
         val lapCounterBoundary: Boolean,
         val newCar: String,
         val newCarId: Int?,
         val newTrack: String,
+        val newLayout: String?,
         val newType: SessionType,
         val newSessionIndex: Int?,
         val newRawLap: Int?,
@@ -59,6 +62,7 @@ internal class AcSessionTracker {
             get() = carChanged ||
                 carIdChanged ||
                 trackChanged ||
+                layoutChanged ||
                 sessionTypeBoundary ||
                 sessionIndexBoundary ||
                 lapCounterBoundary
@@ -95,11 +99,12 @@ internal class AcSessionTracker {
             }
 
             GameConnectionState.IN_MENU to GameConnectionState.IN_SESSION,
-            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION -> Unit
+            GameConnectionState.DISCONNECTED to GameConnectionState.IN_SESSION,
+            -> Unit
 
             GameConnectionState.IN_MENU to GameConnectionState.DISCONNECTED,
             GameConnectionState.IN_SESSION to GameConnectionState.DISCONNECTED,
-                -> {
+            -> {
                 if (sessionState != SessionState.NONE && sessionId > 0L) {
                     logger.atDebug(RATE_LIMITED) {
                         message = "SessionEnded id=$sessionId reason=SIM_DISCONNECTED (source=$source)"
@@ -124,14 +129,16 @@ internal class AcSessionTracker {
             handleRestartHint(frame, source, restartHint, emit)
         }
 
-        when {
-            sessionState == SessionState.PAUSED && lastConnectionState == GameConnectionState.IN_SESSION -> {
-                enterSessionOnFirstFrame(frame, wasPaused = true, source, emit)
+        when (sessionState) {
+            SessionState.PAUSED -> {
+                if (lastConnectionState == GameConnectionState.IN_SESSION) {
+                    enterSessionOnFirstFrame(frame, source, emit)
+                }
             }
 
-            sessionState == SessionState.NONE -> {
-                startNewSessionFromFrame(frame, source, emit, replacedOld = false)
-            }
+            SessionState.NONE -> startNewSessionFromFrame(frame, source, emit, replacedOld = false)
+
+            SessionState.RUNNING -> Unit
         }
 
         logger.atDebug(RATE_LIMITED) {
@@ -169,14 +176,13 @@ internal class AcSessionTracker {
 
     private fun enterSessionOnFirstFrame(
         frame: TelemetryFrame,
-        wasPaused: Boolean,
         source: DataSourceType,
         emit: (TelemetryLifecycleEvent) -> Unit,
     ) {
-        val isResume = wasPaused && isLikelyResume(frame)
+        val isResume = isLikelyResume(frame)
 
         logger.atDebug(RATE_LIMITED) {
-            message = "enterSessionOnFirstFrame wasPaused=$wasPaused isResume=$isResume " +
+            message = "enterSessionOnFirstFrame isResume=$isResume " +
                 "(source=$source) " + frameKeySummary(frame)
         }
 
@@ -205,13 +211,17 @@ internal class AcSessionTracker {
 
         if (mismatch.rejected) {
             logger.atDebug(RATE_LIMITED) {
-                message = "resume rejected: carChanged=${mismatch.carChanged} carIdChanged=${mismatch.carIdChanged} " +
+                message = "resume rejected: carChanged=${mismatch.carChanged} " +
+                    "carIdChanged=${mismatch.carIdChanged} " +
                     "trackChanged=${mismatch.trackChanged} " +
+                    "layoutChanged=${mismatch.layoutChanged} " +
                     "sessionTypeBoundary=${mismatch.sessionTypeBoundary} " +
                     "sessionIndexBoundary=${mismatch.sessionIndexBoundary} " +
                     "lapCounterBoundary=${mismatch.lapCounterBoundary} " +
-                    "cur(car=${cur.carModel}, carId=${cur.carId}, track=${cur.trackId}) " +
-                    "new(car=${mismatch.newCar}, carId=${mismatch.newCarId}, track=${mismatch.newTrack}, " +
+                    "cur(car=${cur.carModel}, carId=${cur.carId}, " +
+                    "track=${cur.trackId}, layout=${cur.layoutId}) " +
+                    "new(car=${mismatch.newCar}, carId=${mismatch.newCarId}, " +
+                    "track=${mismatch.newTrack}, layout=${mismatch.newLayout}, " +
                     "type=${mismatch.newType}, idx=${mismatch.newSessionIndex}, " +
                     "rawLap=${mismatch.newRawLap}, rawCompleted=${mismatch.newRawCompleted})"
             }
@@ -243,13 +253,15 @@ internal class AcSessionTracker {
         val carId = frame.session?.car?.carId?.takeIf { it > 0 }
         val track = frame.session?.track?.trackId.orEmpty().trim()
 
-        currentSession = SessionInfo(
+        val startedSession = SessionInfo(
             sessionId = sessionId,
             sessionType = sessionType,
             carModel = car,
             trackId = track,
             carId = carId,
+            layoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() },
         )
+        currentSession = startedSession
         currentSessionIndex = frame.session?.sessionIndex?.takeIf { it >= 0 }
         lastSessionTimeLeftSec = frame.session?.sessionTimeLeftSec
         lastSessionPlannedLaps = frame.session?.plannedLaps?.takeIf { it > 0 }
@@ -261,7 +273,7 @@ internal class AcSessionTracker {
                 "track=$track car=$car carId=$carId (source=$source)"
         }
 
-        emit(TelemetryLifecycleEvent.SessionStarted(currentSession!!))
+        emit(TelemetryLifecycleEvent.SessionStarted(startedSession))
     }
 
     private fun updateSessionFromFrame(
@@ -274,48 +286,104 @@ internal class AcSessionTracker {
         syncCurrentSessionIndex(frame)
         if (restartForSessionTypeBoundary(cur, frame, source, emit)) return
 
-        var updated = cur
         val changed = linkedSetOf<SessionField>()
-        val newType = frame.session?.sessionType ?: SessionType.UNKNOWN
-        if (newType != SessionType.UNKNOWN && newType != cur.sessionType) {
-            logger.atDebug(RATE_LIMITED) {
-                message = "SessionType changed: ${cur.sessionType} -> $newType (source=$source)"
-            }
-            updated = updated.copy(sessionType = newType)
-            changed += SessionField.SESSION_TYPE
+        var updated = updateSessionType(
+            session = cur,
+            frame = frame,
+            source = source,
+            changed = changed,
+        )
+        updated = updateCarIdentity(
+            session = updated,
+            frame = frame,
+            source = source,
+            changed = changed,
+        )
+        updated = updateTrackIdentity(
+            session = updated,
+            frame = frame,
+            source = source,
+            changed = changed,
+        )
+
+        if (changed.isNotEmpty()) {
+            currentSession = updated
+            emit(TelemetryLifecycleEvent.SessionUpdated(updated, changed.toSet()))
         }
+    }
+
+    private fun updateSessionType(
+        session: SessionInfo,
+        frame: TelemetryFrame,
+        source: DataSourceType,
+        changed: MutableSet<SessionField>,
+    ): SessionInfo {
+        val newType = frame.session?.sessionType ?: SessionType.UNKNOWN
+        if (newType == SessionType.UNKNOWN || newType == session.sessionType) return session
+
+        logger.atDebug(RATE_LIMITED) {
+            message = "SessionType changed: ${session.sessionType} -> $newType (source=$source)"
+        }
+        changed += SessionField.SESSION_TYPE
+        return session.copy(sessionType = newType)
+    }
+
+    private fun updateCarIdentity(
+        session: SessionInfo,
+        frame: TelemetryFrame,
+        source: DataSourceType,
+        changed: MutableSet<SessionField>,
+    ): SessionInfo {
+        var updated = session
 
         val newCar = frame.session?.car?.carModel.orEmpty().trim()
-        if (newCar.isNotBlank() && newCar != cur.carModel) {
+        if (newCar.isNotBlank() && newCar != updated.carModel) {
             logger.atDebug(RATE_LIMITED) {
-                message = "CarModel changed: ${cur.carModel} -> $newCar (source=$source)"
+                message = "CarModel changed: ${updated.carModel} -> $newCar (source=$source)"
             }
             updated = updated.copy(carModel = newCar)
             changed += SessionField.CAR_MODEL
         }
 
         val newCarId = frame.session?.car?.carId?.takeIf { it > 0 }
-        if (newCarId != null && newCarId != cur.carId) {
+        if (newCarId != null && newCarId != updated.carId) {
             logger.atDebug(RATE_LIMITED) {
-                message = "CarId changed: ${cur.carId} -> $newCarId (source=$source)"
+                message = "CarId changed: ${updated.carId} -> $newCarId (source=$source)"
             }
             updated = updated.copy(carId = newCarId)
             changed += SessionField.CAR_ID
         }
 
+        return updated
+    }
+
+    private fun updateTrackIdentity(
+        session: SessionInfo,
+        frame: TelemetryFrame,
+        source: DataSourceType,
+        changed: MutableSet<SessionField>,
+    ): SessionInfo {
+        var updated = session
+
         val newTrack = frame.session?.track?.trackId.orEmpty().trim()
-        if (newTrack.isNotBlank() && newTrack != cur.trackId) {
+        if (newTrack.isNotBlank() && newTrack != updated.trackId) {
             logger.atDebug(RATE_LIMITED) {
-                message = "TrackId changed: ${cur.trackId} -> $newTrack (source=$source)"
+                message = "TrackId changed: ${updated.trackId} -> $newTrack (source=$source)"
             }
             updated = updated.copy(trackId = newTrack)
             changed += SessionField.TRACK_ID
         }
 
-        if (changed.isNotEmpty()) {
-            currentSession = updated
-            emit(TelemetryLifecycleEvent.SessionUpdated(updated, changed.toSet()))
+        val newLayoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() }
+        if (newLayoutId != updated.layoutId) {
+            logger.atDebug(RATE_LIMITED) {
+                message = "TrackLayout changed: ${updated.layoutId} -> $newLayoutId (source=$source)"
+            }
+            updated = updated.copy(layoutId = newLayoutId)
+            changed += SessionField.TRACK_LAYOUT_ID
         }
+
+        return updated
     }
 
     private fun restartForSessionIndexBoundary(
@@ -406,54 +474,61 @@ internal class AcSessionTracker {
     }
 
     private fun logInferredBoundaries(frame: TelemetryFrame, source: DataSourceType) {
-        val s = frame.session ?: return
+        val session = frame.session ?: return
+        trackSessionIndexBoundary(session, source)
+        trackPlannedLapsBoundary(session, source)
+        trackTimedRaceBoundary(session, source)
+        trackSessionTimeLeftBoundary(session, source)
+    }
 
-        val idx = s.sessionIndex
-        if (idx != null && idx >= 0) {
-            if (lastSessionIndex != null && idx != lastSessionIndex) {
-                logger.atDebug(RATE_LIMITED) {
-                    message = "[boundary] sessionIndex: $lastSessionIndex -> $idx " +
-                        "type=${s.sessionType} track=${s.track?.trackId} car=${s.car?.carModel} (source=$source)"
-                }
+    private fun trackSessionIndexBoundary(session: SessionFrame, source: DataSourceType) {
+        val sessionIndex = session.sessionIndex?.takeIf { it >= 0 } ?: return
+        if (lastSessionIndex != null && sessionIndex != lastSessionIndex) {
+            logger.atDebug(RATE_LIMITED) {
+                message = "[boundary] sessionIndex: $lastSessionIndex -> $sessionIndex " +
+                    "type=${session.sessionType} track=${session.track?.trackId} " +
+                    "car=${session.car?.carModel} (source=$source)"
             }
-            lastSessionIndex = idx
         }
+        lastSessionIndex = sessionIndex
+    }
 
-        val plannedLaps = s.plannedLaps?.takeIf { it > 0 }
-        if (plannedLaps != null) {
-            if (lastSessionPlannedLaps != null && plannedLaps != lastSessionPlannedLaps) {
-                logger.atDebug(RATE_LIMITED) {
-                    message = "[boundary] plannedLaps: $lastSessionPlannedLaps -> $plannedLaps " +
-                        "idx=${s.sessionIndex} type=${s.sessionType} (source=$source)"
-                }
+    private fun trackPlannedLapsBoundary(session: SessionFrame, source: DataSourceType) {
+        val plannedLaps = session.plannedLaps?.takeIf { it > 0 } ?: return
+        if (lastSessionPlannedLaps != null && plannedLaps != lastSessionPlannedLaps) {
+            logger.atDebug(RATE_LIMITED) {
+                message = "[boundary] plannedLaps: $lastSessionPlannedLaps -> $plannedLaps " +
+                    "idx=${session.sessionIndex} type=${session.sessionType} (source=$source)"
             }
-            lastSessionPlannedLaps = plannedLaps
         }
+        lastSessionPlannedLaps = plannedLaps
+    }
 
-        val timedRace = s.isTimedRace
-        if (timedRace != null) {
-            if (lastSessionIsTimedRace != null && timedRace != lastSessionIsTimedRace) {
-                logger.atDebug(RATE_LIMITED) {
-                    message = "[boundary] isTimedRace: $lastSessionIsTimedRace -> $timedRace " +
-                        "idx=${s.sessionIndex} type=${s.sessionType} (source=$source)"
-                }
+    private fun trackTimedRaceBoundary(session: SessionFrame, source: DataSourceType) {
+        val isTimedRace = session.isTimedRace ?: return
+        if (lastSessionIsTimedRace != null && isTimedRace != lastSessionIsTimedRace) {
+            logger.atDebug(RATE_LIMITED) {
+                message = "[boundary] isTimedRace: $lastSessionIsTimedRace -> $isTimedRace " +
+                    "idx=${session.sessionIndex} type=${session.sessionType} (source=$source)"
             }
-            lastSessionIsTimedRace = timedRace
         }
+        lastSessionIsTimedRace = isTimedRace
+    }
 
-        val left = s.sessionTimeLeftSec
-        val prevLeft = lastSessionTimeLeftSec
-        if (prevLeft != null) {
-            val jumpUp = left?.let { (it - prevLeft) > 120f }
+    private fun trackSessionTimeLeftBoundary(session: SessionFrame, source: DataSourceType) {
+        val newTimeLeftSec = session.sessionTimeLeftSec
+        val previousTimeLeftSec = lastSessionTimeLeftSec
+        if (previousTimeLeftSec != null) {
+            val jumpUp = newTimeLeftSec?.let { (it - previousTimeLeftSec) > SESSION_CLOCK_JUMP_BOUNDARY_SEC }
             if (jumpUp == true) {
                 logger.atDebug(RATE_LIMITED) {
-                    message = "[boundary] sessionTimeLeft jump up: $prevLeft -> $left " +
-                        "idx=${s.sessionIndex} type=${s.sessionType} (source=$source)"
+                    message = "[boundary] sessionTimeLeft jump up: $previousTimeLeftSec -> $newTimeLeftSec " +
+                        "idx=${session.sessionIndex} type=${session.sessionType} (source=$source)"
                 }
             }
         }
-        if (left != null && left.isFinite()) {
-            lastSessionTimeLeftSec = left
+        if (newTimeLeftSec != null && newTimeLeftSec.isFinite()) {
+            lastSessionTimeLeftSec = newTimeLeftSec
         }
     }
 
@@ -519,6 +594,7 @@ internal class AcSessionTracker {
         val newCar = frame.session?.car?.carModel.orEmpty().trim()
         val newCarId = frame.session?.car?.carId?.takeIf { it > 0 }
         val newTrack = frame.session?.track?.trackId.orEmpty().trim()
+        val newLayout = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() }
         val newType = frame.session?.sessionType ?: SessionType.UNKNOWN
         val newSessionIndex = frame.session?.sessionIndex
         val newRawLap = frame.lap?.currentLapIndex
@@ -530,12 +606,14 @@ internal class AcSessionTracker {
             carChanged = newCar.isNotBlank() && cur.carModel.isNotBlank() && newCar != cur.carModel,
             carIdChanged = newCarId != null && cur.carId != null && newCarId != cur.carId,
             trackChanged = newTrack.isNotBlank() && cur.trackId.isNotBlank() && newTrack != cur.trackId,
+            layoutChanged = newLayout != cur.layoutId,
             sessionTypeBoundary = shouldRestartForSessionTypeChange(cur.sessionType, newType),
             sessionIndexBoundary = sessionIndexBoundary,
             lapCounterBoundary = lapCounterBoundary,
             newCar = newCar,
             newCarId = newCarId,
             newTrack = newTrack,
+            newLayout = newLayout,
             newType = newType,
             newSessionIndex = newSessionIndex,
             newRawLap = newRawLap,

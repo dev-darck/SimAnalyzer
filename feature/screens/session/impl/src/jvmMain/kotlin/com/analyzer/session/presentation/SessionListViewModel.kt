@@ -1,26 +1,21 @@
 package com.analyzer.session.presentation
 
-import com.analyzer.session.domain.interactor.SessionListManager
-import com.analyzer.session.domain.model.SessionListDataset
 import com.analyzer.session.domain.model.SessionListQuery
-import com.analyzer.session.domain.model.SessionListResult
-import com.analyzer.session.presentation.mapper.SessionListUiStateMapper
+import com.analyzer.session.domain.usecase.SessionListDataUseCase
+import com.analyzer.session.domain.usecase.SessionTrackMapUseCase
 import com.analyzer.session.presentation.model.SessionListIntent
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
-import com.analyzer.session.presentation.usecase.SessionTrackMapUseCase
-import com.project.analyzer.ui.components.TrackMapData
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
+import com.project.analyzer.ui.components.TrackMapData
 import dev.zacsweers.metro.Inject
 
 @Inject
 internal class SessionListViewModel(
-    private val manager: SessionListManager,
-    private val uiStateMapper: SessionListUiStateMapper,
+    private val dataUseCase: SessionListDataUseCase,
     private val sessionTrackMapUseCase: SessionTrackMapUseCase,
 ) : LeakAwareMviViewModel<SessionListIntent, SessionListState>(SessionListState()) {
 
-    private var dataset = SessionListDataset()
     private var query = SessionListQuery()
     private var trackMapsByKey: Map<String, TrackMapData> = emptyMap()
     private var hasLoadedOnce = false
@@ -28,7 +23,7 @@ internal class SessionListViewModel(
     override suspend fun handleIntent(intent: SessionListIntent) {
         when (intent) {
             SessionListIntent.Start -> start()
-            SessionListIntent.Refresh -> refresh()
+            SessionListIntent.Refresh -> refresh(forceRefresh = true)
             is SessionListIntent.ChangeGame -> updateQuery { copy(gameId = intent.optionId, page = 1) }
             is SessionListIntent.ChangeTrack -> updateQuery { copy(trackId = intent.optionId, page = 1) }
             is SessionListIntent.ChangeCar -> updateQuery { copy(carId = intent.optionId, page = 1) }
@@ -46,57 +41,53 @@ internal class SessionListViewModel(
         refresh()
     }
 
-    private suspend fun refresh(showLoading: Boolean = true) {
+    private suspend fun refresh(showLoading: Boolean = true, forceRefresh: Boolean = false) {
         if (showLoading) {
             updateState { copy(isLoading = true, error = null) }
         } else {
             updateState { copy(error = null) }
         }
-        val result = manager.refresh(query)
-        val trackMapRequests = result.dataset.items
-            .asSequence()
-            .mapNotNull { item -> sessionTrackMapUseCase.request(item.gameId, item.trackId) }
-            .toSet()
-        trackMapsByKey = sessionTrackMapUseCase.loadTrackMapsByRequest(trackMapRequests)
-        applyInteractorResult(result)
+        loadPage(
+            nextQuery = query,
+            forceRefresh = forceRefresh,
+        )
     }
 
     private suspend fun updateQuery(mutator: SessionListQuery.() -> SessionListQuery) {
-        applyInteractorResult(manager.project(dataset, mutator(query)))
+        loadPage(mutator(query))
     }
 
     private suspend fun saveSession(sessionId: Long) {
-        val saved = manager.saveSession(sessionId)
+        val saved = dataUseCase.saveSession(sessionId)
         if (saved) {
-            refresh(showLoading = false)
+            refresh(showLoading = false, forceRefresh = true)
         } else {
             updateState { copy(error = "Failed to save session.") }
         }
     }
 
     private suspend fun deleteSession(sessionId: Long) {
-        val deleted = manager.deleteSession(sessionId)
+        val deleted = dataUseCase.deleteSession(sessionId)
         if (deleted) {
-            refresh(showLoading = false)
+            refresh(showLoading = false, forceRefresh = true)
         } else {
             updateState { copy(error = "Failed to delete session.") }
         }
     }
 
-    private fun applyInteractorResult(result: SessionListResult) {
-        dataset = result.dataset
+    private suspend fun loadPage(nextQuery: SessionListQuery, forceRefresh: Boolean = false) {
+        val result = dataUseCase.loadPage(
+            query = nextQuery,
+            forceRefresh = forceRefresh,
+        )
+        trackMapsByKey = sessionTrackMapUseCase.loadTrackMaps(result.page.rows)
         query = result.query
         hasLoadedOnce = true
-        val mapped = uiStateMapper.map(
-            dataset = result.dataset,
-            projection = result.projection,
+        val mapped = result.page.toSessionListState(
             query = result.query,
         )
         setState(
-            mapped.copy(
-                sessions = mapped.sessions.map(::mapTrackMap),
-                visibleSessions = mapped.visibleSessions.map(::mapTrackMap),
-            ),
+            mapped.copy(visibleSessions = mapped.visibleSessions.map(::mapTrackMap)),
         )
     }
 
@@ -105,6 +96,7 @@ internal class SessionListViewModel(
             trackMapsByKey = trackMapsByKey,
             gameId = row.gameId,
             trackId = row.trackId,
+            layoutId = row.layoutId,
         ),
     )
 }

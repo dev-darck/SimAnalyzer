@@ -1,0 +1,124 @@
+{
+    "trackId": "redbull_ring_national",
+    "trackName": "Redbull Ring National",
+    "layoutId": "national",
+    "createdAtEpochMs": 1772924746804,
+    "source": "GAME",
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": 367.58173,
+            "y": 282.88922
+        },
+        "forward": {
+            "x": -0.95981425,
+            "y": 0.28063637
+        },
+        "normal": {
+            "x": -0.28063637,
+            "y": -0.95981425
+        },
+        "halfWidthMeters": 10.196476
+    },
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": 367.58173,
+                    "y": 282.88922
+                },
+                "forward": {
+                    "x": -0.95981425,
+                    "y": 0.28063637
+                },
+                "normal": {
+                    "x": -0.28063637,
+                    "y": -0.95981425
+                },
+                "halfWidthMeters": 10.196476
+            },
+            "finish": {
+                "center": {
+                    "x": -195.08981,
+                    "y": 41.09716
+                },
+                "forward": {
+                    "x": 0.7515652,
+                    "y": 0.65965885
+                },
+                "normal": {
+                    "x": 0.65965885,
+                    "y": -0.7515652
+                },
+                "halfWidthMeters": 20.0
+            }
+        },
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": -195.08981,
+                    "y": 41.09716
+                },
+                "forward": {
+                    "x": 0.7515652,
+                    "y": 0.65965885
+                },
+                "normal": {
+                    "x": 0.65965885,
+                    "y": -0.7515652
+                },
+                "halfWidthMeters": 20.0
+            },
+            "finish": {
+                "center": {
+                    "x": 536.55756,
+                    "y": -48.282272
+                },
+                "forward": {
+                    "x": 0.93333393,
+                    "y": 0.35900953
+                },
+                "normal": {
+                    "x": -0.35900953,
+                    "y": 0.93333393
+                },
+                "halfWidthMeters": 19.5
+            }
+        },
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": 536.55756,
+                    "y": -48.282272
+                },
+                "forward": {
+                    "x": 0.93333393,
+                    "y": 0.35900953
+                },
+                "normal": {
+                    "x": -0.35900953,
+                    "y": 0.93333393
+                },
+                "halfWidthMeters": 19.5
+            },
+            "finish": {
+                "center": {
+                    "x": 367.58173,
+                    "y": 282.88922
+                },
+                "forward": {
+                    "x": -0.95981425,
+                    "y": 0.28063637
+                },
+                "normal": {
+                    "x": -0.28063637,
+                    "y": -0.95981425
+                },
+                "halfWidthMeters": 10.196476
+            }
+        }
+    ]
+}

@@ -13,6 +13,7 @@ internal data class SessionMetadata(
     val carId: Int? = null,
     val trackId: String?,
     val trackName: String? = null,
+    val layoutId: String? = null,
     val airTempC: Float? = null,
     val trackTempC: Float? = null,
     val startedAtMs: Long,

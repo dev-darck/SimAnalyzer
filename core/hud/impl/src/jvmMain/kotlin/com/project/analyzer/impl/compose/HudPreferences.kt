@@ -1,7 +1,7 @@
 package com.project.analyzer.impl.compose
 
 import androidx.compose.ui.unit.IntOffset
-import com.project.analyzer.hud.api.DefaultHudBackgroundOpacity
+import com.project.analyzer.hud.api.DEFAULT_HUD_BACKGROUND_OPACITY
 import com.project.analyzer.hud.api.HudPreferencesStore
 import com.project.analyzer.hud.api.HudStoredPosition
 import com.project.analyzer.preference.api.Preference
@@ -27,7 +27,7 @@ internal class HudPreferences(
     override fun observeHudEnabled(): Flow<Boolean> = preference.observe(TELEMETRY_HUD_ENABLED.bool, true)
     override fun observeInputLocked(): Flow<Boolean> = preference.observe(KEY_INPUT_LOCKED.bool, false)
     override fun observeHudOpacity(): Flow<Float> =
-        preference.observe(KEY_HUD_OPACITY.float, DefaultHudBackgroundOpacity)
+        preference.observe(KEY_HUD_OPACITY.float, DEFAULT_HUD_BACKGROUND_OPACITY)
 
     override suspend fun setInputLocked(locked: Boolean) {
         preference.put(KEY_INPUT_LOCKED.bool to locked)

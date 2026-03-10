@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
@@ -63,7 +64,7 @@ class AcTelemetryLifecycleTest {
             cb(PollResult.Frame(snapshot = newSnapshot()))
         }
 
-        every { mapper.map(any()) } returns frame1
+        coEvery { mapper.map(any()) } returns frame1
 
         val lifecycle = AcTelemetryLifecycle(
             pollLoop = pollLoop,
@@ -76,8 +77,12 @@ class AcTelemetryLifecycleTest {
         val events = mutableListOf<TelemetryLifecycleEvent>()
         val frames = mutableListOf<TelemetryFrame>()
 
-        val evJob = launch { lifecycle.events.take(3).toList(events) }
-        val frJob = launch { lifecycle.frames.take(1).toList(frames) }
+        val evJob = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            lifecycle.events.take(3).toList(events)
+        }
+        val frJob = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            lifecycle.frames.take(1).toList(frames)
+        }
 
         lifecycle.launchTelemetry()
         testScheduler.advanceUntilIdle()
@@ -130,7 +135,7 @@ class AcTelemetryLifecycleTest {
             cb(PollResult.Frame(snapshot = newSnapshot()))
         }
 
-        every { mapper.map(any()) } returnsMany listOf(frame1, frame2)
+        coEvery { mapper.map(any()) } returnsMany listOf(frame1, frame2)
 
         val lifecycle = AcTelemetryLifecycle(
             pollLoop = pollLoop,
@@ -141,7 +146,9 @@ class AcTelemetryLifecycleTest {
         )
 
         val events = mutableListOf<TelemetryLifecycleEvent>()
-        val evJob = launch { lifecycle.events.take(5).toList(events) }
+        val evJob = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            lifecycle.events.take(5).toList(events)
+        }
 
         lifecycle.launchTelemetry()
         testScheduler.advanceUntilIdle()
@@ -149,13 +156,15 @@ class AcTelemetryLifecycleTest {
 
         assertTrue(events[0] is TelemetryLifecycleEvent.SimConnected)
         assertTrue(events[1] is TelemetryLifecycleEvent.SessionStarted)
-        assertEquals(1, (events[2] as TelemetryLifecycleEvent.LapStarted).lapNumber)
 
-        val finished = events[3] as TelemetryLifecycleEvent.LapFinished
+        val started = events.filterIsInstance<TelemetryLifecycleEvent.LapStarted>()
+        assertEquals(2, started.size)
+        assertEquals(1, started[0].lapNumber)
+
+        val finished = events.filterIsInstance<TelemetryLifecycleEvent.LapFinished>().single()
         assertEquals(1, finished.lapNumber)
         assertEquals(LapValidity.VALID, finished.validity)
-
-        assertEquals(2, (events[4] as TelemetryLifecycleEvent.LapStarted).lapNumber)
+        assertEquals(2, started[1].lapNumber)
     }
 
     @Test
@@ -184,7 +193,7 @@ class AcTelemetryLifecycleTest {
             cb(PollResult.StateChanged(GameConnectionState.IN_MENU, mockk(relaxed = true)))
         }
 
-        every { mapper.map(any()) } returns frame
+        coEvery { mapper.map(any()) } returns frame
 
         val lifecycle = AcTelemetryLifecycle(
             pollLoop = pollLoop,
@@ -195,7 +204,9 @@ class AcTelemetryLifecycleTest {
         )
 
         val events = mutableListOf<TelemetryLifecycleEvent>()
-        val evJob = launch { lifecycle.events.take(4).toList(events) }
+        val evJob = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            lifecycle.events.take(4).toList(events)
+        }
 
         lifecycle.launchTelemetry()
         testScheduler.advanceUntilIdle()
@@ -232,7 +243,7 @@ class AcTelemetryLifecycleTest {
             cb(PollResult.StateChanged(GameConnectionState.DISCONNECTED, mockk(relaxed = true)))
         }
 
-        every { mapper.map(any()) } returns frame
+        coEvery { mapper.map(any()) } returns frame
 
         val lifecycle = AcTelemetryLifecycle(
             pollLoop = pollLoop,
@@ -243,7 +254,9 @@ class AcTelemetryLifecycleTest {
         )
 
         val events = mutableListOf<TelemetryLifecycleEvent>()
-        val evJob = launch { lifecycle.events.take(10).toList(events) }
+        val evJob = backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            lifecycle.events.take(10).toList(events)
+        }
 
         try {
             lifecycle.launchTelemetry()

@@ -189,26 +189,25 @@ internal class SettingsRepositoryImpl(
 
     override fun getDefaultStorageLocation(): String = appDirectories.cacheDir.absolutePath
 
-    override suspend fun validateStorageLocation(path: String): StorageValidationResult =
-        withContext(ioDispatcher) {
-            if (path.isBlank()) return@withContext StorageValidationResult.Empty
+    override suspend fun validateStorageLocation(path: String): StorageValidationResult = withContext(ioDispatcher) {
+        if (path.isBlank()) return@withContext StorageValidationResult.Empty
 
-            val file = File(path)
-            if (!file.isAbsolute) return@withContext StorageValidationResult.NotAbsolutePath
+        val file = File(path)
+        if (!file.isAbsolute) return@withContext StorageValidationResult.NotAbsolutePath
 
-            return@withContext when {
-                !file.exists() -> {
-                    val created = runCatching { file.mkdirs() }.getOrDefault(false)
-                    if (created) StorageValidationResult.Valid else StorageValidationResult.CannotCreate
-                }
-
-                !file.isDirectory -> StorageValidationResult.NotADirectory
-
-                !file.canWrite() -> StorageValidationResult.NotWritable
-
-                else -> StorageValidationResult.Valid
+        return@withContext when {
+            !file.exists() -> {
+                val created = runCatching { file.mkdirs() }.getOrDefault(false)
+                if (created) StorageValidationResult.Valid else StorageValidationResult.CannotCreate
             }
+
+            !file.isDirectory -> StorageValidationResult.NotADirectory
+
+            !file.canWrite() -> StorageValidationResult.NotWritable
+
+            else -> StorageValidationResult.Valid
         }
+    }
 
     private fun toGameId(raw: String): GameId? = runCatching { GameId.valueOf(raw) }.getOrNull()
 

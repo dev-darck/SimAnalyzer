@@ -79,24 +79,15 @@ data class SessionLapDomainItem(
 
 data class SessionDetailSessionTypeOption(val id: String, val label: String)
 
-data class SessionDetailDataset(
+data class SessionDetailPage(
     val header: SessionDetailDomainHeader = SessionDetailDomainHeader(),
     val stats: SessionDetailDomainStats = SessionDetailDomainStats(),
-    val laps: List<SessionLapDomainItem> = emptyList(),
     val sessionTypeOptions: List<SessionDetailSessionTypeOption> = emptyList(),
     val defaultSessionTypeId: String = SESSION_DETAIL_TYPE_ALL,
-)
-
-data class SessionDetailProjection(
-    val laps: List<SessionLapDomainItem>,
-    val visibleLaps: List<SessionLapDomainItem>,
+    val laps: List<SessionLapDomainItem> = emptyList(),
     val page: Int,
     val pageCount: Int,
     val error: String?,
 )
 
-data class SessionDetailResult(
-    val dataset: SessionDetailDataset,
-    val query: SessionDetailQuery,
-    val projection: SessionDetailProjection,
-)
+data class SessionDetailPageResult(val query: SessionDetailQuery, val page: SessionDetailPage)

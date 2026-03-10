@@ -29,6 +29,10 @@ moduleImpl {
         projects.feature.screens.hudSettings.jvmImpl
         projects.feature.huds.inputs.jvmImpl
         projects.feature.screens.chooser.jvmImpl
+        projects.feature.screens.trackMap.jvmImpl
+        projects.feature.screens.trackMapBuilder.jvmImpl
+        projects.feature.screens.trackMapLibrary.jvmImpl
+        projects.feature.screens.trackMapEditor.jvmImpl
         projects.feature.screens.session.impl.jvmImpl
         projects.feature.screens.sessionDetails.jvmImpl
 

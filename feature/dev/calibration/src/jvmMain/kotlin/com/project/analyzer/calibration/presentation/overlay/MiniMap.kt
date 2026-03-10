@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
+import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
 fun MiniMap(
@@ -25,13 +26,16 @@ fun MiniMap(
     pendingCapturePosition: Vec2? = null,
     modifier: Modifier = Modifier,
 ) {
+    val material = SimAnalyzerTheme.material
+    val chrome = SimAnalyzerTheme.chrome
+    val extended = SimAnalyzerTheme.extended
     val pxPerMeter = 4.5f
     val radiusMeters = 40f
 
     Box(
         modifier
             .size(420.dp)
-            .background(Color(0x55000000))
+            .background(chrome.fillOverlay)
             .padding(10.dp),
     ) {
         Canvas(Modifier.fillMaxSize()) {
@@ -82,26 +86,26 @@ fun MiniMap(
             }
 
             drawCircle(
-                color = Color(0x22FFFFFF),
+                color = material.onSurface.copy(alpha = 0.14f),
                 radius = radiusMeters * pxPerMeter,
                 center = Offset(cx, cy),
                 style = Stroke(width = 1f),
             )
 
             val carS = Offset(cx, cy)
-            drawCircle(Color.Cyan, radius = 6f, center = carS)
-            drawArrow(carS, carDir, lenMeters = 12f, color = Color.Cyan)
+            drawCircle(extended.cyan, radius = 6f, center = carS)
+            drawArrow(carS, carDir, lenMeters = 12f, color = extended.cyan)
 
             pendingCapturePosition?.let { pending ->
                 val pendingS = worldToScreen(pending)
-                drawCircle(Color(0xFFFF6600), radius = 10f, center = pendingS, style = Stroke(width = 2f))
-                drawCircle(Color(0x88FF6600), radius = 6f, center = pendingS)
+                drawCircle(extended.orange, radius = 10f, center = pendingS, style = Stroke(width = 2f))
+                drawCircle(extended.orange.copy(alpha = 0.55f), radius = 6f, center = pendingS)
             }
 
             lastCapturePoint?.let { capture ->
                 val captureS = worldToScreen(capture.position)
-                drawCircle(Color.Magenta, radius = 8f, center = captureS)
-                drawArrow(captureS, capture.forward, lenMeters = 10f, color = Color.Magenta)
+                drawCircle(extended.pink, radius = 8f, center = captureS)
+                drawArrow(captureS, capture.forward, lenMeters = 10f, color = extended.pink)
             }
 
             val filtered = gates
@@ -129,9 +133,9 @@ fun MiniMap(
                 val ascr = worldToScreen(a)
                 val bscr = worldToScreen(b)
 
-                drawLine(Color.Yellow, ascr, bscr, strokeWidth = 4f)
-                drawCircle(Color.Yellow, radius = 4f, center = cs)
-                drawArrow(cs, f, lenMeters = 8f, color = Color.Green)
+                drawLine(extended.yellow, ascr, bscr, strokeWidth = 4f)
+                drawCircle(extended.yellow, radius = 4f, center = cs)
+                drawArrow(cs, f, lenMeters = 8f, color = extended.lightGreen)
             }
         }
     }

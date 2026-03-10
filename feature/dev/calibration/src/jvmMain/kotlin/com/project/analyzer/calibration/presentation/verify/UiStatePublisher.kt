@@ -4,15 +4,16 @@ import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
+import com.project.analyzer.math.headingDegreesOrZero
 import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationCarPose
 import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugGateDetector
 import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugLapAnalyzer
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
+import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlin.math.abs
-import kotlin.math.atan2
 
 internal class UiStatePublisher(
     private val state: MutableStateFlow<CalibrationVerifyState>,
@@ -26,11 +27,7 @@ internal class UiStatePublisher(
     fun publish(nowNs: Long, carPose: AcCalibrationCarPose, calibration: TrackCalibration, speedKmh: Float) {
         val snapshot = lapAnalyzer.getSnapshot(nowNs)
 
-        val headingDeg = if (carPose.headingDir.len() > 0.01f) {
-            Math.toDegrees(atan2(carPose.headingDir.x.toDouble(), carPose.headingDir.y.toDouble())).toFloat()
-        } else {
-            0f
-        }
+        val headingDeg = carPose.headingDir.headingDegreesOrZero()
 
         val gateInfoList = buildGateInfo(carPose, calibration)
 
@@ -87,41 +84,36 @@ internal class UiStatePublisher(
         prev: AcCalibrationCarPose,
         cur: AcCalibrationCarPose,
         cal: TrackCalibration,
-        currentSectorIndex: Int,
-        isLapRunning: Boolean,
-        nowMs: Long,
+        context: CrossingContext,
     ) {
         fun mark(key: String, gate: Gate, allowed: Boolean) {
             if (!allowed) return
             if (gateCrossedTimes[key] != null) return
 
             if (gateDetector.hasCrossing(prev, cur, gate)) {
-                gateCrossedTimes[key] = nowMs
+                gateCrossedTimes[key] = context.nowMs
             }
         }
 
         mark("SF", cal.startFinish, allowed = true)
 
         cal.sectors.find { it.index == 1 }?.finish?.let {
-            mark("S1_F", it, allowed = isLapRunning && currentSectorIndex >= 1)
+            mark("S1_F", it, allowed = context.isLapRunning && context.currentSectorIndex >= 1)
         }
         cal.sectors.find { it.index == 2 }?.finish?.let {
-            mark("S2_F", it, allowed = isLapRunning && currentSectorIndex >= 2)
+            mark("S2_F", it, allowed = context.isLapRunning && context.currentSectorIndex >= 2)
         }
     }
 
     private fun buildGateInfo(carPose: AcCalibrationCarPose, cal: TrackCalibration): List<GateDebugInfo> =
         cal.gates.map { (key, gate) ->
-            val (inside, margin, dParallel) = calculateOutOfWidth(carPose.position, gate)
+            val metrics = calculateGateMetrics(carPose.position, gate)
             buildGateDebugInfo(
                 name = keyToName(key),
                 gate = gate,
-                carPosition = carPose.position,
                 carForward = carPose.headingDir,
                 gateKey = key,
-                isInside = inside,
-                margin = margin,
-                dParallel = dParallel,
+                metrics = metrics,
             )
         }
 
@@ -135,50 +127,52 @@ internal class UiStatePublisher(
     private fun buildGateDebugInfo(
         name: String,
         gate: Gate,
-        carPosition: Vec2,
         carForward: Vec2,
         gateKey: String,
-        isInside: Boolean,
-        margin: Float,
-        dParallel: Float,
+        metrics: GateDebugMetrics,
     ): GateDebugInfo {
-        val gateCenter = gate.centerV2()
-        val gateForward = gate.forwardV2().normalized()
-        val dist = (carPosition - gateCenter).len()
-
-        val signedDistFromPlane = (carPosition - gateCenter).dot(gateForward)
-
         val moveDir = if (carForward.len() > 0.01f) carForward.normalized() else carForward
-        val directionDot = moveDir.dot(gateForward)
+        val directionDot = moveDir.dot(metrics.gateForward)
 
         val crossed = gateCrossedTimes[gateKey]
 
         return GateDebugInfo(
             name = name,
-            distanceMeters = dist,
+            distanceMeters = metrics.distanceMeters,
             isCrossed = crossed != null,
             lastCrossedTimeMs = crossed,
-            gateForward = gateForward,
+            gateForward = metrics.gateForward,
             directionDot = directionDot,
-            signedDistanceFromPlane = signedDistFromPlane,
-            isInside = isInside,
-            margin = margin,
-            dParallel = dParallel,
+            signedDistanceFromPlane = metrics.signedDistanceFromPlane,
+            isInside = metrics.isInside,
+            margin = metrics.margin,
+            dParallel = metrics.dParallel,
             gate = gate,
         )
     }
 
-    private fun calculateOutOfWidth(carPosition: Vec2, gate: Gate): Triple<Boolean, Float, Float> {
-        val delta = carPosition - gate.centerV2()
-        val f = gate.forwardV2().safeNormalized()
-        val n = gate.normalV2().safeNormalized(f.perpLeft())
+    private fun calculateGateMetrics(carPosition: Vec2, gate: Gate): GateDebugMetrics {
+        val axes = gate.toDebugAxes()
+        val delta = carPosition - axes.center
+        val dParallel = delta.dot(axes.forward)
+        val dLateral = delta.dot(axes.normal)
+        return GateDebugMetrics(
+            distanceMeters = delta.len(),
+            signedDistanceFromPlane = delta.dot(axes.forward),
+            gateForward = axes.forward,
+            isInside = abs(dLateral) <= gate.halfWidthMeters,
+            margin = gate.halfWidthMeters - abs(dLateral),
+            dParallel = dParallel,
+        )
+    }
 
-        val dParallel = delta.dot(f)
-        val dLateral = delta.dot(n)
-        val inside = abs(dLateral) <= gate.halfWidthMeters
-        val margin = gate.halfWidthMeters - abs(dLateral)
-
-        return Triple(inside, margin, dParallel)
+    private fun Gate.toDebugAxes(): GateDebugAxes {
+        val forward = forwardV2().safeNormalized()
+        return GateDebugAxes(
+            center = centerV2(),
+            forward = forward,
+            normal = normalV2().safeNormalized(forward.perpLeft()),
+        )
     }
 
     private val TrackCalibration.gates: Map<String, Gate>
@@ -187,4 +181,34 @@ internal class UiStatePublisher(
             sectors.find { it.index == 1 }?.finish?.let { "S1_F" to it },
             sectors.find { it.index == 2 }?.finish?.let { "S2_F" to it },
         ).toMap()
+
+    internal data class CrossingContext(val currentSectorIndex: Int, val isLapRunning: Boolean, val nowMs: Long)
+
+    private data class GateDebugAxes(val center: Vec2, val forward: Vec2, val normal: Vec2)
+
+    private data class GateDebugMetrics(
+        val distanceMeters: Float,
+        val signedDistanceFromPlane: Float,
+        val gateForward: Vec2,
+        val isInside: Boolean,
+        val margin: Float,
+        val dParallel: Float,
+    )
+}
+
+@Inject
+internal class UiStatePublisherFactory(
+    private val overlayDebugBus: OverlayDebugBus,
+    private val gateDetector: AcCalibrationDebugGateDetector,
+) {
+
+    fun create(
+        state: MutableStateFlow<CalibrationVerifyState>,
+        lapAnalyzer: AcCalibrationDebugLapAnalyzer,
+    ): UiStatePublisher = UiStatePublisher(
+        state = state,
+        overlayDebugBus = overlayDebugBus,
+        lapAnalyzer = lapAnalyzer,
+        gateDetector = gateDetector,
+    )
 }

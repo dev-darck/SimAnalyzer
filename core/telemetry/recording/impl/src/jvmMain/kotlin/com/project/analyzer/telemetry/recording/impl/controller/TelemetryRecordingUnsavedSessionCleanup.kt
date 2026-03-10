@@ -37,13 +37,14 @@ internal class TelemetryRecordingUnsavedSessionCleanup(
                 }.getOrNull() ?: return@forEach
 
                 if (metadata.isSaved) return@forEach
+                if (metadata.endedAtMs != null) return@forEach
                 if (dir.deleteRecursively()) {
                     removed += 1
                 }
             }
 
             if (removed > 0) {
-                logger.debug { "[recording] removed $removed temp sessions ($reason)" }
+                logger.debug { "[recording] removed $removed incomplete temp sessions ($reason)" }
             }
         }
     }

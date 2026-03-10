@@ -1,9 +1,9 @@
 package com.project.analyzer.calibration.domain.usecase
 
 import com.project.analyzer.api.di.ScreenScope
-import com.project.analyzer.calibration.data.model.Pose2D
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
 import com.project.analyzer.math.Heading2D
+import com.project.analyzer.math.Pose2D
 import com.project.analyzer.math.Statistics2D
 import com.project.analyzer.math.Vec2
 import dev.zacsweers.metro.Inject
@@ -12,8 +12,8 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 
-@Inject
 @SingleIn(ScreenScope::class)
+@Inject
 internal class CaptureGateOnStandstillUseCaseImpl(
     private val provider: TelemetrySampleProvider,
     private val buildGate: BuildGateUseCase,
@@ -109,10 +109,12 @@ internal class CaptureGateOnStandstillUseCaseImpl(
                 0L
             }
 
-            delay(STABLE_INTERVAL_MS)
+            delay(STABLE_INTERVAL_MS.milliseconds)
         }
 
-        val netDelta = (lastPos!! - firstPos!!)
+        val startPos = firstPos ?: return null
+        val endPos = lastPos ?: return null
+        val netDelta = endPos - startPos
         val netLen = netDelta.len()
         val moveDirRaw = if (netLen >= MIN_NET_DISPLACEMENT_METERS) netDelta * (1f / netLen) else null
 
@@ -133,7 +135,7 @@ internal class CaptureGateOnStandstillUseCaseImpl(
             samples.add(pose.pos)
 
             captureTimeMs += CAPTURE_INTERVAL_MS
-            delay(CAPTURE_INTERVAL_MS)
+            delay(CAPTURE_INTERVAL_MS.milliseconds)
         }
 
         return samples

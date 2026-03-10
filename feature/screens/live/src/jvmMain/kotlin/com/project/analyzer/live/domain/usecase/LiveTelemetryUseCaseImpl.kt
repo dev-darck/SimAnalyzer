@@ -33,7 +33,7 @@ internal class LiveTelemetryUseCaseImpl(private val telemetry: TelemetryLifecycl
 
                     is TelemetryLifecycleEvent.SessionEnded,
                     is TelemetryLifecycleEvent.SimDisconnected,
-                        -> false
+                    -> false
 
                     else -> active
                 }

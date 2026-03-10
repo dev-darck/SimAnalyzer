@@ -1,0 +1,124 @@
+{
+    "trackId": "watkins_glen_short_inner_loop",
+    "trackName": "Watkins Glen Short Inner Loop",
+    "layoutId": "short_inner_loop",
+    "createdAtEpochMs": 1772928235687,
+    "source": "GAME",
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": 1105.8955,
+            "y": 556.87427
+        },
+        "forward": {
+            "x": 0.08653092,
+            "y": -0.99624914
+        },
+        "normal": {
+            "x": 0.99624926,
+            "y": 0.086530924
+        },
+        "halfWidthMeters": 12.811474
+    },
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": 1105.8955,
+                    "y": 556.87427
+                },
+                "forward": {
+                    "x": 0.08653092,
+                    "y": -0.99624914
+                },
+                "normal": {
+                    "x": 0.99624926,
+                    "y": 0.086530924
+                },
+                "halfWidthMeters": 12.811474
+            },
+            "finish": {
+                "center": {
+                    "x": 1769.2122,
+                    "y": 801.4859
+                },
+                "forward": {
+                    "x": 0.06749161,
+                    "y": 0.99771994
+                },
+                "normal": {
+                    "x": -0.9977198,
+                    "y": 0.067491606
+                },
+                "halfWidthMeters": 12.811474
+            }
+        },
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": 1769.2122,
+                    "y": 801.4859
+                },
+                "forward": {
+                    "x": 0.06749161,
+                    "y": 0.99771994
+                },
+                "normal": {
+                    "x": -0.9977198,
+                    "y": 0.067491606
+                },
+                "halfWidthMeters": 12.811474
+            },
+            "finish": {
+                "center": {
+                    "x": 1493.975,
+                    "y": 1375.0256
+                },
+                "forward": {
+                    "x": -0.19046845,
+                    "y": -0.9816933
+                },
+                "normal": {
+                    "x": 0.9816933,
+                    "y": -0.19046845
+                },
+                "halfWidthMeters": 12.811474
+            }
+        },
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": 1493.975,
+                    "y": 1375.0256
+                },
+                "forward": {
+                    "x": -0.19046845,
+                    "y": -0.9816933
+                },
+                "normal": {
+                    "x": 0.9816933,
+                    "y": -0.19046845
+                },
+                "halfWidthMeters": 12.811474
+            },
+            "finish": {
+                "center": {
+                    "x": 1105.8955,
+                    "y": 556.87427
+                },
+                "forward": {
+                    "x": 0.08653092,
+                    "y": -0.99624914
+                },
+                "normal": {
+                    "x": 0.99624926,
+                    "y": 0.086530924
+                },
+                "halfWidthMeters": 12.811474
+            }
+        }
+    ]
+}

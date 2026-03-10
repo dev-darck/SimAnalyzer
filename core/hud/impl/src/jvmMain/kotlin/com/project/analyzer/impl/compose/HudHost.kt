@@ -23,8 +23,8 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.hud.api.HudAnchor
 import com.project.analyzer.hud.api.HudPanel
-import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
 import com.project.analyzer.hud.api.HudStoredPosition
+import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -182,6 +182,7 @@ private fun resolveHudOffset(
 
     return when (storedPosition) {
         null -> defaultOffset
+
         is HudStoredPosition.Absolute -> IntOffset(
             x = storedPosition.offset.x.coerceIn(0, maxX),
             y = storedPosition.offset.y.coerceIn(0, maxY),
@@ -194,11 +195,7 @@ private fun resolveHudOffset(
     }
 }
 
-private fun normalizeHudOffset(
-    offset: IntOffset,
-    container: IntSize,
-    panel: IntSize,
-): HudStoredPosition.Normalized {
+private fun normalizeHudOffset(offset: IntOffset, container: IntSize, panel: IntSize): HudStoredPosition.Normalized {
     val maxX = (container.width - panel.width).coerceAtLeast(0)
     val maxY = (container.height - panel.height).coerceAtLeast(0)
 

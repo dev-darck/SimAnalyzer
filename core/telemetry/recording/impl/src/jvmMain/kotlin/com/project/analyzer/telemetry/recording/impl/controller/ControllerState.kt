@@ -135,15 +135,9 @@ internal data class ActiveRecordingSession(
     val baseCompletedLaps: Int? = null,
 )
 
-internal data class SessionLabels(
-    val carName: String? = null,
-    val trackName: String? = null,
-)
+internal data class SessionLabels(val carName: String? = null, val trackName: String? = null)
 
-internal data class SessionTemperatures(
-    val airTempC: Float? = null,
-    val trackTempC: Float? = null,
-)
+internal data class SessionTemperatures(val airTempC: Float? = null, val trackTempC: Float? = null)
 
 internal data class SessionBoundaryState(
     val blockedSessionId: Long? = null,
@@ -151,7 +145,4 @@ internal data class SessionBoundaryState(
     val lastEndedSessionType: SessionType? = null,
 )
 
-internal data class RecordingConfigState(
-    val recordingEnabled: Boolean = true,
-    val maxRecordedLaps: Int = 0,
-)
+internal data class RecordingConfigState(val recordingEnabled: Boolean = true, val maxRecordedLaps: Int = 0)

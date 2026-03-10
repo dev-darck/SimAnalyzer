@@ -44,7 +44,7 @@ public fun ScrollableScreenColumn(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background)
+            .background(SimAnalyzerTheme.material.background),
     ) {
         Column(
             modifier = Modifier

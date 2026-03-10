@@ -5,11 +5,9 @@ import com.analyzer.session.data.repository.RecordedSessionRepository
 import com.analyzer.session.data.repository.impl.RecordedSessionRepositoryImpl
 import com.analyzer.session.domain.usecase.SessionListDataUseCase
 import com.analyzer.session.domain.usecase.SessionListDataUseCaseImpl
-import com.analyzer.session.domain.usecase.SessionListProjectionUseCase
-import com.analyzer.session.domain.usecase.SessionListProjectionUseCaseImpl
+import com.analyzer.session.domain.usecase.SessionTrackMapUseCase
+import com.analyzer.session.domain.usecase.SessionTrackMapUseCaseImpl
 import com.analyzer.session.presentation.SessionListViewModel
-import com.analyzer.session.presentation.usecase.SessionTrackMapUseCase
-import com.analyzer.session.presentation.usecase.SessionTrackMapUseCaseImpl
 import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -19,7 +17,9 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(ScreenScope::class)
 @BindingContainer
+@Suppress("unused")
 interface SessionBindings {
+
     companion object {
 
         @Provides
@@ -28,11 +28,6 @@ interface SessionBindings {
 
         @Provides
         private fun provideSessionListDataUseCase(impl: SessionListDataUseCaseImpl): SessionListDataUseCase = impl
-
-        @Provides
-        private fun provideSessionListProjectionUseCase(
-            impl: SessionListProjectionUseCaseImpl,
-        ): SessionListProjectionUseCase = impl
 
         @Provides
         private fun provideSessionTrackMapUseCase(impl: SessionTrackMapUseCaseImpl): SessionTrackMapUseCase = impl

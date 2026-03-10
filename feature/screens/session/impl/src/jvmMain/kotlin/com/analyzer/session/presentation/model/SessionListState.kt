@@ -2,22 +2,6 @@ package com.analyzer.session.presentation.model
 
 import com.analyzer.session.domain.model.SESSION_LIST_SORT_NEWEST
 
-enum class SessionFilterKind {
-    Track,
-    Game,
-    Car,
-    Date,
-    Sort,
-}
-
-data class SessionFilterOptionUi(val id: String, val label: String? = null)
-
-data class SessionFilterUiModel(
-    val kind: SessionFilterKind,
-    val selectedId: String,
-    val options: List<SessionFilterOptionUi> = emptyList(),
-)
-
 data class SessionListState(
     val isLoading: Boolean = true,
     val error: String? = null,
@@ -50,6 +34,5 @@ data class SessionListState(
     val searchQuery: String = "",
     val page: Int = 1,
     val pageCount: Int = 1,
-    val sessions: List<SessionRowUi> = emptyList(),
     val visibleSessions: List<SessionRowUi> = emptyList(),
 )

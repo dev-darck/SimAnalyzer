@@ -94,7 +94,7 @@ private fun CalibrationContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background)
+            .background(SimAnalyzerTheme.material.background),
     ) {
         Column(
             modifier = Modifier
@@ -104,107 +104,107 @@ private fun CalibrationContent(
                 .padding(end = 10.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-        CalibrationHeader(state)
+            CalibrationHeader(state)
 
-        CalibrationSectionCard(
-            title = stringResource(Res.string.calibration_track_identity_title),
-            subtitle = stringResource(Res.string.calibration_track_identity_subtitle),
-        ) {
-            TrackNameBlock(state) { dispatchEvent(CalibrationIntent.TrackNameChanged(it)) }
-        }
-
-        CalibrationSectionCard(
-            title = stringResource(Res.string.calibration_capture_settings_title),
-            subtitle = stringResource(Res.string.calibration_capture_settings_subtitle),
-        ) {
-            SettingsBlock(
-                state = state,
-                onRp = { dispatchEvent(CalibrationIntent.ReferencePointChanged(it)) },
-                onRadius = { dispatchEvent(CalibrationIntent.TriggerRadiusChanged(it)) },
-            )
-        }
-
-        CalibrationSectionCard(
-            title = stringResource(Res.string.calibration_gate_capture_title),
-            subtitle = stringResource(Res.string.calibration_gate_capture_subtitle),
-        ) {
-            GateRow(
-                title = stringResource(Res.string.calibration_start_finish),
-                gate = state.startFinish,
-                enabled = !state.isBusy,
-                onClick = { dispatchEvent(CalibrationIntent.CaptureStartFinish) },
-                showFlipAction = true,
-                onFlip = { dispatchEvent(CalibrationIntent.FlipStartFinishDirection) },
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            SectorsBlock(
-                state = state,
-                dispatch = dispatchEvent,
-            )
-        }
-
-        CalibrationSectionCard(
-            title = stringResource(Res.string.calibration_actions_title),
-            subtitle = stringResource(Res.string.calibration_actions_subtitle),
-        ) {
-            ActionsBlock(
-                state = state,
-                onSave = { dispatchEvent(CalibrationIntent.Save) },
-                onReset = { dispatchEvent(CalibrationIntent.Reset) },
-            )
-
-            if (state.canVerify) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(onClick = { onVerify(state.lastSavedTrackId!!) }) {
-                    Text(
-                        text = stringResource(Res.string.calibration_verify_last_saved),
-                        style = SimAnalyzerTheme.typography.labelMedium,
-                    )
-                }
-            }
-
-            state.message?.let { message ->
-                Spacer(modifier = Modifier.height(10.dp))
-                MessageBanner(message)
-            }
-        }
-
-        CalibrationSectionCard(
-            title = stringResource(Res.string.calibration_saved_calibrations_title),
-            subtitle = stringResource(Res.string.calibration_saved_calibrations_subtitle),
-        ) {
-            ChooseToVerify(
-                state = state,
-                dispatchEvent = dispatchEvent,
-                onVerify = onVerify,
-            )
-        }
-
-        state.debugTelemetry?.let { debugText ->
             CalibrationSectionCard(
-                title = stringResource(Res.string.calibration_live_telemetry_title),
-                subtitle = stringResource(Res.string.calibration_live_telemetry_subtitle),
+                title = stringResource(Res.string.calibration_track_identity_title),
+                subtitle = stringResource(Res.string.calibration_track_identity_subtitle),
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(SimAnalyzerTheme.shapes.medium)
-                        .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f))
-                        .border(
-                            width = 1.dp,
-                            color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f),
-                            shape = SimAnalyzerTheme.shapes.medium,
+                TrackNameBlock(state) { dispatchEvent(CalibrationIntent.TrackNameChanged(it)) }
+            }
+
+            CalibrationSectionCard(
+                title = stringResource(Res.string.calibration_capture_settings_title),
+                subtitle = stringResource(Res.string.calibration_capture_settings_subtitle),
+            ) {
+                SettingsBlock(
+                    state = state,
+                    onRp = { dispatchEvent(CalibrationIntent.ReferencePointChanged(it)) },
+                    onRadius = { dispatchEvent(CalibrationIntent.TriggerRadiusChanged(it)) },
+                )
+            }
+
+            CalibrationSectionCard(
+                title = stringResource(Res.string.calibration_gate_capture_title),
+                subtitle = stringResource(Res.string.calibration_gate_capture_subtitle),
+            ) {
+                GateRow(
+                    title = stringResource(Res.string.calibration_start_finish),
+                    gate = state.startFinish,
+                    enabled = !state.isBusy,
+                    onClick = { dispatchEvent(CalibrationIntent.CaptureStartFinish) },
+                    showFlipAction = true,
+                    onFlip = { dispatchEvent(CalibrationIntent.FlipStartFinishDirection) },
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                SectorsBlock(
+                    state = state,
+                    dispatch = dispatchEvent,
+                )
+            }
+
+            CalibrationSectionCard(
+                title = stringResource(Res.string.calibration_actions_title),
+                subtitle = stringResource(Res.string.calibration_actions_subtitle),
+            ) {
+                ActionsBlock(
+                    state = state,
+                    onSave = { dispatchEvent(CalibrationIntent.Save) },
+                    onReset = { dispatchEvent(CalibrationIntent.Reset) },
+                )
+
+                if (state.canVerify) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Button(onClick = { onVerify(state.lastSavedTrackId!!) }) {
+                        Text(
+                            text = stringResource(Res.string.calibration_verify_last_saved),
+                            style = SimAnalyzerTheme.typography.labelMedium,
                         )
-                        .padding(12.dp),
-                ) {
-                    Text(
-                        text = debugText,
-                        style = SimAnalyzerTheme.typography.bodySmall,
-                        color = SimAnalyzerTheme.material.onSurface,
-                    )
+                    }
+                }
+
+                state.message?.let { message ->
+                    Spacer(modifier = Modifier.height(10.dp))
+                    MessageBanner(message)
                 }
             }
-        }
+
+            CalibrationSectionCard(
+                title = stringResource(Res.string.calibration_saved_calibrations_title),
+                subtitle = stringResource(Res.string.calibration_saved_calibrations_subtitle),
+            ) {
+                ChooseToVerify(
+                    state = state,
+                    dispatchEvent = dispatchEvent,
+                    onVerify = onVerify,
+                )
+            }
+
+            state.debugTelemetry?.let { debugText ->
+                CalibrationSectionCard(
+                    title = stringResource(Res.string.calibration_live_telemetry_title),
+                    subtitle = stringResource(Res.string.calibration_live_telemetry_subtitle),
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(SimAnalyzerTheme.shapes.medium)
+                            .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f))
+                            .border(
+                                width = 1.dp,
+                                color = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.4f),
+                                shape = SimAnalyzerTheme.shapes.medium,
+                            )
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            text = debugText,
+                            style = SimAnalyzerTheme.typography.bodySmall,
+                            color = SimAnalyzerTheme.material.onSurface,
+                        )
+                    }
+                }
+            }
         }
         AppVerticalScrollbar(
             modifier = Modifier

@@ -1,14 +1,14 @@
 package com.project.analyzer.calibration.domain.usecase
 
 import com.project.analyzer.api.di.ScreenScope
-import com.project.analyzer.calibration.data.model.Pose2D
+import com.project.analyzer.math.Pose2D
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
-@Inject
 @SingleIn(ScreenScope::class)
+@Inject
 internal class BuildGateUseCaseImpl : BuildGateUseCase {
 
     /**

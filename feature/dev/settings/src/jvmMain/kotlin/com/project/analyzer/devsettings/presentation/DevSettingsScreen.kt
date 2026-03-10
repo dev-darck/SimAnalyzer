@@ -30,18 +30,14 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.project.analyzer.calibration.presentation.CalibrationHost
-import com.project.analyzer.calibration.presentation.trackmap.TrackMapBuilderScreen
-import com.project.analyzer.calibration.presentation.trackmap.TrackMapLibraryScreen
+import com.project.analyzer.calibration.presentation.setup.CalibrationScreen
+import com.project.analyzer.calibration.presentation.verify.CalibrationVerifyScreen
 import com.project.analyzer.feature.dev.settings.Res.Res
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_hud_disabled_subtitle
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_hud_disabled_title
@@ -84,6 +80,8 @@ import com.project.analyzer.feature.dev.settings.Res.dev_settings_telemetry_stat
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_telemetry_track
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_telemetry_updated
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_title
+import com.project.analyzer.navigation.api.LocalNavigator
+import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
@@ -91,23 +89,24 @@ import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
-private enum class DevSettingsSection {
-    Calibration,
-    TrackMap,
-    TrackMapLibrary,
-    Telemetry,
-    Hud,
+private enum class DevSettingsSection(val route: Route.SettingsRoot) {
+    Calibration(Route.SettingsRoot.DevCalibration),
+    TrackMap(Route.SettingsRoot.DevTrackMap),
+    TrackMapLibrary(Route.SettingsRoot.DevTrackMapLibrary),
+    Telemetry(Route.SettingsRoot.DevTelemetry),
+    Hud(Route.SettingsRoot.DevHud),
 }
 
 private data class DevNavItem(val section: DevSettingsSection, val title: String, val subtitle: String)
 
 @Composable
-internal fun DevSettingsScreen() {
+internal fun DevSettingsScreen(route: Route.SettingsRoot) {
     val viewModel: DevSettingsViewModel = metroViewModel()
+    val navigator = LocalNavigator.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     val dispatch: (DevSettingsIntent) -> Unit = viewModel::dispatch
-    var section by rememberSaveable { mutableStateOf(DevSettingsSection.Calibration) }
-    val navItems = rememberDevNavItems()
+    val section = route.toDevSettingsSection()
+    val navItems = devSettingsNavItems()
 
     BoxWithConstraints(
         modifier = Modifier
@@ -123,10 +122,10 @@ internal fun DevSettingsScreen() {
                 DevSettingsNavRow(
                     items = navItems,
                     selected = section,
-                    onSelect = { section = it },
+                    onSelect = { navigator.navigate(it.route) },
                 )
                 DevSettingsContent(
-                    section = section,
+                    route = route,
                     state = state,
                     onToggleHudPanel = { id, enabled ->
                         dispatch(DevSettingsIntent.ToggleHudPanel(id, enabled))
@@ -142,11 +141,11 @@ internal fun DevSettingsScreen() {
                 DevSettingsNavColumn(
                     items = navItems,
                     selected = section,
-                    onSelect = { section = it },
+                    onSelect = { navigator.navigate(it.route) },
                     modifier = Modifier.widthIn(min = 250.dp, max = 320.dp),
                 )
                 DevSettingsContent(
-                    section = section,
+                    route = route,
                     state = state,
                     onToggleHudPanel = { id, enabled ->
                         dispatch(DevSettingsIntent.ToggleHudPanel(id, enabled))
@@ -317,25 +316,41 @@ private fun DevSettingsNavChip(
 
 @Composable
 private fun DevSettingsContent(
-    section: DevSettingsSection,
+    route: Route.SettingsRoot,
     state: DevSettingsState,
     onToggleHudPanel: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val navigator = LocalNavigator.current
+
     Box(modifier = modifier) {
-        when (section) {
-            DevSettingsSection.Calibration -> CalibrationHost()
+        when (route) {
+            Route.SettingsRoot.DevSettings,
+            Route.SettingsRoot.DevCalibration,
+            Route.SettingsRoot.Settings,
+            Route.SettingsRoot.HudSettings,
+            -> CalibrationScreen(
+                onVerify = { trackId ->
+                    navigator.navigate(Route.SettingsRoot.DevCalibrationVerify(trackId))
+                },
+            )
 
-            DevSettingsSection.TrackMap -> TrackMapBuilderScreen()
+            is Route.SettingsRoot.DevCalibrationVerify -> CalibrationVerifyScreen(
+                trackId = route.trackId,
+                onBack = navigator::handleBack,
+            )
 
-            DevSettingsSection.TrackMapLibrary -> TrackMapLibraryScreen()
+            Route.SettingsRoot.DevTelemetry -> TelemetryInspectorScreen(state = state.telemetry)
 
-            DevSettingsSection.Telemetry -> TelemetryInspectorScreen(state = state.telemetry)
-
-            DevSettingsSection.Hud -> DevHudSettingsScreen(
+            Route.SettingsRoot.DevHud -> DevHudSettingsScreen(
                 state = state.hud,
                 onToggleHudPanel = onToggleHudPanel,
             )
+
+            Route.SettingsRoot.DevTrackMap,
+            Route.SettingsRoot.DevTrackMapLibrary,
+            is Route.SettingsRoot.TrackMapCalibrationEditor,
+            -> Unit
         }
     }
 }
@@ -350,7 +365,7 @@ private fun DevHudSettingsScreen(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
+            .fillMaxSize(),
     ) {
         Column(
             modifier = Modifier
@@ -564,7 +579,7 @@ private fun TelemetryInspectorHeader(state: TelemetryInspectorState) {
 }
 
 @Composable
-private fun rememberDevNavItems(): List<DevNavItem> = listOf(
+private fun devSettingsNavItems(): List<DevNavItem> = listOf(
     DevNavItem(
         section = DevSettingsSection.Calibration,
         title = stringResource(Res.string.dev_settings_nav_calibration_title),
@@ -636,7 +651,7 @@ private fun TelemetryEntryRow(entry: TelemetryEntry) {
 
 @Preview
 @Composable
-private fun DevSettingsScreenPreview() {
+internal fun DevSettingsScreenPreview() {
     val sample = DevSettingsState(
         telemetry = TelemetryInspectorState(
             status = TelemetryStatusUi.SimConnected,
@@ -684,3 +699,24 @@ private fun String.toDisplayLabel(): String = split('_', '-')
     .joinToString(" ") { part ->
         part.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
     }
+
+private fun Route.SettingsRoot.toDevSettingsSection(): DevSettingsSection = when (this) {
+    Route.SettingsRoot.DevSettings,
+    Route.SettingsRoot.DevCalibration,
+    is Route.SettingsRoot.DevCalibrationVerify,
+    -> DevSettingsSection.Calibration
+
+    Route.SettingsRoot.DevTrackMap -> DevSettingsSection.TrackMap
+
+    Route.SettingsRoot.DevTrackMapLibrary -> DevSettingsSection.TrackMapLibrary
+
+    is Route.SettingsRoot.TrackMapCalibrationEditor -> DevSettingsSection.TrackMapLibrary
+
+    Route.SettingsRoot.DevTelemetry -> DevSettingsSection.Telemetry
+
+    Route.SettingsRoot.DevHud -> DevSettingsSection.Hud
+
+    Route.SettingsRoot.Settings,
+    Route.SettingsRoot.HudSettings,
+    -> DevSettingsSection.Calibration
+}

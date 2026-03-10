@@ -1,0 +1,124 @@
+{
+    "trackId": "watkins_glen_gp",
+    "trackName": "Watkins Glen Gp",
+    "layoutId": "gp",
+    "createdAtEpochMs": 1772928480705,
+    "source": "GAME",
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": 1105.6328,
+            "y": 557.1782
+        },
+        "forward": {
+            "x": 0.09019351,
+            "y": -0.9959243
+        },
+        "normal": {
+            "x": 0.9959243,
+            "y": 0.09019351
+        },
+        "halfWidthMeters": 12.809155
+    },
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": 1105.6328,
+                    "y": 557.1782
+                },
+                "forward": {
+                    "x": 0.09019351,
+                    "y": -0.9959243
+                },
+                "normal": {
+                    "x": 0.9959243,
+                    "y": 0.09019351
+                },
+                "halfWidthMeters": 12.809155
+            },
+            "finish": {
+                "center": {
+                    "x": 1769.569,
+                    "y": 793.10706
+                },
+                "forward": {
+                    "x": 0.15635984,
+                    "y": 0.9877002
+                },
+                "normal": {
+                    "x": -0.9877002,
+                    "y": 0.15635984
+                },
+                "halfWidthMeters": 12.809155
+            }
+        },
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": 1769.569,
+                    "y": 793.10706
+                },
+                "forward": {
+                    "x": 0.15635984,
+                    "y": 0.9877002
+                },
+                "normal": {
+                    "x": -0.9877002,
+                    "y": 0.15635984
+                },
+                "halfWidthMeters": 12.809155
+            },
+            "finish": {
+                "center": {
+                    "x": 1298.0035,
+                    "y": 1815.1625
+                },
+                "forward": {
+                    "x": 0.025350973,
+                    "y": 0.9996787
+                },
+                "normal": {
+                    "x": 0.9996787,
+                    "y": -0.025350973
+                },
+                "halfWidthMeters": 12.809155
+            }
+        },
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": 1298.0035,
+                    "y": 1815.1625
+                },
+                "forward": {
+                    "x": 0.025350973,
+                    "y": 0.9996787
+                },
+                "normal": {
+                    "x": 0.9996787,
+                    "y": -0.025350973
+                },
+                "halfWidthMeters": 12.809155
+            },
+            "finish": {
+                "center": {
+                    "x": 1105.6328,
+                    "y": 557.1782
+                },
+                "forward": {
+                    "x": 0.09019351,
+                    "y": -0.9959243
+                },
+                "normal": {
+                    "x": 0.9959243,
+                    "y": 0.09019351
+                },
+                "halfWidthMeters": 12.809155
+            }
+        }
+    ]
+}

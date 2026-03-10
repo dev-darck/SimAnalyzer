@@ -1,11 +1,10 @@
 package com.analyzer.session.details.domain.mapper
 
-import com.analyzer.session.data.model.LapSummary
-import com.analyzer.session.data.model.RecordedSessionDetail
+import com.analyzer.session.data.model.RecordedSessionDetailPage
 import com.analyzer.session.details.domain.model.SESSION_DETAIL_TYPE_ALL
-import com.analyzer.session.details.domain.model.SessionDetailDataset
 import com.analyzer.session.details.domain.model.SessionDetailDomainHeader
 import com.analyzer.session.details.domain.model.SessionDetailDomainStats
+import com.analyzer.session.details.domain.model.SessionDetailPage
 import com.analyzer.session.details.domain.model.SessionDetailSessionTypeOption
 import com.analyzer.session.details.domain.model.SessionLapDomainItem
 import com.analyzer.session.details.domain.model.SessionLapDomainStatus
@@ -35,52 +34,40 @@ class SessionDetailDomainMapper(
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
     private val zoneId = ZoneId.systemDefault()
 
-    suspend fun map(details: RecordedSessionDetail, thumbnail: SavedCarThumbnailMatch? = null): SessionDetailDataset =
+    suspend fun map(details: RecordedSessionDetailPage, thumbnail: SavedCarThumbnailMatch? = null): SessionDetailPage =
         withContext(default) {
             val sessionTypeLabel = details.summary.sessionType.toSessionTypeLabel()
-            val bestLapMs = details.laps
-                .filter { it.complete && !it.invalid && !it.inPit }
-                .mapNotNull { it.totalTimeMs }
-                .minOrNull()
-            val averageLapMs = details.laps
-                .filter { it.complete && !it.invalid && !it.inPit }
-                .mapNotNull { it.totalTimeMs }
-                .average()
-                .takeIf { it.isFinite() }
-                ?.toInt()
-            val lapRows = buildLapRows(details.laps, bestLapMs)
-            val sessionTypeOptionsById = linkedMapOf<String, String>()
-            lapRows.forEach { lap ->
-                sessionTypeOptionsById.putIfAbsent(lap.sessionTypeId, lap.sessionTypeLabel)
+            val lapRows = buildLapRows(details.laps, details.stats.bestLapTimeMs)
+            val sessionTypeOptions = details.sessionTypeOptions.map { option ->
+                SessionDetailSessionTypeOption(
+                    id = option.id,
+                    label = option.label ?: option.id.toSessionTypeLabel(),
+                )
             }
-            val sessionTypeOptions = sessionTypeOptionsById
-                .map { (id, label) -> SessionDetailSessionTypeOption(id = id, label = label) }
-            val summaryTypeId = details.summary.sessionType.toSessionTypeId()
-            val defaultSessionTypeId = when {
-                sessionTypeOptionsById.containsKey(summaryTypeId) -> summaryTypeId
-                lapRows.isNotEmpty() -> lapRows.last().sessionTypeId
-                else -> SESSION_DETAIL_TYPE_ALL
-            }
+            val defaultSessionTypeId = details.defaultSessionTypeId ?: SESSION_DETAIL_TYPE_ALL
 
-            SessionDetailDataset(
+            SessionDetailPage(
                 header = buildHeader(
                     details = details,
                     sessionTypeLabel = sessionTypeLabel,
                     thumbnail = thumbnail,
                 ),
                 stats = SessionDetailDomainStats(
-                    bestLapLabel = bestLapMs?.fromMsToLapTime() ?: "0:00.000",
-                    averageLapLabel = averageLapMs?.fromMsToLapTime() ?: "0:00.000",
-                    incidentsCount = details.laps.count { it.invalid },
+                    bestLapLabel = details.stats.bestLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
+                    averageLapLabel = details.stats.averageLapTimeMs?.fromMsToLapTime() ?: "0:00.000",
+                    incidentsCount = details.stats.incidentsCount,
                 ),
                 laps = lapRows,
                 sessionTypeOptions = sessionTypeOptions,
                 defaultSessionTypeId = defaultSessionTypeId,
+                page = details.page,
+                pageCount = details.pageCount,
+                error = details.error,
             )
         }
 
     private fun buildHeader(
-        details: RecordedSessionDetail,
+        details: RecordedSessionDetailPage,
         sessionTypeLabel: String,
         thumbnail: SavedCarThumbnailMatch?,
     ): SessionDetailDomainHeader {
@@ -104,7 +91,10 @@ class SessionDetailDomainMapper(
         )
     }
 
-    private fun buildLapRows(laps: List<LapSummary>, bestLapMs: Int?): List<SessionLapDomainItem> {
+    private fun buildLapRows(
+        laps: List<com.analyzer.session.data.model.LapSummary>,
+        bestLapMs: Int?,
+    ): List<SessionLapDomainItem> {
         val firstLap = laps.minByOrNull { it.lap }?.lap
         return laps.map { lap ->
             val totalTimeMs = lap.totalTimeMs
@@ -143,7 +133,11 @@ class SessionDetailDomainMapper(
         }
     }
 
-    private fun resolveStatus(lap: LapSummary, isBest: Boolean, isFirst: Boolean): SessionLapDomainStatus {
+    private fun resolveStatus(
+        lap: com.analyzer.session.data.model.LapSummary,
+        isBest: Boolean,
+        isFirst: Boolean,
+    ): SessionLapDomainStatus {
         if (!lap.complete) {
             return if (isFirst) SessionLapDomainStatus.OutLap else SessionLapDomainStatus.Invalid
         }
@@ -180,6 +174,9 @@ class SessionDetailDomainMapper(
             .joinToString(" ") { part -> part.replaceFirstChar { c -> c.titlecase(Locale.US) } }
     }
 
-    private fun String?.toSessionTypeId(): String =
-        this?.trim()?.takeIf { it.isNotBlank() }?.lowercase(Locale.US) ?: "unknown"
+    private fun String?.toSessionTypeId(): String = this
+        ?.trim()
+        ?.takeIf(String::isNotBlank)
+        ?.lowercase(Locale.US)
+        ?: "unknown"
 }

@@ -6,10 +6,8 @@ import com.project.analyzer.chooser.domain.model.FsEntry
 
 sealed interface FileChooserIntent {
 
-    data class Init(
-        val startPath: String? = null,
-        val selectionMode: SelectionMode = SelectionMode.FILE
-    ) : FileChooserIntent
+    data class Init(val startPath: String? = null, val selectionMode: SelectionMode = SelectionMode.FILE) :
+        FileChooserIntent
 
     data class SelectEntry(val entry: FsEntry) : FileChooserIntent
     data class SelectPath(val path: String) : FileChooserIntent

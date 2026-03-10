@@ -15,7 +15,7 @@ import dev.zacsweers.metro.SingleIn
 class SessionDetailsEntry : RouteEntryBuilder {
 
     override fun NavigationEntryBuilder.build() {
-        entry(Route.SessionRoot.SessionDetails(0L)) { route ->
+        entry(Route.SessionRoot.SessionDetails::class) { route ->
             SessionDetailsScreen(sessionId = route.sessionId)
         }
     }

@@ -1,5 +1,7 @@
 package com.analyzer.session.data.repository.impl
 
+import com.analyzer.session.data.repository.RecordedSessionDetailRequest
+import com.analyzer.session.data.repository.RecordedSessionListRequest
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionConfig
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
 import kotlinx.coroutines.flow.Flow
@@ -61,7 +63,7 @@ class RecordedSessionRepositoryImplTest {
 
         val repository = repository(root)
 
-        val sessions = repository.loadSessions()
+        val sessions = repository.loadSessionListPage(RecordedSessionListRequest()).items
 
         assertEquals(1, sessions.size)
         assertEquals("QUALIFYING", sessions.single().sessionType)
@@ -105,9 +107,9 @@ class RecordedSessionRepositoryImplTest {
         )
 
         val repository = repository(root)
-        val sessionId = repository.loadSessions().single().sessionId
+        val sessionId = repository.loadSessionListPage(RecordedSessionListRequest()).items.single().sessionId
 
-        val details = repository.loadSessionDetails(sessionId)
+        val details = repository.loadSessionDetailPage(sessionId, RecordedSessionDetailRequest())
 
         requireNotNull(details)
         assertEquals(1, details.laps.count { it.sessionType == "QUALIFYING" && it.lap == 1 })

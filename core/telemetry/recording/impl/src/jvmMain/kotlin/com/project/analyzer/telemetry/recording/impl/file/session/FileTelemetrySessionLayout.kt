@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.recording.impl.file.session
 
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionDescriptor
 import com.project.analyzer.utils.logger.logger
+import com.project.analyzer.utils.toSlugId
 import java.io.File
 
 internal class FileTelemetrySessionLayout {
@@ -46,15 +47,9 @@ internal class FileTelemetrySessionLayout {
     }
 
     fun buildSessionDirName(descriptor: TelemetrySessionDescriptor): String {
-        val safeGame = normalizeGameId(descriptor.gameId)
-            .replace(UNSAFE_DIR_CHARS_REGEX, "_")
-            .trim('_')
+        val safeGame = normalizeGameId(descriptor.gameId).toSlugId()
         return "${safeGame}_${descriptor.startedAtMs}_${descriptor.sessionId}"
     }
 
     fun normalizeGameId(gameId: String): String = gameId.trim().lowercase().ifBlank { "unknown" }
-
-    private companion object {
-        val UNSAFE_DIR_CHARS_REGEX = Regex("[^a-z0-9]+")
-    }
 }

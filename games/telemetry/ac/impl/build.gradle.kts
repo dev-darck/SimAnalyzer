@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 moduleImpl {
     metro()
     proto()
@@ -22,5 +24,15 @@ moduleImpl {
         lib.metro.runtime.jvmImpl
         lib.jna.base.jvmImpl
         lib.jna.platform.jvmImpl
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    if (name == "jvmTest") {
+        // These tests allocate JNA-backed snapshots and are unstable when the whole suite
+        // reuses one JVM for every class.
+        forkEvery = 1
+        maxHeapSize = "2048m"
+        maxParallelForks = 1
     }
 }

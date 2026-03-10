@@ -1,5 +1,6 @@
 package com.project.analyzer.impl.di
 
+import com.project.analyzer.ac.telemetry.impl.calibration.TrackCalibrationBootstrapper
 import com.project.analyzer.api.di.AppLifecycle
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.leak.api.LeakCanaryController
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Inject
 @SingleIn(AppScope::class)
 internal class AppLifecycleImpl(
+    private val trackCalibrationBootstrapper: TrackCalibrationBootstrapper,
     private val telemetryLifecycle: TelemetryLifecycle,
     private val telemetryRecordingController: TelemetryRecordingController,
     private val leakCanaryController: LeakCanaryController,
@@ -39,6 +41,7 @@ internal class AppLifecycleImpl(
         LeakCanaryRuntime.install(leakCanaryController)
         startupJob?.cancelAndJoin()
         startupJob = scope.launch {
+            runCatching { trackCalibrationBootstrapper.ensureBundledCalibrationsInstalled() }
             coroutineScope {
                 launch {
                     runCatching { telemetryLifecycle.launchTelemetry() }

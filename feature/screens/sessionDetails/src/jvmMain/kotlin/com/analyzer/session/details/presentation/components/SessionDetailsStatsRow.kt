@@ -4,7 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
-import com.project.analyzer.feature.screens.sessionDetails.Res.*
+import com.project.analyzer.feature.screens.sessionDetails.Res.Res
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_stats_average_lap
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_stats_best_lap
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_stats_incidents
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.StatItem
 import com.project.analyzer.ui.components.StatsRow

@@ -6,7 +6,7 @@ public interface TrackMapRepository {
 
     public suspend fun save(trackMap: TrackMap)
 
-    public suspend fun load(gameId: String, trackId: String): TrackMap?
+    public suspend fun load(gameId: String, trackId: String, layoutId: String? = null): TrackMap?
 
     public suspend fun loadAll(gameId: String? = null): List<TrackMap>
 }

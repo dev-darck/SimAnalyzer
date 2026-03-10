@@ -3,8 +3,6 @@ package com.analyzer.session.details.di
 import androidx.lifecycle.ViewModel
 import com.analyzer.session.details.domain.usecase.SessionDetailDataUseCase
 import com.analyzer.session.details.domain.usecase.SessionDetailDataUseCaseImpl
-import com.analyzer.session.details.domain.usecase.SessionDetailProjectionUseCase
-import com.analyzer.session.details.domain.usecase.SessionDetailProjectionUseCaseImpl
 import com.analyzer.session.details.presentation.SessionDetailViewModel
 import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.BindingContainer
@@ -19,14 +17,7 @@ interface SessionDetailsBindings {
     companion object {
 
         @Provides
-        private fun provideSessionDetailDataUseCase(
-            impl: SessionDetailDataUseCaseImpl,
-        ): SessionDetailDataUseCase = impl
-
-        @Provides
-        private fun provideSessionDetailProjectionUseCase(
-            impl: SessionDetailProjectionUseCaseImpl,
-        ): SessionDetailProjectionUseCase = impl
+        private fun provideSessionDetailDataUseCase(impl: SessionDetailDataUseCaseImpl): SessionDetailDataUseCase = impl
 
         @Provides
         @IntoMap

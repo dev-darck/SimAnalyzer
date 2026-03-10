@@ -476,6 +476,7 @@ private fun storageSizeText(info: StorageSizeInfo): String {
 
     return when (info) {
         StorageSizeInfo.Unknown -> unknown
+
         StorageSizeInfo.Zero -> zero
 
         is StorageSizeInfo.Value -> {

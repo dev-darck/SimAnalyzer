@@ -1,6 +1,7 @@
 package com.project.analyzer.math
 
 import com.project.analyzer.math.MathEps.EPS_6_DOUBLE
+import kotlin.math.atan2
 
 public fun Double?.finiteOrNull(): Double? = this?.takeIf { it.isFinite() }
 
@@ -37,4 +38,10 @@ public fun safeDiv(num: Double, den: Double, eps: Double = EPS_6_DOUBLE): Double
 public fun ewma(prev: Double?, sample: Double, alpha: Double): Double {
     val a = alpha.coerceIn(0.0, 1.0)
     return if (prev == null) sample else prev + (sample - prev) * a
+}
+
+public fun Vec2.headingDegreesOrZero(minLen: Float = 0.01f): Float = if (len() > minLen) {
+    Math.toDegrees(atan2(x.toDouble(), y.toDouble())).toFloat()
+} else {
+    0f
 }

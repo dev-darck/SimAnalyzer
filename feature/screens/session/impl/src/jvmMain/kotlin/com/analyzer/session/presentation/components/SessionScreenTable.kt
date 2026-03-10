@@ -428,17 +428,16 @@ private data class SessionTableWeights(
     val actions: Float,
 )
 
-private fun sessionTableWeights(): SessionTableWeights =
-    SessionTableWeights(
-        date = .1f,
-        game = .1f,
-        track = .1f,
-        map = .1f,
-        car = .1f,
-        laps = .1f,
-        best = .1f,
-        actions = .1f,
-    )
+private fun sessionTableWeights(): SessionTableWeights = SessionTableWeights(
+    date = .1f,
+    game = .1f,
+    track = .1f,
+    map = .1f,
+    car = .1f,
+    laps = .1f,
+    best = .1f,
+    actions = .1f,
+)
 
 @Preview
 @Composable
@@ -457,7 +456,6 @@ private fun SessionScreenEmptyPreview() {
                 ),
                 page = 1,
                 pageCount = 9,
-                sessions = emptyList(),
                 visibleSessions = emptyList(),
             ),
             onOpenDetails = {},
@@ -516,7 +514,6 @@ private fun SessionScreenTablePreview() {
                 ),
                 page = 1,
                 pageCount = 9,
-                sessions = sessions,
                 visibleSessions = sessions,
             ),
             onOpenDetails = {},

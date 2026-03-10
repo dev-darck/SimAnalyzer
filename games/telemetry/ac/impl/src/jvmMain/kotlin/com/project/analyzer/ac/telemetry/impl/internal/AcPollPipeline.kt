@@ -21,11 +21,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.Executors
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
-internal class AcPollPipeline @Inject constructor(
-    private val pollLoop: AcPollLoop,
-    snapshotAdapters: Set<AcPollSnapshotAdapter>,
-) {
+@Inject
+internal class AcPollPipeline(private val pollLoop: AcPollLoop, snapshotAdapters: Set<AcPollSnapshotAdapter>) {
 
     private val logger = logger()
     private val physicsSize = SPageFilePhysics().size()
@@ -60,6 +60,8 @@ internal class AcPollPipeline @Inject constructor(
     private var pollJob: Job? = null
     private var channel: Channel<PollResult>? = null
     private var currentState: GameConnectionState = GameConnectionState.DISCONNECTED
+    private var useDedicatedPollThread: Boolean = true
+    private var useSnapshotPool: Boolean = true
     private val snapshotPipeline = AcPollSnapshotPipeline(adapters = snapshotAdapters.toList())
     private val snapshotAdapterContext = SnapshotAdapterContext()
 
@@ -75,7 +77,7 @@ internal class AcPollPipeline @Inject constructor(
         val created = Channel<PollResult>(capacity = SNAPSHOT_POOL_SIZE + STATE_BUFFER_CAPACITY)
         channel = created
 
-        pollJob = scope.launch(ensurePollDispatcher()) {
+        pollJob = scope.launch(pollLaunchContext()) {
             pollLoop.start { result ->
                 handlePollResult(result, created)
             }
@@ -100,6 +102,7 @@ internal class AcPollPipeline @Inject constructor(
     }
 
     fun release(snapshot: AcRawSnapshot) {
+        if (!useSnapshotPool) return
         releaseToPool(snapshot)
     }
 
@@ -119,6 +122,13 @@ internal class AcPollPipeline @Inject constructor(
     }
 
     private fun handleFrame(source: AcRawSnapshot, channel: Channel<PollResult>) {
+        if (!useSnapshotPool) {
+            if (!channel.trySend(PollResult.Frame(source)).isSuccess) {
+                logDrop("queue_full")
+            }
+            return
+        }
+
         val pooled = acquireFromPool()
         if (pooled == null) {
             logDrop("pool_empty")
@@ -166,7 +176,7 @@ internal class AcPollPipeline @Inject constructor(
         while (true) {
             val result = channel.tryReceive().getOrNull() ?: break
             if (result is PollResult.Frame) {
-                releaseToPool(result.snapshot)
+                release(result.snapshot)
             }
         }
     }
@@ -217,6 +227,7 @@ internal class AcPollPipeline @Inject constructor(
     private fun requireBoundSnapshot(): AcRawSnapshot = requireNotNull(boundSnapshot) { "Snapshot is not bound" }
 
     private inner class SnapshotAdapterContext : AcPollSnapshotAdapterContext {
+
         override lateinit var snapshot: AcRawSnapshot
         override var gameState: GameConnectionState = GameConnectionState.DISCONNECTED
         override var loopStartNanos: Long = 0L
@@ -237,6 +248,9 @@ internal class AcPollPipeline @Inject constructor(
         return created
     }
 
+    private fun pollLaunchContext(): CoroutineContext =
+        if (useDedicatedPollThread) ensurePollDispatcher() else EmptyCoroutineContext
+
     private fun closePollDispatcher() {
         pollDispatcher?.close()
         pollDispatcher = null
@@ -252,4 +266,16 @@ internal class AcPollPipeline @Inject constructor(
         pollLoop = pollLoop,
         snapshotAdapters = setOf(AcFallbackPollSnapshotAdapter(fallback)),
     )
+
+    internal constructor(
+        pollLoop: AcPollLoop,
+        fallback: AcEvoFallbackShmPatcher,
+        useDedicatedPollThread: Boolean,
+    ) : this(
+        pollLoop = pollLoop,
+        snapshotAdapters = setOf(AcFallbackPollSnapshotAdapter(fallback)),
+    ) {
+        this.useDedicatedPollThread = useDedicatedPollThread
+        this.useSnapshotPool = false
+    }
 }

@@ -13,6 +13,7 @@ moduleImpl {
         projects.core.math.jvmImpl
         projects.core.preference.api.jvmImpl
         projects.core.ui.jvmImpl
+        projects.core.utils.jvmImpl
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl

@@ -384,10 +384,14 @@ private fun rememberDropdownPopupWidth(presentation: DropdownFilterPresentation)
                 longestLabelWidthPx.toDp() +
                     DROPDOWN_POPUP_TEXT_WIDTH_BUFFER.dp +
                     (DROPDOWN_POPUP_CONTENT_PADDING * 2).dp +
-                    if (needsScrollbar) DROPDOWN_POPUP_SCROLLBAR_GUTTER.dp else 0.dp +
-                    (DROPDOWN_ITEM_HORIZONTAL_PADDING * 2).dp +
-                    DROPDOWN_ITEM_SPACING.dp +
-                    DROPDOWN_ITEM_TRAILING_ICON_SIZE.dp
+                    if (needsScrollbar) {
+                        DROPDOWN_POPUP_SCROLLBAR_GUTTER.dp
+                    } else {
+                        0.dp +
+                            (DROPDOWN_ITEM_HORIZONTAL_PADDING * 2).dp +
+                            DROPDOWN_ITEM_SPACING.dp +
+                            DROPDOWN_ITEM_TRAILING_ICON_SIZE.dp
+                    }
                 ).coerceAtLeast(DROPDOWN_POPUP_MIN_WIDTH.dp)
         }
     }

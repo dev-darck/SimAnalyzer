@@ -17,9 +17,28 @@ import com.analyzer.session.presentation.model.FILTER_ALL_ID
 import com.analyzer.session.presentation.model.SessionFilterKind
 import com.analyzer.session.presentation.model.SessionFilterOptionUi
 import com.analyzer.session.presentation.model.SessionFilterUiModel
-import com.project.analyzer.feature.screens.session.impl.Res.*
+import com.project.analyzer.feature.screens.session.impl.Res.Res
+import com.project.analyzer.feature.screens.session.impl.Res.session_filter_all
+import com.project.analyzer.feature.screens.session.impl.Res.session_filter_car
+import com.project.analyzer.feature.screens.session.impl.Res.session_filter_date
+import com.project.analyzer.feature.screens.session.impl.Res.session_filter_game
+import com.project.analyzer.feature.screens.session.impl.Res.session_filter_sort
+import com.project.analyzer.feature.screens.session.impl.Res.session_filter_track
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_best_asc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_best_desc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_car_asc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_car_desc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_game_asc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_game_desc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_laps_asc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_laps_desc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_newest
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_oldest
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_track_asc
+import com.project.analyzer.feature.screens.session.impl.Res.session_sort_track_desc
 import com.project.analyzer.ui.components.DropdownFilterUi
 import com.project.analyzer.ui.components.DropdownOptionUi
+import com.project.analyzer.ui.components.buildDropdownFilterUi
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -30,14 +49,9 @@ internal fun SessionFilterUiModel.asDropdownFilter(): DropdownFilterUi {
             label = sessionFilterOptionLabel(kind = kind, option = option),
         )
     }
-    val selectedLabel = dropdownOptions.firstOrNull { it.id == selectedId }?.label
-        ?: dropdownOptions.firstOrNull()?.label
-        ?: sessionFilterLabel(kind)
-
-    return DropdownFilterUi(
+    return buildDropdownFilterUi(
         label = sessionFilterLabel(kind),
         selectedId = selectedId,
-        selectedLabel = selectedLabel,
         options = dropdownOptions,
     )
 }

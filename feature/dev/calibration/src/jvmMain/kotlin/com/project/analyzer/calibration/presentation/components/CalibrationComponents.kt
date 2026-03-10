@@ -282,7 +282,7 @@ internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Un
 }
 
 @Composable
-internal fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (ReferencePoint) -> Unit) {
+fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (ReferencePoint) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }) {

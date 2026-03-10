@@ -8,7 +8,6 @@ moduleImpl {
         projects.core.di.api.jvmImpl
         projects.core.leak.api.jvmImpl
         projects.games.game.api.jvmImpl
-        projects.games.game.impl.jvmImpl
         projects.core.utils.jvmImpl
 
         lib.metro.runtime.jvmImpl

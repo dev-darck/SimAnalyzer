@@ -19,9 +19,8 @@ import kotlinx.coroutines.launch
 import java.nio.file.Path
 
 @Inject
-internal class FileChooserViewModel(
-    private val useCase: FileChooserUseCase,
-) : LeakAwareMviViewModel<FileChooserIntent, FileUiState>(FileUiState()) {
+internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
+    LeakAwareMviViewModel<FileChooserIntent, FileUiState>(FileUiState()) {
 
     init {
         loadSidebar()

@@ -7,7 +7,6 @@ moduleImpl {
         projects.core.di.api.jvmImpl
         projects.core.leak.api.jvmImpl
         projects.core.hud.api.jvmImpl
-        projects.core.hud.impl.jvmImpl
         projects.core.navigation.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.core.ui.jvmImpl
@@ -18,5 +17,6 @@ moduleImpl {
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
+        lib.navigation3.runtime.jvmImpl
     }
 }
