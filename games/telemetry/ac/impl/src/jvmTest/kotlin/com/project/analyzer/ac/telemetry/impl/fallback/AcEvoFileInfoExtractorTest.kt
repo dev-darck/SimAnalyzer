@@ -210,6 +210,114 @@ class AcEvoFileInfoExtractorTest {
     }
 
     @Test
+    fun `asset-backed watkins identity wins over ui slug alias`() {
+        val dir = Files.createTempDirectory("acevo-extractor-watkins-canonical").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-08 01:15:39.025] [dataUtils] [info] Loading scene Watkins Glen International",
+                "[2026-03-08 01:15:39.029] [physics] [info] Loading DynamicTrack preset: content\\tracks\\watkins_glen\\dynamic_track\\Short Inner Loop.dynamictrackpresetcompressed",
+                "[2026-03-08 01:15:39.208] [platformCore] [info] Container \"content\\tracks\\watkins_glen\\containers\\layout_short_inner_loop.scene\" activated correctly",
+                "[2026-03-08 01:15:48.729] [gameface] [info] TRACK NAME watkins_glen_international short_inner_loop",
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals("watkins_glen_short_inner_loop", info.trackId)
+        assertEquals("short_inner_loop", info.layoutId)
+    }
+
+    @Test
+    fun `later ui slug alias does not override canonical asset-backed track id`() {
+        val dir = Files.createTempDirectory("acevo-extractor-watkins-stable").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-08 01:15:39.029] [physics] [info] Loading DynamicTrack preset: content\\tracks\\watkins_glen\\dynamic_track\\Short Inner Loop.dynamictrackpresetcompressed",
+                "[2026-03-08 01:15:39.208] [platformCore] [info] Container \"content\\tracks\\watkins_glen\\containers\\layout_short_inner_loop.scene\" activated correctly",
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val first = ex.poll()
+        assertEquals("watkins_glen_short_inner_loop", first.trackId)
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-08 01:15:48.729] [gameface] [info] TRACK NAME watkins_glen_international short_inner_loop",
+            )
+        )
+
+        val second = ex.poll()
+
+        assertEquals("watkins_glen_short_inner_loop", second.trackId)
+        assertEquals("short_inner_loop", second.layoutId)
+        assertEquals(first.sessionEpoch, second.sessionEpoch)
+    }
+
+    @Test
+    fun `non layout containers do not override actual spa layout`() {
+        val dir = Files.createTempDirectory("acevo-extractor-spa-layout").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-08 02:09:03.134] [gameplay] [info] Game Started! GameModeType_PRACTICE | Circuit de Spa Francorchamps GP Time Attack Practice  5400 seconds @2014/8/15 10:45:0 | ks_bmw_m4_gt3",
+                "[2026-03-08 02:09:05.231] [physics] [info] Loading DynamicTrack preset: content\\tracks\\spa\\dynamic_track\\GP.dynamictrackpresetcompressed",
+                "[2026-03-08 02:09:05.548] [platformCore] [info] Container \"content\\tracks\\spa\\containers\\camera_sequence_practice.scene\" activated correctly",
+                "[2026-03-08 02:09:05.549] [platformCore] [info] Container \"content\\tracks\\spa\\containers\\layout_gp.scene\" activated correctly",
+                "[2026-03-08 02:09:06.000] [gameface] [info] TRACK NAME circuit_de_spa_francorchamps gp",
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals("spa_gp", info.trackId)
+        assertEquals("gp", info.layoutId)
+    }
+
+    @Test
+    fun `track aliases from log are canonicalized to imported asset ids`() {
+        val dir = Files.createTempDirectory("acevo-extractor-aliases").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-08 02:12:00.000] [gameface] [info] TRACK NAME red_bull_ring gp",
+                "[2026-03-08 02:12:00.100] [gameplay] [info] Game Started! GameModeType_PRACTICE | Red Bull Ring GP Time Attack Practice 5400 seconds @2014/8/15 10:45:0 | ks_bmw_m4_gt3",
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val info = ex.poll()
+
+        assertEquals("redbull_ring_gp", info.trackId)
+        assertEquals("gp", info.layoutId)
+    }
+
+    @Test
     fun `game started line sets session type from game mode marker`() {
         val dir = Files.createTempDirectory("acevo-extractor7").toFile()
         val log = File(dir, "log.txt")
@@ -228,6 +336,44 @@ class AcEvoFileInfoExtractorTest {
         val info = ex.poll()
 
         assertEquals(EvoSessionType.QUALIFYING, info.sessionType)
+    }
+
+    @Test
+    fun `split lines do not affect extracted identity or session epoch`() {
+        val dir = Files.createTempDirectory("acevo-extractor-splits").toFile()
+        val log = File(dir, "log.txt")
+
+        writeLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-07 00:35:26.956] [gameplay] [info] Game Started! GameModeType_PRACTICE | Paul Ricard Layout 3A Time Attack Practice 5400 seconds | ks_bmw_m4_gt3",
+                "[2026-03-07 00:35:38.190] [gameface] [info] TRACK NAME paul_ricard layout_3a",
+            )
+        )
+
+        val locator = mockk<AcEvoLogLocator>()
+        every { locator.locateLogFile() } returns log
+        val ex = AcEvoFileInfoExtractor(locator)
+
+        val before = ex.poll()
+
+        appendLines(
+            file = log,
+            lines = listOf(
+                "[2026-03-07 00:36:10.587] [gameplay] [info] Unexpected On Split",
+                "[2026-03-07 00:36:38.220] [gameplay] [info] Unexpected On Split",
+                "[2026-03-07 00:37:10.474] [gameplay] [info] split now 2 expected split 0 is_end 1",
+                "[2026-03-07 00:37:10.474] [gameplay] [info] On Split start 1 end 1 id 2 splittime 32253",
+                "[2026-03-07 00:37:10.475] [gameplay] [error] Couldn't create lap from opensplits (carId foo): Splitcollection 1/3, split times: 2,",
+            )
+        )
+
+        val after = ex.poll()
+
+        assertEquals(before.sessionEpoch, after.sessionEpoch)
+        assertEquals("paul_ricard_3a", after.trackId)
+        assertEquals(EvoSessionType.PRACTICE, after.sessionType)
+        assertEquals("ks_bmw_m4_gt3", after.carModel)
     }
 
     @Test

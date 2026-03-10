@@ -5,9 +5,7 @@ import java.awt.Desktop
 import java.net.URI
 import java.net.URLEncoder
 
-internal class ReportOnGitHubUseCaseImpl(
-    private val copyReportUseCase: CopyReportUseCase,
-) : ReportOnGitHubUseCase {
+internal class ReportOnGitHubUseCaseImpl(private val copyReportUseCase: CopyReportUseCase) : ReportOnGitHubUseCase {
 
     override fun reportOnGitHub(report: CrashReport, githubRepo: String): Result<Unit> {
         copyReportUseCase.copyReport(report.fullText)

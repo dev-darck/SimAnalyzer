@@ -1,22 +1,16 @@
 package com.analyzer.session.details.presentation
 
-import com.analyzer.session.details.domain.interactor.SessionDetailManager
-import com.analyzer.session.details.domain.model.SessionDetailDataset
 import com.analyzer.session.details.domain.model.SessionDetailQuery
-import com.analyzer.session.details.domain.model.SessionDetailResult
-import com.analyzer.session.details.presentation.mapper.SessionDetailUiStateMapper
+import com.analyzer.session.details.domain.usecase.SessionDetailDataUseCase
 import com.analyzer.session.details.presentation.model.SessionDetailIntent
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 
 @Inject
-internal class SessionDetailViewModel(
-    private val manager: SessionDetailManager,
-    private val uiStateMapper: SessionDetailUiStateMapper,
-) : LeakAwareMviViewModel<SessionDetailIntent, SessionDetailState>(SessionDetailState()) {
+internal class SessionDetailViewModel(private val dataUseCase: SessionDetailDataUseCase) :
+    LeakAwareMviViewModel<SessionDetailIntent, SessionDetailState>(SessionDetailState()) {
 
-    private var dataset = SessionDetailDataset()
     private var query = SessionDetailQuery()
     private var currentSessionId: Long? = null
     private var loadedSessionId: Long? = null
@@ -25,7 +19,7 @@ internal class SessionDetailViewModel(
         when (intent) {
             is SessionDetailIntent.BindSession -> bindSession(intent.sessionId)
 
-            SessionDetailIntent.Refresh -> reload()
+            SessionDetailIntent.Refresh -> reload(forceRefresh = true)
 
             is SessionDetailIntent.ChangeSort -> updateQuery { copy(sortId = intent.optionId, page = 1) }
 
@@ -45,28 +39,31 @@ internal class SessionDetailViewModel(
     private suspend fun bindSession(sessionId: Long) {
         if (currentSessionId == sessionId && loadedSessionId == sessionId) return
         currentSessionId = sessionId
-        load(sessionId)
+        load(sessionId = sessionId)
     }
 
-    private suspend fun reload() {
+    private suspend fun reload(forceRefresh: Boolean = false) {
         val sessionId = currentSessionId ?: return
-        load(sessionId)
+        load(
+            sessionId = sessionId,
+            forceRefresh = forceRefresh,
+        )
     }
 
-    private suspend fun load(sessionId: Long) {
+    private suspend fun load(sessionId: Long, forceRefresh: Boolean = false) {
         if (loadedSessionId == null) {
             updateState { copy(isLoading = true, error = null) }
         } else {
             updateState { copy(error = null) }
         }
-        val result = manager.load(sessionId = sessionId, query = query.copy(page = 1))
+        val result = dataUseCase.loadPage(
+            sessionId = sessionId,
+            query = query.copy(page = 1),
+            forceRefresh = forceRefresh,
+        )
         if (result == null) {
-            dataset = SessionDetailDataset()
             loadedSessionId = sessionId
-            applyResult(
-                result = manager.project(dataset = dataset, query = query.copy(page = 1)),
-                errorOverride = "Session data not found.",
-            )
+            setState(SessionDetailState(isLoading = false, error = "Session data not found."))
             return
         }
         loadedSessionId = sessionId
@@ -74,18 +71,16 @@ internal class SessionDetailViewModel(
     }
 
     private suspend fun updateQuery(mutator: SessionDetailQuery.() -> SessionDetailQuery) {
-        applyResult(manager.project(dataset, mutator(query)))
+        val sessionId = currentSessionId ?: return
+        val result = dataUseCase.loadPage(sessionId, mutator(query)) ?: return
+        applyResult(result)
     }
 
-    private fun applyResult(result: SessionDetailResult, errorOverride: String? = null) {
-        dataset = result.dataset
+    private fun applyResult(result: com.analyzer.session.details.domain.model.SessionDetailPageResult) {
         query = result.query
         setState(
-            uiStateMapper.map(
-                dataset = result.dataset,
-                projection = result.projection,
+            result.page.toSessionDetailState(
                 query = result.query,
-                errorOverride = errorOverride,
             ),
         )
     }

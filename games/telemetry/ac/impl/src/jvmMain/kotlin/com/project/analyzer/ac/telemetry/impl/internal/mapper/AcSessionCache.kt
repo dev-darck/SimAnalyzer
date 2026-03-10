@@ -126,7 +126,7 @@ class AcSessionCache {
                 trackId = lastTrackId,
                 layoutId = rawLayout,
             ),
-            layoutId = rawLayout.takeIf { it.isNotBlank() },
+            layoutId = TrackIdNormalizer.normalizeLayoutId(rawLayout),
             sectorCount = sectorCount,
             lengthMeters = trackLength,
         )

@@ -9,6 +9,7 @@ public data class TelemetrySessionUpdate(
     val carId: Int? = null,
     val trackId: String? = null,
     val trackName: String? = null,
+    val layoutId: String? = null,
     val airTempC: Float? = null,
     val trackTempC: Float? = null,
     val dataSource: String? = null,

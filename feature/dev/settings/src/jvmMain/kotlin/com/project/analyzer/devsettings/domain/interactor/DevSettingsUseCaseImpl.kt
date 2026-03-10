@@ -6,7 +6,7 @@ import com.project.analyzer.devsettings.presentation.TelemetryEntry
 import com.project.analyzer.devsettings.presentation.TelemetryInspectorMapper
 import com.project.analyzer.devsettings.presentation.TelemetryStatusUi
 import com.project.analyzer.hud.api.HudPanel
-import com.project.analyzer.impl.compose.HudPreferencesRepository
+import com.project.analyzer.hud.api.HudPreferencesStore
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import dev.zacsweers.metro.Inject
@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @Inject
 class DevSettingsUseCaseImpl(
     private val telemetryLifecycle: TelemetryLifecycle,
-    private val hudRepository: HudPreferencesRepository,
+    private val hudPreferencesStore: HudPreferencesStore,
     private val panels: Provider<Set<HudPanel>>,
 ) : DevSettingsUseCase {
 
@@ -55,7 +55,7 @@ class DevSettingsUseCaseImpl(
         val devIds = devPanels.map { it.id }.toSet()
         if (devIds.isEmpty() || id !in devIds) {
             val next = if (enabled) lastVisibleIds + id else lastVisibleIds - id
-            hudRepository.saveVisiblePanels(next)
+            hudPreferencesStore.saveVisiblePanels(next)
             return
         }
 
@@ -65,16 +65,16 @@ class DevSettingsUseCaseImpl(
 
         if (activeDevIds.isEmpty() && enabled) {
             val backup = currentVisible - devIds
-            hudRepository.saveVisiblePanelsBackup(backup)
+            hudPreferencesStore.saveVisiblePanelsBackup(backup)
         }
 
         if (nextDevIds.isEmpty()) {
-            val backup = hudRepository.getVisiblePanelsBackup()
+            val backup = hudPreferencesStore.getVisiblePanelsBackup()
             val restored = if (backup.isNotEmpty()) backup else currentVisible - devIds
-            hudRepository.saveVisiblePanels(restored)
-            hudRepository.clearVisiblePanelsBackup()
+            hudPreferencesStore.saveVisiblePanels(restored)
+            hudPreferencesStore.clearVisiblePanelsBackup()
         } else {
-            hudRepository.saveVisiblePanels(nextDevIds)
+            hudPreferencesStore.saveVisiblePanels(nextDevIds)
         }
     }
 
@@ -89,13 +89,13 @@ class DevSettingsUseCaseImpl(
 
     private fun observeHudVisibility(scope: CoroutineScope) {
         scope.launch {
-            hudRepository.observeVisiblePanels().collect { visibleIds ->
+            hudPreferencesStore.observeVisiblePanels().collect { visibleIds ->
                 lastVisibleIds = visibleIds
                 updateDevHudPanels()
             }
         }
         scope.launch {
-            hudRepository.observeHudEnabled().collect { enabled ->
+            hudPreferencesStore.observeHudEnabled().collect { enabled ->
                 _state.update { it.copy(hud = it.hud.copy(hudEnabled = enabled)) }
             }
         }

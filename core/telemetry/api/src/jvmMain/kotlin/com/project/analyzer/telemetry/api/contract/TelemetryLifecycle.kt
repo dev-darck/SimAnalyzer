@@ -63,6 +63,7 @@ public data class SessionInfo(
     val carModel: String,
     val trackId: String,
     val carId: Int? = null,
+    val layoutId: String? = null,
 )
 
 public enum class SessionField {
@@ -70,6 +71,7 @@ public enum class SessionField {
     CAR_MODEL,
     CAR_ID,
     TRACK_ID,
+    TRACK_LAYOUT_ID,
 }
 
 public enum class SessionPauseReason {

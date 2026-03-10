@@ -26,7 +26,7 @@ class AcMapper(
         cache.addSessionChangeListener { lapAnalyzer.resetSession() }
     }
 
-    fun map(snapshot: AcRawSnapshot): TelemetryFrame {
+    suspend fun map(snapshot: AcRawSnapshot): TelemetryFrame {
         val physics = snapshot.physics
         val graphics = snapshot.graphics
         val statics = snapshot.statics

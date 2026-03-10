@@ -62,15 +62,15 @@ class TelemetryLifecycleRouter(
     private val logger = logger()
     private val routerDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(
         parallelism = 2,
-        name = "TelemetryRouter"
+        name = "TelemetryRouter",
     )
     private val detectorDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(
         parallelism = 1,
-        name = "GameDetectorTelemetry"
+        name = "GameDetectorTelemetry",
     )
     private val forwardDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(
         parallelism = 2,
-        name = "TelemetryRouterForward"
+        name = "TelemetryRouterForward",
     )
 
     private val scope = CoroutineScope(
@@ -234,11 +234,7 @@ class TelemetryLifecycleRouter(
         return Triple(lifecycle, forwarder, sessionId)
     }
 
-    private suspend fun executeCleanup(
-        lifecycle: TelemetryLifecycle?,
-        forwarder: Job?,
-        sessionId: Long?,
-    ) {
+    private suspend fun executeCleanup(lifecycle: TelemetryLifecycle?, forwarder: Job?, sessionId: Long?) {
         if (lifecycle == null && forwarder == null && sessionId == null) return
 
         logger.debug { "executeCleanup: finishing lifecycle, sessionId=$sessionId" }

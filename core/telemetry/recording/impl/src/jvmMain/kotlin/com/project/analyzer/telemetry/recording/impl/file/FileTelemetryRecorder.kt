@@ -16,6 +16,7 @@ import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -40,19 +41,13 @@ internal class FileTelemetryRecorder(
 ) : TelemetryRecorder {
 
     private val logger = logger()
-    private val recorderScopeDispatcher: CoroutineDispatcher =
-        ioDispatcher.limitedParallelism(2, "FileTelemetryRecorder")
-    private val writerDispatcher: CoroutineDispatcher =
-        ioDispatcher.limitedParallelism(1, "FileTelemetryWriter")
-    private val compressionDispatcher: CoroutineDispatcher =
-        ioDispatcher.limitedParallelism(1, "FileTelemetryCompression")
-    private val scope = CoroutineScope(SupervisorJob() + recorderScopeDispatcher)
+    private val scope = CoroutineScope(SupervisorJob() + ioDispatcher + CoroutineName("FileTelemetryRecorder"))
     private val commandQueue = Channel<RecordCommand>(capacity = DEFAULT_QUEUE_CAPACITY)
     private val compressionQueue = Channel<SessionCompressionTask>(capacity = Channel.UNLIMITED)
     private val isClosed = AtomicBoolean(false)
 
-    private val writerJob = scope.launch(writerDispatcher) { processCommands() }
-    private val compressionJob = scope.launch(compressionDispatcher) { processCompressionQueue() }
+    private val writerJob = scope.launch(CoroutineName("FileTelemetryWriter")) { processCommands() }
+    private val compressionJob = scope.launch(CoroutineName("FileTelemetryCompression")) { processCompressionQueue() }
 
     override suspend fun startSession(descriptor: TelemetrySessionDescriptor) {
         val config = settings.currentConfig()

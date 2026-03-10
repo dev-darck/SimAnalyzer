@@ -1,22 +1,23 @@
 package com.project.analyzer.calibration.presentation.verify
 
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.calibration.data.model.CalibrationSample
-import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
+import com.project.analyzer.calibration.domain.model.CalibrationSample
 import com.project.analyzer.calibration.domain.usecase.CaptureGateOnStandstillUseCase
 import com.project.analyzer.calibration.domain.usecase.GateCaptureException
 import com.project.analyzer.calibration.domain.usecase.LoadTrackCalibrationUseCase
 import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCase
 import com.project.analyzer.calibration.domain.usecase.flipDirection
-import com.project.analyzer.calibration.presentation.components.fmt
+import com.project.analyzer.calibration.presentation.formatDebugString
+import com.project.analyzer.calibration.presentation.toDebugSnapshot
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
 import com.project.analyzer.leak.api.LeakAwareViewModel
+import com.project.analyzer.math.Pose2D
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationCarPose
-import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugGateDetector
 import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugLapAnalyzer
+import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
@@ -25,8 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.atan2
 
 @Inject
 internal class CalibrationVerifyViewModel(
@@ -35,21 +36,19 @@ internal class CalibrationVerifyViewModel(
     private val captureGate: CaptureGateOnStandstillUseCase,
     private val sampleProvider: TelemetrySampleProvider,
     private val lapAnalyzer: AcCalibrationDebugLapAnalyzer,
-    gateCrossingDetector: AcCalibrationDebugGateDetector,
-    overlayDebugBus: OverlayDebugBus,
+    statePublisherFactory: UiStatePublisherFactory,
 ) : LeakAwareViewModel() {
 
     private val _state = MutableStateFlow(CalibrationVerifyState())
     val state: StateFlow<CalibrationVerifyState> = _state.asStateFlow()
 
-    private val statePublisher = UiStatePublisher(
+    private val statePublisher = statePublisherFactory.create(
         state = _state,
-        overlayDebugBus = overlayDebugBus,
         lapAnalyzer = lapAnalyzer,
-        gateDetector = gateCrossingDetector,
     )
 
-    private var job: Job? = null
+    private var loadJob: Job? = null
+    private var sampleJob: Job? = null
     private var calibration: TrackCalibration? = null
 
     private var lastPosForVelocity: Vec2? = null
@@ -66,94 +65,121 @@ internal class CalibrationVerifyViewModel(
     }
 
     fun start(trackId: String) {
-        job?.cancel()
+        resetVerificationRuntime()
+
+        loadJob = viewModelScope.launch {
+            _state.update { it.copy(trackId = trackId, message = "Loading $trackId…") }
+
+            val loadedCalibration = loadUseCase.load(trackId)
+            if (!isActive || _state.value.trackId != trackId) return@launch
+            if (loadedCalibration == null) {
+                showMissingCalibration(trackId)
+                return@launch
+            }
+
+            activateCalibration(trackId, loadedCalibration)
+        }
+    }
+
+    private fun resetVerificationRuntime() {
+        loadJob?.cancel()
+        sampleJob?.cancel()
         lapAnalyzer.resetSession()
         statePublisher.clearGateCrossings()
         prevPoseForUiCrossing = null
         lastPosForVelocity = null
         lastTsForVelocityNs = 0L
+        calibration = null
+    }
 
-        viewModelScope.launch {
-            _state.update { it.copy(trackId = trackId, message = "Loading $trackId…") }
-
-            val cal = loadUseCase.load(trackId)
-            if (cal == null) {
-                _state.update {
-                    it.copy(
-                        calibration = null,
-                        isRunning = false,
-                        message = "No calibration found for $trackId",
-                    )
-                }
-                return@launch
-            }
-
-            calibration = cal
-            sampleProvider.setReferencePoint(cal.referencePoint)
-            lapAnalyzer.loadCalibration(trackId, cal)
-
-            _state.update {
-                it.copy(
-                    trackId = trackId,
-                    calibration = cal,
-                    isRunning = true,
-                    message = "Loaded. Drive and cross SF/sectors to verify.",
-                )
-            }
-
-            job = viewModelScope.launch {
-                sampleProvider.sample.collectLatest { sample ->
-                    val pose = sample.pose ?: return@collectLatest
-                    val calNow = calibration ?: return@collectLatest
-
-                    val nowNs = sample.timestampNs.takeIf { it > 0L } ?: System.nanoTime()
-                    val nowMs = System.currentTimeMillis()
-
-                    val headingDir = pose.forward.normalized()
-
-                    val velocityDir = computeVelocityDir(sample, pose.pos)
-                        ?: headingDir
-
-                    val isMovingForward = velocityDir.dot(headingDir) >= 0f
-
-                    val carPose = AcCalibrationCarPose(
-                        position = pose.pos,
-                        velocityDir = velocityDir,
-                        headingDir = headingDir,
-                        speedKmh = sample.speedKmh,
-                        isMovingForward = isMovingForward,
-                    )
-
-                    lapAnalyzer.processPose(nowNs, carPose, calNow)
-
-                    val prev = prevPoseForUiCrossing
-                    if (prev != null) {
-                        val snapshot = lapAnalyzer.getSnapshot(nowNs)
-                        statePublisher.markCrossingsUsingDetector(
-                            prev,
-                            carPose,
-                            calNow,
-                            snapshot.currentSectorIndex,
-                            snapshot.isLapRunning,
-                            nowMs,
-                        )
-                    }
-                    prevPoseForUiCrossing = carPose
-
-                    statePublisher.publish(
-                        nowNs = nowNs,
-                        carPose = carPose,
-                        calibration = calNow,
-                        speedKmh = sample.speedKmh,
-                    )
-                }
-            }
+    private fun showMissingCalibration(trackId: String) {
+        _state.update {
+            it.copy(
+                calibration = null,
+                isRunning = false,
+                message = "No calibration found for $trackId",
+            )
         }
     }
 
+    private fun activateCalibration(trackId: String, loadedCalibration: TrackCalibration) {
+        calibration = loadedCalibration
+        sampleProvider.setReferencePoint(loadedCalibration.referencePoint)
+        lapAnalyzer.loadCalibration(trackId, loadedCalibration)
+
+        _state.update {
+            it.copy(
+                trackId = trackId,
+                calibration = loadedCalibration,
+                isRunning = true,
+                message = "Loaded. Drive and cross SF/sectors to verify.",
+            )
+        }
+
+        sampleJob = viewModelScope.launch {
+            sampleProvider.sample.collectLatest(::processVerificationSample)
+        }
+    }
+
+    private fun processVerificationSample(sample: CalibrationSample) {
+        val pose = sample.pose ?: return
+        val activeCalibration = calibration ?: return
+
+        val nowNs = sample.timestampNs.takeIf { it > 0L } ?: System.nanoTime()
+        val nowMs = System.currentTimeMillis()
+        val carPose = buildCarPose(sample = sample, pose = pose)
+
+        lapAnalyzer.processPose(nowNs, carPose, activeCalibration)
+        markUiCrossingIfNeeded(nowNs, nowMs, carPose, activeCalibration)
+        statePublisher.publish(
+            nowNs = nowNs,
+            carPose = carPose,
+            calibration = activeCalibration,
+            speedKmh = sample.speedKmh,
+        )
+    }
+
+    private fun buildCarPose(sample: CalibrationSample, pose: Pose2D): AcCalibrationCarPose {
+        val headingDirection = pose.forward.normalized()
+        val velocityDirection = computeVelocityDir(sample, pose.pos) ?: headingDirection
+        return AcCalibrationCarPose(
+            position = pose.pos,
+            velocityDir = velocityDirection,
+            headingDir = headingDirection,
+            speedKmh = sample.speedKmh,
+            isMovingForward = velocityDirection.dot(headingDirection) >= 0f,
+        )
+    }
+
+    private fun markUiCrossingIfNeeded(
+        nowNs: Long,
+        nowMs: Long,
+        carPose: AcCalibrationCarPose,
+        calibration: TrackCalibration,
+    ) {
+        val previousPose = prevPoseForUiCrossing ?: run {
+            prevPoseForUiCrossing = carPose
+            return
+        }
+        val snapshot = lapAnalyzer.getSnapshot(nowNs)
+        statePublisher.markCrossingsUsingDetector(
+            previousPose,
+            carPose,
+            calibration,
+            UiStatePublisher.CrossingContext(
+                currentSectorIndex = snapshot.currentSectorIndex,
+                isLapRunning = snapshot.isLapRunning,
+                nowMs = nowMs,
+            ),
+        )
+        prevPoseForUiCrossing = carPose
+    }
+
     fun stop() {
-        job?.cancel()
-        job = null
+        loadJob?.cancel()
+        sampleJob?.cancel()
+        loadJob = null
+        sampleJob = null
         prevPoseForUiCrossing = null
         _state.update { it.copy(isRunning = false, message = "Stopped") }
     }
@@ -199,55 +225,10 @@ internal class CalibrationVerifyViewModel(
     }
 
     fun flipGateDirection(gate: EditingGate) {
-        val cal = calibration ?: return
+        val currentCalibration = calibration ?: return
         viewModelScope.launch {
-            val updatedCalibration = when (gate) {
-                EditingGate.START_FINISH -> {
-                    val flipped = cal.startFinish.flipDirection()
-                    cal.copy(
-                        startFinish = flipped,
-                        sectors = cal.sectors.map { sector ->
-                            when (sector.index) {
-                                1 -> sector.copy(start = flipped)
-                                3 -> sector.copy(finish = flipped)
-                                else -> sector
-                            }
-                        },
-                    )
-                }
-
-                EditingGate.SECTOR_1_FINISH -> {
-                    val original = cal.sectors.find { it.index == 1 }?.finish ?: return@launch
-                    val flipped = original.flipDirection()
-                    cal.copy(
-                        sectors = cal.sectors.map { sector ->
-                            when (sector.index) {
-                                1 -> sector.copy(finish = flipped)
-                                2 -> sector.copy(start = flipped)
-                                else -> sector
-                            }
-                        },
-                    )
-                }
-
-                EditingGate.SECTOR_2_FINISH -> {
-                    val original = cal.sectors.find { it.index == 2 }?.finish ?: return@launch
-                    val flipped = original.flipDirection()
-                    cal.copy(
-                        sectors = cal.sectors.map { sector ->
-                            when (sector.index) {
-                                2 -> sector.copy(finish = flipped)
-                                3 -> sector.copy(start = flipped)
-                                else -> sector
-                            }
-                        },
-                    )
-                }
-            }
-
-            saveUseCase.save(updatedCalibration)
-            calibration = updatedCalibration
-            lapAnalyzer.loadCalibration(updatedCalibration.trackId, updatedCalibration)
+            val updatedCalibration = currentCalibration.flipGateDirection(gate) ?: return@launch
+            saveAndReloadCalibration(updatedCalibration)
 
             _state.update {
                 it.copy(
@@ -260,52 +241,18 @@ internal class CalibrationVerifyViewModel(
 
     fun captureCurrentGate() {
         val editingGate = _state.value.editingGate ?: return
-        val cal = calibration ?: return
+        val currentCalibration = calibration ?: return
 
         viewModelScope.launch {
             _state.update { it.copy(isCapturing = true, message = "⏳ Stop on the line and wait (~2 sec)...") }
 
             try {
                 val result = captureGate.captureWithDetails(halfWidthMeters = state.value.halfWidthMeters)
-                val newGate = result.gate
-
-                val updatedCalibration = when (editingGate) {
-                    EditingGate.START_FINISH -> cal.copy(
-                        startFinish = newGate,
-                        sectors = cal.sectors.map { sector ->
-                            when (sector.index) {
-                                1 -> sector.copy(start = newGate)
-                                3 -> sector.copy(finish = newGate)
-                                else -> sector
-                            }
-                        },
-                    )
-
-                    EditingGate.SECTOR_1_FINISH -> cal.copy(
-                        sectors = cal.sectors.map { sector ->
-                            when (sector.index) {
-                                1 -> sector.copy(finish = newGate)
-                                2 -> sector.copy(start = newGate)
-                                else -> sector
-                            }
-                        },
-                    )
-
-                    EditingGate.SECTOR_2_FINISH -> cal.copy(
-                        sectors = cal.sectors.map { sector ->
-                            when (sector.index) {
-                                2 -> sector.copy(finish = newGate)
-                                3 -> sector.copy(start = newGate)
-                                else -> sector
-                            }
-                        },
-                    )
-                }
-
-                saveUseCase.save(updatedCalibration)
-
-                calibration = updatedCalibration
-                lapAnalyzer.loadCalibration(updatedCalibration.trackId, updatedCalibration)
+                val updatedCalibration = currentCalibration.replaceGate(
+                    gate = editingGate,
+                    replacement = result.gate,
+                )
+                saveAndReloadCalibration(updatedCalibration)
 
                 val posInfo = "pos=(%.2f, %.2f)".format(result.capturedPosition.x, result.capturedPosition.y)
 
@@ -323,6 +270,12 @@ internal class CalibrationVerifyViewModel(
                 _state.update { it.copy(isCapturing = false, message = "❌ Error: ${e.message}") }
             }
         }
+    }
+
+    private suspend fun saveAndReloadCalibration(updatedCalibration: TrackCalibration) {
+        saveUseCase.save(updatedCalibration)
+        calibration = updatedCalibration
+        lapAnalyzer.loadCalibration(updatedCalibration.trackId, updatedCalibration)
     }
 
     private fun computeVelocityDir(sample: CalibrationSample, posePos: Vec2): Vec2? {
@@ -346,23 +299,55 @@ internal class CalibrationVerifyViewModel(
     }
 
     private fun buildDebugString(sample: CalibrationSample): String {
-        val p = sample.pose ?: return "Waiting for telemetry..."
-        val w = sample.wheels
+        val snapshot = sample.toDebugSnapshot() ?: return "Waiting for telemetry..."
+        return snapshot.formatDebugString(
+            speedKmh = sample.speedKmh,
+            directionLabel = "DIR (movement)",
+            direction = computeVelocityDir(sample, snapshot.pose.pos) ?: snapshot.pose.forward,
+        )
+    }
 
-        val headingFromForward = if (p.forward.len() > 0.01f) {
-            Math.toDegrees(atan2(p.forward.x.toDouble(), p.forward.y.toDouble())).toFloat()
-        } else {
-            0f
-        }
+    private fun TrackCalibration.flipGateDirection(gate: EditingGate): TrackCalibration? {
+        val currentGate = gateToUpdate(gate) ?: return null
+        return replaceGate(gate = gate, replacement = currentGate.flipDirection())
+    }
 
-        return """
-            POS: ${fmt(p.pos)}  |  Speed: ${"%.1f".format(sample.speedKmh)} km/h
-            
-            DIR (movement): ${fmt(computeVelocityDir(sample, p.pos) ?: p.forward)}  
-            Heading(from forward): ${"%.1f".format(headingFromForward)}°
-            
-            FL: ${fmt(w?.fl)}   FR: ${fmt(w?.fr)}
-            RL: ${fmt(w?.rl)}   RR: ${fmt(w?.rr)}
-            """.trimIndent()
+    private fun TrackCalibration.replaceGate(gate: EditingGate, replacement: Gate): TrackCalibration = when (gate) {
+        EditingGate.START_FINISH -> copy(
+            startFinish = replacement,
+            sectors = sectors.map { sector ->
+                when (sector.index) {
+                    1 -> sector.copy(start = replacement)
+                    3 -> sector.copy(finish = replacement)
+                    else -> sector
+                }
+            },
+        )
+
+        EditingGate.SECTOR_1_FINISH -> copy(
+            sectors = sectors.map { sector ->
+                when (sector.index) {
+                    1 -> sector.copy(finish = replacement)
+                    2 -> sector.copy(start = replacement)
+                    else -> sector
+                }
+            },
+        )
+
+        EditingGate.SECTOR_2_FINISH -> copy(
+            sectors = sectors.map { sector ->
+                when (sector.index) {
+                    2 -> sector.copy(finish = replacement)
+                    3 -> sector.copy(start = replacement)
+                    else -> sector
+                }
+            },
+        )
+    }
+
+    private fun TrackCalibration.gateToUpdate(gate: EditingGate): Gate? = when (gate) {
+        EditingGate.START_FINISH -> startFinish
+        EditingGate.SECTOR_1_FINISH -> sectors.find { it.index == 1 }?.finish
+        EditingGate.SECTOR_2_FINISH -> sectors.find { it.index == 2 }?.finish
     }
 }

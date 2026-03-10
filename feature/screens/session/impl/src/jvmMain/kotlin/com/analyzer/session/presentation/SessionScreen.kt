@@ -2,17 +2,15 @@ package com.analyzer.session.presentation
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.analyzer.session.presentation.components.previewTrackMapData
 import com.analyzer.session.presentation.components.SessionScreenHeader
 import com.analyzer.session.presentation.components.SessionScreenStatsRow
 import com.analyzer.session.presentation.components.SessionScreenTable
+import com.analyzer.session.presentation.components.previewTrackMapData
 import com.analyzer.session.presentation.model.FILTER_ALL_ID
 import com.analyzer.session.presentation.model.SessionFilterKind
 import com.analyzer.session.presentation.model.SessionFilterOptionUi
@@ -32,22 +30,9 @@ internal fun SessionScreen() {
     val viewModel = metroViewModel<SessionListViewModel>()
     val navigator = LocalNavigator.current
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val existingSessionIds = remember(state.sessions) {
-        state.sessions.mapTo(HashSet(state.sessions.size)) { it.sessionId }
-    }
 
     LaunchedEffect(Unit) {
         viewModel.dispatch(SessionListIntent.Start)
-    }
-
-    DisposableEffect(navigator, existingSessionIds) {
-        navigator.registerForwardValidator(Route.SessionRoot.SessionDetails::class) { route ->
-            val detailsRoute = route as? Route.SessionRoot.SessionDetails ?: return@registerForwardValidator true
-            existingSessionIds.contains(detailsRoute.sessionId)
-        }
-        onDispose {
-            navigator.unregisterForwardValidator(Route.SessionRoot.SessionDetails::class)
-        }
     }
 
     SessionListContent(
@@ -147,7 +132,6 @@ private fun previewState(): SessionListState = SessionListState(
     ),
     page = 1,
     pageCount = 9,
-    sessions = previewSessions(),
     visibleSessions = previewSessions(),
 )
 

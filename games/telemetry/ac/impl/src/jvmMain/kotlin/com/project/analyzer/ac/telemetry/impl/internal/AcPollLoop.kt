@@ -17,6 +17,7 @@ import java.util.concurrent.locks.LockSupport
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -151,7 +152,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         onResult(PollResult.Frame(reusableSnapshot))
     }
 
-    private fun runSessionLoop(coroutineContext: CoroutineContext, onResult: (PollResult) -> Unit) {
+    private suspend fun runSessionLoop(coroutineContext: CoroutineContext, onResult: (PollResult) -> Unit) {
         var nextTickNanos = System.nanoTime()
 
         while (coroutineContext.isActive) {
@@ -206,7 +207,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         }
     }
 
-    private fun sleepUntilNextTick(scheduledTickNs: Long): Long {
+    private suspend fun sleepUntilNextTick(scheduledTickNs: Long): Long {
         val nowNs = System.nanoTime()
 
         val nextTickNs = when {
@@ -223,7 +224,11 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
 
         val remainingNs = nextTickNs - nowNs
         if (remainingNs > 0L) {
-            LockSupport.parkNanos(remainingNs)
+            if (remainingNs >= 1_000_000L) {
+                delay(remainingNs.nanoseconds)
+            } else {
+                LockSupport.parkNanos(remainingNs)
+            }
         }
 
         return nextTickNs

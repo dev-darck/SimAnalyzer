@@ -14,6 +14,7 @@ internal data class SessionEvent(
     val carId: Int? = null,
     val trackId: String? = null,
     val trackName: String? = null,
+    val layoutId: String? = null,
     val payloadType: String? = null,
     val payloadSize: Int? = null,
 )

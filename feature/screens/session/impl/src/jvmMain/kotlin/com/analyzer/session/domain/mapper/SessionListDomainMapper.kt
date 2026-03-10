@@ -1,5 +1,8 @@
 package com.analyzer.session.domain.mapper
 
+import com.analyzer.session.data.model.RecordedSessionListPage
+import com.analyzer.session.data.model.RecordedSessionListStats
+import com.analyzer.session.data.model.RecordedSessionOption
 import com.analyzer.session.data.model.RecordedSessionSummary
 import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST
 import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST_DESC
@@ -14,9 +17,9 @@ import com.analyzer.session.domain.model.SESSION_LIST_SORT_OLDEST
 import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_ASC
 import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_DESC
 import com.analyzer.session.domain.model.SessionFilterOption
-import com.analyzer.session.domain.model.SessionListDataset
 import com.analyzer.session.domain.model.SessionListDomainItem
 import com.analyzer.session.domain.model.SessionListDomainStats
+import com.analyzer.session.domain.model.SessionListPage
 import com.project.analyzer.api.di.Default
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.utils.TelemetryIdentityFormatter
@@ -41,17 +44,13 @@ class SessionListDomainMapper(
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm", Locale.US)
     private val zoneId = ZoneId.systemDefault()
 
-    suspend fun map(
-        sessions: List<RecordedSessionSummary>,
-    ): SessionListDataset = withContext(default) {
-        val items = sessions.map(::mapItem)
-        SessionListDataset(
-            items = items,
-            stats = mapStats(sessions),
-            gameOptions = buildGameOptions(items),
-            trackOptions = buildIdentityOptions(items.map { it.trackId to it.trackLabel }),
-            carOptions = buildIdentityOptions(items.map { it.carId to it.carLabel }),
-            dateOptions = buildLabelOptions(items.map { it.dateLabel }),
+    suspend fun map(page: RecordedSessionListPage): SessionListPage = withContext(default) {
+        SessionListPage(
+            stats = mapStats(page.stats),
+            gameOptions = page.gameOptions.toFilterOptions(),
+            trackOptions = page.trackOptions.toFilterOptions(),
+            carOptions = page.carOptions.toFilterOptions(),
+            dateOptions = page.dateOptions.toFilterOptions(),
             sortOptions = listOf(
                 SessionFilterOption(SESSION_LIST_SORT_NEWEST),
                 SessionFilterOption(SESSION_LIST_SORT_OLDEST),
@@ -66,19 +65,22 @@ class SessionListDomainMapper(
                 SessionFilterOption(SESSION_LIST_SORT_BEST),
                 SessionFilterOption(SESSION_LIST_SORT_BEST_DESC),
             ),
+            rows = page.items.map(::mapItem),
+            page = page.page,
+            pageCount = page.pageCount,
+            error = page.error,
         )
     }
 
-    private fun mapItem(
-        session: RecordedSessionSummary,
-    ): SessionListDomainItem {
+    private fun mapItem(session: RecordedSessionSummary): SessionListDomainItem {
         val gameId = normalizeGameId(session.gameId)
         val gameLabel = gameLabel(gameId)
         val sessionTypeLabel = session.sessionType.toSessionTypeLabel()
         val trackId = session.trackId?.takeIf { it.isNotBlank() }
+        val layoutId = session.layoutId?.takeIf { it.isNotBlank() }
         val carId = session.carId?.takeIf { it > 0 }?.toString()
             ?: session.carModel?.takeIf { it.isNotBlank() }
-        val trackLabel = session.trackName.toDisplayTrackLabel(trackId)
+        val trackLabel = session.trackName.toDisplayTrackLabel(trackId, layoutId)
         val carLabel = session.carName.toDisplayCarLabel(session.carModel)
         val dateLabel = formatDate(session.startedAtMs)
         val timeLabel = formatTime(session.startedAtMs)
@@ -96,6 +98,7 @@ class SessionListDomainMapper(
             gameLabel = gameLabel,
             sessionTypeLabel = sessionTypeLabel,
             trackId = trackId ?: trackLabel,
+            layoutId = layoutId,
             trackLabel = trackLabel,
             carId = carId ?: carLabel,
             carLabel = carLabel,
@@ -108,61 +111,35 @@ class SessionListDomainMapper(
         )
     }
 
-    private fun mapStats(sessions: List<RecordedSessionSummary>): SessionListDomainStats {
-        val favoriteCar = sessions
-            .mapNotNull { summary ->
-                summary.carName.toDisplayCarLabel(summary.carModel).takeIf { it.isNotBlank() }
-            }
-            .groupingBy { it }
-            .eachCount()
-            .maxByOrNull { it.value }
-            ?.key
+    private fun mapStats(stats: RecordedSessionListStats): SessionListDomainStats {
+        val favoriteCar = stats.favoriteCarName
+            .toDisplayCarLabel(stats.favoriteCarModel)
+            .takeIf { it.isNotBlank() }
             ?: "-"
-
         return SessionListDomainStats(
-            totalDistanceKm = sessions.sumOf { it.distanceKm },
-            sessionsCount = sessions.size,
-            incidentsCount = sessions.sumOf { it.totalIncidents },
+            totalDistanceKm = stats.totalDistanceKm,
+            sessionsCount = stats.sessionsCount,
+            incidentsCount = stats.incidentsCount,
             favoriteCar = favoriteCar,
         )
     }
 
-    private fun buildGameOptions(items: List<SessionListDomainItem>): List<SessionFilterOption> = listOf(
+    private fun List<RecordedSessionOption>.toFilterOptions(): List<SessionFilterOption> = listOf(
         SessionFilterOption(id = "all"),
-    ) + items
-        .asSequence()
-        .map { SessionFilterOption(id = it.gameId, label = it.gameLabel) }
-        .distinctBy { it.id }
+    ) + asSequence()
+        .filter { option -> option.id.isNotBlank() }
+        .map { option -> SessionFilterOption(id = option.id, label = option.label) }
         .sortedBy { it.label }
-        .toList()
-
-    private fun buildLabelOptions(values: List<String>): List<SessionFilterOption> = listOf(
-        SessionFilterOption(id = "all"),
-    ) + values
-        .asSequence()
-        .filter { it.isNotBlank() }
-        .distinct()
-        .sorted()
-        .map { SessionFilterOption(id = it, label = it) }
-        .toList()
-
-    private fun buildIdentityOptions(values: List<Pair<String, String>>): List<SessionFilterOption> = listOf(
-        SessionFilterOption(id = "all"),
-    ) + values
-        .asSequence()
-        .filter { (id, label) -> id.isNotBlank() && label.isNotBlank() }
-        .distinctBy { it.first }
-        .sortedBy { it.second }
-        .map { (id, label) -> SessionFilterOption(id = id, label = label) }
         .toList()
 
     private fun formatDate(epochMs: Long): String = dateFormatter.format(Instant.ofEpochMilli(epochMs).atZone(zoneId))
 
     private fun formatTime(epochMs: Long): String = timeFormatter.format(Instant.ofEpochMilli(epochMs).atZone(zoneId))
 
-    private fun String?.toDisplayTrackLabel(trackId: String?): String = this?.takeIf { it.isNotBlank() }
-        ?: TelemetryIdentityFormatter.formatTrackName(trackName = null, trackId = trackId)
-        ?: "Unknown"
+    private fun String?.toDisplayTrackLabel(trackId: String?, layoutId: String?): String =
+        this?.takeIf { it.isNotBlank() }
+            ?: TelemetryIdentityFormatter.formatTrackName(trackName = null, trackId = trackId, layoutId = layoutId)
+            ?: "Unknown"
 
     private fun String?.toDisplayCarLabel(carModel: String?): String = this?.takeIf { it.isNotBlank() }
         ?: TelemetryIdentityFormatter.formatCarName(carModel = carModel)

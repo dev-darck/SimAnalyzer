@@ -596,17 +596,19 @@ private fun subtitleText(phase: FuelPhase, confidence: Double, displayLapNumber:
 
     FuelPhase.WARMUP -> stringResource(Res.string.fuel_hud_subtitle_warmup)
 
-    FuelPhase.PREDICTIVE -> "${
-        stringResource(
-            Res.string.fuel_hud_subtitle_predictive,
-        )
-    } • ${(confidence * 100).toInt()}%"
+    FuelPhase.PREDICTIVE ->
+        "${
+            stringResource(
+                Res.string.fuel_hud_subtitle_predictive,
+            )
+        } • ${(confidence * 100).toInt()}%"
 
-    FuelPhase.PER_LAP -> "${
-        stringResource(
-            Res.string.fuel_hud_subtitle_per_lap,
-        )
-    } ($displayLapNumber) • ${(confidence * 100).toInt()}%"
+    FuelPhase.PER_LAP ->
+        "${
+            stringResource(
+                Res.string.fuel_hud_subtitle_per_lap,
+            )
+        } ($displayLapNumber) • ${(confidence * 100).toInt()}%"
 }
 
 @Composable

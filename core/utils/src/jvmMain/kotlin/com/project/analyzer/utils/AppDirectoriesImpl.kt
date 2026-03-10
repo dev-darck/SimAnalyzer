@@ -9,9 +9,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import kotlin.LazyThreadSafetyMode.NONE
 
-public class AppDirectoriesImpl internal constructor(
-    override val dataDir: File,
-) : AppDirectories {
+public class AppDirectoriesImpl internal constructor(override val dataDir: File) : AppDirectories {
 
     override val preferencesDir: File by lazy(NONE) { File(dataDir, "preferences") }
     override val logsDir: File by lazy(NONE) { File(dataDir, "logs") }
@@ -30,23 +28,22 @@ public class AppDirectoriesImpl internal constructor(
     }
 }
 
-public suspend fun resolveAppDirectories(
-    dispatcher: CoroutineDispatcher = Dispatchers.IO,
-): AppDirectoriesImpl = withContext(dispatcher) {
-    val codeSourceRootDir = detectCodeSourceRootDirWindows()
-    val installationRootDir = detectInstallationRootDirWindows(codeSourceRootDir)
-    val portableBaseDir = if (BuildConfig.IS_PORTABLE) {
-        (installationRootDir ?: codeSourceRootDir).takeIf { it.isWritableDirectory() }
-    } else {
-        null
+public suspend fun resolveAppDirectories(dispatcher: CoroutineDispatcher = Dispatchers.IO): AppDirectoriesImpl =
+    withContext(dispatcher) {
+        val codeSourceRootDir = detectCodeSourceRootDirWindows()
+        val installationRootDir = detectInstallationRootDirWindows(codeSourceRootDir)
+        val portableBaseDir = if (BuildConfig.IS_PORTABLE) {
+            (installationRootDir ?: codeSourceRootDir).takeIf { it.isWritableDirectory() }
+        } else {
+            null
+        }
+
+        val dataDir = portableBaseDir
+            ?.let { base -> File(base, "data") }
+            ?: resolveInstalledDataDir(installationRootDir)
+
+        AppDirectoriesImpl(dataDir).ensureStructure()
     }
-
-    val dataDir = portableBaseDir
-        ?.let { base -> File(base, "data") }
-        ?: resolveInstalledDataDir(installationRootDir)
-
-    AppDirectoriesImpl(dataDir).ensureStructure()
-}
 
 private const val APP_DATA = "APPDATA"
 private const val INSTALL_SETTINGS_FILE_NAME = "simanalyzer-installation.ini"
@@ -98,10 +95,9 @@ private fun defaultInstalledDataRootPath(installationRootDir: File?): String {
     return File(appData, BuildConfig.APP_NAME).absolutePath
 }
 
-private fun readConfiguredDataRoot(installationRootDir: File?): String? {
-    return readConfiguredDataRootFromInstallSettings(installationRootDir)
+private fun readConfiguredDataRoot(installationRootDir: File?): String? =
+    readConfiguredDataRootFromInstallSettings(installationRootDir)
         ?: readConfiguredDataRootFromRegistry()
-}
 
 private fun readConfiguredDataRootFromInstallSettings(installationRootDir: File?): String? {
     val installSettingsFile = installationSettingsFile(installationRootDir) ?: return null

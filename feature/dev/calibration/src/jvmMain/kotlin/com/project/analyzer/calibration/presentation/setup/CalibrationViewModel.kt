@@ -1,28 +1,30 @@
 package com.project.analyzer.calibration.presentation.setup
 
 import androidx.lifecycle.viewModelScope
-import com.project.analyzer.calibration.data.model.CalibrationSample
 import com.project.analyzer.calibration.di.OverlayDebugBus
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
+import com.project.analyzer.calibration.domain.model.CalibrationSample
 import com.project.analyzer.calibration.domain.usecase.CaptureGateOnStandstillUseCase
 import com.project.analyzer.calibration.domain.usecase.GateCaptureException
 import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCase
 import com.project.analyzer.calibration.domain.usecase.flipDirection
-import com.project.analyzer.calibration.presentation.components.fmt
+import com.project.analyzer.calibration.presentation.formatDebugString
 import com.project.analyzer.calibration.presentation.overlay.OverlayPublisher
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
+import com.project.analyzer.calibration.presentation.toDebugSnapshot
 import com.project.analyzer.leak.api.LeakAwareViewModel
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.calibration.SectorCalibration
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
+import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibrationSource
+import com.project.analyzer.utils.toSlugId
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.math.atan2
 
 @Inject
 internal class CalibrationViewModel(
@@ -57,7 +59,7 @@ internal class CalibrationViewModel(
                     val resolvedTrackId = when {
                         it.trackId.isNotBlank() -> it.trackId
                         !trackId.isNullOrBlank() -> trackId
-                        !resolvedTrackName.isNullOrBlank() -> slugify(resolvedTrackName)
+                        resolvedTrackName.isNotBlank() -> slugify(resolvedTrackName)
                         else -> it.trackId
                     }
                     it.copy(
@@ -95,8 +97,6 @@ internal class CalibrationViewModel(
                     pendingCapturePosition = if (st.isBusy) pose?.pos else null,
                 )
             }
-        }
-        viewModelScope.launch {
         }
     }
 
@@ -261,7 +261,9 @@ internal class CalibrationViewModel(
                 val calibration = TrackCalibration(
                     trackId = s.trackId,
                     trackName = s.trackName,
+                    layoutId = null,
                     createdAtEpochMs = System.currentTimeMillis(),
+                    source = TrackCalibrationSource.USER,
                     referencePoint = s.referencePoint,
                     startFinish = requireNotNull(s.startFinish),
                     sectors = sectors,
@@ -285,30 +287,13 @@ internal class CalibrationViewModel(
     }
 
     private fun buildDebugString(sample: CalibrationSample): String {
-        val p = sample.pose ?: return "Waiting for telemetry..."
-        val w = sample.wheels
-
-        val headingFromForward = if (p.forward.len() > 0.01f) {
-            Math.toDegrees(atan2(p.forward.x.toDouble(), p.forward.y.toDouble())).toFloat()
-        } else {
-            0f
-        }
-
-        return """
-            POS: ${fmt(p.pos)}  |  Speed: ${"%.1f".format(sample.speedKmh)} km/h
-            
-            FORWARD: ${fmt(p.forward)}  |  Heading: ${"%.1f".format(headingFromForward)}°
-            
-            FL: ${fmt(w?.fl)}   FR: ${fmt(w?.fr)}
-            RL: ${fmt(w?.rl)}   RR: ${fmt(w?.rr)}
-            """.trimIndent()
+        val snapshot = sample.toDebugSnapshot() ?: return "Waiting for telemetry..."
+        return snapshot.formatDebugString(
+            speedKmh = sample.speedKmh,
+            directionLabel = "FORWARD",
+            direction = snapshot.pose.forward,
+        )
     }
 
-    private fun slugify(text: String): String = text
-        .lowercase()
-        .trim()
-        .replace(Regex("""\s+"""), "_")
-        .replace(Regex("""[^a-z0-9_]+"""), "_")
-        .replace(Regex("""_+"""), "_")
-        .trim('_')
+    private fun slugify(text: String): String = text.toSlugId()
 }

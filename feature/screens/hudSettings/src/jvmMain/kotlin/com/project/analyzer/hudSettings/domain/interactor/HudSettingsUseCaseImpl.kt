@@ -1,13 +1,13 @@
 package com.project.analyzer.hudSettings.domain.interactor
 
 import com.project.analyzer.hud.api.HudPanel
+import com.project.analyzer.hud.api.HudPreferencesStore
 import com.project.analyzer.hudSettings.presentation.HudUiState
-import com.project.analyzer.impl.compose.HudPreferencesRepository
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.Flow
 
 class HudSettingsUseCaseImpl(
-    private val hudRepository: HudPreferencesRepository,
+    private val hudPreferencesStore: HudPreferencesStore,
     private val panels: Provider<Set<HudPanel>>,
 ) : HudSettingsUseCase {
 
@@ -15,17 +15,17 @@ class HudSettingsUseCaseImpl(
         .filter { panel -> !panel.isDevOnly }
         .sortedBy { panel -> panel.id }
 
-    override fun observeVisiblePanels(): Flow<Set<String>> = hudRepository.observeVisiblePanels()
+    override fun observeVisiblePanels(): Flow<Set<String>> = hudPreferencesStore.observeVisiblePanels()
 
-    override fun observeHudOpacity(): Flow<Float> = hudRepository.observeHudOpacity()
+    override fun observeHudOpacity(): Flow<Float> = hudPreferencesStore.observeHudOpacity()
 
     override suspend fun updateVisiblePanels(currentVisibleIds: Set<String>, id: String, enable: Boolean) {
         val next = if (enable) currentVisibleIds + id else currentVisibleIds - id
-        hudRepository.saveVisiblePanels(next)
+        hudPreferencesStore.saveVisiblePanels(next)
     }
 
     override suspend fun updateHudOpacity(opacity: Float) {
-        hudRepository.setHudOpacity(opacity.coerceIn(0f, 1f))
+        hudPreferencesStore.setHudOpacity(opacity.coerceIn(0f, 1f))
     }
 
     override fun applyVisiblePanels(state: HudUiState, visibleIds: Set<String>): HudUiState {

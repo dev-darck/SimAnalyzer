@@ -98,30 +98,39 @@ internal class ComposeWindowProcedure(
 
                 hitResult = when {
                     isMaximized -> hitTest(logicalX, logicalY)
+
                     logicalX <= horizontalPadding &&
                         logicalY > verticalPadding &&
                         logicalY < height - verticalPadding -> HTLEFT
 
                     logicalX <= horizontalPadding && logicalY <= verticalPadding -> HTTOPLEFT
+
                     logicalX <= horizontalPadding -> HTBOTTOMLEFT
+
                     logicalY <= verticalPadding &&
                         logicalX > horizontalPadding &&
                         logicalX < width - horizontalPadding -> HTTOP
 
                     logicalY <= verticalPadding && logicalX <= horizontalPadding -> HTTOPLEFT
+
                     logicalY <= verticalPadding -> HTTOPRIGHT
+
                     logicalX >= width - horizontalPadding &&
                         logicalY > verticalPadding &&
                         logicalY < height - verticalPadding -> HTRIGHT
 
                     logicalX >= width - horizontalPadding && logicalY <= verticalPadding -> HTTOPRIGHT
+
                     logicalX >= width - horizontalPadding -> HTBOTTOMRIGHT
+
                     logicalY >= height - verticalPadding &&
                         logicalX > horizontalPadding &&
                         logicalX < width - horizontalPadding -> HTBOTTOM
 
                     logicalY >= height - verticalPadding && logicalX <= horizontalPadding -> HTBOTTOMLEFT
+
                     logicalY >= height - verticalPadding -> HTBOTTOMRIGHT
+
                     else -> hitTest(logicalX, logicalY)
                 }
 

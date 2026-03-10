@@ -261,7 +261,7 @@ internal class LeakCanaryControllerImpl(
     }
 
     private fun dumpDirectory(): File = File(directories.cacheDir, config.dumpDirectoryName)
-            .apply { mkdirs() }
+        .apply { mkdirs() }
 
     private fun newHeapDumpFile(): File {
         val timestamp = TIMESTAMP_FORMAT.format(Instant.now())

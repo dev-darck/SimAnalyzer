@@ -1,6 +1,5 @@
 package com.project.analyzer.impl.compose
 
-import androidx.compose.ui.unit.IntOffset
 import com.project.analyzer.hud.api.HudPreferencesStore
 import com.project.analyzer.hud.api.HudStoredPosition
 import dev.zacsweers.metro.Inject

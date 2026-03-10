@@ -38,11 +38,10 @@ internal fun FuelEstimate.toUiState(safetyFactor: Double): FuelHudUiState {
     )
 }
 
-private fun FuelEstimate.displayLapNumber(): Int =
-    maxOf(
-        currentLapIndex?.takeIf { it > 0 } ?: 0,
-        (completedLaps + 1).coerceAtLeast(1),
-    )
+private fun FuelEstimate.displayLapNumber(): Int = maxOf(
+    currentLapIndex?.takeIf { it > 0 } ?: 0,
+    (completedLaps + 1).coerceAtLeast(1),
+)
 
 private fun FuelEstimate.displayLapsRemainingCount(): Int? {
     val laps = lapsRemaining?.takeIf { it.isFinite() }?.coerceAtLeast(0.0) ?: return null

@@ -67,7 +67,7 @@ internal fun FileChooserContent(
             FileChooserIntent.Init(
                 startPath = initialPath,
                 selectionMode = selectionMode,
-            )
+            ),
         )
     }
 

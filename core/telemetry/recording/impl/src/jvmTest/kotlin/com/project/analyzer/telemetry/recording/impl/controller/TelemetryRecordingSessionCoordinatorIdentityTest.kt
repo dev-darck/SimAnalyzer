@@ -48,6 +48,7 @@ class TelemetryRecordingSessionCoordinatorIdentityTest {
                             track = TrackInfo(
                                 trackId = "brands_hatch_indy",
                                 trackName = "Brands Hatch Indy",
+                                layoutId = "indy",
                             ),
                             car = CarInfo(
                                 carModel = "ks_bmw_m4_gt3",
@@ -62,6 +63,7 @@ class TelemetryRecordingSessionCoordinatorIdentityTest {
         val started = recorder.startedDescriptors.single()
         assertEquals("brands_hatch_indy", started.trackId)
         assertEquals("Brands Hatch Indy", started.trackName)
+        assertEquals("indy", started.layoutId)
         assertEquals("ks_bmw_m4_gt3", started.carModel)
         assertEquals("BMW M4 GT3", started.carName)
     }
@@ -101,6 +103,7 @@ class TelemetryRecordingSessionCoordinatorIdentityTest {
                             track = TrackInfo(
                                 trackId = "brands_hatch_indy",
                                 trackName = "Brands Hatch Indy",
+                                layoutId = "indy",
                             ),
                             car = CarInfo(
                                 carModel = "ks_bmw_m4_gt3",
@@ -116,7 +119,9 @@ class TelemetryRecordingSessionCoordinatorIdentityTest {
         val update = recorder.sessionUpdates.single()
         assertEquals("brands_hatch_indy", started.trackId)
         assertEquals(null, started.trackName)
+        assertEquals(null, started.layoutId)
         assertEquals("Brands Hatch Indy", update.trackName)
+        assertEquals("indy", update.layoutId)
         assertEquals("BMW M4 GT3", update.carName)
         assertEquals(null, update.trackId)
         assertEquals(null, update.carModel)

@@ -16,6 +16,7 @@ public data class TrackMapPreparedData(
 public data class TrackMapSourceData(
     val gameId: String?,
     val trackId: String?,
+    val layoutId: String? = null,
     val createdAtMs: Long,
     val points: List<TrackMapPreparedPoint>,
     val pitPoints: List<TrackMapPreparedPoint> = emptyList(),
@@ -25,7 +26,7 @@ public data class TrackMapSourceData(
 @Inject
 public class TrackMapPreparationUtil {
 
-    public fun key(gameId: String?, trackId: String?): String? {
+    public fun key(gameId: String?, trackId: String?, layoutId: String? = null): String? {
         val normalizedGameId = gameId
             ?.trim()
             ?.lowercase(Locale.US)
@@ -36,7 +37,15 @@ public class TrackMapPreparationUtil {
             ?.lowercase(Locale.US)
             ?.takeIf { it.isNotBlank() }
             ?: return null
-        return "$normalizedGameId|$normalizedTrackId"
+        val normalizedLayoutId = layoutId
+            ?.trim()
+            ?.lowercase(Locale.US)
+            ?.takeIf { it.isNotBlank() }
+        return if (normalizedLayoutId == null) {
+            "$normalizedGameId|$normalizedTrackId"
+        } else {
+            "$normalizedGameId|$normalizedTrackId|$normalizedLayoutId"
+        }
     }
 
     public fun prepare(
@@ -64,6 +73,7 @@ public class TrackMapPreparationUtil {
             val sourceKey = key(
                 gameId = source.gameId,
                 trackId = source.trackId,
+                layoutId = source.layoutId,
             ) ?: return@forEach
             val prepared = prepare(
                 points = source.points,
@@ -111,8 +121,5 @@ public class TrackMapPreparationUtil {
         )
     }
 
-    private data class PreparedSnapshot(
-        val createdAtMs: Long,
-        val data: TrackMapPreparedData,
-    )
+    private data class PreparedSnapshot(val createdAtMs: Long, val data: TrackMapPreparedData)
 }

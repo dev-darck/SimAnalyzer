@@ -8,6 +8,7 @@ data class SessionRowUi(
     val timeLabel: String,
     val gameId: String,
     val trackId: String,
+    val layoutId: String? = null,
     val gameLabel: String,
     val sessionTypeLabel: String,
     val trackLabel: String,

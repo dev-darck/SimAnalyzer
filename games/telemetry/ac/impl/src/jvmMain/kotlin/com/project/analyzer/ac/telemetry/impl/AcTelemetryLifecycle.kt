@@ -48,7 +48,7 @@ class AcTelemetryLifecycle internal constructor(
 ) : TelemetryLifecycle {
 
     private val logger = logger()
-    private val lifecycleDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(1, "AcTelemetryLifecycle")
+    private var useLimitedParallelism: Boolean = true
 
     private var appScope = createScope()
     private var processingJob: Job? = null
@@ -79,8 +79,15 @@ class AcTelemetryLifecycle internal constructor(
         mapper = mapper,
         recordingEmitter = recordingEmitter,
         ioDispatcher = ioDispatcher,
-        pollPipeline = AcPollPipeline(pollLoop = pollLoop, fallback = fallback),
-    )
+        pollPipeline = AcPollPipeline(
+            pollLoop = pollLoop,
+            fallback = fallback,
+            useDedicatedPollThread = false,
+        ),
+    ) {
+        useLimitedParallelism = false
+        appScope = createScope()
+    }
 
     override suspend fun launchTelemetry() {
         if (processingJob?.isActive == true) return
@@ -148,10 +155,13 @@ class AcTelemetryLifecycle internal constructor(
     }
 
     private fun createScope(): CoroutineScope = CoroutineScope(
-        SupervisorJob() + lifecycleDispatcher + CoroutineExceptionHandler { _, e ->
+        SupervisorJob() + resolvedLifecycleDispatcher() + CoroutineExceptionHandler { _, e ->
             logger.error(e) { "uncaught exception" }
         },
     )
+
+    private fun resolvedLifecycleDispatcher(): CoroutineDispatcher =
+        if (useLimitedParallelism) ioDispatcher.limitedParallelism(1, "AcTelemetryLifecycle") else ioDispatcher
 
     private suspend fun processFrame(
         snapshot: AcRawSnapshot,

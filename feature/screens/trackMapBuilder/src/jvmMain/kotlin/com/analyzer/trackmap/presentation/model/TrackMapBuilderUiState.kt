@@ -1,0 +1,37 @@
+package com.analyzer.trackmap.presentation.model
+
+import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
+
+data class TrackMapBuilderUiState(
+    val recording: Boolean = false,
+    val isSaving: Boolean = false,
+    val gameId: String = "",
+    val gameLabel: String = "",
+    val trackId: String = "",
+    val trackName: String = "",
+    val layoutId: String? = null,
+    val referencePoint: ReferencePoint = ReferencePoint.FRONT_AXLE,
+    val pointCount: Int = 0,
+    val totalDistanceMeters: Float = 0f,
+    val averageTrackWidthMeters: Float = 0f,
+    val leftCoverageRatio: Float = 0f,
+    val rightCoverageRatio: Float = 0f,
+    val minSpacingMeters: Float = 0f,
+    val maxSpacingMeters: Float = 0f,
+    val minAngleDeg: Float = 0f,
+    val minSpeedKmh: Float = 0f,
+    val fallbackHalfWidthMeters: Float = 0f,
+    val lapIndex: Int? = null,
+    val lapsRecorded: Int = 0,
+    val sectorCount: Int = 0,
+    val capturedSectorCount: Int = 0,
+    val isInPitLane: Boolean = false,
+    val pitOverrideActive: Boolean = false,
+    val pitEntryPointSet: Boolean = false,
+    val pitExitPointSet: Boolean = false,
+    val pitPointCount: Int = 0,
+    val guidanceText: String? = null,
+    val message: String? = null,
+    val lastSavedTrackId: String? = null,
+    val preview: TrackMapPreviewUi = TrackMapPreviewUi(),
+)

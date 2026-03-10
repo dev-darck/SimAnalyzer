@@ -1,0 +1,63 @@
+<resources>
+    <string name="calibration_capture_settings_title">Capture settings</string>
+    <string name="calibration_capture_settings_subtitle">Tune recording thresholds and fallback width.</string>
+    <string name="calibration_reference_point">Reference point</string>
+    <string name="calibration_reset">Reset</string>
+
+    <string name="track_map_builder_title">Track map builder</string>
+    <string name="track_map_builder_subtitle">Record a clean lap and save the track line.</string>
+    <string name="track_map_game">Game</string>
+    <string name="track_map_detected_track">Detected track</string>
+    <string name="track_map_track_id">Track id</string>
+    <string name="track_map_layout">Layout</string>
+    <string name="track_map_lap">Lap</string>
+    <string name="track_map_laps_recorded">Laps recorded</string>
+    <string name="track_map_sectors">Sectors</string>
+    <string name="track_map_pit_lane">Pit lane</string>
+    <string name="track_map_pit_source">Pit source</string>
+    <string name="track_map_pit_entry">Pit entry</string>
+    <string name="track_map_pit_exit">Pit exit</string>
+    <string name="track_map_pit_points">Pit points</string>
+    <string name="track_map_points">Points</string>
+    <string name="track_map_distance">Distance</string>
+    <string name="track_map_avg_width">Avg width</string>
+    <string name="track_map_width_coverage">Width coverage</string>
+    <string name="track_map_yes">Yes</string>
+    <string name="track_map_no">No</string>
+    <string name="track_map_manual">Manual</string>
+    <string name="track_map_auto">Auto</string>
+    <string name="track_map_set">Set</string>
+    <string name="track_map_status_recording">Recording</string>
+    <string name="track_map_status_idle">Idle</string>
+    <string name="track_map_status_saved">Saved: %1$s</string>
+    <string name="track_map_sampling">Sampling: min %1$sm, max %2$sm, turn %3$s deg, speed &gt;= %4$s km/h</string>
+    <string name="track_map_width_minus">Width -</string>
+    <string name="track_map_width_plus">Width +</string>
+    <string name="track_map_fallback_half_width">Fallback half-width: %1$sm</string>
+    <string name="track_map_guidance">Guidance: %1$s</string>
+    <string name="track_map_build_preview_title">Build preview</string>
+    <string name="track_map_build_preview_subtitle">Live track map while recording.</string>
+    <string name="track_map_actions_title">Actions</string>
+    <string name="track_map_actions_subtitle">Start/stop recording and save the map.</string>
+    <string name="track_map_start">Start</string>
+    <string name="track_map_stop">Stop</string>
+    <string name="track_map_save">Save</string>
+    <string name="track_map_saving">Saving...</string>
+    <string name="track_map_mark_pit_entry">Mark pit entry</string>
+    <string name="track_map_mark_pit_exit">Mark pit exit</string>
+    <string name="track_map_need_points">Need at least %1$d points to save.</string>
+
+    <string name="track_map_library_title">Saved track maps</string>
+    <string name="track_map_library_subtitle">Browse stored layouts and verify distances.</string>
+    <string name="track_map_library_total">Total maps: %1$d</string>
+    <string name="track_map_library_empty_title">No maps yet</string>
+    <string name="track_map_library_empty_subtitle">Capture a track map to see it listed here.</string>
+    <string name="track_map_library_points">Points: %1$d</string>
+    <string name="track_map_library_distance">Distance: %1$s</string>
+    <string name="track_map_library_width">Width: %1$s m</string>
+    <string name="track_map_library_pit">Pit: %1$d</string>
+    <string name="track_map_library_edit">Edit sectors</string>
+    <string name="track_map_library_hide_points">Hide points</string>
+    <string name="track_map_library_show_points">Show points</string>
+    <string name="track_map_library_more_points">&#10;... +%1$d more</string>
+</resources>

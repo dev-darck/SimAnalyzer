@@ -117,6 +117,7 @@ internal class TelemetryRecordingSessionCoordinator(
                 carModel = updated.carModel.ifBlank { null },
                 carId = updated.carId,
                 trackId = updated.trackId.ifBlank { null },
+                layoutId = updated.layoutId?.trim()?.takeIf { it.isNotBlank() },
                 airTempC = state.lastAirTempC,
                 trackTempC = state.lastTrackTempC,
                 dataSource = state.currentDataSource,
@@ -239,62 +240,62 @@ internal class TelemetryRecordingSessionCoordinator(
     }
 
     private suspend fun startSession(session: SessionInfo, sample: TelemetryRecordingSample) {
-        val baseCompletedLaps = completedLaps(sample.frame)
-        val carModel = session.carModel
-            .ifBlank { sample.frame.session?.car?.carModel.orEmpty() }
-            .ifBlank { null }
-        val carId = session.carId ?: sample.frame.session?.car?.carId?.takeIf { it > 0 }
-        val trackId = session.trackId
-            .ifBlank { sample.frame.session?.track?.trackId.orEmpty() }
-            .ifBlank { null }
-        val carName = sample.frame.session?.car?.carName.normalizeLabel()
-        val trackName = sample.frame.session?.track?.trackName.normalizeLabel()
-        val airTempC = normalizeTemperature(sample.frame.environment?.airTempC)
-        val trackTempC = normalizeTemperature(sample.frame.environment?.roadTempC)
-        val previousSessionType = state.lastEndedSessionType
-        val shouldStartNewGroup = when {
-            state.sessionGroupId == null -> true
-            session.sessionType != SessionType.PRACTICE -> false
-            previousSessionType == null -> true
-            previousSessionType == SessionType.PRACTICE -> false
-            else -> true
-        }
-        val sessionGroupId = if (shouldStartNewGroup) {
-            newSessionGroupId(sample.gameId, session.sessionId)
-        } else {
-            state.sessionGroupId
-        }
-        recorder.startSession(
-            TelemetrySessionDescriptor(
-                sessionId = session.sessionId,
-                gameId = sample.gameId,
-                sessionGroupId = sessionGroupId,
-                sessionType = session.sessionType.asSessionTypeString(),
-                carModel = carModel,
-                carName = carName,
-                carId = carId,
-                trackId = trackId,
-                trackName = trackName,
-                airTempC = airTempC,
-                trackTempC = trackTempC,
-                startedAtMs = System.currentTimeMillis(),
-                dataSource = sample.dataSource,
-                payloadType = sample.payloadType,
-                payloadSize = sample.payload.size,
-            ),
+        val startSnapshot = buildSessionStartSnapshot(session, sample.frame)
+        val sessionGroupId = resolveSessionGroupId(
+            sessionType = session.sessionType,
+            gameId = sample.gameId,
+            sessionId = session.sessionId,
         )
+        recorder.startSession(startSnapshot.toDescriptor(sample, sessionGroupId))
 
         state = state.withActiveSession(
             sessionId = session.sessionId,
             gameId = sample.gameId,
             dataSource = sample.dataSource,
-            baseCompletedLaps = baseCompletedLaps,
-            carName = carName,
-            trackName = trackName,
-            airTempC = airTempC,
-            trackTempC = trackTempC,
+            baseCompletedLaps = startSnapshot.baseCompletedLaps,
+            carName = startSnapshot.carName,
+            trackName = startSnapshot.trackName,
+            airTempC = startSnapshot.airTempC,
+            trackTempC = startSnapshot.trackTempC,
             sessionGroupId = sessionGroupId,
         )
+    }
+
+    private fun buildSessionStartSnapshot(session: SessionInfo, frame: TelemetryFrame): SessionStartSnapshot =
+        SessionStartSnapshot(
+            baseCompletedLaps = completedLaps(frame),
+            sessionType = session.sessionType,
+            carModel = session.carModel
+                .ifBlank { frame.session?.car?.carModel.orEmpty() }
+                .ifBlank { null },
+            carId = session.carId ?: frame.session?.car?.carId?.takeIf { it > 0 },
+            trackId = session.trackId
+                .ifBlank { frame.session?.track?.trackId.orEmpty() }
+                .ifBlank { null },
+            layoutId = session.layoutId
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() },
+            carName = frame.session?.car?.carName.normalizeLabel(),
+            trackName = frame.session?.track?.trackName.normalizeLabel(),
+            airTempC = normalizeTemperature(frame.environment?.airTempC),
+            trackTempC = normalizeTemperature(frame.environment?.roadTempC),
+        )
+
+    private fun resolveSessionGroupId(sessionType: SessionType, gameId: String, sessionId: Long): String {
+        val previousSessionType = state.lastEndedSessionType
+        val shouldStartNewGroup = when {
+            state.sessionGroupId == null -> true
+            sessionType != SessionType.PRACTICE -> false
+            previousSessionType == null -> true
+            previousSessionType == SessionType.PRACTICE -> false
+            else -> true
+        }
+        return if (shouldStartNewGroup) {
+            newSessionGroupId(gameId, sessionId)
+        } else {
+            checkNotNull(state.sessionGroupId)
+        }
     }
 
     private suspend fun maybeUpdateIdentityLabels(frame: TelemetryFrame) {
@@ -303,10 +304,13 @@ internal class TelemetryRecordingSessionCoordinator(
 
         val carName = frame.session?.car?.carName.normalizeLabel()
         val trackName = frame.session?.track?.trackName.normalizeLabel()
+        val layoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() }
+        val currentSessionInfo = state.sessionInfo
 
         val carChanged = carName != null && carName != state.lastCarName
         val trackChanged = trackName != null && trackName != state.lastTrackName
-        if (!carChanged && !trackChanged) return
+        val layoutChanged = layoutId != null && layoutId != currentSessionInfo?.layoutId
+        if (!carChanged && !trackChanged && !layoutChanged) return
 
         recorder.updateSession(
             TelemetrySessionUpdate(
@@ -314,13 +318,20 @@ internal class TelemetryRecordingSessionCoordinator(
                 gameId = gameId,
                 carName = carName,
                 trackName = trackName,
+                layoutId = layoutId,
             ),
         )
 
-        state = state.withUpdatedLabels(
+        var updatedState = state.withUpdatedLabels(
             carName = carName,
             trackName = trackName,
         )
+        if (layoutChanged && currentSessionInfo != null) {
+            updatedState = updatedState.withSessionInfo(
+                currentSessionInfo.copy(layoutId = layoutId),
+            )
+        }
+        state = updatedState
     }
 
     private suspend fun maybeUpdateTemperatures(sample: TelemetryRecordingSample) {
@@ -380,6 +391,28 @@ internal class TelemetryRecordingSessionCoordinator(
 
     private fun String?.normalizeLabel(): String? = this?.trim()?.takeIf { it.isNotBlank() }
 
+    private fun SessionStartSnapshot.toDescriptor(
+        sample: TelemetryRecordingSample,
+        sessionGroupId: String,
+    ): TelemetrySessionDescriptor = TelemetrySessionDescriptor(
+        sessionId = sample.sessionId,
+        gameId = sample.gameId,
+        sessionGroupId = sessionGroupId,
+        sessionType = sessionType.asSessionTypeString(),
+        carModel = carModel,
+        carName = carName,
+        carId = carId,
+        trackId = trackId,
+        trackName = trackName,
+        layoutId = layoutId,
+        airTempC = airTempC,
+        trackTempC = trackTempC,
+        startedAtMs = System.currentTimeMillis(),
+        dataSource = sample.dataSource,
+        payloadType = sample.payloadType,
+        payloadSize = sample.payload.size,
+    )
+
     private fun newSessionGroupId(gameId: String, sessionId: Long): String {
         val normalizedGameId = gameId.trim().lowercase().ifBlank { "unknown" }
         val suffix = UUID.randomUUID()
@@ -387,6 +420,19 @@ internal class TelemetryRecordingSessionCoordinator(
             .substring(0, 8)
         return "$normalizedGameId-${System.currentTimeMillis()}-$sessionId-$suffix"
     }
+
+    private data class SessionStartSnapshot(
+        val baseCompletedLaps: Int?,
+        val sessionType: SessionType,
+        val carModel: String?,
+        val carId: Int?,
+        val trackId: String?,
+        val layoutId: String?,
+        val carName: String?,
+        val trackName: String?,
+        val airTempC: Float?,
+        val trackTempC: Float?,
+    )
 
     private companion object {
         const val TEMP_UPDATE_EPSILON_C = 0.25f

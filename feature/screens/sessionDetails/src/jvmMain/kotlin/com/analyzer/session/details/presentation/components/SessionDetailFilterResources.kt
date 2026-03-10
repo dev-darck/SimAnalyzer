@@ -25,11 +25,35 @@ import com.analyzer.session.details.domain.model.SESSION_DETAIL_TYPE_ALL
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
-import com.project.analyzer.feature.screens.sessionDetails.Res.*
+import com.project.analyzer.feature.screens.sessionDetails.Res.Res
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_all_laps
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_all_session_types
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_invalid_laps
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_pit_laps
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_session_type
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_show
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_sort
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_filter_valid_laps
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_delta_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_delta_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_incidents_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_incidents_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_lap_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_lap_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_s1_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_s1_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_s2_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_s2_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_s3_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_s3_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_status_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_status_desc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_total_asc
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_sort_total_desc
 import com.project.analyzer.ui.components.DropdownFilterUi
 import com.project.analyzer.ui.components.DropdownOptionUi
+import com.project.analyzer.ui.components.buildDropdownFilterUi
 import org.jetbrains.compose.resources.stringResource
-import java.util.Locale
 
 @Composable
 internal fun SessionDetailFilterUiModel.asDropdownFilter(): DropdownFilterUi {
@@ -39,14 +63,9 @@ internal fun SessionDetailFilterUiModel.asDropdownFilter(): DropdownFilterUi {
             label = sessionDetailFilterOptionLabel(kind = kind, option = option),
         )
     }
-    val selectedLabel = dropdownOptions.firstOrNull { it.id == selectedId }?.label
-        ?: dropdownOptions.firstOrNull()?.label
-        ?: sessionDetailFilterLabel(kind)
-
-    return DropdownFilterUi(
+    return buildDropdownFilterUi(
         label = sessionDetailFilterLabel(kind),
         selectedId = selectedId,
-        selectedLabel = selectedLabel,
         options = dropdownOptions,
     )
 }
@@ -96,18 +115,4 @@ internal fun sessionDetailShowLabel(showId: String): String = when (showId) {
     SESSION_DETAIL_SHOW_INVALID -> stringResource(Res.string.session_details_filter_invalid_laps)
     SESSION_DETAIL_SHOW_PIT -> stringResource(Res.string.session_details_filter_pit_laps)
     else -> showId
-}
-
-@Composable
-internal fun sessionTypeDisplayLabel(sessionTypeId: String, fallbackLabel: String? = null): String {
-    if (!fallbackLabel.isNullOrBlank()) return fallbackLabel
-    if (sessionTypeId == SESSION_DETAIL_TYPE_ALL) {
-        return stringResource(Res.string.session_details_filter_all_session_types)
-    }
-    return sessionTypeId
-        .replace('_', ' ')
-        .split(' ')
-        .joinToString(" ") { part ->
-            part.replaceFirstChar { char -> char.titlecase(Locale.US) }
-        }
 }

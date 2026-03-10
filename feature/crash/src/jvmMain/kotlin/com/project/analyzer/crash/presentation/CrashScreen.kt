@@ -236,7 +236,7 @@ private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> 
 
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize(),
     ) {
         Column(
             modifier = Modifier

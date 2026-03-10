@@ -17,12 +17,7 @@ internal class CreateCrashReportUseCaseImpl : CreateCrashReportUseCase {
         .ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
         .withZone(ZoneId.systemDefault())
 
-    override fun createReport(
-        throwable: Throwable,
-        thread: Thread,
-        title: String,
-        appVersion: String?,
-    ): CrashReport {
+    override fun createReport(throwable: Throwable, thread: Thread, title: String, appVersion: String?): CrashReport {
         val logDirFile = resolveLogDir().apply { mkdirs() }
 
         val fileStamp = DateTimeFormatter

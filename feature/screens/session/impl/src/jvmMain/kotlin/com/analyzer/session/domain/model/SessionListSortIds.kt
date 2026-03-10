@@ -1,0 +1,16 @@
+package com.analyzer.session.domain.model
+
+const val SESSION_LIST_SORT_BEST = "best"
+const val SESSION_LIST_SORT_BEST_DESC = "best_desc"
+const val SESSION_LIST_SORT_NEWEST = "newest"
+const val SESSION_LIST_SORT_OLDEST = "oldest"
+const val SESSION_LIST_SORT_GAME_ASC = "game_asc"
+const val SESSION_LIST_SORT_GAME_DESC = "game_desc"
+const val SESSION_LIST_SORT_TYPE_ASC = "type_asc"
+const val SESSION_LIST_SORT_TYPE_DESC = "type_desc"
+const val SESSION_LIST_SORT_TRACK_ASC = "track_asc"
+const val SESSION_LIST_SORT_TRACK_DESC = "track_desc"
+const val SESSION_LIST_SORT_CAR_ASC = "car_asc"
+const val SESSION_LIST_SORT_CAR_DESC = "car_desc"
+const val SESSION_LIST_SORT_LAPS_ASC = "laps_asc"
+const val SESSION_LIST_SORT_LAPS_DESC = "laps_desc"

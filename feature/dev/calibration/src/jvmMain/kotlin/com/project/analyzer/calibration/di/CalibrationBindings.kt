@@ -4,8 +4,6 @@ import androidx.lifecycle.ViewModel
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.calibration.data.TelemetrySampleProviderImpl
 import com.project.analyzer.calibration.domain.TelemetrySampleProvider
-import com.project.analyzer.calibration.domain.interactor.TrackMapLibraryUseCase
-import com.project.analyzer.calibration.domain.interactor.TrackMapLibraryUseCaseImpl
 import com.project.analyzer.calibration.domain.usecase.BuildGateUseCase
 import com.project.analyzer.calibration.domain.usecase.BuildGateUseCaseImpl
 import com.project.analyzer.calibration.domain.usecase.CaptureGateOnStandstillUseCase
@@ -15,8 +13,6 @@ import com.project.analyzer.calibration.domain.usecase.LoadTrackCalibrationUseCa
 import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCase
 import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCaseImpl
 import com.project.analyzer.calibration.presentation.setup.CalibrationViewModel
-import com.project.analyzer.calibration.presentation.trackmap.TrackMapBuilderViewModel
-import com.project.analyzer.calibration.presentation.trackmap.TrackMapLibraryViewModel
 import com.project.analyzer.calibration.presentation.verify.CalibrationVerifyViewModel
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -26,7 +22,9 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(ScreenScope::class)
 @BindingContainer
+@Suppress("unused")
 interface CalibrationBindings {
+
     companion object {
 
         @Provides
@@ -51,22 +49,9 @@ interface CalibrationBindings {
         ): SaveTrackCalibrationUseCase = impl
 
         @Provides
-        private fun provideTrackMapLibraryUseCase(impl: TrackMapLibraryUseCaseImpl): TrackMapLibraryUseCase = impl
-
-        @Provides
         @IntoMap
         @ViewModelKey(CalibrationViewModel::class)
         private fun provideCalibrationViewModel(impl: CalibrationViewModel): ViewModel = impl
-
-        @Provides
-        @IntoMap
-        @ViewModelKey(TrackMapBuilderViewModel::class)
-        private fun provideTrackMapBuilderViewModel(impl: TrackMapBuilderViewModel): ViewModel = impl
-
-        @Provides
-        @IntoMap
-        @ViewModelKey(TrackMapLibraryViewModel::class)
-        private fun provideTrackMapLibraryViewModel(impl: TrackMapLibraryViewModel): ViewModel = impl
 
         @Provides
         @IntoMap

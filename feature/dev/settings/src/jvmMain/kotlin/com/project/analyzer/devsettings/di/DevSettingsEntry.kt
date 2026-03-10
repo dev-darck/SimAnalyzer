@@ -12,11 +12,24 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @ContributesIntoSet(NavigationScope::class)
 @SingleIn(NavigationScope::class)
+@Suppress("unused")
 class DevSettingsEntry : RouteEntryBuilder {
 
     override fun NavigationEntryBuilder.build() {
-        entry(Route.SettingsRoot.DevSettings) {
-            DevSettingsScreen()
+        entry(Route.SettingsRoot.DevSettings) { route ->
+            DevSettingsScreen(route = route)
+        }
+        entry(Route.SettingsRoot.DevCalibration) { route ->
+            DevSettingsScreen(route = route)
+        }
+        entry(Route.SettingsRoot.DevCalibrationVerify::class) { route ->
+            DevSettingsScreen(route = route)
+        }
+        entry(Route.SettingsRoot.DevTelemetry) { route ->
+            DevSettingsScreen(route = route)
+        }
+        entry(Route.SettingsRoot.DevHud) { route ->
+            DevSettingsScreen(route = route)
         }
     }
 }

@@ -31,8 +31,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-private const val ScrollbarScrollRevealDurationMillis = 900L
-private const val ScrollbarOffsetDeltaEpsilon = 0.5
+private const val SCROLLBAR_SCROLL_REVEAL_DURATION_MILLIS = 900L
+private const val SCROLLBAR_OFFSET_DELTA_EPSILON = 0.5
 private val ScrollbarThickness: Dp = 6.dp
 private val ScrollbarRevealZoneSize: Dp = 16.dp
 private val ScrollbarHoverPadding: Dp = (ScrollbarRevealZoneSize - ScrollbarThickness) / 2f
@@ -56,10 +56,7 @@ public fun rememberAppScrollbarStyle(): ScrollbarStyle {
 }
 
 @Composable
-public fun AppVerticalScrollbar(
-    adapter: ScrollbarAdapter,
-    modifier: Modifier = Modifier,
-) {
+public fun AppVerticalScrollbar(adapter: ScrollbarAdapter, modifier: Modifier = Modifier) {
     val uiState = rememberAppScrollbarUiState(
         adapter = adapter,
         animationLabel = "appVerticalScrollbarAlpha",
@@ -79,10 +76,7 @@ public fun AppVerticalScrollbar(
 }
 
 @Composable
-public fun AppHorizontalScrollbar(
-    adapter: ScrollbarAdapter,
-    modifier: Modifier = Modifier,
-) {
+public fun AppHorizontalScrollbar(adapter: ScrollbarAdapter, modifier: Modifier = Modifier) {
     val uiState = rememberAppScrollbarUiState(
         adapter = adapter,
         animationLabel = "appHorizontalScrollbarAlpha",
@@ -102,16 +96,13 @@ public fun AppHorizontalScrollbar(
 }
 
 @Composable
-private fun rememberAppScrollbarUiState(
-    adapter: ScrollbarAdapter,
-    animationLabel: String,
-): AppScrollbarUiState {
+private fun rememberAppScrollbarUiState(adapter: ScrollbarAdapter, animationLabel: String): AppScrollbarUiState {
     val interactionSource = remember { MutableInteractionSource() }
     val isEdgeHovered by interactionSource.collectIsHoveredAsState()
     val isScrollRevealActive = rememberScrollRevealState(adapter)
     val canScroll by remember(adapter) {
         derivedStateOf {
-            adapter.contentSize - adapter.viewportSize > ScrollbarOffsetDeltaEpsilon
+            adapter.contentSize - adapter.viewportSize > SCROLLBAR_OFFSET_DELTA_EPSILON
         }
     }
     val isVisible = canScroll && (isEdgeHovered || isScrollRevealActive)
@@ -127,12 +118,10 @@ private fun rememberAppScrollbarUiState(
     )
 }
 
-private fun Modifier.appScrollbarChrome(
-    interactionSource: MutableInteractionSource,
-    alpha: Float,
-): Modifier = hoverable(interactionSource)
-    .clip(SimAnalyzerTheme.corners.indicator)
-    .alpha(alpha)
+private fun Modifier.appScrollbarChrome(interactionSource: MutableInteractionSource, alpha: Float): Modifier =
+    hoverable(interactionSource)
+        .clip(SimAnalyzerTheme.corners.indicator)
+        .alpha(alpha)
 
 @Composable
 private fun rememberScrollRevealState(adapter: ScrollbarAdapter): Boolean {
@@ -151,7 +140,7 @@ private fun rememberScrollRevealState(adapter: ScrollbarAdapter): Boolean {
                     return@collect
                 }
 
-                if (abs(currentOffset - previousOffset) <= ScrollbarOffsetDeltaEpsilon) {
+                if (abs(currentOffset - previousOffset) <= SCROLLBAR_OFFSET_DELTA_EPSILON) {
                     return@collect
                 }
 
@@ -160,7 +149,7 @@ private fun rememberScrollRevealState(adapter: ScrollbarAdapter): Boolean {
 
                 hideJob?.cancel()
                 hideJob = launch {
-                    delay(ScrollbarScrollRevealDurationMillis)
+                    delay(SCROLLBAR_SCROLL_REVEAL_DURATION_MILLIS)
                     isVisible = false
                 }
             }
@@ -169,7 +158,4 @@ private fun rememberScrollRevealState(adapter: ScrollbarAdapter): Boolean {
     return isVisible
 }
 
-private data class AppScrollbarUiState(
-    val interactionSource: MutableInteractionSource,
-    val alpha: Float,
-)
+private data class AppScrollbarUiState(val interactionSource: MutableInteractionSource, val alpha: Float)

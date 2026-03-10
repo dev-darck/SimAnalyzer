@@ -36,6 +36,5 @@ data class SessionDetailState(
     ),
     val page: Int = 1,
     val pageCount: Int = 1,
-    val laps: List<SessionLapRowUi> = emptyList(),
     val visibleLaps: List<SessionLapRowUi> = emptyList(),
 )

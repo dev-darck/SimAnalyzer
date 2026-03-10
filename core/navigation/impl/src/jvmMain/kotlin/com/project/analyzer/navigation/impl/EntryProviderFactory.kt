@@ -13,6 +13,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
+import kotlin.reflect.KClass
 
 @Inject
 @SingleIn(NavigationScope::class)
@@ -43,6 +44,20 @@ private class Nav3EntryAdapter(private val scope: EntryProviderScope<Route>) : N
             content = {
                 content(it)
             },
+        )
+    }
+
+    override fun <T : Route> entry(
+        clazz: KClass<out T>,
+        clazzContentKey: (T) -> Any,
+        metadata: (T) -> Map<String, Any>,
+        content: @Composable (T) -> Unit,
+    ) {
+        scope.addEntryProvider(
+            clazz = clazz,
+            clazzContentKey = clazzContentKey,
+            metadata = metadata,
+            content = content,
         )
     }
 }

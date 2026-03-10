@@ -47,9 +47,7 @@ interface CrashModule {
 
         @Provides
         @SingleIn(CrashScope::class)
-        private fun provideReportOnGitHubUseCase(
-            copyReportUseCase: CopyReportUseCase,
-        ): ReportOnGitHubUseCase =
+        private fun provideReportOnGitHubUseCase(copyReportUseCase: CopyReportUseCase): ReportOnGitHubUseCase =
             ReportOnGitHubUseCaseImpl(copyReportUseCase)
     }
 }

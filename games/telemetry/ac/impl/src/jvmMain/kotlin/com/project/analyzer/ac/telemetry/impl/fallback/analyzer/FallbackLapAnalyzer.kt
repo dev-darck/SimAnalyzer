@@ -7,12 +7,18 @@ import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDete
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.PhysicsPoseExtractor
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
+import com.project.analyzer.api.di.IO
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -20,12 +26,18 @@ import kotlin.time.Duration.Companion.seconds
 class FallbackLapAnalyzer(
     private val calibrationLoader: TrackCalibrationLoader,
     private val gateDetector: GateCrossingDetector,
+    @param:IO
+    private val ioDispatcher: CoroutineDispatcher,
 ) {
 
     private val state = LapAnalyzerState()
     private val poseExtractor = PhysicsPoseExtractor()
+    private val calibrationLoadScope = CoroutineScope(
+        SupervisorJob() + ioDispatcher.limitedParallelism(1, "FallbackLapAnalyzerCalibration"),
+    )
+    private val requestedCalibrationLoads = ConcurrentHashMap.newKeySet<String>()
 
-    private var lastMissingCalibrationTrackId: String? = null
+    private var lastMissingCalibrationTrackKey: String? = null
     private var lastMissingCalibrationLogMs: Long = 0L
     private var lastProcessedTimestampNs: Long = -1L
 
@@ -69,36 +81,28 @@ class FallbackLapAnalyzer(
             null
         }
 
-        return if (id != state.currentTrackId) {
-            val calibration = calibrationLoader.load(id)
-            if (calibration == null) {
-                val now = System.currentTimeMillis()
-                val shouldLog =
-                    lastMissingCalibrationTrackId != id ||
-                        (now - lastMissingCalibrationLogMs) >= MISSING_CALIBRATION_LOG_COOLDOWN_MS
-
-                if (shouldLog) {
-                    logger.info {
-                        "TrackCalibration NOT found for trackId=$id. " +
-                            "Checked store and resource: /track_calibrations/$id.json"
-                    }
-                    lastMissingCalibrationTrackId = id
-                    lastMissingCalibrationLogMs = now
-                }
-
-                state.resetWithTrackId(id)
-                return null
+        val cachedCalibration = calibrationLoader.peek(id)
+        if (cachedCalibration != null) {
+            if (lastMissingCalibrationTrackKey == normalizeTrackLogKey(id)) {
+                lastMissingCalibrationTrackKey = null
             }
-
-            if (lastMissingCalibrationTrackId == id) {
-                lastMissingCalibrationTrackId = null
+            requestedCalibrationLoads.remove(id)
+            if (state.currentTrackId != id || state.calibration != cachedCalibration) {
+                state.setCalibration(id, cachedCalibration)
             }
-
-            state.setCalibration(id, calibration)
-            calibration
-        } else {
-            state.calibration
+            return cachedCalibration
         }
+
+        if (!calibrationLoader.isCached(id)) {
+            requestCalibrationLoad(id)
+        } else {
+            maybeLogMissingCalibration(id)
+        }
+
+        if (state.currentTrackId != id || state.calibration != null) {
+            state.resetWithTrackId(id)
+        }
+        return null
     }
 
     fun processPhysicsFrame(timestampNs: Long, physics: SPageFilePhysics) {
@@ -137,7 +141,42 @@ class FallbackLapAnalyzer(
     fun reset() {
         state.reset()
         lastProcessedTimestampNs = -1L
+        requestedCalibrationLoads.clear()
     }
+
+    private fun requestCalibrationLoad(trackId: String) {
+        if (!requestedCalibrationLoads.add(trackId)) return
+        calibrationLoadScope.launch {
+            runCatching {
+                calibrationLoader.load(trackId = trackId)
+            }.onFailure { error ->
+                logger.warn(error) { "TrackCalibration load failed for trackId=$trackId" }
+            }
+            requestedCalibrationLoads.remove(trackId)
+        }
+    }
+
+    private fun maybeLogMissingCalibration(trackId: String) {
+        val trackKey = normalizeTrackLogKey(trackId)
+        val now = System.currentTimeMillis()
+        val shouldLog =
+            lastMissingCalibrationTrackKey != trackKey ||
+                (now - lastMissingCalibrationLogMs) >= MISSING_CALIBRATION_LOG_COOLDOWN_MS
+
+        if (!shouldLog) return
+
+        logger.info {
+            "TrackCalibration NOT found for trackId=$trackId. " +
+                "Checked app calibration folder for $trackId.json"
+        }
+        lastMissingCalibrationTrackKey = trackKey
+        lastMissingCalibrationLogMs = now
+    }
+
+    private fun normalizeTrackLogKey(trackId: String): String = trackId
+        .trim()
+        .lowercase()
+        .replace("_", "")
 
     private fun processFrame(
         timestampNs: Long,

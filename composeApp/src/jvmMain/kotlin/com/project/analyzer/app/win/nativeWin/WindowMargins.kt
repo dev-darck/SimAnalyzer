@@ -17,4 +17,5 @@ data class WindowMargins(
     var topBorderHeight: Int,
     @JvmField
     var bottomBorderHeight: Int,
-) : Structure(), Structure.ByReference
+) : Structure(),
+    Structure.ByReference

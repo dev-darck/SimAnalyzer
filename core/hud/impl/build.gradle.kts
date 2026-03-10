@@ -7,7 +7,6 @@ moduleImpl {
     dependencies {
         projects.core.hud.api.jvmImpl
         projects.games.game.api.jvmImpl
-        projects.games.game.impl.jvmImpl
         projects.core.di.api.jvmImpl
         projects.core.leak.api.jvmImpl
         projects.core.preference.api.jvmImpl

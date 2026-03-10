@@ -1,0 +1,15 @@
+<resources>
+    <string name="track_map_library_title">Saved track maps</string>
+    <string name="track_map_library_subtitle">Browse stored layouts and verify distances.</string>
+    <string name="track_map_library_total">Total maps: %1$d</string>
+    <string name="track_map_library_empty_title">No maps yet</string>
+    <string name="track_map_library_empty_subtitle">Capture a track map to see it listed here.</string>
+    <string name="track_map_library_points">Points: %1$d</string>
+    <string name="track_map_library_distance">Distance: %1$s</string>
+    <string name="track_map_library_width">Width: %1$s m</string>
+    <string name="track_map_library_pit">Pit: %1$d</string>
+    <string name="track_map_library_edit">Edit sectors</string>
+    <string name="track_map_library_hide_points">Hide points</string>
+    <string name="track_map_library_show_points">Show points</string>
+    <string name="track_map_library_more_points">&#10;... +%1$d more</string>
+</resources>

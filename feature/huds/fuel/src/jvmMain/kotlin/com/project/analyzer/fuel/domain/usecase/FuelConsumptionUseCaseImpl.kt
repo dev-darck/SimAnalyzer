@@ -371,10 +371,7 @@ class FuelConsumptionUseCaseImpl(
         data object ManualReset : Input
     }
 
-    private data class PendingReplacement(
-        val session: SessionInfo?,
-        val activeSessionId: Long,
-    )
+    private data class PendingReplacement(val session: SessionInfo?, val activeSessionId: Long)
 
     private enum class Mode {
         NONE,

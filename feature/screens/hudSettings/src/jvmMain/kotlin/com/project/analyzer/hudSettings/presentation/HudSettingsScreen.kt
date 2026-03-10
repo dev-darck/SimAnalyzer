@@ -51,7 +51,7 @@ import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_preview
 import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_preview_title
 import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_select_hint
 import com.project.analyzer.feature.screens.hudSettings.Res.hud_settings_title
-import com.project.analyzer.hud.api.DefaultHudBackgroundOpacity
+import com.project.analyzer.hud.api.DEFAULT_HUD_BACKGROUND_OPACITY
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
 import com.project.analyzer.theme.SimAnalyzerTheme
@@ -130,7 +130,7 @@ private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
-            .background(SimAnalyzerTheme.material.surface)
+            .background(SimAnalyzerTheme.material.surface),
     ) {
         Column(
             modifier = Modifier
@@ -432,7 +432,7 @@ private fun HudSettingsScreenPreview() {
             state = HudUiState(
                 panels = demoPanels,
                 visiblePanels = mapOf("fuel" to 0, "timing" to 0, "electronics" to 0),
-                hudOpacity = DefaultHudBackgroundOpacity,
+                hudOpacity = DEFAULT_HUD_BACKGROUND_OPACITY,
             ),
         )
     }

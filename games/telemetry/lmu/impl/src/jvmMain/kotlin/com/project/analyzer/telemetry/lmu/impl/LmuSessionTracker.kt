@@ -60,6 +60,7 @@ internal class LmuSessionTracker {
             carModel = frame.session?.car?.carModel.orEmpty(),
             trackId = frame.session?.track?.trackId.orEmpty(),
             carId = frame.session?.car?.carId?.takeIf { it > 0 },
+            layoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() },
         )
     }
 
@@ -114,6 +115,12 @@ internal class LmuSessionTracker {
             changed += SessionField.TRACK_ID
         }
 
+        val newLayoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() }
+        if (newLayoutId != cur.layoutId) {
+            updated = updated.copy(layoutId = newLayoutId)
+            changed += SessionField.TRACK_LAYOUT_ID
+        }
+
         if (changed.isNotEmpty()) {
             currentSession = updated
             emit(TelemetryLifecycleEvent.SessionUpdated(updated, changed.toSet()))
@@ -137,6 +144,7 @@ internal class LmuSessionTracker {
             carModel = frame.session?.car?.carModel.orEmpty().trim().ifBlank { cur.carModel },
             trackId = frame.session?.track?.trackId.orEmpty().trim().ifBlank { cur.trackId },
             carId = frame.session?.car?.carId?.takeIf { it > 0 } ?: cur.carId,
+            layoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() } ?: cur.layoutId,
         )
         currentSession = restarted
         emit(TelemetryLifecycleEvent.SessionStarted(restarted))

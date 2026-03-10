@@ -41,7 +41,7 @@ private fun File.buildRollbackDirectory(): File {
     var attempt = 0
     while (true) {
         val suffix = if (attempt == 0) "" else "_$attempt"
-        val candidate = File(parent, "${name}.rollback$suffix")
+        val candidate = File(parent, "$name.rollback$suffix")
         if (!candidate.exists()) return candidate
         attempt += 1
     }

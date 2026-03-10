@@ -1,0 +1,124 @@
+{
+    "trackId": "paul_ricard_3c",
+    "trackName": "Paul Ricard 3c",
+    "layoutId": "3c",
+    "createdAtEpochMs": 1772921729056,
+    "source": "GAME",
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": 1729.8662,
+            "y": -1495.4973
+        },
+        "forward": {
+            "x": -0.81163114,
+            "y": -0.58417034
+        },
+        "normal": {
+            "x": 0.58417034,
+            "y": -0.81163114
+        },
+        "halfWidthMeters": 11.236275
+    },
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": 1729.8662,
+                    "y": -1495.4973
+                },
+                "forward": {
+                    "x": -0.81163114,
+                    "y": -0.58417034
+                },
+                "normal": {
+                    "x": 0.58417034,
+                    "y": -0.81163114
+                },
+                "halfWidthMeters": 11.236275
+            },
+            "finish": {
+                "center": {
+                    "x": 2125.1624,
+                    "y": -1657.4972
+                },
+                "forward": {
+                    "x": 0.94669497,
+                    "y": 0.32213163
+                },
+                "normal": {
+                    "x": -0.32213163,
+                    "y": 0.94669497
+                },
+                "halfWidthMeters": 14.0
+            }
+        },
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": 2125.1624,
+                    "y": -1657.4972
+                },
+                "forward": {
+                    "x": 0.94669497,
+                    "y": 0.32213163
+                },
+                "normal": {
+                    "x": -0.32213163,
+                    "y": 0.94669497
+                },
+                "halfWidthMeters": 14.0
+            },
+            "finish": {
+                "center": {
+                    "x": 2485.8608,
+                    "y": -1249.6344
+                },
+                "forward": {
+                    "x": 0.49730822,
+                    "y": -0.867574
+                },
+                "normal": {
+                    "x": 0.867574,
+                    "y": 0.49730822
+                },
+                "halfWidthMeters": 11.236275
+            }
+        },
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": 2485.8608,
+                    "y": -1249.6344
+                },
+                "forward": {
+                    "x": 0.49730822,
+                    "y": -0.867574
+                },
+                "normal": {
+                    "x": 0.867574,
+                    "y": 0.49730822
+                },
+                "halfWidthMeters": 11.236275
+            },
+            "finish": {
+                "center": {
+                    "x": 1729.8662,
+                    "y": -1495.4973
+                },
+                "forward": {
+                    "x": -0.81163114,
+                    "y": -0.58417034
+                },
+                "normal": {
+                    "x": 0.58417034,
+                    "y": -0.81163114
+                },
+                "halfWidthMeters": 11.236275
+            }
+        }
+    ]
+}

@@ -49,12 +49,7 @@ public fun Gate.frame2D(fallbackForward: Vec2 = Vec2.Up): GateGeometry {
     )
 }
 
-private fun safeNormalizedOrFallback(
-    x: Float,
-    y: Float,
-    fallbackX: Float,
-    fallbackY: Float,
-): Vec2 {
+private fun safeNormalizedOrFallback(x: Float, y: Float, fallbackX: Float, fallbackY: Float): Vec2 {
     val len2 = x * x + y * y
     if (len2 > MathEps.EPS * MathEps.EPS) {
         val inv = 1f / sqrt(len2)

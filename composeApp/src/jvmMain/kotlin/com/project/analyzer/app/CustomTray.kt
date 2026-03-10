@@ -178,10 +178,7 @@ private fun Image.toTraySizedImage(tray: SystemTray): Image {
     }
 }
 
-private data class TrayAnchor(
-    val clickUser: Point,
-    val screenBoundsUser: Rectangle,
-)
+private data class TrayAnchor(val clickUser: Point, val screenBoundsUser: Rectangle)
 
 private fun resolveTrayAnchor(position: Pair<Int, Int>): TrayAnchor {
     val click = Point(position.first, position.second)

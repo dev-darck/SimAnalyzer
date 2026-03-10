@@ -89,6 +89,7 @@ internal class FileTelemetrySessionStore(
             carId = update.carId ?: session.metadata.carId,
             trackId = update.trackId ?: session.metadata.trackId,
             trackName = update.trackName ?: session.metadata.trackName,
+            layoutId = update.layoutId ?: session.metadata.layoutId,
             airTempC = update.airTempC ?: session.metadata.airTempC,
             trackTempC = update.trackTempC ?: session.metadata.trackTempC,
             dataSource = update.dataSource ?: session.metadata.dataSource,
@@ -107,6 +108,7 @@ internal class FileTelemetrySessionStore(
                 carId = update.carId,
                 trackId = update.trackId,
                 trackName = update.trackName,
+                layoutId = update.layoutId,
             ),
         )
     }

@@ -1,6 +1,6 @@
 package com.project.analyzer.fuel.domain.model
 
-import java.util.Locale
+import com.project.analyzer.utils.toSlugId
 
 internal data class FuelIdentityKey(val carId: Int, val trackId: String) {
 
@@ -24,17 +24,6 @@ internal data class FuelIdentityKey(val carId: Int, val trackId: String) {
             )
         }
 
-        private fun normalizeTrackId(value: String?): String = value
-            .orEmpty()
-            .trim()
-            .lowercase(Locale.US)
-            .replace(WHITESPACE_REGEX, "_")
-            .replace(NON_SLUG_CHARS_REGEX, "_")
-            .replace(MULTIPLE_UNDERSCORES_REGEX, "_")
-            .trim('_')
-
-        private val WHITESPACE_REGEX = Regex("\\s+")
-        private val NON_SLUG_CHARS_REGEX = Regex("[^a-z0-9_-]")
-        private val MULTIPLE_UNDERSCORES_REGEX = Regex("_+")
+        private fun normalizeTrackId(value: String?): String = value.orEmpty().toSlugId(allowDash = true)
     }
 }

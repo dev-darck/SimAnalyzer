@@ -11,13 +11,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 @Inject
 @SingleIn(AppScope::class)
 internal class GameDetectorFactoryImpl : GameDetectorFactory {
-    override fun create(
-        requireForeground: Boolean,
-        coroutineDispatcher: CoroutineDispatcher,
-    ): GameWindowDetector = GameDetector(
-        configs = GameProfiles.detectorConfigs(),
-        requireForeground = requireForeground,
-        coroutineDispatcher = coroutineDispatcher,
-    )
+    override fun create(requireForeground: Boolean, coroutineDispatcher: CoroutineDispatcher): GameWindowDetector =
+        GameDetector(
+            configs = GameProfiles.detectorConfigs(),
+            requireForeground = requireForeground,
+            coroutineDispatcher = coroutineDispatcher,
+        )
 }
-

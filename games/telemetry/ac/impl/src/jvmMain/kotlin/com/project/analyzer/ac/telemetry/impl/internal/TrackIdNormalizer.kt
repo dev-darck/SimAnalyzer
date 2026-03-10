@@ -12,10 +12,13 @@ internal object TrackIdNormalizer {
     private var lastResult: String = ""
 
     fun normalize(track: String, layout: String? = null): String {
-        val layoutKey = layout?.takeIf { it.isNotBlank() }
+        val layoutKey = normalizeLayoutId(layout)
         if (track == lastTrack && layoutKey == lastLayout) return lastResult
 
-        val base = normalizeBaseToken(track)
+        val base = canonicalizeBaseToken(
+            base = normalizeBaseToken(track),
+            layout = layoutKey,
+        )
         if (base.isBlank()) {
             updateCache(track, layoutKey, "")
             return ""
@@ -26,6 +29,11 @@ internal object TrackIdNormalizer {
 
         updateCache(track, layoutKey, result)
         return result
+    }
+
+    fun normalizeLayoutId(raw: String?): String? {
+        val layoutKey = raw?.trim()?.takeIf { it.isNotBlank() } ?: return null
+        return normalizeLayoutToken(layoutKey).takeIf { it.isNotBlank() }
     }
 
     private fun updateCache(track: String, layout: String?, result: String) {
@@ -50,6 +58,17 @@ internal object TrackIdNormalizer {
         if (token.isBlank()) return ""
         if (token in NON_DRIVABLE_TRACK_TOKENS) return ""
         return token
+    }
+
+    private fun canonicalizeBaseToken(base: String, layout: String?): String {
+        var normalized = base
+        val layoutKey = layout.orEmpty()
+        if (layoutKey.isNotBlank() && normalized.endsWith("_$layoutKey")) {
+            normalized = normalized.removeSuffix("_$layoutKey")
+        }
+        normalized = normalized.removeSuffix("_layout").trim('_')
+        if (normalized.isBlank()) return ""
+        return BASE_ALIASES[normalized] ?: normalized
     }
 
     private fun normalizeLayoutToken(raw: String): String {
@@ -132,6 +151,14 @@ internal object TrackIdNormalizer {
         "24_hour" to "24h",
         "24hours" to "24h",
         "24_hour_layout" to "24h",
+    )
+
+    private val BASE_ALIASES: Map<String, String> = mapOf(
+        "circuit_de_spa_francorchamps" to "spa",
+        "spa_francorchamps" to "spa",
+        "red_bull_ring" to "redbull_ring",
+        "watkins_glen_international" to "watkins_glen",
+        "paul_ricard_layout" to "paul_ricard",
     )
 
     private val NON_DRIVABLE_TRACK_TOKENS: Set<String> = setOf(

@@ -23,12 +23,7 @@ public sealed class Route(public val isRoot: Boolean, public val topLevel: Root)
         public data object Session : SessionRoot(true)
 
         @Serializable
-        public data class SessionDetails(public val sessionId: Long) : SessionRoot(false) {
-
-            override fun equals(other: Any?): Boolean = other is SessionDetails
-
-            override fun hashCode(): Int = SessionDetails::class.hashCode()
-        }
+        public data class SessionDetails(public val sessionId: Long) : SessionRoot(false)
     }
 
     @Serializable
@@ -49,5 +44,30 @@ public sealed class Route(public val isRoot: Boolean, public val topLevel: Root)
 
         @Serializable
         public data object DevSettings : SettingsRoot(false)
+
+        @Serializable
+        public data object DevCalibration : SettingsRoot(false)
+
+        @Serializable
+        public data class DevCalibrationVerify(public val trackId: String) : SettingsRoot(false)
+
+        @Serializable
+        public data object DevTrackMap : SettingsRoot(false)
+
+        @Serializable
+        public data object DevTrackMapLibrary : SettingsRoot(false)
+
+        @Serializable
+        public data object DevTelemetry : SettingsRoot(false)
+
+        @Serializable
+        public data object DevHud : SettingsRoot(false)
+
+        @Serializable
+        public data class TrackMapCalibrationEditor(
+            public val gameId: String,
+            public val trackId: String,
+            public val layoutId: String? = null,
+        ) : SettingsRoot(false)
     }
 }

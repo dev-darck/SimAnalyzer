@@ -23,7 +23,8 @@ public enum class FlagType {
     CHECKERED,
     PENALTY,
     GREEN,
-    ORANGE;
+    ORANGE,
+    ;
 
     public companion object {
 

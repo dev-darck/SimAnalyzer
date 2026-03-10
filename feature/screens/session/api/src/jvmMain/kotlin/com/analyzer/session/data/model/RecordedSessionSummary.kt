@@ -11,6 +11,7 @@ public data class RecordedSessionSummary(
     val carId: Int? = null,
     val trackId: String?,
     val trackName: String? = null,
+    val layoutId: String? = null,
     val lapCount: Int,
     val bestLapTimeMs: Int?,
     val totalIncidents: Int,

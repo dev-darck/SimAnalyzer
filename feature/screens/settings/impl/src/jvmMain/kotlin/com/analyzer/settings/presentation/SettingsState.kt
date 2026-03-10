@@ -15,11 +15,7 @@ internal enum class StorageSizeUnit {
 internal sealed interface StorageSizeInfo {
     data object Unknown : StorageSizeInfo
     data object Zero : StorageSizeInfo
-    data class Value(
-        val size: Double,
-        val fractionDigits: Int,
-        val unit: StorageSizeUnit,
-    ) : StorageSizeInfo
+    data class Value(val size: Double, val fractionDigits: Int, val unit: StorageSizeUnit) : StorageSizeInfo
 }
 
 internal data class SettingsState(

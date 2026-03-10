@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,6 +23,7 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
+@Suppress("unused")
 class CalibrationDebugHudPanel(private val overlayDebugBus: OverlayDebugBus) : HudPanel {
 
     override val id: String = "calibration_debug"
@@ -46,6 +46,7 @@ class CalibrationDebugHudPanel(private val overlayDebugBus: OverlayDebugBus) : H
 @Inject
 @SingleIn(HudScope::class)
 @ContributesIntoSet(HudScope::class)
+@Suppress("unused")
 class CalibrationMiniMapHudPanel(private val overlayDebugBus: OverlayDebugBus) : HudPanel {
 
     override val id: String = "calibration_minimap"
@@ -57,6 +58,8 @@ class CalibrationMiniMapHudPanel(private val overlayDebugBus: OverlayDebugBus) :
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val material = SimAnalyzerTheme.material
+        val chrome = SimAnalyzerTheme.chrome
         val state by overlayDebugBus.state.collectAsStateWithLifecycle()
         val carPos = state.carPos
         val carDir = state.carDir
@@ -64,14 +67,14 @@ class CalibrationMiniMapHudPanel(private val overlayDebugBus: OverlayDebugBus) :
         if (carPos == null || carDir == null) {
             Box(
                 modifier = modifier
-                    .background(Color(0x66000000))
+                    .background(chrome.fillOverlay)
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = "Waiting for telemetry",
                     style = SimAnalyzerTheme.typography.bodySmall,
-                    color = Color.White,
+                    color = material.onSurface,
                 )
             }
             return

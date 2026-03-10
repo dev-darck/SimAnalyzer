@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.components.TimingInfo
 import com.project.analyzer.calibration.presentation.components.fmt
@@ -18,18 +17,21 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
 fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
+    val material = SimAnalyzerTheme.material
+    val chrome = SimAnalyzerTheme.chrome
+    val extended = SimAnalyzerTheme.extended
     val carPos = state.carPos
     val carDir = state.carDir ?: Vec2.Up
 
     Column(
         modifier
             .padding(14.dp)
-            .background(Color(0x66000000))
+            .background(chrome.fillOverlay)
             .padding(10.dp),
     ) {
         Text(
             "Overlay Debug",
-            color = Color.White,
+            color = material.onSurface,
             style = SimAnalyzerTheme.typography.bodyLarge,
         )
 
@@ -38,7 +40,7 @@ fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
         if (carPos == null) {
             Text(
                 text = "Waiting for telemetry...",
-                color = Color.White,
+                color = material.onSurface,
                 style = SimAnalyzerTheme.typography.bodySmall,
             )
             return
@@ -53,22 +55,22 @@ fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
 
         Text(
             text = "track=${state.trackId ?: "?"}",
-            color = Color.White,
+            color = material.onSurface,
             style = SimAnalyzerTheme.typography.bodySmall,
         )
         Text(
             text = "speed=${state.speedKmh?.let { "%.1f".format(it) } ?: "?"} km/h",
-            color = Color.White,
+            color = material.onSurface,
             style = SimAnalyzerTheme.typography.bodySmall,
         )
         Text(
             text = "pos=(${fmt(carPos.x)}, ${fmt(carPos.y)})",
-            color = Color.White,
+            color = material.onSurface,
             style = SimAnalyzerTheme.typography.bodySmall,
         )
         Text(
             text = "dir=(${fmt(carDir.x)}, ${fmt(carDir.y)})",
-            color = Color.White,
+            color = material.onSurface,
             style = SimAnalyzerTheme.typography.bodySmall,
         )
 
@@ -76,15 +78,17 @@ fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
 
         state.gateInfo.forEach { gi ->
             val inside = if (gi.isInside) "INSIDE" else "OUTSIDE"
+            val planeDistance = gi.signedDistanceFromPlane?.let(::fmt) ?: "?"
+            val directionDot = gi.directionDot?.let(::fmt) ?: "?"
             Text(
                 text = "${gi.name}: $inside " +
                     "dist=${fmt(gi.distanceMeters)} " +
-                    "dPlane=${fmt(gi.signedDistanceFromPlane!!)} " +
+                    "dPlane=$planeDistance " +
                     "dPar=${fmt(gi.dParallel)} " +
                     "margin=${fmt(gi.margin)} " +
-                    "dot=${fmt(gi.directionDot!!)} " +
+                    "dot=$directionDot " +
                     "crossed=${gi.isCrossed}",
-                color = if (gi.isInside) Color(0xFFB6FFB6) else Color(0xFFFFB6B6),
+                color = if (gi.isInside) extended.lightGreen else extended.red,
                 style = SimAnalyzerTheme.typography.bodySmall,
             )
         }
