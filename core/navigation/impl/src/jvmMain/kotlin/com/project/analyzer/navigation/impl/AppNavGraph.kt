@@ -54,7 +54,7 @@ fun AppNavGraph(
 
         val sceneState = rememberSceneState(
             entries = entries,
-            sceneStrategy = SinglePaneSceneStrategy(),
+            sceneStrategies = listOf(SinglePaneSceneStrategy()),
             sharedTransitionScope = null,
             onBack = navigationState::handleBack,
         )

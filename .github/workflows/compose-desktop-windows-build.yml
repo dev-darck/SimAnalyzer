@@ -78,7 +78,7 @@ concurrency:
 
 jobs:
   windows:
-    if: github.event_name != 'push' || !endsWith(github.actor, '[bot]')
+    if: ${{ github.event_name != 'push' || !endsWith(github.actor, '[bot]') }}
     runs-on: windows-latest
     outputs:
       dev_artifact_version: ${{ steps.dev_version.outputs.artifact_version }}
