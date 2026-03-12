@@ -242,7 +242,7 @@ jobs:
           git config user.name "${{ steps.app-token.outputs.app-slug }}[bot]"
           git config user.email "${user_id}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
           git add version.properties
-          git commit -m "chore: publish ${PUBLISH_DISPLAY} [skip ci]"
+          git commit -m "[skip CI] chore: publish ${PUBLISH_DISPLAY}"
           git push origin HEAD:${{ github.ref_name }}
           echo "commit_sha=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
 

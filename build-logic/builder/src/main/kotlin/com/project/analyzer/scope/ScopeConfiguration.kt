@@ -6,12 +6,14 @@ import com.project.analyzer.kmp.configureComposeResources
 import com.project.analyzer.kmp.configureDesktop
 import com.project.analyzer.kmp.configureKmpLibrary
 import com.project.analyzer.kmp.configureStorytale
+import com.project.analyzer.versioncatalog.checker.registerDependencyWatcher
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.kotlin.dsl.configure
 import org.jetbrains.compose.desktop.application.dsl.JvmApplication
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 internal fun ProjectScope.configureAppImpl(scope: JvmApplication.() -> Unit = {}) {
+    registerDependencyWatcher()
     detektConfiguration()
     configureComposeKmp()
     configureDesktop(scope)

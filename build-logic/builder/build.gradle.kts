@@ -17,4 +17,5 @@ dependencies {
     implementation(libs.gradle.detekt.plugin)
     implementation(libs.gradle.compose.compiler)
     implementation(libs.gradle.metro.plugin)
+    implementation(projects.dependenciesWatcher)
 }
