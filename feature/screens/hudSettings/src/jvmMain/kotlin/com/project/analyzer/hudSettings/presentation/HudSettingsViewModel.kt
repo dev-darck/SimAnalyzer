@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.project.analyzer.hudSettings.domain.interactor.HudSettingsUseCase
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
+import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.launch
 
 @Inject
@@ -18,13 +19,19 @@ internal class HudSettingsViewModel(private val useCase: HudSettingsUseCase) :
 
         viewModelScope.launch {
             useCase.observeVisiblePanels().collect { visibleIds ->
-                updateState { useCase.applyVisiblePanels(this, visibleIds) }
+                updateState {
+                    copy(
+                        visiblePanels = visibleIds
+                            .associateWith { id -> visiblePanels[id] ?: 0 }
+                            .toImmutableMap(),
+                    )
+                }
             }
         }
 
         viewModelScope.launch {
             useCase.observeHudOpacity().collect { opacity ->
-                updateState { useCase.applyHudOpacity(this, opacity) }
+                updateState { copy(hudOpacity = opacity.coerceIn(0f, 1f)) }
             }
         }
     }
@@ -40,7 +47,15 @@ internal class HudSettingsViewModel(private val useCase: HudSettingsUseCase) :
             }
 
             is HudSettingsIntent.OnShowPanel -> {
-                updateState { useCase.toggleSelectedPanel(this, intent.id) }
+                updateState {
+                    copy(
+                        panel = if (panel?.id != intent.id) {
+                            panels.find { panel -> panel.id == intent.id }
+                        } else {
+                            null
+                        },
+                    )
+                }
             }
 
             is HudSettingsIntent.UpdateHudOpacity -> {

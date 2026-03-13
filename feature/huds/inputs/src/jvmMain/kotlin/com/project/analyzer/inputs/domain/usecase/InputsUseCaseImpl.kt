@@ -1,9 +1,9 @@
 package com.project.analyzer.inputs.domain.usecase
 
 import com.project.analyzer.hud.api.HudScope
+import com.project.analyzer.inputs.data.repository.InputHudSettingsRepository
 import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.settings.InputHudSettings
-import com.project.analyzer.inputs.settings.repository.InputHudSettingsRepository
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.api.model.TelemetryFrame

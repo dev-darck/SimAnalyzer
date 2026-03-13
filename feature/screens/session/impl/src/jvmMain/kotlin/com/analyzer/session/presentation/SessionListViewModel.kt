@@ -9,6 +9,7 @@ import com.analyzer.session.presentation.model.SessionRowUi
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import com.project.analyzer.ui.components.TrackMapData
 import dev.zacsweers.metro.Inject
+import kotlinx.collections.immutable.toImmutableList
 
 @Inject
 internal class SessionListViewModel(
@@ -87,7 +88,7 @@ internal class SessionListViewModel(
             query = result.query,
         )
         setState(
-            mapped.copy(visibleSessions = mapped.visibleSessions.map(::mapTrackMap)),
+            mapped.copy(visibleSessions = mapped.visibleSessions.map(::mapTrackMap).toImmutableList()),
         )
     }
 

@@ -11,12 +11,16 @@ import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_s
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.StatItem
 import com.project.analyzer.ui.components.StatsRow
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun SessionDetailsStatsRow(stats: SessionDetailStatsUi, modifier: Modifier = Modifier) {
+internal fun SessionDetailsStatsRow(
+    stats: SessionDetailStatsUi,
+    modifier: Modifier = Modifier
+) {
     StatsRow(
-        stats = listOf(
+        stats = persistentListOf(
             StatItem(title = stringResource(Res.string.session_details_stats_best_lap), value = stats.bestLapLabel),
             StatItem(
                 title = stringResource(Res.string.session_details_stats_average_lap),

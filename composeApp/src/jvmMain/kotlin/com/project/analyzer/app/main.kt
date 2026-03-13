@@ -16,6 +16,8 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.awaitApplication
 import androidx.compose.ui.window.rememberWindowState
+import com.project.analyzer.app.frame.FrameDecorator
+import com.project.analyzer.app.tray.CustomTray
 import com.project.analyzer.composeApp.Res.Res
 import com.project.analyzer.composeApp.Res.app_icon
 import com.project.analyzer.crash.presentation.CrashBoundary
@@ -31,6 +33,7 @@ import com.project.analyzer.utils.SingleInstanceGuard
 import com.project.analyzer.utils.logger.LogbackConfigurator
 import com.project.analyzer.utils.resolveAppDirectories
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import kotlinx.collections.immutable.toImmutableSet
 import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
 import java.awt.SystemTray
@@ -65,6 +68,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
     var showAppWindow by remember { mutableStateOf(true) }
     val showHud by appGraph.hudPreferences.observeHudEnabled().collectAsState(true)
     var showOverlay by remember { mutableStateOf(features.hud.hudPanels.isNotEmpty()) }
+    val hudPanels = remember(features.hud.hudPanels) { features.hud.hudPanels.toImmutableSet() }
     val isSystemTraySupported = remember { SystemTray.isSupported() }
     val navigationState = rememberNavigationState()
 
@@ -113,7 +117,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
     OverlayWindow(
         visible = showHud && showOverlay,
         onCloseRequest = { showOverlay = false },
-        panels = features.hud.hudPanels,
+        panels = hudPanels,
         gameDetectorFactory = features.gameDetector.gameDetectorFactory,
         state = rememberWindowState(),
     )

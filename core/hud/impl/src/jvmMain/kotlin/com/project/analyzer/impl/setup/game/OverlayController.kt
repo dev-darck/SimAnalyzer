@@ -1,5 +1,6 @@
 package com.project.analyzer.impl.setup.game
 
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.IntRect
 import com.project.analyzer.game.api.GameWindowDetector
 import com.project.analyzer.game.api.GameWindowInfo
@@ -43,6 +44,7 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.swing.SwingUtilities
 import kotlin.time.Duration.Companion.milliseconds
 
+@Stable
 class OverlayController(
     private val gameDetector: GameWindowDetector,
     private val hitRegions: HitRegions,

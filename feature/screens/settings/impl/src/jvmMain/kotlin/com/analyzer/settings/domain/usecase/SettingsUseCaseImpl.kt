@@ -1,7 +1,7 @@
 package com.analyzer.settings.domain.usecase
 
 import com.analyzer.settings.data.telemetry.SettingsRepository
-import com.analyzer.settings.data.telemetry.StorageValidationResult
+import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.data.theme.ThemeRepository
 import com.analyzer.settings.domain.model.TelemetrySettings
 import com.project.analyzer.api.di.ScreenScope

@@ -24,6 +24,9 @@ import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.ScrollableScreenColumn
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 internal fun SessionScreen() {
@@ -47,8 +50,8 @@ internal fun SessionScreen() {
 @Composable
 internal fun SessionListContent(
     state: SessionListState,
-    onIntent: (SessionListIntent) -> Unit,
     modifier: Modifier = Modifier,
+    onIntent: (SessionListIntent) -> Unit = {},
     onOpenDetails: (Long) -> Unit = {},
 ) {
     ScrollableScreenColumn(modifier = modifier) {
@@ -92,7 +95,7 @@ private fun previewState(): SessionListState = SessionListState(
     gameFilter = SessionFilterUiModel(
         kind = SessionFilterKind.Game,
         selectedId = FILTER_ALL_ID,
-        options = listOf(
+        options = persistentListOf(
             SessionFilterOptionUi(FILTER_ALL_ID),
             SessionFilterOptionUi("acc", "ACC"),
         ),
@@ -100,7 +103,7 @@ private fun previewState(): SessionListState = SessionListState(
     trackFilter = SessionFilterUiModel(
         kind = SessionFilterKind.Track,
         selectedId = FILTER_ALL_ID,
-        options = listOf(
+        options = persistentListOf(
             SessionFilterOptionUi(FILTER_ALL_ID),
             SessionFilterOptionUi("spa", "Spa"),
         ),
@@ -108,7 +111,7 @@ private fun previewState(): SessionListState = SessionListState(
     carFilter = SessionFilterUiModel(
         kind = SessionFilterKind.Car,
         selectedId = FILTER_ALL_ID,
-        options = listOf(
+        options = persistentListOf(
             SessionFilterOptionUi(FILTER_ALL_ID),
             SessionFilterOptionUi("car_name", "Car Name"),
         ),
@@ -116,7 +119,7 @@ private fun previewState(): SessionListState = SessionListState(
     dateFilter = SessionFilterUiModel(
         kind = SessionFilterKind.Date,
         selectedId = FILTER_ALL_ID,
-        options = listOf(
+        options = persistentListOf(
             SessionFilterOptionUi(FILTER_ALL_ID),
             SessionFilterOptionUi("oct_2025", "Oct 2025"),
         ),
@@ -124,7 +127,7 @@ private fun previewState(): SessionListState = SessionListState(
     sortFilter = SessionFilterUiModel(
         kind = SessionFilterKind.Sort,
         selectedId = "newest",
-        options = listOf(
+        options = persistentListOf(
             SessionFilterOptionUi("newest"),
             SessionFilterOptionUi("oldest"),
             SessionFilterOptionUi("best"),
@@ -135,7 +138,7 @@ private fun previewState(): SessionListState = SessionListState(
     visibleSessions = previewSessions(),
 )
 
-private fun previewSessions(): List<SessionRowUi> = List(size = 8) { index ->
+private fun previewSessions(): ImmutableList<SessionRowUi> = List(size = 8) { index ->
     val trackMap = previewTrackMapData()
     SessionRowUi(
         sessionId = (index + 1).toLong(),
@@ -158,4 +161,4 @@ private fun previewSessions(): List<SessionRowUi> = List(size = 8) { index ->
         isSaved = index % 3 == 0,
         trackMap = trackMap,
     )
-}
+}.toImmutableList()

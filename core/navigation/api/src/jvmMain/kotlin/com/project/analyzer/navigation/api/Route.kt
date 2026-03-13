@@ -1,8 +1,10 @@
 package com.project.analyzer.navigation.api
 
+import androidx.compose.runtime.Immutable
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
+@Immutable
 @Serializable
 public sealed class Route(public val isRoot: Boolean, public val topLevel: Root) : NavKey {
 

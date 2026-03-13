@@ -22,6 +22,8 @@ import com.analyzer.session.details.presentation.model.SessionLapRowUi
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.ScrollableScreenColumn
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun SessionDetailsScreen(sessionId: Long) {
@@ -41,8 +43,8 @@ internal fun SessionDetailsScreen(sessionId: Long) {
 @Composable
 internal fun SessionDetailsContent(
     state: SessionDetailState,
-    onIntent: (SessionDetailIntent) -> Unit,
     modifier: Modifier = Modifier,
+    onIntent: (SessionDetailIntent) -> Unit = {},
 ) {
     ScrollableScreenColumn(modifier = modifier) {
         SessionDetailsStatsRow(
@@ -80,16 +82,16 @@ private fun SessionDetailsContentPreview() {
 }
 
 private fun previewState(): SessionDetailState {
-    val sortOptions = listOf(
+    val sortOptions = persistentListOf(
         SessionDetailFilterOptionUi(id = "lap"),
         SessionDetailFilterOptionUi(id = "best"),
     )
-    val showOptions = listOf(
+    val showOptions = persistentListOf(
         SessionDetailFilterOptionUi(id = "all"),
         SessionDetailFilterOptionUi(id = "valid"),
         SessionDetailFilterOptionUi(id = "invalid"),
     )
-    val typeOptions = listOf(
+    val typeOptions = persistentListOf(
         SessionDetailFilterOptionUi(id = "all_session_types"),
         SessionDetailFilterOptionUi(id = "practice", label = "Practice"),
         SessionDetailFilterOptionUi(id = "qualifying", label = "Qualifying"),
@@ -132,7 +134,7 @@ private fun previewState(): SessionDetailState {
     )
 }
 
-private fun previewLaps(): List<SessionLapRowUi> = listOf(
+private fun previewLaps(): ImmutableList<SessionLapRowUi> = persistentListOf(
     lap(
         number = 1,
         total = "0:00.000",

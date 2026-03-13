@@ -71,6 +71,8 @@ import com.project.analyzer.fuel.domain.model.FuelPhase
 import com.project.analyzer.hud.api.hudPanelSurfaceColor
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.tooltip.Tooltip
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 private val FUEL_HUD_WIDTH = 304.dp
@@ -93,7 +95,7 @@ fun FuelDemoContent(modifier: Modifier = Modifier) {
                 lapsRemainingCount = 14,
                 lapsRemainingIsApprox = true,
                 lapBasisText = "≈1:28.500",
-                planRows = listOf(
+                planRows = persistentListOf(
                     PlanRowUi(5, "≈7:22", "7 L", "8 L"),
                     PlanRowUi(10, "≈14:45", "15 L", "16 L"),
                     PlanRowUi(15, "≈22:07", "22 L", "23 L"),
@@ -107,7 +109,7 @@ fun FuelDemoContent(modifier: Modifier = Modifier) {
                 isShow = true,
                 isSessionActive = true,
                 phase = FuelPhase.PIT_WAITING,
-                planRows = listOf(
+                planRows = persistentListOf(
                     PlanRowUi(5, "≈7:22", "7 L", "8 L"),
                     PlanRowUi(10, "≈14:45", "15 L", "16 L"),
                     PlanRowUi(15, "≈22:07", "22 L", "23 L"),
@@ -450,7 +452,7 @@ private fun SummaryMetric(
 }
 
 @Composable
-private fun PlanBlock(planRows: List<PlanRowUi>, isToolTipEnabled: Boolean) {
+private fun PlanBlock(planRows: ImmutableList<PlanRowUi>, isToolTipEnabled: Boolean) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -651,7 +653,7 @@ private fun FuelHudContentPreviewPredictive() {
                 lapsRemainingCount = 14,
                 lapsRemainingIsApprox = true,
                 lapBasisText = "≈1:28.500",
-                planRows = listOf(
+                planRows = persistentListOf(
                     PlanRowUi(5, "≈7:22", "7 L", "8 L"),
                     PlanRowUi(10, "≈14:45", "15 L", "16 L"),
                     PlanRowUi(15, "≈22:07", "22 L", "23 L"),

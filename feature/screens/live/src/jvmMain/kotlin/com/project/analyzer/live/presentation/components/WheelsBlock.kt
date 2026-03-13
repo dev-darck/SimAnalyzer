@@ -27,9 +27,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.live.Res.*
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.wheel_degree_value
+import com.project.analyzer.feature.screens.live.Res.wheel_metric_brk
+import com.project.analyzer.feature.screens.live.Res.wheel_metric_psi
+import com.project.analyzer.feature.screens.live.Res.wheel_metric_slip
+import com.project.analyzer.feature.screens.live.Res.wheel_metric_sus
+import com.project.analyzer.feature.screens.live.Res.wheel_metric_ty
+import com.project.analyzer.feature.screens.live.Res.wheel_position_fl
+import com.project.analyzer.feature.screens.live.Res.wheel_position_fr
+import com.project.analyzer.feature.screens.live.Res.wheel_position_rl
+import com.project.analyzer.feature.screens.live.Res.wheel_position_rr
+import com.project.analyzer.feature.screens.live.Res.wheel_suspension_value
+import com.project.analyzer.feature.screens.live.Res.wheel_tooltip_brk
+import com.project.analyzer.feature.screens.live.Res.wheel_tooltip_psi
+import com.project.analyzer.feature.screens.live.Res.wheel_tooltip_slip
+import com.project.analyzer.feature.screens.live.Res.wheel_tooltip_sus
+import com.project.analyzer.feature.screens.live.Res.wheel_tooltip_ty
+import com.project.analyzer.feature.screens.live.Res.wheels_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.tooltip.Tooltip
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 import java.util.Locale
 
@@ -51,7 +70,12 @@ data class WheelUi(
 )
 
 @Composable
-fun WheelsBlock(wheels: List<WheelUi>, modifier: Modifier = Modifier, tileHeight: Dp = 108.dp, gap: Dp = 22.dp) {
+fun WheelsBlock(
+    wheels: ImmutableList<WheelUi>,
+    modifier: Modifier = Modifier,
+    tileHeight: Dp = 108.dp,
+    gap: Dp = 22.dp,
+) {
     val tileShape = SimAnalyzerTheme.corners.display
     val badgeShape = SimAnalyzerTheme.corners.badge
 
@@ -233,7 +257,13 @@ private fun WheelWideTile(
 }
 
 @Composable
-private fun InfoBlock(label: String, value: String, labelColor: Color, valueColor: Color, tooltip: String) {
+private fun InfoBlock(
+    label: String,
+    value: String,
+    labelColor: Color,
+    valueColor: Color,
+    tooltip: String
+) {
     Tooltip(
         tooltip = tooltip,
     ) {
@@ -272,7 +302,7 @@ private fun WheelsBlockPreview() {
             contentAlignment = Alignment.Center,
         ) {
             WheelsBlock(
-                wheels = listOf(
+                wheels = persistentListOf(
                     WheelUi(
                         pos = WheelPos.FL,
                         psi = 24.5f,

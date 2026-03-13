@@ -1,8 +1,8 @@
 package com.project.analyzer.inputs.domain.usecase
 
+import com.project.analyzer.inputs.data.repository.InputHudSettingsRepository
 import com.project.analyzer.inputs.domain.model.InputsResult
 import com.project.analyzer.inputs.settings.InputHudSettings
-import com.project.analyzer.inputs.settings.repository.InputHudSettingsRepository
 import com.project.analyzer.telemetry.api.contract.SessionInfo
 import com.project.analyzer.telemetry.api.contract.SessionType
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle

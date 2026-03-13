@@ -1,5 +1,6 @@
 package com.analyzer.settings.data.telemetry
 
+import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.ScreenScope

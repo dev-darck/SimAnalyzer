@@ -32,6 +32,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -145,7 +146,7 @@ private fun SessionScreenHeaderPreview() {
                 gameFilter = SessionFilterUiModel(
                     kind = SessionFilterKind.Game,
                     selectedId = FILTER_ALL_ID,
-                    options = listOf(
+                    options = persistentListOf(
                         SessionFilterOptionUi(FILTER_ALL_ID),
                         SessionFilterOptionUi("acc", "ACC"),
                     ),

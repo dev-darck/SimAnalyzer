@@ -30,6 +30,7 @@ import com.project.analyzer.core.ui.Res.screen_layout_preview_track
 import com.project.analyzer.core.ui.Res.screen_layout_preview_track_value
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -78,7 +79,7 @@ private fun ScreenLayoutPreview() {
     SimAnalyzerTheme {
         ScrollableScreenColumn {
             StatsRow(
-                stats = listOf(
+                stats = persistentListOf(
                     StatItem(
                         title = stringResource(Res.string.screen_layout_preview_distance),
                         value = stringResource(Res.string.screen_layout_preview_distance_value),

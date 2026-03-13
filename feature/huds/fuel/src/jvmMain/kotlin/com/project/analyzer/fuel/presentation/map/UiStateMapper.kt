@@ -6,6 +6,8 @@ import com.project.analyzer.fuel.domain.predictor.FuelConsumptionConfig
 import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.PlanRowUi
 import com.project.analyzer.utils.ext.fromMsToLapTime
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -32,7 +34,7 @@ internal fun FuelEstimate.toUiState(safetyFactor: Double): FuelHudUiState {
         litersPerLapRaw = lpl,
         planFuelLitersRaw = FuelConsumptionConfig.planLaps.map { laps ->
             lpl?.let { it * laps * safetyFactor }
-        },
+        }.toImmutableList(),
         confidence = confidence,
         isCurrentLapValid = isCurrentLapValid,
     )
@@ -57,7 +59,7 @@ private fun FuelEstimate.formatLapBasis(lapTimeSec: Double): String {
     return if (isLapTimeFromCompletedLap) formatted else "≈$formatted"
 }
 
-private fun buildPlanRows(litersPerLap: Double?, lapTimeSec: Double, safetyFactor: Double): List<PlanRowUi> =
+private fun buildPlanRows(litersPerLap: Double?, lapTimeSec: Double, safetyFactor: Double): ImmutableList<PlanRowUi> =
     FuelConsumptionConfig.planLaps.map { laps ->
         val totalTimeSec = laps * lapTimeSec
         val fuelNeeded = litersPerLap?.let { it * laps * safetyFactor }
@@ -68,7 +70,7 @@ private fun buildPlanRows(litersPerLap: Double?, lapTimeSec: Double, safetyFacto
             fuelText = fuelNeeded?.let { "${it.roundToInt()} L" } ?: "—",
             peakFuelText = "—",
         )
-    }
+    }.toImmutableList()
 
 private fun Double.formatLiters(decimals: Int): String = String.format(Locale.US, "%.${decimals}f L", this)
 

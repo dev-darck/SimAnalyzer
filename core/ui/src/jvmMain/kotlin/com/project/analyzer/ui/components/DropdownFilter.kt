@@ -40,10 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
@@ -65,16 +63,16 @@ import com.project.analyzer.core.ui.Res.dropdown_preview_le_mans_ultimate
 import com.project.analyzer.core.ui.Res.dropdown_preview_rfactor_2
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 private const val DROPDOWN_FIELD_MAX_WIDTH = 220
 private const val DROPDOWN_FIELD_TEXT_MAX_WIDTH = 180
 private const val DROPDOWN_POPUP_MAX_HEIGHT = 320
-private const val DROPDOWN_POPUP_MIN_WIDTH = 112
 private const val DROPDOWN_POPUP_CONTENT_PADDING = 8
 private const val DROPDOWN_POPUP_ITEM_SPACING = 4
 private const val DROPDOWN_POPUP_SCROLLBAR_GUTTER = 10
-private const val DROPDOWN_POPUP_TEXT_WIDTH_BUFFER = 28
 private const val DROPDOWN_ITEM_HORIZONTAL_PADDING = 12
 private const val DROPDOWN_ITEM_MIN_HEIGHT = 38
 private const val DROPDOWN_ITEM_SPACING = 8
@@ -84,7 +82,7 @@ public data class DropdownFilterUi(
     val label: String = "",
     val selectedId: String = "",
     val selectedLabel: String = "",
-    val options: List<DropdownOptionUi> = emptyList(),
+    val options: ImmutableList<DropdownOptionUi> = persistentListOf(),
 )
 
 public data class DropdownOptionUi(val id: String, val label: String)
@@ -100,7 +98,7 @@ private data class DropdownFilterPresentation(
     val selectedIndex: Int,
     val selectedLabel: String,
     val selectedId: String,
-    val options: List<DropdownOptionUi>,
+    val options: ImmutableList<DropdownOptionUi>,
 )
 
 private val DropdownFieldShape = SimAnalyzerTheme.corners.field
@@ -132,7 +130,11 @@ public fun FilterDropdown(
 }
 
 @Composable
-private fun InlineDropdown(presentation: DropdownFilterPresentation, onSelect: (String) -> Unit, modifier: Modifier) {
+private fun InlineDropdown(
+    presentation: DropdownFilterPresentation,
+    modifier: Modifier = Modifier,
+    onSelect: (String) -> Unit = {}
+) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
@@ -148,7 +150,11 @@ private fun InlineDropdown(presentation: DropdownFilterPresentation, onSelect: (
 }
 
 @Composable
-private fun StackedDropdown(presentation: DropdownFilterPresentation, onSelect: (String) -> Unit, modifier: Modifier) {
+private fun StackedDropdown(
+    presentation: DropdownFilterPresentation,
+    modifier: Modifier = Modifier,
+    onSelect: (String) -> Unit = {}
+) {
     Column(modifier = modifier) {
         DropdownLabel(text = presentation.labelText)
         Spacer(modifier = Modifier.height(6.dp))
@@ -361,42 +367,6 @@ private fun DropdownLabel(text: String) {
     )
 }
 
-@Composable
-private fun rememberDropdownPopupWidth(presentation: DropdownFilterPresentation): Dp {
-    val textMeasurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    val textStyle = SimAnalyzerTheme.typography.labelMedium
-    val labelCandidates = remember(presentation) { dropdownPopupLabelCandidates(presentation) }
-    val needsScrollbar = remember(presentation.options.size) { dropdownPopupNeedsScrollbar(presentation.options.size) }
-
-    return remember(labelCandidates, density, textMeasurer, textStyle, needsScrollbar) {
-        val longestLabelWidthPx = labelCandidates
-            .maxOfOrNull { label ->
-                textMeasurer.measure(
-                    text = label,
-                    style = textStyle,
-                    maxLines = 1,
-                ).size.width
-            } ?: 0
-
-        with(density) {
-            (
-                longestLabelWidthPx.toDp() +
-                    DROPDOWN_POPUP_TEXT_WIDTH_BUFFER.dp +
-                    (DROPDOWN_POPUP_CONTENT_PADDING * 2).dp +
-                    if (needsScrollbar) {
-                        DROPDOWN_POPUP_SCROLLBAR_GUTTER.dp
-                    } else {
-                        0.dp +
-                            (DROPDOWN_ITEM_HORIZONTAL_PADDING * 2).dp +
-                            DROPDOWN_ITEM_SPACING.dp +
-                            DROPDOWN_ITEM_TRAILING_ICON_SIZE.dp
-                    }
-                ).coerceAtLeast(DROPDOWN_POPUP_MIN_WIDTH.dp)
-        }
-    }
-}
-
 private fun buildDropdownFilterPresentation(filter: DropdownFilterUi): DropdownFilterPresentation =
     DropdownFilterPresentation(
         labelText = filter.label.uppercase(),
@@ -406,11 +376,6 @@ private fun buildDropdownFilterPresentation(filter: DropdownFilterUi): DropdownF
         selectedId = filter.selectedId,
         options = filter.options,
     )
-
-private fun dropdownPopupLabelCandidates(presentation: DropdownFilterPresentation): List<String> = buildList {
-    add(presentation.selectedLabel)
-    addAll(presentation.options.map(DropdownOptionUi::label))
-}.filter(String::isNotBlank)
 
 private fun dropdownPopupNeedsScrollbar(optionCount: Int): Boolean =
     dropdownPopupContentHeight(optionCount) > DROPDOWN_POPUP_MAX_HEIGHT
@@ -493,7 +458,7 @@ private fun previewDropdownFilter(): DropdownFilterUi = DropdownFilterUi(
     label = stringResource(Res.string.dropdown_preview_label_game),
     selectedId = "acc",
     selectedLabel = stringResource(Res.string.dropdown_preview_assetto_corsa_competizione),
-    options = listOf(
+    options = persistentListOf(
         DropdownOptionUi(id = "all", label = stringResource(Res.string.dropdown_preview_all_games)),
         DropdownOptionUi(id = "acc", label = stringResource(Res.string.dropdown_preview_assetto_corsa_competizione)),
         DropdownOptionUi(id = "ac", label = stringResource(Res.string.dropdown_preview_assetto_corsa)),

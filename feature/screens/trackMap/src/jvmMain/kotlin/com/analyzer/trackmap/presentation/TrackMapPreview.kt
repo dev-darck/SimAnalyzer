@@ -17,9 +17,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import com.analyzer.trackmap.presentation.model.TrackMapPreviewBoundsUi
+import com.analyzer.trackmap.presentation.model.TrackMapPreviewPointUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewUi
-import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMapBounds
 import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlin.math.min
 
@@ -133,7 +133,7 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
         val offsetX = (size.width - widthMeters * scale) * 0.5f - bounds.minX * scale
         val offsetY = (size.height - heightMeters * scale) * 0.5f - bounds.minY * scale
 
-        fun toScreen(point: Vec2): Offset = Offset(
+        fun toScreen(point: TrackMapPreviewPointUi): Offset = Offset(
             x = point.x * scale + offsetX,
             y = point.y * scale + offsetY,
         )
@@ -146,8 +146,8 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
 
         val hasWidths = state.leftWidthsMeters.size == points.size && state.rightWidthsMeters.size == points.size
         if (hasWidths && points.size >= 3) {
-            val leftWorld = ArrayList<Vec2>(points.size)
-            val rightWorld = ArrayList<Vec2>(points.size)
+            val leftWorld = ArrayList<TrackMapPreviewPointUi>(points.size)
+            val rightWorld = ArrayList<TrackMapPreviewPointUi>(points.size)
             points.indices.forEach { index ->
                 val normal = localNormal(points, index)
                 leftWorld += points[index] + normal * state.leftWidthsMeters[index].coerceAtLeast(0f)
@@ -227,7 +227,7 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
             drawCircle(color = markerColor, radius = 6f, center = toScreen(highlightPoints.last()))
         }
 
-        fun drawPitMarker(point: Vec2, color: androidx.compose.ui.graphics.Color) {
+        fun drawPitMarker(point: TrackMapPreviewPointUi, color: androidx.compose.ui.graphics.Color) {
             val mapped = toScreen(point)
             drawCircle(color = color.copy(alpha = 0.28f), radius = 10f, center = mapped)
             drawCircle(color = color, radius = 5.5f, center = mapped)
@@ -248,15 +248,17 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
     }
 }
 
-private fun localNormal(points: List<Vec2>, index: Int): Vec2 {
+private fun localNormal(points: List<TrackMapPreviewPointUi>, index: Int): TrackMapPreviewPointUi {
     val count = points.size
-    if (count < 2) return Vec2.Up
+    if (count < 2) return previewPointUp
     val prev = points[(index - 1 + count) % count]
     val next = points[(index + 1) % count]
-    return (next - prev).safeNormalized(Vec2.Up).perpLeft().safeNormalized(Vec2.Up)
+    return (next - prev).safeNormalized(previewPointUp)
+        .perpLeft()
+        .safeNormalized(previewPointUp)
 }
 
-private fun buildPath(points: List<Vec2>, mapper: (Vec2) -> Offset): Path {
+private fun buildPath(points: List<TrackMapPreviewPointUi>, mapper: (TrackMapPreviewPointUi) -> Offset): Path {
     val path = Path()
     points.forEachIndexed { index, point ->
         val mapped = mapper(point)
@@ -265,7 +267,7 @@ private fun buildPath(points: List<Vec2>, mapper: (Vec2) -> Offset): Path {
     return path
 }
 
-private fun computeBounds(points: List<Vec2>): TrackMapBounds? {
+private fun computeBounds(points: List<TrackMapPreviewPointUi>): TrackMapPreviewBoundsUi? {
     if (points.isEmpty()) return null
     var minX = points[0].x
     var minY = points[0].y
@@ -277,5 +279,30 @@ private fun computeBounds(points: List<Vec2>): TrackMapBounds? {
         if (point.x > maxX) maxX = point.x
         if (point.y > maxY) maxY = point.y
     }
-    return TrackMapBounds(minX = minX, minY = minY, maxX = maxX, maxY = maxY)
+    return TrackMapPreviewBoundsUi(minX = minX, minY = minY, maxX = maxX, maxY = maxY)
 }
+
+private operator fun TrackMapPreviewPointUi.plus(other: TrackMapPreviewPointUi): TrackMapPreviewPointUi =
+    TrackMapPreviewPointUi(x = x + other.x, y = y + other.y)
+
+private operator fun TrackMapPreviewPointUi.minus(other: TrackMapPreviewPointUi): TrackMapPreviewPointUi =
+    TrackMapPreviewPointUi(x = x - other.x, y = y - other.y)
+
+private operator fun TrackMapPreviewPointUi.times(scalar: Float): TrackMapPreviewPointUi =
+    TrackMapPreviewPointUi(x = x * scalar, y = y * scalar)
+
+private fun TrackMapPreviewPointUi.len2(): Float = x * x + y * y
+
+private fun TrackMapPreviewPointUi.safeNormalized(fallback: TrackMapPreviewPointUi = previewPointUp): TrackMapPreviewPointUi {
+    val lengthSquared = len2()
+    return if (lengthSquared > 1e-6f) {
+        val invLength = 1f / kotlin.math.sqrt(lengthSquared)
+        this * invLength
+    } else {
+        fallback
+    }
+}
+
+private fun TrackMapPreviewPointUi.perpLeft(): TrackMapPreviewPointUi = TrackMapPreviewPointUi(x = -y, y = x)
+
+private val previewPointUp = TrackMapPreviewPointUi(x = 0f, y = 1f)

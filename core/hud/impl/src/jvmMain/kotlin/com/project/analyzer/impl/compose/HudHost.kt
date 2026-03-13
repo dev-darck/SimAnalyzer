@@ -28,10 +28,11 @@ import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.collections.immutable.ImmutableSet
 
 @Composable
 internal fun HudHost(
-    panels: Set<HudPanel>,
+    panels: ImmutableSet<HudPanel>,
     hitRegions: HitRegions,
     overlayController: OverlayController,
     modifier: Modifier = Modifier,

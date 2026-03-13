@@ -1,7 +1,10 @@
 package com.project.analyzer.impl.compose
 
 import androidx.lifecycle.viewModelScope
+import com.project.analyzer.hud.api.HudStoredPosition
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
+import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.collections.immutable.toPersistentMap
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -12,25 +15,25 @@ internal class HudViewModel(private val useCase: HudContainerUseCase) :
     init {
         useCase.observeVisiblePanels()
             .onEach { visibleIds ->
-                updateState { useCase.applyVisiblePanels(this, visibleIds) }
+                updateState { withVisiblePanels(visibleIds) }
             }
             .launchIn(viewModelScope)
 
         useCase.observeInputLocked()
             .onEach { locked ->
-                updateState { useCase.applyInputLocked(this, locked) }
+                updateState { copy(inputLocked = locked) }
             }
             .launchIn(viewModelScope)
 
         useCase.observeHudOpacity()
             .onEach { opacity ->
-                updateState { useCase.applyHudOpacity(this, opacity) }
+                updateState { copy(hudOpacity = opacity.coerceIn(0f, 1f)) }
             }
             .launchIn(viewModelScope)
 
         viewModelScope.launch {
             val positions = useCase.loadPositions()
-            updateState { useCase.applyPositions(this, positions) }
+            updateState { copy(positions = positions.toImmutableMap()) }
         }
     }
 
@@ -54,7 +57,7 @@ internal class HudViewModel(private val useCase: HudContainerUseCase) :
             }
 
             is HudIntent.Restart -> {
-                updateState { useCase.restartPanel(this, intent.id) }
+                updateState { restartPanel(intent.id) }
             }
 
             HudIntent.HideAll -> {
@@ -62,15 +65,34 @@ internal class HudViewModel(private val useCase: HudContainerUseCase) :
             }
 
             is HudIntent.SavePosition -> {
-                updateState { useCase.savePositionLocally(this, intent.id, intent.position) }
+                updateState { withSavedPosition(intent.id, intent.position) }
                 useCase.savePosition(intent.id, intent.position)
             }
 
             HudIntent.ToggleInputLock -> {
-                val nextState = useCase.toggleInputLock(currentState)
+                val nextState = currentState.toggleInputLock()
                 setState(nextState)
                 useCase.saveInputLocked(nextState.inputLocked)
             }
         }
     }
 }
+
+private fun HudUiState.withVisiblePanels(visibleIds: Set<String>): HudUiState {
+    val newVisiblePanels = visibleIds.associateWith { id -> visiblePanels[id] ?: 0 }.toImmutableMap()
+    return copy(visiblePanels = newVisiblePanels)
+}
+
+private fun HudUiState.toggleInputLock(): HudUiState = copy(inputLocked = !inputLocked)
+
+private fun HudUiState.restartPanel(id: String): HudUiState = copy(
+    visiblePanels = if (id in visiblePanels) {
+        val newVersion = (visiblePanels[id] ?: 0) + 1
+        visiblePanels.toPersistentMap().put(id, newVersion)
+    } else {
+        visiblePanels
+    },
+)
+
+private fun HudUiState.withSavedPosition(id: String, position: HudStoredPosition): HudUiState =
+    copy(positions = positions.toPersistentMap().put(id, position))

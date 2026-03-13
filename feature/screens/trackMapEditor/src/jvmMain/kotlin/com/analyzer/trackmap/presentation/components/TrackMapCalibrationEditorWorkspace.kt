@@ -11,17 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.analyzer.trackmap.domain.model.TrackMapLibraryItem
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationEditorMode
-import com.analyzer.trackmap.presentation.state.TrackMapCalibrationEditorState
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 
 @Composable
 internal fun TrackMapCalibrationEditorWorkspace(
-    item: TrackMapLibraryItem,
-    state: TrackMapCalibrationEditorState,
-    editMode: TrackMapCalibrationEditorMode,
-    isAddPointMode: Boolean,
+    uiState: TrackMapCalibrationWorkspaceUiState,
     modifier: Modifier = Modifier,
     onAddPoint: (Gate) -> Unit,
     onBack: () -> Unit,
@@ -32,12 +28,7 @@ internal fun TrackMapCalibrationEditorWorkspace(
 ) {
     Box(modifier = modifier) {
         TrackMapCalibrationEditorCanvas(
-            item = item,
-            state = state,
-            markers = state.markers,
-            sectors = state.sectors,
-            editMode = editMode,
-            isAddPointMode = isAddPointMode,
+            uiState = uiState.canvas,
             modifier = Modifier.fillMaxSize(),
             onAddPoint = onAddPoint,
             onSelectMarker = onSelectMarker,
@@ -51,15 +42,15 @@ internal fun TrackMapCalibrationEditorWorkspace(
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             TrackMapOverlayInfoCard(
-                title = item.map.trackName,
-                subtitle = buildWorkspaceSubtitle(item),
+                title = uiState.title,
+                subtitle = uiState.subtitle,
             )
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                TrackMapToolbarPill(label = "Source: ${state.source?.name ?: "NEW"}")
-                TrackMapToolbarPill(label = "Markers: ${state.markers.size}")
+                TrackMapToolbarPill(label = "Source: ${uiState.sourceLabel}")
+                TrackMapToolbarPill(label = "Markers: ${uiState.markerCount}")
             }
         }
 
@@ -71,7 +62,7 @@ internal fun TrackMapCalibrationEditorWorkspace(
             TrackMapGhostButton(
                 label = "Reset",
                 onClick = onReset,
-                active = state.canReset,
+                active = uiState.canReset,
             )
             TrackMapGhostButton(
                 label = "Back",
@@ -79,19 +70,13 @@ internal fun TrackMapCalibrationEditorWorkspace(
             )
         }
 
-        if (isAddPointMode) {
+        uiState.addPointHint?.let { hint ->
             TrackMapOverlayCard(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 18.dp),
             ) {
-                TrackMapToolbarPill(
-                    label = if (state.markers.isEmpty()) {
-                        "Click on the track to place Start / Finish"
-                    } else {
-                        "Click on the track to insert a new marker"
-                    },
-                )
+                TrackMapToolbarPill(label = hint)
             }
         }
 
@@ -101,19 +86,10 @@ internal fun TrackMapCalibrationEditorWorkspace(
                 .padding(18.dp),
         ) {
             TrackMapModeSelector(
-                selectedMode = editMode,
+                selectedMode = uiState.editMode,
                 onSelectMode = onEditModeChange,
                 modifier = Modifier.width(320.dp),
             )
         }
     }
-}
-
-private fun buildWorkspaceSubtitle(item: TrackMapLibraryItem): String {
-    val layout = item.map.layoutId?.takeIf(String::isNotBlank)
-    return buildList {
-        add(item.map.gameId.ifBlank { "unknown" })
-        add(item.map.trackId)
-        layout?.let(::add)
-    }.joinToString(" / ")
 }

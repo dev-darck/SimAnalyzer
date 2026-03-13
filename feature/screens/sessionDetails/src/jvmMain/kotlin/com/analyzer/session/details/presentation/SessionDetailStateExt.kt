@@ -33,6 +33,9 @@ import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 internal fun SessionDetailPage.toSessionDetailState(
     query: SessionDetailQuery,
@@ -72,10 +75,10 @@ internal fun SessionDetailPage.toSessionDetailState(
     ),
     page = page,
     pageCount = pageCount,
-    visibleLaps = laps.map(SessionLapDomainItem::toSessionLapRowUi),
+    visibleLaps = laps.map(SessionLapDomainItem::toSessionLapRowUi).toImmutableList(),
 )
 
-private fun sessionDetailSortOptions(): List<SessionDetailFilterOptionUi> = listOf(
+private fun sessionDetailSortOptions(): ImmutableList<SessionDetailFilterOptionUi> = persistentListOf(
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP),
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP_DESC),
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_BEST),
@@ -94,24 +97,24 @@ private fun sessionDetailSortOptions(): List<SessionDetailFilterOptionUi> = list
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS_DESC),
 )
 
-private fun sessionDetailShowOptions(): List<SessionDetailFilterOptionUi> = listOf(
+private fun sessionDetailShowOptions(): ImmutableList<SessionDetailFilterOptionUi> = persistentListOf(
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_ALL),
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_VALID),
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_INVALID),
     SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_PIT),
 )
 
-private fun SessionDetailPage.sessionDetailSessionTypeOptions(): List<SessionDetailFilterOptionUi> = buildList {
+private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> = buildList {
     add(SessionDetailFilterOptionUi(id = SESSION_DETAIL_TYPE_ALL))
     sessionTypeOptions.forEach { option ->
         add(SessionDetailFilterOptionUi(id = option.id, label = option.label))
     }
-}
+}.toImmutableList()
 
 private fun sessionDetailFilterUiModel(
     kind: SessionDetailFilterKind,
     selectedId: String,
-    options: List<SessionDetailFilterOptionUi>,
+    options: ImmutableList<SessionDetailFilterOptionUi>,
 ): SessionDetailFilterUiModel {
     val resolved = if (options.any { it.id == selectedId }) selectedId else options.first().id
     return SessionDetailFilterUiModel(

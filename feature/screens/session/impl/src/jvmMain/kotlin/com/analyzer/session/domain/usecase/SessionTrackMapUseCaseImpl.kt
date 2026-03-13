@@ -14,6 +14,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import kotlinx.collections.immutable.toImmutableList
 import java.util.Locale
 
 @Inject
@@ -73,8 +74,8 @@ internal class SessionTrackMapUseCaseImpl(
                 ) ?: return@forEach
 
                 result[key] = TrackMapData(
-                    points = prepared.points.map { point -> TrackMapPoint(x = point.x, y = point.y) },
-                    pitPoints = prepared.pitPoints.map { point -> TrackMapPoint(x = point.x, y = point.y) },
+                    points = prepared.points.map { point -> TrackMapPoint(x = point.x, y = point.y) }.toImmutableList(),
+                    pitPoints = prepared.pitPoints.map { point -> TrackMapPoint(x = point.x, y = point.y) }.toImmutableList(),
                     bounds = TrackMapBounds(
                         minX = prepared.bounds.minX,
                         minY = prepared.bounds.minY,

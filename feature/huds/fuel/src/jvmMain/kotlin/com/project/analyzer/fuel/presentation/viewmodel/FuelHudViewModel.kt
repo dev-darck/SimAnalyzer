@@ -11,6 +11,7 @@ import com.project.analyzer.fuel.presentation.FuelHudUiState
 import com.project.analyzer.fuel.presentation.map.toUiState
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.launchIn
@@ -116,7 +117,7 @@ internal class FuelHudViewModel(private val useCase: FuelConsumptionUseCase) :
             planRows = fresh.planRows.mapIndexed { index, row ->
                 val peakLiters = peakState.peakPlanFuelLiters.getOrNull(index)
                 row.copy(peakFuelText = peakLiters?.let { "${it.roundToInt()} L" } ?: "—")
-            },
+            }.toImmutableList(),
         )
     }
 

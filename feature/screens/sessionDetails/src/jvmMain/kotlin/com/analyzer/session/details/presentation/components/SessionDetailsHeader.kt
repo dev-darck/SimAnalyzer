@@ -38,6 +38,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -216,11 +217,11 @@ private fun SessionDetailsFiltersRow(
 @Preview
 @Composable
 private fun SessionDetailsHeaderPreview() {
-    val sortOptions = listOf(
+    val sortOptions = persistentListOf(
         SessionDetailFilterOptionUi(id = "lap"),
         SessionDetailFilterOptionUi(id = "best"),
     )
-    val showOptions = listOf(
+    val showOptions = persistentListOf(
         SessionDetailFilterOptionUi(id = "all"),
         SessionDetailFilterOptionUi(id = "valid"),
         SessionDetailFilterOptionUi(id = "invalid"),
@@ -249,7 +250,7 @@ private fun SessionDetailsHeaderPreview() {
             sessionTypeFilter = SessionDetailFilterUiModel(
                 kind = SessionDetailFilterKind.SessionType,
                 selectedId = "all_session_types",
-                options = listOf(
+                options = persistentListOf(
                     SessionDetailFilterOptionUi(id = "all_session_types"),
                     SessionDetailFilterOptionUi(id = "qualifying", label = "Qualifying"),
                     SessionDetailFilterOptionUi(id = "race", label = "Race"),

@@ -2,7 +2,6 @@ package com.project.analyzer.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -13,19 +12,18 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlin.math.max
 import kotlin.math.min
 
-@Immutable
 public data class TrackMapPoint(val x: Float, val y: Float)
 
-@Immutable
 public data class TrackMapBounds(val minX: Float, val minY: Float, val maxX: Float, val maxY: Float)
 
-@Immutable
 public data class TrackMapData(
-    val points: List<TrackMapPoint>,
-    val pitPoints: List<TrackMapPoint> = emptyList(),
+    val points: ImmutableList<TrackMapPoint>,
+    val pitPoints: ImmutableList<TrackMapPoint> = persistentListOf(),
     val bounds: TrackMapBounds,
 )
 
@@ -90,7 +88,7 @@ public fun TrackMap(
     }
 }
 
-private fun buildPath(points: List<TrackMapPoint>, toScreen: (TrackMapPoint) -> Offset): Path {
+private fun buildPath(points: ImmutableList<TrackMapPoint>, toScreen: (TrackMapPoint) -> Offset): Path {
     val path = Path()
     points.forEachIndexed { index, point ->
         val mapped = toScreen(point)

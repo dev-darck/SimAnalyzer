@@ -1,16 +1,18 @@
 package com.project.analyzer.devsettings.domain.interactor
 
-import com.project.analyzer.devsettings.presentation.DevHudPanelUi
-import com.project.analyzer.devsettings.presentation.DevSettingsState
-import com.project.analyzer.devsettings.presentation.TelemetryEntry
-import com.project.analyzer.devsettings.presentation.TelemetryInspectorMapper
-import com.project.analyzer.devsettings.presentation.TelemetryStatusUi
+import com.project.analyzer.devsettings.domain.mapper.TelemetryInspectorMapper
+import com.project.analyzer.devsettings.domain.model.DevHudPanelModel
+import com.project.analyzer.devsettings.domain.model.DevSettingsDomainState
+import com.project.analyzer.devsettings.domain.model.TelemetryEntryModel
+import com.project.analyzer.devsettings.domain.model.TelemetryStatus
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.HudPreferencesStore
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.collections.immutable.toImmutableList
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -30,8 +33,8 @@ class DevSettingsUseCaseImpl(
     private val panels: Provider<Set<HudPanel>>,
 ) : DevSettingsUseCase {
 
-    private val _state = MutableStateFlow(DevSettingsState())
-    override val state: StateFlow<DevSettingsState> = _state.asStateFlow()
+    private val _state = MutableStateFlow(DevSettingsDomainState())
+    override val state: StateFlow<DevSettingsDomainState> = _state.asStateFlow()
 
     private val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS")
         .withZone(ZoneId.systemDefault())
@@ -103,11 +106,11 @@ class DevSettingsUseCaseImpl(
 
     private fun updateDevHudPanels() {
         val panelsUi = devPanels.map { panel ->
-            DevHudPanelUi(
+            DevHudPanelModel(
                 id = panel.id,
                 enabled = panel.id in lastVisibleIds,
             )
-        }
+        }.toImmutableList()
 
         _state.update { current ->
             current.copy(hud = current.hud.copy(panels = panelsUi))
@@ -118,15 +121,15 @@ class DevSettingsUseCaseImpl(
         scope.launch {
             telemetryLifecycle.events.collect { event ->
                 val label = when (event) {
-                    TelemetryLifecycleEvent.SimConnected -> TelemetryStatusUi.SimConnected
-                    TelemetryLifecycleEvent.SimDisconnected -> TelemetryStatusUi.SimDisconnected
-                    is TelemetryLifecycleEvent.SessionStarted -> TelemetryStatusUi.SessionStarted
-                    is TelemetryLifecycleEvent.SessionUpdated -> TelemetryStatusUi.SessionUpdated
-                    is TelemetryLifecycleEvent.SessionPaused -> TelemetryStatusUi.SessionPaused
-                    is TelemetryLifecycleEvent.SessionResumed -> TelemetryStatusUi.SessionResumed
-                    is TelemetryLifecycleEvent.SessionEnded -> TelemetryStatusUi.SessionEnded
-                    is TelemetryLifecycleEvent.LapStarted -> TelemetryStatusUi.LapStarted
-                    is TelemetryLifecycleEvent.LapFinished -> TelemetryStatusUi.LapFinished
+                    TelemetryLifecycleEvent.SimConnected -> TelemetryStatus.SimConnected
+                    TelemetryLifecycleEvent.SimDisconnected -> TelemetryStatus.SimDisconnected
+                    is TelemetryLifecycleEvent.SessionStarted -> TelemetryStatus.SessionStarted
+                    is TelemetryLifecycleEvent.SessionUpdated -> TelemetryStatus.SessionUpdated
+                    is TelemetryLifecycleEvent.SessionPaused -> TelemetryStatus.SessionPaused
+                    is TelemetryLifecycleEvent.SessionResumed -> TelemetryStatus.SessionResumed
+                    is TelemetryLifecycleEvent.SessionEnded -> TelemetryStatus.SessionEnded
+                    is TelemetryLifecycleEvent.LapStarted -> TelemetryStatus.LapStarted
+                    is TelemetryLifecycleEvent.LapFinished -> TelemetryStatus.LapFinished
                 }
                 _state.update { current ->
                     current.copy(telemetry = current.telemetry.copy(status = label))
@@ -136,13 +139,14 @@ class DevSettingsUseCaseImpl(
                     telemetryOrder.clear()
                     telemetryValues.clear()
                     _state.update { current ->
-                        current.copy(telemetry = current.telemetry.copy(entries = emptyList()))
+                        current.copy(telemetry = current.telemetry.copy(entries = persistentListOf()))
                     }
                 }
             }
         }
     }
 
+    @OptIn(FlowPreview::class)
     private fun observeTelemetryFrames(scope: CoroutineScope) {
         scope.launch {
             telemetryLifecycle.frames
@@ -154,7 +158,7 @@ class DevSettingsUseCaseImpl(
                     val status = session?.status?.name
                         ?.lowercase()
                         ?.replace('_', ' ')
-                        ?.let(TelemetryStatusUi::Raw)
+                        ?.let(TelemetryStatus::Raw)
                         ?: _state.value.telemetry.status
                     val sessionType = session?.sessionType?.name?.lowercase()?.replace('_', ' ') ?: "-"
                     val trackLabel = listOfNotNull(track?.trackName, track?.trackId)
@@ -197,8 +201,8 @@ class DevSettingsUseCaseImpl(
             .forEach { missingKey -> telemetryValues[missingKey] = "<missing>" }
 
         val ordered = telemetryOrder.mapNotNull { path ->
-            telemetryValues[path]?.let { TelemetryEntry(path, it) }
-        }
+            telemetryValues[path]?.let { TelemetryEntryModel(path, it) }
+        }.toImmutableList()
 
         _state.update { current ->
             current.copy(telemetry = current.telemetry.copy(entries = ordered))

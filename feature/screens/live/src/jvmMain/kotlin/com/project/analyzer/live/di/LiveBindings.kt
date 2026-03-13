@@ -2,10 +2,10 @@ package com.project.analyzer.live.di
 
 import androidx.lifecycle.ViewModel
 import com.project.analyzer.api.di.ScreenScope
-import com.project.analyzer.live.domain.mapper.LiveScreenStateMapper
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCaseImpl
 import com.project.analyzer.live.presentation.LiveViewModel
+import com.project.analyzer.live.presentation.mapper.LiveScreenStateMapper
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo

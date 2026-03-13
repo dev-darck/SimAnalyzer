@@ -76,6 +76,9 @@ import com.project.analyzer.ui.components.TrackMap
 import com.project.analyzer.ui.components.tableSortMappings
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.tooltip.Tooltip
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -166,7 +169,7 @@ private val SESSION_TABLE_SORTS = tableSortMappings(
 private fun sessionTableHeaderColumns(
     showGame: Boolean,
     weights: SessionTableWeights,
-): List<SortableTableColumn<SessionTableSortColumn>> = buildList {
+): ImmutableList<SortableTableColumn<SessionTableSortColumn>> = buildList {
     add(
         SortableTableColumn(
             column = TableColumn(
@@ -247,7 +250,7 @@ private fun sessionTableHeaderColumns(
             ),
         ),
     )
-}
+}.toImmutableList()
 
 private enum class SessionTableSortColumn {
     Date,
@@ -449,14 +452,14 @@ private fun SessionScreenEmptyPreview() {
                 gameFilter = SessionFilterUiModel(
                     kind = SessionFilterKind.Game,
                     selectedId = FILTER_ALL_ID,
-                    options = listOf(
+                    options = persistentListOf(
                         SessionFilterOptionUi(FILTER_ALL_ID),
                         SessionFilterOptionUi("acc", "ACC"),
                     ),
                 ),
                 page = 1,
                 pageCount = 9,
-                visibleSessions = emptyList(),
+                visibleSessions = persistentListOf(),
             ),
             onOpenDetails = {},
             onIntent = {},
@@ -467,7 +470,7 @@ private fun SessionScreenEmptyPreview() {
 @Preview
 @Composable
 private fun SessionScreenTablePreview() {
-    val sessions = listOf(
+    val sessions = persistentListOf(
         SessionRowUi(
             sessionId = 1L,
             dateLabel = "Oct 24, 2025",
@@ -507,7 +510,7 @@ private fun SessionScreenTablePreview() {
                 gameFilter = SessionFilterUiModel(
                     kind = SessionFilterKind.Game,
                     selectedId = FILTER_ALL_ID,
-                    options = listOf(
+                    options = persistentListOf(
                         SessionFilterOptionUi(FILTER_ALL_ID),
                         SessionFilterOptionUi("acc", "ACC"),
                     ),

@@ -6,26 +6,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.analyzer.trackmap.presentation.format.color
-import com.analyzer.trackmap.presentation.model.TrackMapMarkerRowUi
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationMarkerPanelUiState
+import com.analyzer.trackmap.presentation.model.color
 
 @Composable
 internal fun TrackMapCalibrationEditorMarkerPanel(
-    markerRows: List<TrackMapMarkerRowUi>,
-    selectedMarkerId: String?,
-    isAddPointMode: Boolean,
+    uiState: TrackMapCalibrationMarkerPanelUiState,
     onAddPointModeChange: (Boolean) -> Unit,
     onSelectMarker: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     TrackMapEditorPanel(
-        title = "Markers / ${markerRows.size}",
+        title = "Markers / ${uiState.markerRows.size}",
         modifier = modifier,
         trailing = {
             TrackMapGhostButton(
-                label = if (isAddPointMode) "Cancel" else "New marker",
-                onClick = { onAddPointModeChange(!isAddPointMode) },
-                active = isAddPointMode,
+                label = if (uiState.isAddPointMode) "Cancel" else "New marker",
+                onClick = { onAddPointModeChange(!uiState.isAddPointMode) },
+                active = uiState.isAddPointMode,
             )
         },
     ) {
@@ -34,23 +32,23 @@ internal fun TrackMapCalibrationEditorMarkerPanel(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            if (markerRows.isEmpty()) {
+            if (uiState.markerRows.isEmpty()) {
                 TrackMapEditorMessage(
-                    message = if (isAddPointMode) {
+                    message = if (uiState.isAddPointMode) {
                         "Click on the track to place Start / Finish."
                     } else {
                         "No markers yet. Create Start / Finish to start building sectors."
                     },
                 )
             } else {
-                markerRows.forEach { row ->
+                uiState.markerRows.forEach { row ->
                     TrackMapMarkerTableRow(
                         title = row.title,
                         startLabel = row.startLabel,
                         endLabel = row.endLabel,
-                        color = row.marker.color(),
-                        selected = row.marker.gateId == selectedMarkerId,
-                        onClick = { onSelectMarker(row.marker.gateId) },
+                        color = row.color(),
+                        selected = row.gateId == uiState.selectedMarkerId,
+                        onClick = { onSelectMarker(row.gateId) },
                     )
                 }
             }

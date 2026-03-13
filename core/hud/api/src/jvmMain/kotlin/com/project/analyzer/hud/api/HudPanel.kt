@@ -1,9 +1,11 @@
 package com.project.analyzer.hud.api
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 
+@Stable
 public interface HudPanel {
 
     public val id: String

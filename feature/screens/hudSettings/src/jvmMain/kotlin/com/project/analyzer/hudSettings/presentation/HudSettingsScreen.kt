@@ -58,6 +58,11 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import com.project.analyzer.ui.slider.SettingsSliderRow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toImmutableSet
 import org.jetbrains.compose.resources.stringResource
 import java.util.Locale
 
@@ -71,7 +76,8 @@ internal fun HudSettingsScreen() {
 }
 
 @Composable
-private fun Screen(state: HudUiState = HudUiState(panels = emptyList()), dispatch: (HudSettingsIntent) -> Unit = {}) {
+private fun Screen(state: HudUiState = HudUiState(panels = persistentListOf()), dispatch: (HudSettingsIntent) -> Unit = {}) {
+    val visibleIds = remember(state.visiblePanels) { state.visiblePanels.keys.toImmutableSet() }
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -102,7 +108,7 @@ private fun Screen(state: HudUiState = HudUiState(panels = emptyList()), dispatc
         ) {
             HudListPanel(
                 panels = state.panels,
-                visibleIds = state.visiblePanels.keys,
+                visibleIds = visibleIds,
                 onClick = {
                     dispatch(HudSettingsIntent.OnShowPanel(it))
                 },
@@ -193,8 +199,8 @@ private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
 
 @Composable
 private fun HudListPanel(
-    panels: List<HudPanel>,
-    visibleIds: Set<String>,
+    panels: ImmutableList<HudPanel>,
+    visibleIds: ImmutableSet<String>,
     modifier: Modifier = Modifier,
     onClick: (id: String) -> Unit = {},
     onToggle: (String, Boolean) -> Unit = { _, _ -> },
@@ -387,7 +393,7 @@ private fun HudMonitorPanel(panel: HudPanel? = null, hudOpacity: Float = 1f, mod
 @Composable
 private fun HudSettingsScreenPreview() {
     val demoPanels = remember {
-        listOf(
+        persistentListOf(
             object : HudPanel {
                 override val id: String = "fuel"
 
@@ -431,7 +437,7 @@ private fun HudSettingsScreenPreview() {
         Screen(
             state = HudUiState(
                 panels = demoPanels,
-                visiblePanels = mapOf("fuel" to 0, "timing" to 0, "electronics" to 0),
+                visiblePanels = persistentMapOf("fuel" to 0, "timing" to 0, "electronics" to 0),
                 hudOpacity = DEFAULT_HUD_BACKGROUND_OPACITY,
             ),
         )

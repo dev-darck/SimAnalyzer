@@ -1,6 +1,7 @@
 package com.analyzer.trackmap.domain.usecase
 
 import com.analyzer.trackmap.data.library.TrackMapLibraryRepository
+import com.analyzer.trackmap.data.selection.TrackMapEditorSelectionCache
 import com.analyzer.trackmap.domain.model.TrackMapLibraryItem
 import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.ContributesBinding
@@ -11,7 +12,10 @@ import dev.zacsweers.metro.binding
 @SingleIn(ScreenScope::class)
 @ContributesBinding(ScreenScope::class, binding = binding<TrackMapLibraryUseCase>())
 @Inject
-class TrackMapLibraryUseCaseImpl(private val repository: TrackMapLibraryRepository) : TrackMapLibraryUseCase {
+class TrackMapLibraryUseCaseImpl(
+    private val repository: TrackMapLibraryRepository,
+    private val selectionCache: TrackMapEditorSelectionCache,
+) : TrackMapLibraryUseCase {
 
     override suspend fun loadItems(): List<TrackMapLibraryItem> = repository.loadItems()
 
@@ -21,4 +25,8 @@ class TrackMapLibraryUseCaseImpl(private val repository: TrackMapLibraryReposito
             trackId = trackId,
             layoutId = layoutId,
         )
+
+    override fun rememberSelection(item: TrackMapLibraryItem) {
+        selectionCache.remember(item)
+    }
 }

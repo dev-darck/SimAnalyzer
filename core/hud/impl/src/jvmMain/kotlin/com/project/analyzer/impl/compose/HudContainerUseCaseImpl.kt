@@ -30,33 +30,4 @@ class HudContainerUseCaseImpl(private val repository: HudPreferencesRepository) 
     override suspend fun saveHudOpacity(opacity: Float) {
         repository.setHudOpacity(opacity)
     }
-
-    override fun applyVisiblePanels(state: HudUiState, visibleIds: Set<String>): HudUiState {
-        val newVisiblePanels = visibleIds.associateWith { id -> state.visiblePanels[id] ?: 0 }
-        return state.copy(visiblePanels = newVisiblePanels)
-    }
-
-    override fun applyInputLocked(state: HudUiState, locked: Boolean): HudUiState = state.copy(inputLocked = locked)
-
-    override fun applyPositions(state: HudUiState, positions: Map<String, HudStoredPosition>): HudUiState = state.copy(
-        positions = positions,
-    )
-
-    override fun applyHudOpacity(state: HudUiState, opacity: Float): HudUiState = state.copy(
-        hudOpacity = opacity.coerceIn(0f, 1f),
-    )
-
-    override fun toggleInputLock(state: HudUiState): HudUiState = state.copy(inputLocked = !state.inputLocked)
-
-    override fun restartPanel(state: HudUiState, id: String): HudUiState = state.copy(
-        visiblePanels = if (id in state.visiblePanels) {
-            val newVersion = (state.visiblePanels[id] ?: 0) + 1
-            state.visiblePanels + (id to newVersion)
-        } else {
-            state.visiblePanels
-        },
-    )
-
-    override fun savePositionLocally(state: HudUiState, id: String, position: HudStoredPosition): HudUiState =
-        state.copy(positions = state.positions + (id to position))
 }

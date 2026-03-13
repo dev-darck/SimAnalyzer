@@ -54,14 +54,16 @@ import com.project.analyzer.ui.components.TableColumnAlign
 import com.project.analyzer.ui.components.TableRow
 import com.project.analyzer.ui.components.TableSortMapping
 import com.project.analyzer.ui.components.tableSortMappings
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun SessionDetailsLapTable(
     state: SessionDetailState,
-    onPageChange: (Int) -> Unit,
-    onSortChange: (String) -> Unit = {},
     modifier: Modifier = Modifier,
+    onPageChange: (Int) -> Unit = {},
+    onSortChange: (String) -> Unit = {},
 ) {
     val dividerColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.2f)
 
@@ -150,75 +152,79 @@ private enum class SessionDetailsSortColumn {
 }
 
 @Composable
-private fun sessionDetailsHeaderColumns(): List<SortableTableColumn<SessionDetailsSortColumn>> = listOf(
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_lap),
-            weight = 0.08f,
-            align = TableColumnAlign.Center,
+private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> =
+    persistentListOf(
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_lap),
+                weight = 0.08f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.Lap,
         ),
-        sortKey = SessionDetailsSortColumn.Lap,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_total_time),
-            weight = 0.18f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_total_time),
+                weight = 0.18f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.TotalTime,
         ),
-        sortKey = SessionDetailsSortColumn.TotalTime,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_s1),
-            weight = 0.1f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_s1),
+                weight = 0.1f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.S1,
         ),
-        sortKey = SessionDetailsSortColumn.S1,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_s2),
-            weight = 0.1f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_s2),
+                weight = 0.1f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.S2,
         ),
-        sortKey = SessionDetailsSortColumn.S2,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_s3),
-            weight = 0.1f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_s3),
+                weight = 0.1f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.S3,
         ),
-        sortKey = SessionDetailsSortColumn.S3,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_incidents),
-            weight = 0.12f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_incidents),
+                weight = 0.12f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.Incidents,
         ),
-        sortKey = SessionDetailsSortColumn.Incidents,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_delta),
-            weight = 0.18f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_delta),
+                weight = 0.18f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.Delta,
         ),
-        sortKey = SessionDetailsSortColumn.Delta,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = stringResource(Res.string.session_details_table_status),
-            weight = 0.14f,
-            align = TableColumnAlign.Center,
+        SortableTableColumn(
+            column = TableColumn(
+                title = stringResource(Res.string.session_details_table_status),
+                weight = 0.14f,
+                align = TableColumnAlign.Center,
+            ),
+            sortKey = SessionDetailsSortColumn.Status,
         ),
-        sortKey = SessionDetailsSortColumn.Status,
-    ),
-)
+    )
 
 @Composable
-private fun SessionDetailsTableRow(rowIndex: Int, lap: SessionLapRowUi) {
+private fun SessionDetailsTableRow(
+    rowIndex: Int,
+    lap: SessionLapRowUi
+) {
     val baseColor = if (rowIndex % 2 == 0) {
         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f)
     } else {
@@ -324,16 +330,16 @@ private fun SessionDetailsLapTablePreview() {
                 sortFilter = SessionDetailFilterUiModel(
                     kind = SessionDetailFilterKind.Sort,
                     selectedId = "lap",
-                    options = listOf(SessionDetailFilterOptionUi("lap")),
+                    options = persistentListOf(SessionDetailFilterOptionUi("lap")),
                 ),
                 showFilter = SessionDetailFilterUiModel(
                     kind = SessionDetailFilterKind.Show,
                     selectedId = "all",
-                    options = listOf(SessionDetailFilterOptionUi("all")),
+                    options = persistentListOf(SessionDetailFilterOptionUi("all")),
                 ),
                 page = 1,
                 pageCount = 4,
-                visibleLaps = listOf(
+                visibleLaps = persistentListOf(
                     SessionLapRowUi(
                         lapNumber = 1,
                         lapLabel = "1",
