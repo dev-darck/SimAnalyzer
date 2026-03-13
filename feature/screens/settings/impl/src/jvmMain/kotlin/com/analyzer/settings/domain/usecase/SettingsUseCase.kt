@@ -1,7 +1,7 @@
 package com.analyzer.settings.domain.usecase
 
-import com.analyzer.settings.data.telemetry.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
+import com.analyzer.settings.domain.model.StorageValidationResult
 import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.theme.ThemeMode

@@ -2,10 +2,15 @@ package com.analyzer.settings.presentation
 
 import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 internal data class GameSelectionOptionUi(val selection: GameSelection)
 
-internal data class GameSelectionUi(val selection: GameSelection, val options: List<GameSelectionOptionUi>)
+internal data class GameSelectionUi(
+    val selection: GameSelection,
+    val options: ImmutableList<GameSelectionOptionUi>
+)
 
 internal fun defaultGameSelectionOptions(): List<GameSelectionOptionUi> = listOf(
     GameSelectionOptionUi(selection = GameSelection.Auto),
@@ -37,7 +42,7 @@ internal fun buildGameSelectionUi(
         ?: options.first()
     return GameSelectionUi(
         selection = selected.selection,
-        options = options,
+        options = options.toImmutableList(),
     )
 }
 

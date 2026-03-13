@@ -12,12 +12,16 @@ import com.project.analyzer.feature.screens.session.impl.Res.session_stats_total
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.StatItem
 import com.project.analyzer.ui.components.StatsRow
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun SessionScreenStatsRow(stats: SessionStatsUi, modifier: Modifier = Modifier) {
+internal fun SessionScreenStatsRow(
+    stats: SessionStatsUi,
+    modifier: Modifier = Modifier
+) {
     StatsRow(
-        stats = listOf(
+        stats = persistentListOf(
             StatItem(title = stringResource(Res.string.session_stats_total_distance), value = stats.totalDistanceLabel),
             StatItem(title = stringResource(Res.string.session_stats_sessions), value = stats.sessionsCount.toString()),
             StatItem(

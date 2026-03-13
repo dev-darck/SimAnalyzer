@@ -14,14 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.analyzer.trackmap.presentation.model.buildTrackMapMarkerRows
-import com.analyzer.trackmap.presentation.state.TrackMapCalibrationEditorState
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 
 @Composable
 internal fun TrackMapCalibrationEditorSidebar(
-    state: TrackMapCalibrationEditorState,
-    isAddPointMode: Boolean,
+    uiState: TrackMapCalibrationSidebarUiState,
     modifier: Modifier,
     scrollable: Boolean,
     onAddPointModeChange: (Boolean) -> Unit,
@@ -29,25 +27,15 @@ internal fun TrackMapCalibrationEditorSidebar(
     onSave: () -> Unit,
     onSelectMarker: (String) -> Unit,
 ) {
-    val markerRows = buildTrackMapMarkerRows(state.markers)
-    val selectedRow = markerRows.firstOrNull { it.marker.gateId == state.selectedMarkerId } ?: markerRows.firstOrNull()
-    val selectedMarker = selectedRow?.marker
-
     val content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit = {
         TrackMapCalibrationEditorMarkerPanel(
-            markerRows = markerRows,
-            selectedMarkerId = state.selectedMarkerId,
-            isAddPointMode = isAddPointMode,
+            uiState = uiState.markerPanel,
             onAddPointModeChange = onAddPointModeChange,
             onSelectMarker = onSelectMarker,
             modifier = Modifier.fillMaxWidth(),
         )
         TrackMapCalibrationEditorInspectorPanel(
-            state = state,
-            selectedRow = selectedRow,
-            selectedMarker = selectedMarker,
-            markers = state.markers,
-            isAddPointMode = isAddPointMode,
+            uiState = uiState.inspector,
             onDeletePoint = onDeletePoint,
             onSave = onSave,
             modifier = Modifier.fillMaxWidth(),

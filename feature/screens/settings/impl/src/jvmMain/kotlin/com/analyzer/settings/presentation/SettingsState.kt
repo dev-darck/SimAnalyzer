@@ -1,6 +1,7 @@
 package com.analyzer.settings.presentation
 
-import com.analyzer.settings.data.telemetry.StorageValidationResult
+import androidx.compose.runtime.Stable
+import com.analyzer.settings.domain.model.StorageValidationResult
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.theme.ThemeMode
 
@@ -12,6 +13,7 @@ internal enum class StorageSizeUnit {
     TB,
 }
 
+@Stable
 internal sealed interface StorageSizeInfo {
     data object Unknown : StorageSizeInfo
     data object Zero : StorageSizeInfo

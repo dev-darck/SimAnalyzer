@@ -2,8 +2,9 @@ package com.project.analyzer.hudSettings.domain.interactor
 
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.HudPreferencesStore
-import com.project.analyzer.hudSettings.presentation.HudUiState
 import dev.zacsweers.metro.Provider
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 class HudSettingsUseCaseImpl(
@@ -11,9 +12,10 @@ class HudSettingsUseCaseImpl(
     private val panels: Provider<Set<HudPanel>>,
 ) : HudSettingsUseCase {
 
-    override fun loadPanels(): List<HudPanel> = panels.invoke()
+    override fun loadPanels(): ImmutableList<HudPanel> = panels.invoke()
         .filter { panel -> !panel.isDevOnly }
         .sortedBy { panel -> panel.id }
+        .toImmutableList()
 
     override fun observeVisiblePanels(): Flow<Set<String>> = hudPreferencesStore.observeVisiblePanels()
 
@@ -27,21 +29,4 @@ class HudSettingsUseCaseImpl(
     override suspend fun updateHudOpacity(opacity: Float) {
         hudPreferencesStore.setHudOpacity(opacity.coerceIn(0f, 1f))
     }
-
-    override fun applyVisiblePanels(state: HudUiState, visibleIds: Set<String>): HudUiState {
-        val newVisible = visibleIds.associateWith { id -> state.visiblePanels[id] ?: 0 }
-        return state.copy(visiblePanels = newVisible)
-    }
-
-    override fun applyHudOpacity(state: HudUiState, opacity: Float): HudUiState = state.copy(
-        hudOpacity = opacity.coerceIn(0f, 1f),
-    )
-
-    override fun toggleSelectedPanel(state: HudUiState, id: String): HudUiState = state.copy(
-        panel = if (state.panel?.id != id) {
-            state.panels.find { panel -> panel.id == id }
-        } else {
-            null
-        },
-    )
 }

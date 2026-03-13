@@ -8,6 +8,8 @@ import com.project.analyzer.live.presentation.components.Sector
 import com.project.analyzer.live.presentation.components.ValueStatus
 import com.project.analyzer.live.presentation.components.WheelPos
 import com.project.analyzer.live.presentation.components.WheelUi
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 internal data class LiveScreenState(
     val speedKmh: Int = 0,
@@ -34,7 +36,7 @@ internal data class LiveScreenState(
     val estLaps: Float = 0f,
     val fuelPerLap: Float = 0f,
 
-    val sectors: List<Sector> = listOf(
+    val sectors: ImmutableList<Sector> = persistentListOf(
         Sector(1, "--.--", ValueStatus.NORMAL),
         Sector(2, "--.--", ValueStatus.NORMAL),
         Sector(3, "--.--", ValueStatus.NORMAL),
@@ -42,7 +44,7 @@ internal data class LiveScreenState(
 
     val electronics: ElectronicsBlockUi = ElectronicsBlockUi(
         title = ElectronicsTitle.Electronics,
-        items = listOf(
+        items = persistentListOf(
             ElectronicItemUi(ElectronicItemLabel.TC, "0"),
             ElectronicItemUi(ElectronicItemLabel.ABS, "0"),
             ElectronicItemUi(ElectronicItemLabel.Map, "0"),
@@ -50,7 +52,7 @@ internal data class LiveScreenState(
         ),
     ),
 
-    val wheels: List<WheelUi> = listOf(
+    val wheels: ImmutableList<WheelUi> = persistentListOf(
         WheelUi(WheelPos.FL, psi = 0f, tyreTempC = 0f),
         WheelUi(WheelPos.FR, psi = 0f, tyreTempC = 0f),
         WheelUi(WheelPos.RL, psi = 0f, tyreTempC = 0f),

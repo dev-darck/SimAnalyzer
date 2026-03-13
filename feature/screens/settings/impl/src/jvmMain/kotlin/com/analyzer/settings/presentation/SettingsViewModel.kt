@@ -1,7 +1,7 @@
 package com.analyzer.settings.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.analyzer.settings.data.telemetry.StorageValidationResult
+import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.usecase.SettingsUseCase
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.leak.api.LeakAwareMviViewModel

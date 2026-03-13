@@ -1,5 +1,8 @@
 package com.project.analyzer.devsettings.presentation
 
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
 data class DevSettingsState(
     val telemetry: TelemetryInspectorState = TelemetryInspectorState(),
     val hud: DevHudState = DevHudState(),
@@ -26,11 +29,14 @@ data class TelemetryInspectorState(
     val carLabel: String = "-",
     val frameId: Long? = null,
     val lastUpdatedLabel: String = "-",
-    val entries: List<TelemetryEntry> = emptyList(),
+    val entries: ImmutableList<TelemetryEntry> = persistentListOf(),
 )
 
 data class TelemetryEntry(val path: String, val value: String)
 
-data class DevHudState(val hudEnabled: Boolean = true, val panels: List<DevHudPanelUi> = emptyList())
+data class DevHudState(
+    val hudEnabled: Boolean = true,
+    val panels: ImmutableList<DevHudPanelUi> = persistentListOf(),
+)
 
 data class DevHudPanelUi(val id: String, val enabled: Boolean)

@@ -45,6 +45,15 @@ import com.project.analyzer.core.ui.Res.paged_table_preview_suzuka
 import com.project.analyzer.core.ui.Res.paged_table_preview_track
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.ImmutableSet
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
+import kotlinx.collections.immutable.toImmutableSet
 import org.jetbrains.compose.resources.stringResource
 
 public data class TableColumn(
@@ -83,10 +92,10 @@ public data class TableSortMapping<SortKey>(
     val defaultOrder: TableHeaderSortOrder = TableHeaderSortOrder.Asc,
 )
 
-public class TableSortMappings<SortKey>(mappings: List<TableSortMapping<SortKey>>) {
+public class TableSortMappings<SortKey>(mappings: ImmutableList<TableSortMapping<SortKey>>) {
 
-    private val mappingsByKey: Map<SortKey, TableSortMapping<SortKey>>
-    private val activeSortById: Map<String, TableHeaderActiveSort<SortKey>>
+    private val mappingsByKey: ImmutableMap<SortKey, TableSortMapping<SortKey>>
+    private val activeSortById: ImmutableMap<String, TableHeaderActiveSort<SortKey>>
 
     init {
         require(mappings.map(TableSortMapping<SortKey>::sortKey).distinct().size == mappings.size) {
@@ -97,7 +106,7 @@ public class TableSortMappings<SortKey>(mappings: List<TableSortMapping<SortKey>
             "Duplicate sortId in TableSortMappings"
         }
 
-        mappingsByKey = mappings.associateBy(TableSortMapping<SortKey>::sortKey)
+        mappingsByKey = mappings.associateBy(TableSortMapping<SortKey>::sortKey).toImmutableMap()
         activeSortById = buildMap {
             mappings.forEach { mapping ->
                 put(
@@ -115,7 +124,7 @@ public class TableSortMappings<SortKey>(mappings: List<TableSortMapping<SortKey>
                     ),
                 )
             }
-        }
+        }.toImmutableMap()
     }
 
     public fun activeSort(sortId: String): TableHeaderActiveSort<SortKey>? = activeSortById[sortId]
@@ -137,13 +146,13 @@ public class TableSortMappings<SortKey>(mappings: List<TableSortMapping<SortKey>
 }
 
 public fun <SortKey> tableSortMappings(vararg mappings: TableSortMapping<SortKey>): TableSortMappings<SortKey> =
-    TableSortMappings(mappings.toList())
+    TableSortMappings(mappings.toImmutableList())
 
 public fun buildTableHeaderCells(
-    columns: List<TableColumn>,
-    sortableColumnIndices: Set<Int> = emptySet(),
-    sortOrderByColumnIndex: Map<Int, TableHeaderSortOrder> = emptyMap(),
-): List<TableHeaderCellUi> = columns.mapIndexed { index, column ->
+    columns: ImmutableList<TableColumn>,
+    sortableColumnIndices: ImmutableSet<Int> = persistentSetOf(),
+    sortOrderByColumnIndex: ImmutableMap<Int, TableHeaderSortOrder> = persistentMapOf(),
+): ImmutableList<TableHeaderCellUi> = columns.mapIndexed { index, column ->
     TableHeaderCellUi(
         label = column.title.uppercase(),
         weight = column.weight,
@@ -151,7 +160,7 @@ public fun buildTableHeaderCells(
         isSortable = index in sortableColumnIndices,
         sortOrder = sortOrderByColumnIndex[index],
     )
-}
+}.toImmutableList()
 
 @Composable
 @Suppress("LongParameterList")
@@ -215,13 +224,13 @@ public fun PagedTable(
 
 @Composable
 public fun TableHeader(
-    columns: List<TableColumn>,
+    columns: ImmutableList<TableColumn>,
     modifier: Modifier = Modifier,
     backgroundColor: Color = SimAnalyzerTheme.material.secondaryContainer,
     height: Dp = 48.dp,
     contentPadding: Dp = 16.dp,
-    sortableColumnIndices: Set<Int> = emptySet(),
-    sortOrderByColumnIndex: Map<Int, TableHeaderSortOrder> = emptyMap(),
+    sortableColumnIndices: ImmutableSet<Int> = persistentSetOf(),
+    sortOrderByColumnIndex: ImmutableMap<Int, TableHeaderSortOrder> = persistentMapOf(),
     onColumnClickEnabled: Boolean = false,
     onColumnClick: (Int) -> Unit = {},
 ) {
@@ -246,7 +255,7 @@ public fun TableHeader(
 
 @Composable
 public fun TableHeader(
-    cells: List<TableHeaderCellUi>,
+    cells: ImmutableList<TableHeaderCellUi>,
     modifier: Modifier = Modifier,
     backgroundColor: Color = SimAnalyzerTheme.material.secondaryContainer,
     height: Dp = 48.dp,
@@ -386,7 +395,7 @@ public fun <SortKey> SortablePagedTable(
     page: Int,
     pageCount: Int,
     onPageChange: (Int) -> Unit,
-    columns: List<SortableTableColumn<SortKey>>,
+    columns: ImmutableList<SortableTableColumn<SortKey>>,
     activeSort: TableHeaderActiveSort<SortKey>?,
     onSortColumnClick: (SortKey) -> Unit,
     modifier: Modifier = Modifier,
@@ -513,29 +522,29 @@ private fun EmptyStateMessage(text: String) {
 }
 
 private data class SortableTableHeaderPresentation<SortKey>(
-    val headerCells: List<TableHeaderCellUi>,
-    val sortKeyByColumnIndex: Map<Int, SortKey>,
+    val headerCells: ImmutableList<TableHeaderCellUi>,
+    val sortKeyByColumnIndex: ImmutableMap<Int, SortKey>,
 )
 
 private fun <SortKey> buildSortableTableHeaderPresentation(
-    columns: List<SortableTableColumn<SortKey>>,
+    columns: ImmutableList<SortableTableColumn<SortKey>>,
     activeSort: TableHeaderActiveSort<SortKey>?,
 ): SortableTableHeaderPresentation<SortKey> {
     val sortKeyByColumnIndex = columns.mapIndexedNotNull { index, column ->
         column.sortKey?.let { index to it }
-    }.toMap()
+    }.toMap().toImmutableMap()
 
     val sortOrderByColumnIndex = activeSort
         ?.let { sort ->
             val activeIndex = columns.indexOfFirst { it.sortKey == sort.sortKey }
-            if (activeIndex >= 0) mapOf(activeIndex to sort.order) else emptyMap()
+            if (activeIndex >= 0) persistentMapOf(activeIndex to sort.order) else persistentMapOf()
         }
-        ?: emptyMap()
+        ?: persistentMapOf()
 
     return SortableTableHeaderPresentation(
         headerCells = buildTableHeaderCells(
-            columns = columns.map(SortableTableColumn<SortKey>::column),
-            sortableColumnIndices = sortKeyByColumnIndex.keys,
+            columns = columns.map(SortableTableColumn<SortKey>::column).toImmutableList(),
+            sortableColumnIndices = sortKeyByColumnIndex.keys.toImmutableSet(),
             sortOrderByColumnIndex = sortOrderByColumnIndex,
         ),
         sortKeyByColumnIndex = sortKeyByColumnIndex,
@@ -556,7 +565,7 @@ private fun SortablePagedTablePreview() {
         Triple("Oct 23, 2025", stringResource(Res.string.paged_table_preview_monza), "1:47.812"),
         Triple("Oct 22, 2025", stringResource(Res.string.paged_table_preview_suzuka), "2:00.193"),
     )
-    val columns = listOf(
+    val columns = persistentListOf(
         SortableTableColumn(
             column = TableColumn(title = stringResource(Res.string.paged_table_preview_date), weight = 0.34f),
             sortKey = PagedTablePreviewSort.Date,
@@ -625,7 +634,7 @@ private fun SortablePagedTablePreview() {
 @Preview(name = "Table Empty")
 @Composable
 private fun PagedTableEmptyPreview() {
-    val columns = listOf(
+    val columns = persistentListOf(
         TableColumn(title = stringResource(Res.string.paged_table_preview_date), weight = 0.34f),
         TableColumn(title = stringResource(Res.string.paged_table_preview_track), weight = 0.40f),
         TableColumn(

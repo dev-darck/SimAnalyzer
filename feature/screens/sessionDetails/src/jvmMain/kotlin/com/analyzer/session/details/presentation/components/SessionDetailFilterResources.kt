@@ -78,7 +78,10 @@ internal fun sessionDetailFilterLabel(kind: SessionDetailFilterKind): String = w
 }
 
 @Composable
-private fun sessionDetailFilterOptionLabel(kind: SessionDetailFilterKind, option: SessionDetailFilterOptionUi): String =
+private fun sessionDetailFilterOptionLabel(
+    kind: SessionDetailFilterKind,
+    option: SessionDetailFilterOptionUi
+): String =
     when {
         kind == SessionDetailFilterKind.Sort -> sessionDetailSortLabel(option.id)
         kind == SessionDetailFilterKind.Show -> sessionDetailShowLabel(option.id)

@@ -15,13 +15,14 @@ import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.impl.setup.region.internal.InMemoryHitRegions
+import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
 
 @Composable
 fun OverlayWindow(
     onCloseRequest: () -> Unit,
-    panels: Set<HudPanel>,
+    panels: ImmutableSet<HudPanel>,
     gameDetectorFactory: GameDetectorFactory,
     visible: Boolean = true,
     state: WindowState = rememberWindowState(),

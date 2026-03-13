@@ -23,6 +23,9 @@ import com.project.analyzer.core.ui.Res.Res
 import com.project.analyzer.core.ui.Res.pagination_next_page
 import com.project.analyzer.core.ui.Res.pagination_previous_page
 import com.project.analyzer.theme.SimAnalyzerTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.stringResource
 
 public sealed interface PaginationItemUi {
@@ -37,7 +40,7 @@ public data class PaginationUi(
     val pageCount: Int,
     val canGoBack: Boolean,
     val canGoForward: Boolean,
-    val items: List<PaginationItemUi>,
+    val items: ImmutableList<PaginationItemUi>,
 )
 
 public fun buildPaginationUi(page: Int, pageCount: Int): PaginationUi {
@@ -60,7 +63,12 @@ public fun buildPaginationUi(page: Int, pageCount: Int): PaginationUi {
 }
 
 @Composable
-public fun Pagination(page: Int, pageCount: Int, onPageChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+public fun Pagination(
+    page: Int,
+    pageCount: Int,
+    onPageChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val paginationUi = remember(page, pageCount) { buildPaginationUi(page = page, pageCount = pageCount) }
     Pagination(
         pagination = paginationUi,
@@ -70,7 +78,11 @@ public fun Pagination(page: Int, pageCount: Int, onPageChange: (Int) -> Unit, mo
 }
 
 @Composable
-public fun Pagination(pagination: PaginationUi, onPageChange: (Int) -> Unit, modifier: Modifier = Modifier) {
+public fun Pagination(
+    pagination: PaginationUi,
+    onPageChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
     if (pagination.pageCount <= 1) return
 
     val pageItemShape = SimAnalyzerTheme.corners.compact
@@ -148,8 +160,8 @@ public fun Pagination(pagination: PaginationUi, onPageChange: (Int) -> Unit, mod
     }
 }
 
-private fun buildPaginationItems(page: Int, pageCount: Int): List<PaginationItemUi> {
-    if (pageCount <= 0) return emptyList()
+private fun buildPaginationItems(page: Int, pageCount: Int): ImmutableList<PaginationItemUi> {
+    if (pageCount <= 0) return persistentListOf()
 
     if (pageCount <= 5) {
         return (1..pageCount).map { item ->
@@ -157,7 +169,7 @@ private fun buildPaginationItems(page: Int, pageCount: Int): List<PaginationItem
                 value = item,
                 isSelected = item == page,
             )
-        }
+        }.toImmutableList()
     }
 
     val items = mutableListOf<PaginationItemUi>()
@@ -179,7 +191,7 @@ private fun buildPaginationItems(page: Int, pageCount: Int): List<PaginationItem
     }
 
     items.add(PaginationItemUi.Page(value = pageCount, isSelected = page == pageCount))
-    return items
+    return items.toImmutableList()
 }
 
 @Preview(name = "Pagination Middle")

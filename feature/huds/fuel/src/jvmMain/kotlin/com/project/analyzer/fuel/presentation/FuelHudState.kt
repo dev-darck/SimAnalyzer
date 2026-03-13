@@ -1,6 +1,8 @@
 package com.project.analyzer.fuel.presentation
 
 import com.project.analyzer.fuel.domain.model.FuelPhase
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 data class FuelHudUiState(
     val isShow: Boolean = false,
@@ -16,13 +18,13 @@ data class FuelHudUiState(
     val lapBasisText: String = "—",
     val displayLapNumber: Int = 1,
 
-    val planRows: List<PlanRowUi> = emptyList(),
+    val planRows: ImmutableList<PlanRowUi> = persistentListOf(),
 
     val lapBasisIsApprox: Boolean = true,
     val fuelLeftLitersRaw: Double? = null,
     val litersPerLapRaw: Double? = null,
     val peakLitersPerLapRaw: Double? = null,
-    val planFuelLitersRaw: List<Double?> = emptyList(),
+    val planFuelLitersRaw: ImmutableList<Double?> = persistentListOf(),
     val isCurrentLapValid: Boolean = true,
 
     val confidence: Double = 0.0,

@@ -1,5 +1,7 @@
 package com.project.analyzer.ui.components
 
+import kotlinx.collections.immutable.toImmutableList
+
 public fun buildDropdownFilterUi(
     label: String,
     selectedId: String,
@@ -13,6 +15,6 @@ public fun buildDropdownFilterUi(
         label = label,
         selectedId = selectedId,
         selectedLabel = selectedLabel,
-        options = options,
+        options = options.toImmutableList(),
     )
 }

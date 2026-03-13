@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 internal enum class ElectronicItemLabel {
@@ -53,7 +55,7 @@ internal enum class ElectronicsTitle {
 
 internal data class ElectronicsBlockUi(
     val title: ElectronicsTitle = ElectronicsTitle.Electronics,
-    val items: List<ElectronicItemUi> = emptyList(),
+    val items: ImmutableList<ElectronicItemUi> = persistentListOf(),
 )
 
 @Composable
@@ -219,7 +221,7 @@ private fun ElectronicsBlockPreview() {
             ElectronicsBlock(
                 data = ElectronicsBlockUi(
                     title = ElectronicsTitle.TcActive,
-                    items = listOf(
+                    items = persistentListOf(
                         ElectronicItemUi(ElectronicItemLabel.TC, "5", highlighted = true),
                         ElectronicItemUi(ElectronicItemLabel.ABS, "3"),
                         ElectronicItemUi(ElectronicItemLabel.Map, "2"),

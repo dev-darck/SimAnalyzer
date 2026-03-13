@@ -1,10 +1,13 @@
 package com.project.analyzer.navigation.api
 
+import androidx.compose.runtime.Stable
+import kotlinx.collections.immutable.ImmutableList
 import kotlin.reflect.KClass
 
+@Stable
 public interface NavigationState<T : Route> {
     public val currentTopLevel: Root
-    public val backStack: List<T>
+    public val backStack: ImmutableList<T>
     public val canGoForward: Boolean
     public val isCurrentRouteRoot: Boolean
 

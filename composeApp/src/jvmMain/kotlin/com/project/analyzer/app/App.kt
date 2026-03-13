@@ -8,13 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.Icons.Filled
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.window.WindowScope
+import com.project.analyzer.app.frame.FrameDecoratorState
+import com.project.analyzer.app.sidebar.NavItem
+import com.project.analyzer.app.sidebar.Sidebar
+import com.project.analyzer.app.titlebar.AppTitleBar
 import com.project.analyzer.composeApp.Res.Res
+import com.project.analyzer.composeApp.Res.Res.string
 import com.project.analyzer.composeApp.Res.app_logo_content_description
 import com.project.analyzer.composeApp.Res.app_nav_live
 import com.project.analyzer.composeApp.Res.app_nav_session
@@ -29,6 +35,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -39,11 +46,11 @@ fun WindowScope.App(
     decorator: FrameDecoratorState,
     onCloseRequest: () -> Unit = {},
 ) {
-    val items = listOf(
+    val items = persistentListOf(
         NavItem(Root.Live, stringResource(Res.string.app_nav_live), Icons.Filled.Live),
         NavItem(Root.Session, stringResource(Res.string.app_nav_session), Icons.Filled.Session),
 //            NavItem(Root.Setup, "Setup", Icons.Outlined.Build),
-        NavItem(Root.Settings, stringResource(Res.string.app_nav_settings), Icons.Filled.Settings),
+        NavItem(Root.Settings, stringResource(string.app_nav_settings), Filled.Settings),
     )
 
     Column(

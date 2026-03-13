@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import com.project.analyzer.feature.screens.live.Res.*
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -36,7 +38,7 @@ internal fun FuelSectorsBlock(
     fuelLiters: Float,
     estLaps: Float,
     fuelPerLap: Float = 0F,
-    sectors: List<Sector>,
+    sectors: ImmutableList<Sector>,
     modifier: Modifier = Modifier,
 ) {
     val cardBg = SimAnalyzerTheme.material.surface
@@ -181,7 +183,7 @@ private fun FuelSectorsBlockPreview() {
                 fuelLiters = 42.5f,
                 estLaps = 3.2f,
                 fuelPerLap = 2.85f,
-                sectors = listOf(
+                sectors = persistentListOf(
                     Sector(1, "32.45", ValueStatus.BEST),
                     Sector(2, "28.12", ValueStatus.COMPLETED),
                     Sector(3, "--.--", ValueStatus.NORMAL),

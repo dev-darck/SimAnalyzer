@@ -3,9 +3,10 @@ package com.analyzer.session.presentation.components
 import com.project.analyzer.ui.components.TrackMapBounds
 import com.project.analyzer.ui.components.TrackMapData
 import com.project.analyzer.ui.components.TrackMapPoint
+import kotlinx.collections.immutable.persistentListOf
 
 internal fun previewTrackMapData(): TrackMapData = TrackMapData(
-    points = listOf(
+    points = persistentListOf(
         TrackMapPoint(x = 0.0f, y = 9.5f),
         TrackMapPoint(x = 2.0f, y = 8.1f),
         TrackMapPoint(x = 5.0f, y = 7.4f),

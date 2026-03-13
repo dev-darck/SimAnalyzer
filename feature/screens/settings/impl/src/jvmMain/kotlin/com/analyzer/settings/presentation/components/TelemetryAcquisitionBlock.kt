@@ -31,7 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.analyzer.settings.data.telemetry.StorageValidationResult
+import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
 import com.analyzer.settings.presentation.RecordingWarningKind
 import com.analyzer.settings.presentation.StorageSizeInfo
@@ -167,7 +167,10 @@ internal fun TelemetryAcquisitionBlock(
 }
 
 @Composable
-private fun RecordingEnabledSection(enabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
+private fun RecordingEnabledSection(
+    enabled: Boolean,
+    onEnabledChange: (Boolean) -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -193,7 +196,10 @@ private fun RecordingEnabledSection(enabled: Boolean, onEnabledChange: (Boolean)
 }
 
 @Composable
-private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int) -> Unit) {
+private fun SamplingRateSection(
+    samplingRateHz: Int,
+    onSamplingRateChange: (Int) -> Unit
+) {
     var sliderPosition by remember(samplingRateHz) {
         mutableFloatStateOf(samplingRateHz.toFloat())
     }
@@ -267,7 +273,10 @@ private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int)
 }
 
 @Composable
-private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange: (Int) -> Unit) {
+private fun MaxRecordedLapsSection(
+    maxRecordedLaps: Int,
+    onMaxRecordedLapsChange: (Int) -> Unit
+) {
     var sliderPosition by remember(maxRecordedLaps) {
         mutableFloatStateOf(maxRecordedLaps.toFloat())
     }

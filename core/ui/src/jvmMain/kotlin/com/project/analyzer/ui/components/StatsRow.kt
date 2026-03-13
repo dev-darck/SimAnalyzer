@@ -15,12 +15,18 @@ import com.project.analyzer.core.ui.Res.stats_row_preview_sessions_value
 import com.project.analyzer.core.ui.Res.stats_row_preview_total_distance
 import com.project.analyzer.core.ui.Res.stats_row_preview_total_distance_value
 import com.project.analyzer.theme.SimAnalyzerTheme
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 public data class StatItem(val title: String, val value: String)
 
 @Composable
-public fun StatsRow(stats: List<StatItem>, modifier: Modifier = Modifier, horizontalSpacing: Int = 16) {
+public fun StatsRow(
+    stats: ImmutableList<StatItem>,
+    modifier: Modifier = Modifier,
+    horizontalSpacing: Int = 16
+) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(horizontalSpacing.dp),
@@ -40,7 +46,7 @@ public fun StatsRow(stats: List<StatItem>, modifier: Modifier = Modifier, horizo
 private fun StatsRowPreview() {
     SimAnalyzerTheme {
         StatsRow(
-            stats = listOf(
+            stats = persistentListOf(
                 StatItem(
                     title = stringResource(Res.string.stats_row_preview_total_distance),
                     value = stringResource(Res.string.stats_row_preview_total_distance_value),

@@ -8,6 +8,8 @@ import androidx.savedstate.compose.serialization.serializers.SnapshotStateMapSer
 import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.api.Route
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.reflect.KClass
@@ -54,20 +56,20 @@ class NavigationStateInternal<T : Route>(
     override val currentTopLevel: Root
         get() = currentTopLevelState.value
 
-    override val backStack: List<T>
+    override val backStack: ImmutableList<T>
         get() {
             val current = currentTopLevelState.value
             val currentStack = stack(current)
 
             require(currentStack.isNotEmpty()) { "Current stack cannot be empty: $current" }
 
-            if (current == startTopLevel) return currentStack
+            if (current == startTopLevel) return currentStack.toImmutableList()
 
             val startStack = stack(startTopLevel)
             require(startStack.isNotEmpty()) { "Start stack cannot be empty: $startTopLevel" }
 
             val startRoot = startStack.first()
-            return StartPlusStack(startRoot, currentStack)
+            return StartPlusStack(startRoot, currentStack).toImmutableList()
         }
 
     override fun switchTopLevel(topLevel: Root) {

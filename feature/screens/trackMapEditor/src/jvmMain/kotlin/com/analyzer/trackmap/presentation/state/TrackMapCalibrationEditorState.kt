@@ -33,9 +33,6 @@ data class TrackMapCalibrationEditorState(
     val message: String? = null,
 ) {
 
-    val referencePoint: ReferencePoint
-        get() = current.referencePoint
-
     val source: TrackCalibrationSource?
         get() = current.source
 

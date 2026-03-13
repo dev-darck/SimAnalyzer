@@ -11,6 +11,7 @@ import com.analyzer.session.presentation.model.SessionFilterUiModel
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
 import com.analyzer.session.presentation.model.SessionStatsUi
+import kotlinx.collections.immutable.toImmutableList
 import java.util.Locale
 
 internal fun SessionListPage.toSessionListState(
@@ -48,7 +49,7 @@ internal fun SessionListPage.toSessionListState(
     searchQuery = query.searchQuery,
     page = page,
     pageCount = pageCount,
-    visibleSessions = rows.map(SessionListDomainItem::toSessionRowUi),
+    visibleSessions = rows.map(SessionListDomainItem::toSessionRowUi).toImmutableList(),
 )
 
 private fun List<SessionFilterOption>.toSessionFilterUiModel(
@@ -56,9 +57,9 @@ private fun List<SessionFilterOption>.toSessionFilterUiModel(
     selectedId: String,
 ): SessionFilterUiModel {
     val uiOptions = if (isEmpty()) {
-        listOf(SessionFilterOptionUi(id = FILTER_ALL_ID))
+        listOf(SessionFilterOptionUi(id = FILTER_ALL_ID)).toImmutableList()
     } else {
-        map { option -> SessionFilterOptionUi(id = option.id, label = option.label) }
+        map { option -> SessionFilterOptionUi(id = option.id, label = option.label) }.toImmutableList()
     }
     val resolved = if (uiOptions.any { it.id == selectedId }) selectedId else uiOptions.first().id
 

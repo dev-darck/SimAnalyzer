@@ -87,6 +87,8 @@ import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 private enum class DevSettingsSection(val route: Route.SettingsRoot) {
@@ -181,7 +183,7 @@ private fun DevSettingsHeader() {
 
 @Composable
 private fun DevSettingsNavColumn(
-    items: List<DevNavItem>,
+    items: ImmutableList<DevNavItem>,
     selected: DevSettingsSection,
     onSelect: (DevSettingsSection) -> Unit,
     modifier: Modifier = Modifier,
@@ -205,7 +207,7 @@ private fun DevSettingsNavColumn(
 
 @Composable
 private fun DevSettingsNavRow(
-    items: List<DevNavItem>,
+    items: ImmutableList<DevNavItem>,
     selected: DevSettingsSection,
     onSelect: (DevSettingsSection) -> Unit,
     modifier: Modifier = Modifier,
@@ -579,7 +581,7 @@ private fun TelemetryInspectorHeader(state: TelemetryInspectorState) {
 }
 
 @Composable
-private fun devSettingsNavItems(): List<DevNavItem> = listOf(
+private fun devSettingsNavItems(): ImmutableList<DevNavItem> = persistentListOf(
     DevNavItem(
         section = DevSettingsSection.Calibration,
         title = stringResource(Res.string.dev_settings_nav_calibration_title),
@@ -660,11 +662,11 @@ internal fun DevSettingsScreenPreview() {
             carLabel = "BMW",
             frameId = 128,
             lastUpdatedLabel = "12:00:00.000",
-            entries = listOf(TelemetryEntry("frame.car.speedKmh", "120")),
+            entries = persistentListOf(TelemetryEntry("frame.car.speedKmh", "120")),
         ),
         hud = DevHudState(
             hudEnabled = true,
-            panels = listOf(
+            panels = persistentListOf(
                 DevHudPanelUi("calibration_debug", true),
                 DevHudPanelUi("calibration_minimap", false),
             ),

@@ -2,9 +2,9 @@ package com.project.analyzer.live.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
-import com.project.analyzer.live.domain.mapper.LiveScreenStateMapper
 import com.project.analyzer.live.domain.model.LiveTelemetryResult
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
+import com.project.analyzer.live.presentation.mapper.LiveScreenStateMapper
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.launchIn
