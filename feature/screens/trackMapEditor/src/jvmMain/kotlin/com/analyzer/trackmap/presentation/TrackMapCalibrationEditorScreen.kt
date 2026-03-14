@@ -30,11 +30,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.trackmap.presentation.components.TrackMapCalibrationEditorSidebar
 import com.analyzer.trackmap.presentation.components.TrackMapCalibrationEditorWorkspace
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationEditorMode
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState
 import com.analyzer.trackmap.presentation.model.toSidebarUiState
 import com.analyzer.trackmap.presentation.model.toWorkspaceUiState
-import com.analyzer.trackmap.presentation.state.TrackMapCalibrationEditorState
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
@@ -130,8 +132,8 @@ private fun TrackMapCalibrationEditorLoadingState(message: String?) {
 @Composable
 private fun TrackMapCalibrationEditorLoadedContent(
     isWideLayout: Boolean,
-    workspaceUiState: com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState,
-    sidebarUiState: com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState,
+    workspaceUiState: TrackMapCalibrationWorkspaceUiState,
+    sidebarUiState: TrackMapCalibrationSidebarUiState,
     onAddPointModeChange: (Boolean) -> Unit,
     onAddPoint: (Gate) -> Unit,
     onBack: () -> Unit,
@@ -176,8 +178,8 @@ private fun TrackMapCalibrationEditorLoadedContent(
 
 @Composable
 private fun TrackMapCalibrationEditorWideLayout(
-    workspaceUiState: com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState,
-    sidebarUiState: com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState,
+    workspaceUiState: TrackMapCalibrationWorkspaceUiState,
+    sidebarUiState: TrackMapCalibrationSidebarUiState,
     onAddPointModeChange: (Boolean) -> Unit,
     onAddPoint: (Gate) -> Unit,
     onBack: () -> Unit,
@@ -220,8 +222,8 @@ private fun TrackMapCalibrationEditorWideLayout(
 
 @Composable
 private fun TrackMapCalibrationEditorCompactLayout(
-    workspaceUiState: com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState,
-    sidebarUiState: com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState,
+    workspaceUiState: TrackMapCalibrationWorkspaceUiState,
+    sidebarUiState: TrackMapCalibrationSidebarUiState,
     onAddPointModeChange: (Boolean) -> Unit,
     onAddPoint: (Gate) -> Unit,
     onBack: () -> Unit,
@@ -269,7 +271,7 @@ private fun TrackMapCalibrationEditorCompactLayout(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 6.dp),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }

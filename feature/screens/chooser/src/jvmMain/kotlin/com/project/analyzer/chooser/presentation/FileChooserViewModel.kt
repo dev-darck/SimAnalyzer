@@ -15,6 +15,7 @@ import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleExpand
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleHidden
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.launch
 import java.nio.file.Path
 
@@ -42,7 +43,13 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
 
     private fun loadSidebar() = launch {
         val data = useCase.loadSidebar()
-        updateState { copy(drives = data.drives, places = data.places, error = null) }
+        updateState {
+            copy(
+                drives = data.drives.toPersistentList(),
+                places = data.places.toPersistentList(),
+                error = null
+            )
+        }
     }
 
     private suspend fun handleInit(intent: Init) {
@@ -96,7 +103,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
         val result = useCase.refreshTree(currentShowHidden)
         updateState {
             copy(
-                treeNodes = result.nodes,
+                treeNodes = result.nodes.toPersistentList(),
                 error = null,
             )
         }
@@ -105,7 +112,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
     private fun applyTreeResult(result: TreeResult, currentDir: String, selectedDrive: String) {
         updateState {
             copy(
-                treeNodes = result.nodes,
+                treeNodes = result.nodes.toPersistentList(),
                 scrollToIndex = result.scrollToIndex,
                 currentDir = currentDir,
                 selectedDrive = selectedDrive,

@@ -49,6 +49,7 @@ import com.project.analyzer.feature.screens.chooser.Res.chooser_no_folder_select
 import com.project.analyzer.feature.screens.chooser.Res.chooser_no_selection
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.textField.TextField
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -79,7 +80,7 @@ internal fun FileChooserContent(
 }
 
 @Composable
-private fun Content(
+internal fun Content(
     modifier: Modifier = Modifier,
     uiState: FileUiState = FileUiState(),
     dispatch: (FileChooserIntent) -> Unit = {},
@@ -202,7 +203,7 @@ private fun ViewerPanel(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
                         .fillMaxWidth(),
-                    adapter = rememberScrollbarAdapter(scrollState),
+                    adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
                 )
             }
 

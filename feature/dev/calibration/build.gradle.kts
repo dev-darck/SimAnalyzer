@@ -2,6 +2,9 @@ moduleImpl {
     metro()
     compose()
     resources()
+    test {
+        ui()
+    }
     dependencies {
         projects.core.telemetry.api.jvmImpl
         projects.games.telemetry.ac.api.jvmImpl

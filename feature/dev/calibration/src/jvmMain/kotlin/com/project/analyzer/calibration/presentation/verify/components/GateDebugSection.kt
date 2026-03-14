@@ -26,25 +26,47 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_capture
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_ahead
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_angled
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_at_line
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_behind
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_cancel
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_capturing
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_correct_direction
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_crossed
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_distance
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_dot
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_edit
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_flip
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_forward
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_inside
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_perpendicular
+import com.project.analyzer.feature.dev.calibration.Res.calibration_gate_wrong_direction
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
+import kotlinx.collections.immutable.PersistentList
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.abs
 
 @Composable
 fun GateDebugSection(
-    gates: List<GateDebugInfo>,
+    gates: PersistentList<GateDebugInfo>,
     editingGate: EditingGate?,
     halfWidthMeters: Float,
     isCapturing: Boolean,
-    onEditGate: (EditingGate) -> Unit,
-    onCaptureGate: () -> Unit,
-    onCancelEdit: () -> Unit,
-    onFlipGate: (EditingGate) -> Unit,
-    onRadius: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    onEditGate: (EditingGate) -> Unit = {},
+    onCaptureGate: () -> Unit = {},
+    onCancelEdit: () -> Unit = {},
+    onFlipGate: (EditingGate) -> Unit = {},
+    onRadius: (Float) -> Unit = {},
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         gates.forEachIndexed { index, gate ->
             val correspondingEditGate = when (index) {
                 0 -> EditingGate.START_FINISH

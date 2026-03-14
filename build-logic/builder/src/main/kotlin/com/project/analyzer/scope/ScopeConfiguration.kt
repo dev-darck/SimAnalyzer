@@ -49,3 +49,7 @@ internal fun ProjectScope.composeImpl(storytale: Boolean = false) {
 internal fun ProjectScope.resourcesImpl() {
     configureComposeResources()
 }
+
+internal fun ProjectScope.testFixturesImpl() {
+    pluginManager.apply("java-test-fixtures")
+}

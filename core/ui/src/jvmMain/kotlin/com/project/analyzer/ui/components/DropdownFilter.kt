@@ -62,6 +62,7 @@ import com.project.analyzer.core.ui.Res.dropdown_preview_label_game
 import com.project.analyzer.core.ui.Res.dropdown_preview_le_mans_ultimate
 import com.project.analyzer.core.ui.Res.dropdown_preview_rfactor_2
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -299,7 +300,7 @@ private fun DropdownPopupPanel(
                         .align(Alignment.CenterEnd)
                         .matchParentSize()
                         .padding(vertical = 8.dp),
-                    adapter = rememberScrollbarAdapter(scrollState),
+                    adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
                 )
             }
         }

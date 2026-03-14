@@ -86,6 +86,7 @@ import com.project.analyzer.feature.crash.Res.crash_tab_overview
 import com.project.analyzer.feature.crash.Res.crash_tab_stacktrace
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metro.createGraph
 import kotlinx.coroutines.flow.launchIn
@@ -105,7 +106,10 @@ private val crashTabs = listOf(
 )
 
 @Composable
-internal fun CrashScreen(crashReport: CrashReport, onExit: () -> Unit) {
+internal fun CrashScreen(
+    crashReport: CrashReport,
+    onExit: () -> Unit
+) {
     val graph = remember { createGraph<CrashGraph>() }
     val viewModel = graph.crashViewModel
     val state by viewModel.state.collectAsState()
@@ -137,10 +141,12 @@ internal fun CrashScreenContent(
     snackbarHostState: SnackbarHostState,
     onEvent: (CrashScreenUiEvent) -> Unit,
     onExit: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var selectedTab by remember { mutableStateOf(0) }
 
     Scaffold(
+        modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -231,7 +237,10 @@ internal fun CrashScreenContent(
 }
 
 @Composable
-private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> Unit) {
+private fun OverviewPanel(
+    report: CrashReport,
+    onEvent: (CrashScreenUiEvent) -> Unit
+) {
     val scrollState = rememberScrollState()
 
     Box(
@@ -285,7 +294,7 @@ private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> 
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 8.dp),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }
@@ -379,7 +388,12 @@ private fun CrashActions(onEvent: (CrashScreenUiEvent) -> Unit) {
 }
 
 @Composable
-private fun CrashActionButton(text: String, icon: ImageVector, emphasized: Boolean = false, onClick: () -> Unit) {
+private fun CrashActionButton(
+    text: String,
+    icon: ImageVector,
+    emphasized: Boolean = false,
+    onClick: () -> Unit
+) {
     if (emphasized) {
         Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
             Icon(icon, contentDescription = text, modifier = Modifier.size(18.dp))
@@ -460,14 +474,18 @@ private fun CodePanel(text: String, title: String) {
                             .align(Alignment.CenterEnd)
                             .fillMaxHeight()
                             .padding(vertical = 6.dp),
-                        adapter = rememberScrollbarAdapter(vScroll),
+                        adapter = AppScrollbarAdapter(
+                            rememberScrollbarAdapter(vScroll)
+                        ),
                     )
                     AppHorizontalScrollbar(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
                             .fillMaxWidth()
                             .padding(end = 12.dp, start = 6.dp),
-                        adapter = rememberScrollbarAdapter(hScroll),
+                        adapter = AppScrollbarAdapter(
+                            rememberScrollbarAdapter(hScroll)
+                        ),
                     )
                 }
             }

@@ -6,6 +6,11 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +18,16 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -24,9 +36,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.trackRecompositions
+import com.project.analyzer.ui.modifier.uiTestTag
 import com.project.analyzer.ui.tooltip.Tooltip
 import kotlin.math.roundToInt
 
@@ -142,9 +158,16 @@ public fun CustomSlider(
     val ringPx = with(density) { THUMB_RING.toPx() }
     val trackHeightPx = with(density) { TRACK_HEIGHT.toPx() }
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val isThumbHighlighted = enabled && (isHovered || isPressed)
+
     val trackColor = SimAnalyzerTheme.material.onSurface.copy(alpha = trackAlpha)
     val thumbColor = SimAnalyzerTheme.material.primary
-    val thumbRingColor = SimAnalyzerTheme.material.primary.copy(alpha = thumbRingAlpha)
+    val thumbRingColor = SimAnalyzerTheme.material.primary.copy(
+        alpha = if (isThumbHighlighted) thumbRingAlpha else 0f,
+    )
 
     val onValueChangeState = rememberUpdatedState(onValueChange)
     val onFinishedState = rememberUpdatedState(onValueChangeFinished)
@@ -171,23 +194,48 @@ public fun CustomSlider(
 
     Box(
         modifier = modifier
+            .uiTestTag(TestTags.Slider)
+            .trackRecompositions()
             .height(THUMB_RADIUS * 2)
             .then(
                 if (enabled) {
-                    Modifier.pointerInput(valueRange.start, valueRange.endInclusive, thumbRadiusPx, snapStep) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown()
+                    Modifier
+                        .hoverable(interactionSource = interactionSource)
+                        .pointerInput(
+                            valueRange.start,
+                            valueRange.endInclusive,
+                            thumbRadiusPx,
+                            snapStep,
+                        ) {
+                            awaitEachGesture {
+                                val down = awaitFirstDown()
+                                val press = PressInteraction.Press(down.position)
 
-                            onValueChangeState.value(valueFromX(down.position.x, size.width.toFloat()))
+                                interactionSource.tryEmit(press)
 
-                            drag(down.id) { change ->
-                                change.consume()
-                                onValueChangeState.value(valueFromX(change.position.x, size.width.toFloat()))
+                                try {
+                                    onValueChangeState.value(valueFromX(down.position.x, size.width.toFloat()))
+
+                                    val finished = drag(down.id) { change ->
+                                        change.consume()
+                                        onValueChangeState.value(valueFromX(change.position.x, size.width.toFloat()))
+                                    }
+
+                                    interactionSource.tryEmit(
+                                        if (finished) {
+                                            PressInteraction.Release(press)
+                                        } else {
+                                            PressInteraction.Cancel(press)
+                                        },
+                                    )
+                                } catch (t: Throwable) {
+                                    interactionSource.tryEmit(PressInteraction.Cancel(press))
+                                    throw t
+                                } finally {
+                                    onFinishedState.value()
+                                }
                             }
-
-                            onFinishedState.value()
                         }
-                    }
                 } else {
                     Modifier
                 },
@@ -224,4 +272,42 @@ public fun CustomSlider(
                 }
             },
     )
+}
+
+@Preview(name = "Custom Slider")
+@Composable
+private fun CustomSliderPreview() {
+    var floatValue by remember { mutableFloatStateOf(36f) }
+    var intValue by remember { mutableIntStateOf(8) }
+
+    SimAnalyzerTheme {
+        Surface(color = SimAnalyzerTheme.material.background) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                SettingsSliderRow(
+                    title = "Brake bias",
+                    tooltip = "Preview of float slider behavior",
+                    value = floatValue,
+                    valueRange = 30f..70f,
+                    snapStep = 2f,
+                    valueText = { "${it.roundToInt()}%" },
+                    onPreviewChange = { floatValue = it },
+                    onCommit = {},
+                )
+
+                SettingsIntSliderRow(
+                    title = "Force feedback",
+                    tooltip = "Preview of snapped int slider behavior",
+                    value = intValue,
+                    range = 0..12,
+                    step = 2,
+                    valueSuffix = "%",
+                    onPreviewChange = { intValue = it },
+                    onCommit = {},
+                )
+            }
+        }
+    }
 }

@@ -66,6 +66,7 @@ import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_stop
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_stopped
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_title
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -130,7 +131,11 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                 StatusRow(
                     label = stringResource(Res.string.calibration_verify_status),
                     value = stringResource(
-                        if (state.isRunning) Res.string.calibration_verify_running else Res.string.calibration_verify_stopped,
+                        if (state.isRunning) {
+                            Res.string.calibration_verify_running
+                        } else {
+                            Res.string.calibration_verify_stopped
+                        },
                     ),
                 )
                 StatusRow(label = stringResource(Res.string.calibration_verify_lap), value = state.lapIndex.toString())
@@ -273,7 +278,9 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                             modifier = Modifier
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight(),
-                            adapter = rememberScrollbarAdapter(eventsScrollState),
+                            adapter = AppScrollbarAdapter(
+                                rememberScrollbarAdapter(eventsScrollState)
+                            ),
                         )
                     }
                 }
@@ -284,13 +291,20 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 6.dp),
-            adapter = rememberScrollbarAdapter(screenScrollState),
+            adapter = AppScrollbarAdapter(
+                rememberScrollbarAdapter(screenScrollState)
+            ),
         )
     }
 }
 
 @Composable
-private fun TimingRow(name: String, current: Long?, last: Long?, best: Long?) {
+private fun TimingRow(
+    name: String,
+    current: Long?,
+    last: Long?,
+    best: Long?
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,

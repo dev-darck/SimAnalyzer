@@ -1,57 +1,89 @@
+@file:OptIn(ExperimentalTestApi::class)
+
 package com.project.analyzer.inputs.presentation
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.runDesktopComposeUiTest
 import com.project.analyzer.inputs.settings.InputHudSettings
 import com.project.analyzer.theme.SimAnalyzerTheme
-import org.junit.Ignore
-import org.junit.Rule
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.trackRecompositions
+import com.project.analyzer.ui.modifier.uiTestTag
+import com.project.analyzer.ui.testing.assertRecompositionCountAtMost
 import org.junit.Test
 
-@Ignore("Requires Skiko native binaries for Compose Desktop UI tests.")
 class InputsHudContentTest {
 
-    @get:Rule
-    val rule = createComposeRule()
-
     @Test
-    fun showsLegendWhenEnabled() {
-        val state = InputsHudUiState(
-            isShow = true,
-            settings = InputHudSettings(showLegend = true, showHeader = false)
-        )
-
-        rule.setContent {
+    fun `shows legend when enabled with bounded recompositions`() = runDesktopComposeUiTest {
+        setContent {
             SimAnalyzerTheme {
-                InputsHudContent(state = state)
+                InputsHudContent(
+                    state = InputsHudUiState(
+                        isShow = true,
+                        settings = InputHudSettings(showLegend = true, showHeader = false),
+                    ),
+                    modifier = Modifier
+                        .uiTestTag(TestTags.InputsHud)
+                        .trackRecompositions(),
+                )
             }
         }
 
-        rule.onNodeWithText("T").assertIsDisplayed()
-        rule.onNodeWithText("B").assertIsDisplayed()
-        rule.onNodeWithText("C").assertIsDisplayed()
-        rule.onNodeWithText("S").assertIsDisplayed()
+        onNodeWithText("T").assertIsDisplayed()
+        onNodeWithText("B").assertIsDisplayed()
+        onNodeWithText("C").assertIsDisplayed()
+        onNodeWithText("S").assertIsDisplayed()
+        onNodeWithTag(TestTags.InputsHud.value).assertRecompositionCountAtMost(1)
     }
 
     @Test
-    fun hidesLegendWhenDisabled() {
-        val state = InputsHudUiState(
-            isShow = true,
-            settings = InputHudSettings(showLegend = false, showHeader = false)
+    fun `hides legend after state update with bounded recompositions`() = runDesktopComposeUiTest {
+        val state = InputsHudStateHolder(
+            value = InputsHudUiState(
+                isShow = true,
+                settings = InputHudSettings(showLegend = true, showHeader = false),
+            ),
         )
 
-        rule.setContent {
+        setContent {
             SimAnalyzerTheme {
-                InputsHudContent(state = state)
+                InputsHudContent(
+                    state = state.value,
+                    modifier = Modifier
+                        .uiTestTag(TestTags.InputsHud)
+                        .trackRecompositions(),
+                )
             }
         }
 
-        rule.onAllNodesWithText("T").assertCountEquals(0)
-        rule.onAllNodesWithText("B").assertCountEquals(0)
-        rule.onAllNodesWithText("C").assertCountEquals(0)
-        rule.onAllNodesWithText("S").assertCountEquals(0)
+        onNodeWithTag(TestTags.InputsHud.value).assertRecompositionCountAtMost(1)
+
+        runOnIdle {
+            state.value = state.value.copy(
+                settings = state.value.settings.copy(showLegend = false),
+            )
+        }
+        waitForIdle()
+
+        onAllNodesWithText("T").assertCountEquals(0)
+        onAllNodesWithText("B").assertCountEquals(0)
+        onAllNodesWithText("C").assertCountEquals(0)
+        onAllNodesWithText("S").assertCountEquals(0)
+        onNodeWithTag(TestTags.InputsHud.value).assertRecompositionCountAtMost(3)
     }
+}
+
+private class InputsHudStateHolder(value: InputsHudUiState) {
+
+    var value by mutableStateOf(value)
 }

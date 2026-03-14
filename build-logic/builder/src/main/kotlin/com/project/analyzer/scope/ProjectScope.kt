@@ -1,6 +1,7 @@
 package com.project.analyzer.scope
 
 import com.project.analyzer.ProjectDsl
+import com.project.analyzer.base.TestScope
 import com.project.analyzer.base.configureLeakCanaryJvm
 import com.project.analyzer.base.configureMetro
 import com.project.analyzer.base.configureTest
@@ -45,6 +46,10 @@ class ProjectScope(
         resourcesImpl()
     }
 
+    fun testFixtures() {
+        testFixturesImpl()
+    }
+
     fun metro(block: MetroPluginExtension.() -> Unit = {}) {
         configureMetro(block)
     }
@@ -61,13 +66,8 @@ class ProjectScope(
         configureLeakCanaryJvm()
     }
 
-    fun test(config: TestOptions.() -> Unit = { both() }) {
-        val options = TestOptions().apply(config)
-
-        configureTest {
-            if (options.delegate.enableUnit) unit()
-            if (options.delegate.enableUi) ui()
-        }
+    fun test(config: TestScope.() -> Unit = { both() }) {
+        configureTest(TestScope().apply(config))
     }
 
     fun buildConfig(block: BuildConfigOptions.() -> Unit) {

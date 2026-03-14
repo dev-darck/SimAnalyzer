@@ -43,6 +43,9 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.trackRecompositions
+import com.project.analyzer.ui.modifier.uiTestTag
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -74,8 +77,10 @@ fun Sidebar(
 
     Surface(
         modifier = modifier
+            .uiTestTag(TestTags.Sidebar)
             .width(88.dp)
-            .fillMaxHeight(),
+            .fillMaxHeight()
+            .trackRecompositions(),
         color = sidebarBg,
     ) {
         Column(
@@ -192,6 +197,7 @@ private fun SidebarItem(
 
     Column(
         modifier = Modifier
+            .uiTestTag(TestTags.Sidebar.child(item.key))
             .width(56.dp)
             .scale(itemScale)
             .clip(SimAnalyzerTheme.corners.card)

@@ -85,6 +85,7 @@ import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.collections.immutable.ImmutableList
@@ -235,7 +236,9 @@ private fun DevSettingsNavRow(
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .padding(end = 6.dp),
-            adapter = rememberScrollbarAdapter(horizontalScrollState),
+            adapter = AppScrollbarAdapter(
+                rememberScrollbarAdapter(horizontalScrollState)
+            ),
         )
     }
 }
@@ -358,7 +361,7 @@ private fun DevSettingsContent(
 }
 
 @Composable
-private fun DevHudSettingsScreen(
+internal fun DevHudSettingsScreen(
     state: DevHudState,
     onToggleHudPanel: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -415,13 +418,17 @@ private fun DevHudSettingsScreen(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 6.dp),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }
 
 @Composable
-private fun DevHudPanelRow(panel: DevHudPanelUi, onToggle: (Boolean) -> Unit, modifier: Modifier = Modifier) {
+private fun DevHudPanelRow(
+    panel: DevHudPanelUi,
+    onToggle: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -494,7 +501,10 @@ private fun SectionCard(
 }
 
 @Composable
-private fun TelemetryInspectorScreen(state: TelemetryInspectorState, modifier: Modifier = Modifier) {
+internal fun TelemetryInspectorScreen(
+    state: TelemetryInspectorState,
+    modifier: Modifier = Modifier
+) {
     val listState = rememberLazyListState()
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -521,7 +531,7 @@ private fun TelemetryInspectorScreen(state: TelemetryInspectorState, modifier: M
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
                     .padding(vertical = 4.dp),
-                adapter = rememberScrollbarAdapter(listState),
+                adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
             )
         }
     }

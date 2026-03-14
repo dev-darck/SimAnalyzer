@@ -38,6 +38,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
@@ -116,7 +117,10 @@ private fun SessionDetailsTitleBlock(header: SessionDetailHeaderUi) {
 }
 
 @Composable
-private fun SessionDetailsInfoRow(header: SessionDetailHeaderUi, modifier: Modifier = Modifier) {
+private fun SessionDetailsInfoRow(
+    header: SessionDetailHeaderUi,
+    modifier: Modifier = Modifier
+) {
     val scrollState = rememberScrollState()
 
     Box(modifier = modifier.fillMaxWidth()) {
@@ -147,7 +151,7 @@ private fun SessionDetailsInfoRow(header: SessionDetailHeaderUi, modifier: Modif
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }
@@ -209,7 +213,7 @@ private fun SessionDetailsFiltersRow(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }

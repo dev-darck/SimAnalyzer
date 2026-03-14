@@ -32,6 +32,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.components.FilterDropdown
 import com.project.analyzer.ui.components.ResponsivePanelCard
 import com.project.analyzer.ui.scrollbar.AppHorizontalScrollbar
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
@@ -132,7 +133,7 @@ private fun SessionFiltersStrip(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .fillMaxWidth(),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }

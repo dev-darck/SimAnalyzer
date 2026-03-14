@@ -37,6 +37,31 @@ class DependenciesScope internal constructor(
             notation = this,
         ) { dep -> implementation(dep) }
 
+    val ProjectDependency.jvmTestFixtures: Unit
+        get() {
+            val projectPath = path
+
+            addTo(
+                sourceSetName = "jvmTest",
+                notation = dependencies.project(
+                    mapOf(
+                        "path" to projectPath,
+                        "configuration" to "testFixturesApiElements",
+                    ),
+                ),
+            ) { dep -> compileOnly(dep) }
+
+            addTo(
+                sourceSetName = "jvmTest",
+                notation = dependencies.project(
+                    mapOf(
+                        "path" to projectPath,
+                        "configuration" to "testFixturesRuntimeElements",
+                    ),
+                ),
+            ) { dep -> runtimeOnly(dep) }
+        }
+
     val Provider<MinimalExternalModuleDependency>.jvmImpl
         get() = addTo(
             sourceSetName = "jvmMain",
@@ -48,6 +73,18 @@ class DependenciesScope internal constructor(
             sourceSetName = "jvmTest",
             notation = get(),
         ) { dep -> implementation(dep) }
+
+    val Provider<MinimalExternalModuleDependency>.testFixturesImpl
+        get() = addToConfiguration(
+            configurationName = "testFixturesImplementation",
+            notation = get(),
+        )
+
+    val Provider<MinimalExternalModuleDependency>.testFixturesApi
+        get() = addToConfiguration(
+            configurationName = "testFixturesApi",
+            notation = get(),
+        )
 
     val Provider<MinimalExternalModuleDependency>.commonImpl
         get() = addTo(
@@ -71,9 +108,15 @@ class DependenciesScope internal constructor(
 
     fun jvmTest(dep: Provider<MinimalExternalModuleDependency>) = dep.jvmTest
 
+    fun jvmTestFixtures(dep: ProjectDependency) = dep.jvmTestFixtures
+
     fun commonImpl(dep: Provider<MinimalExternalModuleDependency>) = dep.commonImpl
 
     fun commonTestImpl(dep: Provider<MinimalExternalModuleDependency>) = dep.commonTestImpl
+
+    fun testFixturesImpl(dep: Provider<MinimalExternalModuleDependency>) = dep.testFixturesImpl
+
+    fun testFixturesApi(dep: Provider<MinimalExternalModuleDependency>) = dep.testFixturesApi
 
     private inline fun <T : Any> addTo(
         sourceSetName: String,
@@ -89,5 +132,12 @@ class DependenciesScope internal constructor(
         sourceSet.dependencies {
             addOne(notation)
         }
+    }
+
+    private fun <T : Any> addToConfiguration(
+        configurationName: String,
+        notation: T,
+    ) {
+        dependencies.add(configurationName, notation)
     }
 }

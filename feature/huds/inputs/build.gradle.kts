@@ -4,7 +4,9 @@ moduleImpl {
     resources()
     logger()
     proto()
-    test()
+    test {
+        ui()
+    }
 
     dependencies {
         projects.core.hud.api.jvmImpl

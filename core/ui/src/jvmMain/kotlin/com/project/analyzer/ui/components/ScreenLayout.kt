@@ -29,6 +29,7 @@ import com.project.analyzer.core.ui.Res.screen_layout_preview_sessions_value
 import com.project.analyzer.core.ui.Res.screen_layout_preview_track
 import com.project.analyzer.core.ui.Res.screen_layout_preview_track_value
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
@@ -61,7 +62,7 @@ public fun ScrollableScreenColumn(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 4.dp),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }

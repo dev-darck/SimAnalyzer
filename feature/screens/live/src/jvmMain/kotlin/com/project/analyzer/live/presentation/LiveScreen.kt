@@ -37,8 +37,12 @@ internal fun LiveScreen() {
 }
 
 @Composable
-private fun Screen(state: LiveScreenState = LiveScreenState()) {
+internal fun Screen(
+    state: LiveScreenState = LiveScreenState(),
+    modifier: Modifier = Modifier
+) {
     ResponsiveScreen(
+        modifier = modifier,
         contentPadding = PaddingValues(horizontal = 16.dp),
         gridMode = ResponsiveGridMode.Grid,
         backgroundColor = SimAnalyzerTheme.material.background,

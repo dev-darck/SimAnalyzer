@@ -1,6 +1,9 @@
 package com.project.analyzer.base
 
-internal class TestScope {
+import com.project.analyzer.ProjectDsl
+
+@ProjectDsl
+class TestScope {
 
     var enableUnit: Boolean = false
         private set

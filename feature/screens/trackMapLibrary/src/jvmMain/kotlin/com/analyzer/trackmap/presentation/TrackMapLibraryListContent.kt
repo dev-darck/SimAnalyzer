@@ -29,17 +29,19 @@ import com.project.analyzer.feature.screens.trackMapLibrary.Res.track_map_librar
 import com.project.analyzer.feature.screens.trackMapLibrary.Res.track_map_library_title
 import com.project.analyzer.feature.screens.trackMapLibrary.Res.track_map_library_total
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import kotlinx.collections.immutable.ImmutableList
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun TrackMapLibraryListContent(
+    modifier: Modifier = Modifier,
     items: ImmutableList<TrackMapLibraryCardUi>,
     onOpenEditor: (TrackMapLibraryCardUi) -> Unit
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background)
             .padding(16.dp),
@@ -104,7 +106,7 @@ private fun ColumnScope.TrackMapLibraryItemsList(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 4.dp),
-            adapter = rememberScrollbarAdapter(listState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
         )
     }
 }
