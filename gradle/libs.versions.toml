@@ -21,7 +21,7 @@ kotlinpoet = "2.2.0"
 slf4j = "2.1.0-alpha1"
 kotlin-logging = "8.0.01"
 logback = "1.5.32"
-junit-platform = "1.14.3"
+junit-platform = "6.0.2"
 mockk = "1.14.9"
 storytale = "0.0.4-alpha01+dev22"
 tomlParser = "1.1.1"
@@ -55,6 +55,7 @@ gradle-metro-plugin = { module = "dev.zacsweers.metro:dev.zacsweers.metro.gradle
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { module = "junit:junit", version.ref = "junit" }
+compose-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "composeMultiplatform" }
 compose-ui-test-junit4 = { module = "org.jetbrains.compose.ui:ui-test-junit4-desktop", version.ref = "composeMultiplatform" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform" }

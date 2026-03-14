@@ -2,6 +2,9 @@ moduleImpl {
     compose()
     resources()
     metro()
+    test {
+        ui()
+    }
     buildConfig {
         packageName = "settings"
         common {

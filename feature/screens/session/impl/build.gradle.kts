@@ -3,6 +3,9 @@ moduleImpl {
     resources()
     metro()
     logger()
+    test {
+        ui()
+    }
 
     dependencies {
         projects.core.di.api.jvmImpl

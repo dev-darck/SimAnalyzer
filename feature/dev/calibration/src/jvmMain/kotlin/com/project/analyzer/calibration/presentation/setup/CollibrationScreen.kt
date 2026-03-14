@@ -67,6 +67,8 @@ import com.project.analyzer.feature.dev.calibration.Res.calibration_track_identi
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last_saved
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.uiTestTag
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -84,15 +86,16 @@ fun CalibrationScreen(onVerify: (String) -> Unit = {}) {
 }
 
 @Composable
-private fun CalibrationContent(
+internal fun CalibrationContent(
     state: CalibrationState,
     dispatchEvent: (CalibrationIntent) -> Unit,
     onVerify: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val screenScrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background),
     ) {
@@ -155,7 +158,10 @@ private fun CalibrationContent(
 
                 if (state.canVerify) {
                     Spacer(modifier = Modifier.height(10.dp))
-                    Button(onClick = { onVerify(state.lastSavedTrackId!!) }) {
+                    Button(
+                        onClick = { onVerify(state.lastSavedTrackId!!) },
+                        modifier = Modifier.uiTestTag(TestTags.CalibrationVerifyLastSaved),
+                    ) {
                         Text(
                             text = stringResource(Res.string.calibration_verify_last_saved),
                             style = SimAnalyzerTheme.typography.labelMedium,
@@ -211,7 +217,7 @@ private fun CalibrationContent(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 6.dp),
-            adapter = rememberScrollbarAdapter(screenScrollState),
+            adapter = com.project.analyzer.ui.scrollbar.AppScrollbarAdapter(rememberScrollbarAdapter(screenScrollState)),
         )
     }
 }
@@ -253,7 +259,10 @@ private fun ChooseToVerify(
                         style = SimAnalyzerTheme.typography.bodyMedium,
                         color = SimAnalyzerTheme.material.onSurface,
                     )
-                    OutlinedButton(onClick = { onVerify(trackId) }) {
+                    OutlinedButton(
+                        onClick = { onVerify(trackId) },
+                        modifier = Modifier.uiTestTag(TestTags.CalibrationSavedVerify.child(trackId)),
+                    ) {
                         Text(
                             text = stringResource(Res.string.calibration_verify),
                             style = SimAnalyzerTheme.typography.labelMedium,

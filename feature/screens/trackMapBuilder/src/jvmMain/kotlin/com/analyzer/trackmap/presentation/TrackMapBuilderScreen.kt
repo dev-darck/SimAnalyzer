@@ -82,6 +82,9 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
 import com.project.analyzer.ui.format.formatPercent
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.uiTestTag
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
@@ -107,7 +110,7 @@ fun TrackMapBuilderScreen() {
 }
 
 @Composable
-private fun TrackMapBuilderContent(
+internal fun TrackMapBuilderContent(
     state: TrackMapBuilderUiState,
     onStart: () -> Unit = {},
     onStop: () -> Unit = {},
@@ -117,16 +120,18 @@ private fun TrackMapBuilderContent(
     onFallbackHalfWidth: (Float) -> Unit = {},
     onPitEntry: () -> Unit = {},
     onPitExit: () -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     val screenScrollState = rememberScrollState()
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(SimAnalyzerTheme.material.background),
     ) {
         Column(
             modifier = Modifier
+                .uiTestTag(TestTags.TrackMapBuilderScroll)
                 .fillMaxSize()
                 .verticalScroll(screenScrollState)
                 .padding(16.dp)
@@ -155,7 +160,7 @@ private fun TrackMapBuilderContent(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 6.dp),
-            adapter = rememberScrollbarAdapter(screenScrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(screenScrollState)),
         )
     }
 }
@@ -333,7 +338,11 @@ private fun TrackMapBuilderActionsSection(
         subtitle = stringResource(Res.string.track_map_actions_subtitle),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Button(onClick = onStart, enabled = !state.recording && !state.isSaving) {
+            Button(
+                onClick = onStart,
+                enabled = !state.recording && !state.isSaving,
+                modifier = Modifier.uiTestTag(TestTags.TrackMapBuilderStart),
+            ) {
                 Text(
                     text = stringResource(Res.string.track_map_start),
                     style = SimAnalyzerTheme.typography.labelMedium,

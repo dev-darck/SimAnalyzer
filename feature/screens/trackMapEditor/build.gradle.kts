@@ -2,6 +2,9 @@ moduleImpl {
     compose()
     metro()
     logger()
+    test {
+        ui()
+    }
 
     dependencies {
         projects.core.di.api.jvmImpl

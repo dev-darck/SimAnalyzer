@@ -40,7 +40,9 @@ import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_expand
 import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_select_drive
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
+import kotlinx.collections.immutable.PersistentList
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -48,7 +50,7 @@ private val CHEVRON_ANIM_DURATION_MS = 150.milliseconds.inWholeMilliseconds.toIn
 
 @Composable
 fun FileTree(
-    nodes: List<TreeNode>,
+    nodes: PersistentList<TreeNode>,
     currentDir: String,
     scrollToIndex: Int,
     onToggle: (path: String) -> Unit,
@@ -93,13 +95,18 @@ fun FileTree(
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 4.dp),
-            adapter = rememberScrollbarAdapter(listState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
         )
     }
 }
 
 @Composable
-private fun TreeRow(node: TreeNode, isSelected: Boolean, onToggle: () -> Unit, onSelect: () -> Unit) {
+private fun TreeRow(
+    node: TreeNode,
+    isSelected: Boolean,
+    onToggle: () -> Unit,
+    onSelect: () -> Unit
+) {
     val chevronAngle by animateFloatAsState(
         targetValue = if (node.expanded) 90f else 0f,
         animationSpec = tween(durationMillis = CHEVRON_ANIM_DURATION_MS),

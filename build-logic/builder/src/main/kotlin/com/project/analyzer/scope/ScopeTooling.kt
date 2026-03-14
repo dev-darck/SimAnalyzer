@@ -1,21 +1,8 @@
 package com.project.analyzer.scope
 
 import com.project.analyzer.ProjectDsl
-import com.project.analyzer.base.TestScope
 import com.project.analyzer.kmp.DesktopBuildConfigSpec
 import com.project.analyzer.kmp.Fields
-
-@ProjectDsl
-class TestOptions internal constructor(
-    internal val delegate: TestScope = TestScope(),
-) {
-
-    fun both() = delegate.both()
-
-    fun unit() = delegate.unit()
-
-    fun ui() = delegate.ui()
-}
 
 @ProjectDsl
 class BuildConfigOptions internal constructor(

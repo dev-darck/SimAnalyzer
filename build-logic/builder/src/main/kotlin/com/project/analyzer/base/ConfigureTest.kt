@@ -6,17 +6,37 @@ import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
-internal fun Project.configureTest(configure: TestScope.() -> Unit) {
-    val scope = TestScope().apply(configure)
+private const val CORE_TEST_PROJECT_PATH = ":core:test"
+private const val TEST_FIXTURES_API_ELEMENTS = "testFixturesApiElements"
+private const val TEST_FIXTURES_RUNTIME_ELEMENTS = "testFixturesRuntimeElements"
+private const val UI_TEST_ENABLED_EXTRA = "simAnalyzer.uiTestsEnabled"
+
+internal fun Project.configureTest(configure: TestScope) {
+    if (configure.enableUi) {
+        extensions.extraProperties[UI_TEST_ENABLED_EXTRA] = true
+    }
 
     extensions.configure<KotlinMultiplatformExtension> {
         sourceSets {
-            jvmTest.dependencies {
-                if (scope.enableUi) {
-                    implementation(deps.compose.ui.test.junit4)
+            if (configure.enableUi) {
+                commonTest.dependencies {
+                    implementation(deps.compose.ui.test)
                 }
 
-                if (scope.enableUnit) {
+                jvmMain.dependencies {
+                    implementation(this@configureTest.coreTestDependency())
+                }
+            }
+
+            jvmTest.dependencies {
+                if (configure.enableUi) {
+                    implementation(deps.compose.ui.test.junit4)
+                    implementation(deps.navigation3.runtime)
+                    compileOnly(this@configureTest.coreTestDependency(TEST_FIXTURES_API_ELEMENTS))
+                    runtimeOnly(this@configureTest.coreTestDependency(TEST_FIXTURES_RUNTIME_ELEMENTS))
+                }
+
+                if (configure.enableUnit) {
                     implementation(deps.junit)
                     implementation(deps.kotlinx.coroutines.test)
                     implementation(deps.kotlin.test)
@@ -29,3 +49,11 @@ internal fun Project.configureTest(configure: TestScope.() -> Unit) {
         }
     }
 }
+
+private fun Project.coreTestDependency(configuration: String? = null) =
+    dependencies.project(
+        buildMap {
+            put("path", CORE_TEST_PROJECT_PATH)
+            configuration?.let { put("configuration", it) }
+        },
+    )

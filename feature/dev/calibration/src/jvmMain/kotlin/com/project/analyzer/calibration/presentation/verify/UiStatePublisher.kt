@@ -11,6 +11,7 @@ import com.project.analyzer.telemetry.ac.api.debug.AcCalibrationDebugLapAnalyzer
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import dev.zacsweers.metro.Inject
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlin.math.abs
@@ -46,7 +47,7 @@ internal class UiStatePublisher(
                 bestS1Ms = snapshot.bestSectorsMs[0]?.toLong(),
                 bestS2Ms = snapshot.bestSectorsMs[1]?.toLong(),
                 bestS3Ms = snapshot.bestSectorsMs[2]?.toLong(),
-                gateDebugInfo = gateInfoList,
+                gateDebugInfo = gateInfoList.toPersistentList(),
                 currentPosition = carPose.position,
                 currentForward = carPose.headingDir,
                 headingDegrees = headingDeg,

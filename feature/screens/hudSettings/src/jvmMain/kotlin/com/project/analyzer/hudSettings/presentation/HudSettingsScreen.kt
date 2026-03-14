@@ -55,6 +55,7 @@ import com.project.analyzer.hud.api.DEFAULT_HUD_BACKGROUND_OPACITY
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.LocalHudBackgroundOpacity
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import com.project.analyzer.ui.slider.SettingsSliderRow
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -76,10 +77,14 @@ internal fun HudSettingsScreen() {
 }
 
 @Composable
-private fun Screen(state: HudUiState = HudUiState(panels = persistentListOf()), dispatch: (HudSettingsIntent) -> Unit = {}) {
+internal fun Screen(
+    state: HudUiState = HudUiState(panels = persistentListOf()),
+    dispatch: (HudSettingsIntent) -> Unit = {},
+    modifier: Modifier = Modifier,
+) {
     val visibleIds = remember(state.visiblePanels) { state.visiblePanels.keys.toImmutableSet() }
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(color = SimAnalyzerTheme.material.background)
             .padding(all = 16.dp),
@@ -192,7 +197,7 @@ private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 6.dp),
-            adapter = rememberScrollbarAdapter(scrollState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(scrollState)),
         )
     }
 }
@@ -244,7 +249,7 @@ private fun HudListPanel(
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
                     .padding(vertical = 4.dp),
-                adapter = rememberScrollbarAdapter(listState),
+                adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
             )
         }
     }
@@ -335,7 +340,11 @@ private fun HudCommonSettingsPanel(
 }
 
 @Composable
-private fun HudMonitorPanel(panel: HudPanel? = null, hudOpacity: Float = 1f, modifier: Modifier = Modifier) {
+private fun HudMonitorPanel(
+    panel: HudPanel? = null,
+    hudOpacity: Float = 1f,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier = modifier
             .background(color = SimAnalyzerTheme.material.surface, shape = SimAnalyzerTheme.shapes.large)

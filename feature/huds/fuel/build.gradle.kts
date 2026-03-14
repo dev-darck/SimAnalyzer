@@ -3,6 +3,9 @@ moduleImpl {
     compose()
     resources()
     logger()
+    test {
+        ui()
+    }
 
     dependencies {
         projects.core.hud.api.jvmImpl

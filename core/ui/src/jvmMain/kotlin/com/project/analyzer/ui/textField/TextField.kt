@@ -35,6 +35,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.uiTestTag
 
 @Composable
 public fun TextField(
@@ -118,6 +120,7 @@ public fun TextField(
             interactionSource = interactionSource,
             modifier = Modifier
                 .weight(1f)
+                .uiTestTag(TestTags.TextFieldInput)
                 .onFocusChanged {
                     focused = it.isFocused
                     onFocusChanged(it.isFocused)

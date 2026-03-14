@@ -20,9 +20,13 @@ import com.project.analyzer.ui.format.formatDecimal
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun DirectionInfoCard(forward: Vec2?, headingDegrees: Float) {
+fun DirectionInfoCard(
+    forward: Vec2?,
+    headingDegrees: Float,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .clip(SimAnalyzerTheme.shapes.medium)
             .background(SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.2f))

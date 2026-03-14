@@ -4,6 +4,8 @@ import com.project.analyzer.chooser.SelectionMode
 import com.project.analyzer.chooser.domain.model.File
 import com.project.analyzer.chooser.domain.model.FsEntry
 import com.project.analyzer.chooser.domain.model.TreeNode
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 data class FileUiState(
     val currentDir: String = "",
@@ -11,14 +13,14 @@ data class FileUiState(
     val selectedDrive: String = "",
     val selectionMode: SelectionMode = SelectionMode.FILE,
 
-    val drives: List<File> = emptyList(),
-    val places: List<File> = emptyList(),
+    val drives: PersistentList<File> = persistentListOf(),
+    val places: PersistentList<File> = persistentListOf(),
 
-    val treeNodes: List<TreeNode> = emptyList(),
+    val treeNodes: PersistentList<TreeNode> = persistentListOf(),
 
     val scrollToIndex: Int = -1,
 
-    val entries: List<FsEntry> = emptyList(),
+    val entries: PersistentList<FsEntry> = persistentListOf(),
 
     val showHidden: Boolean = false,
 

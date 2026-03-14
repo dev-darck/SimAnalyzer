@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 
 private enum class ResponsiveSize {
@@ -97,7 +98,7 @@ public fun ResponsiveScreen(
                             .align(Alignment.CenterEnd)
                             .fillMaxHeight()
                             .padding(vertical = 4.dp),
-                        adapter = rememberScrollbarAdapter(listState),
+                        adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
                     )
                 }
             }

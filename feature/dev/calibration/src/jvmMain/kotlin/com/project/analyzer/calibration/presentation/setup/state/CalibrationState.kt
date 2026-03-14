@@ -3,6 +3,8 @@ package com.project.analyzer.calibration.presentation.setup.state
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 data class CalibrationState(
     val trackName: String = "",
@@ -15,11 +17,11 @@ data class CalibrationState(
     val halfWidthMeters: Float = 4f,
 
     val startFinish: Gate? = null,
-    val sectorStartMarks: List<Gate> = emptyList(),
+    val sectorStartMarks: PersistentList<Gate> = persistentListOf(),
 
     val isBusy: Boolean = false,
     val message: String? = null,
-    val listOfData: List<String> = emptyList(),
+    val listOfData: PersistentList<String> = persistentListOf(),
     val lastSavedTrackId: String? = null,
     val debugTelemetry: String? = null,
 

@@ -3,6 +3,8 @@ package com.project.analyzer.calibration.presentation.verify.state
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 data class GateDebugInfo(
     val name: String,
@@ -53,7 +55,7 @@ data class CalibrationVerifyState(
     val events: List<String> = emptyList(),
     val debugTelemetry: String? = null,
 
-    val gateDebugInfo: List<GateDebugInfo> = emptyList(),
+    val gateDebugInfo: PersistentList<GateDebugInfo> = persistentListOf(),
 
     val editingGate: EditingGate? = null,
     val isCapturing: Boolean = false,

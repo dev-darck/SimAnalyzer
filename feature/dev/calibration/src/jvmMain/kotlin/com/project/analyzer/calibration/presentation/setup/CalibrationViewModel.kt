@@ -21,6 +21,7 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibrationSource
 import com.project.analyzer.utils.toSlugId
 import dev.zacsweers.metro.Inject
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -134,7 +135,7 @@ internal class CalibrationViewModel(
     private fun onLoadAllCalibrations() {
         viewModelScope.launch {
             val listOfData = saveUseCase.loadAll()
-            _state.update { it.copy(listOfData = listOfData) }
+            _state.update { it.copy(listOfData = listOfData.toPersistentList()) }
         }
     }
 
@@ -150,7 +151,7 @@ internal class CalibrationViewModel(
                 if (index < 2 || index > s.sectorCount) return@update s
                 val listIndex = index - 2
                 val updated = s.sectorStartMarks.toMutableList().apply { this[listIndex] = gate }
-                s.copy(sectorStartMarks = updated, message = "✓ Sector S$index START updated")
+                s.copy(sectorStartMarks = updated.toPersistentList(), message = "✓ Sector S$index START updated")
             }
         }
     }
@@ -160,7 +161,7 @@ internal class CalibrationViewModel(
             _state.update { s ->
                 val nextIndex = s.sectorCount + 1
                 s.copy(
-                    sectorStartMarks = s.sectorStartMarks + gate,
+                    sectorStartMarks = (s.sectorStartMarks + gate).toPersistentList(),
                     message = "✓ Sector S$nextIndex START recorded",
                 )
             }
@@ -172,7 +173,7 @@ internal class CalibrationViewModel(
             if (index < 2 || index > s.sectorCount) return@update s
             val listIndex = index - 2
             val updated = s.sectorStartMarks.toMutableList().apply { removeAt(listIndex) }
-            s.copy(sectorStartMarks = updated, message = "✓ Removed sector S$index")
+            s.copy(sectorStartMarks = updated.toPersistentList(), message = "✓ Removed sector S$index")
         }
     }
 
@@ -191,7 +192,7 @@ internal class CalibrationViewModel(
             val current = s.sectorStartMarks[listIndex]
             val flipped = current.flipDirection()
             val updated = s.sectorStartMarks.toMutableList().apply { this[listIndex] = flipped }
-            s.copy(sectorStartMarks = updated, message = "✓ Sector S$index START direction flipped")
+            s.copy(sectorStartMarks = updated.toPersistentList(), message = "✓ Sector S$index START direction flipped")
         }
     }
 

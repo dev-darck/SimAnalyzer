@@ -35,6 +35,9 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
 import com.project.analyzer.ui.icons.Settings
+import com.project.analyzer.ui.modifier.TestTags
+import com.project.analyzer.ui.modifier.trackRecompositions
+import com.project.analyzer.ui.modifier.uiTestTag
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -46,6 +49,42 @@ fun WindowScope.App(
     decorator: FrameDecoratorState,
     onCloseRequest: () -> Unit = {},
 ) {
+    AppContent(
+        navigationState = navigationState,
+        onCloseRequest = onCloseRequest,
+        titleBar = { canGoBack, canGoForward, onBack, onForward, close ->
+            AppTitleBar(
+                canGoBack = canGoBack,
+                canGoForward = canGoForward,
+                onBack = onBack,
+                onForward = onForward,
+                onCloseRequest = close,
+                appName = BuildConfig.APP_NAME,
+                decorator = decorator,
+            )
+        },
+        navigationContent = {
+            AppNavGraph(
+                navigationState = navigationState,
+                providerFactory = providerFactory,
+            )
+        },
+    )
+}
+
+@Composable
+internal fun AppContent(
+    navigationState: NavigationState<Route>,
+    onCloseRequest: () -> Unit = {},
+    titleBar: @Composable (
+        canGoBack: Boolean,
+        canGoForward: Boolean,
+        onBack: () -> Unit,
+        onForward: () -> Unit,
+        onCloseRequest: () -> Unit,
+    ) -> Unit = { _, _, _, _, _ -> },
+    navigationContent: @Composable () -> Unit = {},
+) {
     val items = persistentListOf(
         NavItem(Root.Live, stringResource(Res.string.app_nav_live), Icons.Filled.Live),
         NavItem(Root.Session, stringResource(Res.string.app_nav_session), Icons.Filled.Session),
@@ -56,16 +95,16 @@ fun WindowScope.App(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background),
+            .background(SimAnalyzerTheme.material.background)
+            .uiTestTag(TestTags.App)
+            .trackRecompositions(),
     ) {
-        AppTitleBar(
-            canGoBack = navigationState.backStack.size > 1,
-            canGoForward = navigationState.canGoForward,
-            onBack = { navigationState.handleBack() },
-            onForward = { navigationState.handleForward() },
-            onCloseRequest = onCloseRequest,
-            appName = BuildConfig.APP_NAME,
-            decorator = decorator,
+        titleBar(
+            navigationState.backStack.size > 1,
+            navigationState.canGoForward,
+            { navigationState.handleBack() },
+            { navigationState.handleForward() },
+            onCloseRequest,
         )
 
         Row(
@@ -98,13 +137,11 @@ fun WindowScope.App(
                 modifier = Modifier
                     .background(SimAnalyzerTheme.material.background)
                     .weight(1f)
-                    .fillMaxHeight(),
+                    .fillMaxHeight()
+                    .uiTestTag(TestTags.Content),
                 contentAlignment = Alignment.TopStart,
             ) {
-                AppNavGraph(
-                    navigationState = navigationState,
-                    providerFactory = providerFactory,
-                )
+                navigationContent()
             }
         }
     }

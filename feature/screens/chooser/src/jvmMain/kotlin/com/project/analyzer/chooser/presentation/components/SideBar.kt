@@ -36,13 +36,15 @@ import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_quick_ac
 import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_this_pc
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
+import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
+import kotlinx.collections.immutable.PersistentList
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun Sidebar(
-    places: List<File>,
-    drives: List<File>,
+    places: PersistentList<File>,
+    drives: PersistentList<File>,
     currentDir: String,
     selectedDrive: String,
     dispatch: (FileChooserIntent) -> Unit,
@@ -74,7 +76,11 @@ internal fun Sidebar(
 }
 
 @Composable
-private fun SidebarPanel(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+private fun SidebarPanel(
+    title: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
@@ -92,7 +98,11 @@ private fun SidebarPanel(title: String, modifier: Modifier = Modifier, content: 
 }
 
 @Composable
-private fun PlacesList(places: List<File>, selectedPath: String, onPlaceClick: (File) -> Unit) {
+private fun PlacesList(
+    places: PersistentList<File>,
+    selectedPath: String,
+    onPlaceClick: (File) -> Unit
+) {
     val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -116,13 +126,17 @@ private fun PlacesList(places: List<File>, selectedPath: String, onPlaceClick: (
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 4.dp),
-            adapter = rememberScrollbarAdapter(listState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
         )
     }
 }
 
 @Composable
-private fun DrivesList(drives: List<File>, selectedDrive: String, onDriveClick: (File) -> Unit) {
+private fun DrivesList(
+    drives: PersistentList<File>,
+    selectedDrive: String,
+    onDriveClick: (File) -> Unit
+) {
     val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -171,13 +185,18 @@ private fun DrivesList(drives: List<File>, selectedDrive: String, onDriveClick: 
                 .align(Alignment.CenterEnd)
                 .fillMaxHeight()
                 .padding(vertical = 4.dp),
-            adapter = rememberScrollbarAdapter(listState),
+            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
         )
     }
 }
 
 @Composable
-private fun SidebarItem(text: String, leadingIcon: ImageVector, isSelected: Boolean, onClick: () -> Unit) {
+private fun SidebarItem(
+    text: String,
+    leadingIcon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     val backgroundColor = if (isSelected) {
         SimAnalyzerTheme.material.primary.copy(alpha = 0.14f)
     } else {
