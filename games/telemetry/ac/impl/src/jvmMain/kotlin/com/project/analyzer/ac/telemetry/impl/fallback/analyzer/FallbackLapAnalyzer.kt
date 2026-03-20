@@ -57,7 +57,14 @@ class FallbackLapAnalyzer(
             return
         }
 
-        processFrame(timestampNs, previous, pose, calibration)
+        processFrame(
+            timestampNs = timestampNs,
+            previousPose = previous,
+            currentPose = pose,
+            calibration = calibration,
+            sectorIndexHint0Based = null,
+            lastSectorTimeHintMs = null,
+        )
     }
 
     fun getSnapshot(currentTimeNs: Long): LapTimingSnapshot = state.createSnapshot(currentTimeNs)
@@ -105,11 +112,17 @@ class FallbackLapAnalyzer(
         return null
     }
 
-    fun processPhysicsFrame(timestampNs: Long, physics: SPageFilePhysics) {
+    fun processPhysicsFrame(
+        timestampNs: Long,
+        physics: SPageFilePhysics,
+        sectorIndexHint0Based: Int? = null,
+        lastSectorTimeHintMs: Int? = null,
+    ) {
         val calibration = state.calibration ?: return
         if (timestampNs == lastProcessedTimestampNs) return
         val pose = poseExtractor.extract(physics, state.referencePoint) ?: return state.markActive()
         lastProcessedTimestampNs = timestampNs
+        val sanitizedSectorHint = sanitizeGameSectorHint(sectorIndexHint0Based, calibration)
 
         state.ensureLapStarted(timestampNs)
 
@@ -122,11 +135,19 @@ class FallbackLapAnalyzer(
 
         val previous = state.previousPose
         if (previous == null) {
+            state.lastObservedGameSectorIndex0Based = sanitizedSectorHint
             state.previousPose = pose
             return
         }
 
-        processFrame(timestampNs, previous, pose, calibration)
+        processFrame(
+            timestampNs = timestampNs,
+            previousPose = previous,
+            currentPose = pose,
+            calibration = calibration,
+            sectorIndexHint0Based = sanitizedSectorHint,
+            lastSectorTimeHintMs = lastSectorTimeHintMs,
+        )
     }
 
     fun onPenaltyDetected() {
@@ -183,11 +204,14 @@ class FallbackLapAnalyzer(
         previousPose: CarPose,
         currentPose: CarPose,
         calibration: TrackCalibration,
+        sectorIndexHint0Based: Int?,
+        lastSectorTimeHintMs: Int?,
     ) {
         state.ensureLapStarted(timestampNs)
 
         val stationary = isCarStationary(currentPose, previousPose)
         if (stationary) {
+            state.lastObservedGameSectorIndex0Based = sectorIndexHint0Based
             state.previousPose = currentPose
             state.updateFrame(timestampNs)
             return
@@ -195,11 +219,18 @@ class FallbackLapAnalyzer(
 
         if (!state.isSyncedToStartFinish) {
             trySyncToStartFinish(timestampNs, previousPose, currentPose, calibration)
+            state.lastObservedGameSectorIndex0Based = sectorIndexHint0Based
             state.previousPose = currentPose
             state.updateFrame(timestampNs)
             return
         }
 
+        applyGameSectorProgressHint(
+            timestampNs = timestampNs,
+            sectorIndexHint0Based = sectorIndexHint0Based,
+            lastSectorTimeHintMs = lastSectorTimeHintMs,
+            calibration = calibration,
+        )
         checkSectorCrossings(timestampNs, previousPose, currentPose, calibration)
         checkLapCompletion(timestampNs, previousPose, currentPose, calibration)
 
@@ -242,6 +273,54 @@ class FallbackLapAnalyzer(
         }
     }
 
+    private fun applyGameSectorProgressHint(
+        timestampNs: Long,
+        sectorIndexHint0Based: Int?,
+        lastSectorTimeHintMs: Int?,
+        calibration: TrackCalibration,
+    ) {
+        val previousObservedSector = state.lastObservedGameSectorIndex0Based
+        if (sectorIndexHint0Based == null) {
+            state.lastObservedGameSectorIndex0Based = null
+            return
+        }
+        if (previousObservedSector == sectorIndexHint0Based) return
+
+        val sectorCount = getSectorCount(calibration)
+        val expectedSectorIndex0Based = (state.currentSectorIndex - 1).coerceIn(0, sectorCount - 1)
+        val forwardSteps = when {
+            sectorIndexHint0Based == expectedSectorIndex0Based -> 0
+            sectorIndexHint0Based > expectedSectorIndex0Based -> sectorIndexHint0Based - expectedSectorIndex0Based
+            expectedSectorIndex0Based == sectorCount - 1 && sectorIndexHint0Based == 0 -> 1
+            else -> {
+                logger.debug {
+                    "LAP: Ignore non-monotonic native sector hint " +
+                        "prev=$previousObservedSector expected=$expectedSectorIndex0Based actual=$sectorIndexHint0Based"
+                }
+                state.lastObservedGameSectorIndex0Based = sectorIndexHint0Based
+                return
+            }
+        }
+        state.lastObservedGameSectorIndex0Based = sectorIndexHint0Based
+        if (forwardSteps <= 0) return
+
+        val sectorTimeHintMs = lastSectorTimeHintMs?.takeIf { it > 0 }
+        repeat(forwardSteps) { stepIndex ->
+            val timeOverride = if (stepIndex == forwardSteps - 1) sectorTimeHintMs else null
+            if (state.currentSectorIndex < sectorCount) {
+                val gateKey = "S${state.currentSectorIndex}_F"
+                if (!state.canTriggerGate(timestampNs, gateKey)) return@repeat
+                state.completeSector(timestampNs, interpolationFactor = 1f, sectorTimeMsOverride = timeOverride)
+                state.markGateTriggered(timestampNs, gateKey)
+            } else {
+                if (!state.canTriggerGate(timestampNs, GATE_START_FINISH)) return@repeat
+                logger.debug { "LAP: Start/Finish derived from native sector index wrap" }
+                state.completeLap(timestampNs, interpolationFactor = 1f, finalSectorTimeMsOverride = timeOverride)
+                state.markGateTriggered(timestampNs, GATE_START_FINISH)
+            }
+        }
+    }
+
     private fun checkSectorCrossings(
         timestampNs: Long,
         previousPose: CarPose,
@@ -280,14 +359,20 @@ class FallbackLapAnalyzer(
                     state.completeLap(timestampNs, crossing.interpolationFactor)
                 } else {
                     logger.debug {
-                        "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - ignored (sync locked)"
+                        "LAP: Start/Finish crossed in sector ${state.currentSectorIndex}, expected $expectedFinalSector - realigning"
                     }
+                    state.realignToStartFinish(timestampNs, crossing.interpolationFactor)
                 }
             } else {
                 state.syncToStartFinish(timestampNs, crossing.interpolationFactor)
             }
             state.markGateTriggered(timestampNs, GATE_START_FINISH)
         }
+    }
+
+    private fun sanitizeGameSectorHint(sectorIndexHint0Based: Int?, calibration: TrackCalibration): Int? {
+        val sectorCount = getSectorCount(calibration)
+        return sectorIndexHint0Based?.takeIf { it in 0 until sectorCount }
     }
 
     private fun findNextSectorFinishGate(calibration: TrackCalibration, sectorNumber: Int): Gate? {

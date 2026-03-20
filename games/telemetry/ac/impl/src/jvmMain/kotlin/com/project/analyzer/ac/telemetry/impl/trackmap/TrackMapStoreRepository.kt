@@ -8,7 +8,6 @@ import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMapPoint
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
 import com.project.analyzer.utils.AppDirectories
 import com.project.analyzer.utils.TrackIdentityAliasMatcher
-import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -23,8 +22,6 @@ class TrackMapStoreRepository internal constructor(
     appDirectories: AppDirectories,
     private val gameProvider: TrackMapGameProvider,
 ) : TrackMapRepository {
-
-    private val logger = logger()
 
     private val store = createTrackMapStoreDataStore(
         directory = appDirectories.preferencesDir,
@@ -61,20 +58,7 @@ class TrackMapStoreRepository internal constructor(
             trackId = trackId.trim(),
             layoutId = layoutId.normalizedLayoutId(),
         )
-        logLoadStart(request)
-
-        resolveUserMap(request)?.let { resolvedUserMap ->
-            logUserMapHit(request, resolvedUserMap)
-            return resolvedUserMap
-        }
-
-        resolveGameMap(request)?.let { resolvedGameMap ->
-            logGameMapHit(resolvedGameMap)
-            return resolvedGameMap
-        }
-
-        logLoadMiss(request)
-        return null
+        return resolveUserMap(request) ?: resolveGameMap(request)
     }
 
     override suspend fun loadAll(gameId: String?): List<TrackMap> {
@@ -131,52 +115,19 @@ class TrackMapStoreRepository internal constructor(
     }
 
     private suspend fun resolveGameMap(request: TrackMapLookupRequest): TrackMap? {
+        gameProvider.load(
+            gameId = request.gameId,
+            trackId = request.trackId,
+            layoutId = request.layoutId.ifBlank { null },
+        )?.let(::sanitize)?.let { return it }
+
         val candidates = selectCandidates(
             maps = gameProvider.loadAll(request.gameId).map(::sanitize),
             gameId = request.gameId,
             trackId = request.trackId,
             layoutId = request.layoutId,
         )
-        candidates.forEach { candidate ->
-            logGameFallbackCandidate(
-                candidateTrackId = candidate.trackId,
-                layoutId = candidate.layoutId.normalizedLayoutId(),
-            )
-        }
         return candidates.resolvePreferredMap(layoutId = request.layoutId)
-    }
-
-    private fun logLoadStart(request: TrackMapLookupRequest) {
-        logger.info {
-            "TrackMapStoreRepository.load start " +
-                "gameId=${request.gameId} trackId=${request.trackId} layoutId=${request.layoutId}"
-        }
-    }
-
-    private fun logUserMapHit(request: TrackMapLookupRequest, map: TrackMap) {
-        logger.info {
-            "TrackMapStoreRepository.load user hit " +
-                "gameId=${request.gameId} trackId=${map.trackId} layoutId=${map.layoutId}"
-        }
-    }
-
-    private fun logGameFallbackCandidate(candidateTrackId: String, layoutId: String) {
-        logger.info {
-            "TrackMapStoreRepository.load game fallback candidate=$candidateTrackId layoutId=$layoutId"
-        }
-    }
-
-    private fun logGameMapHit(map: TrackMap) {
-        logger.info {
-            "TrackMapStoreRepository.load game hit trackId=${map.trackId} layoutId=${map.layoutId}"
-        }
-    }
-
-    private fun logLoadMiss(request: TrackMapLookupRequest) {
-        logger.warn {
-            "TrackMapStoreRepository.load miss " +
-                "gameId=${request.gameId} trackId=${request.trackId} layoutId=${request.layoutId}"
-        }
     }
 
     private fun selectCandidates(

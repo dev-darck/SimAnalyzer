@@ -7,8 +7,8 @@ import com.project.analyzer.devsettings.domain.model.TelemetryEntryModel
 import com.project.analyzer.devsettings.domain.model.TelemetryStatus
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.HudPreferencesStore
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
+import com.project.analyzer.telemetry.api.contract.TelemetryReadSource
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provider
 import kotlinx.collections.immutable.persistentListOf
@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 @Inject
 class DevSettingsUseCaseImpl(
-    private val telemetryLifecycle: TelemetryLifecycle,
+    private val telemetry: TelemetryReadSource,
     private val hudPreferencesStore: HudPreferencesStore,
     private val panels: Provider<Set<HudPanel>>,
 ) : DevSettingsUseCase {
@@ -119,7 +119,7 @@ class DevSettingsUseCaseImpl(
 
     private fun observeTelemetryEvents(scope: CoroutineScope) {
         scope.launch {
-            telemetryLifecycle.events.collect { event ->
+            telemetry.events.collect { event ->
                 val label = when (event) {
                     TelemetryLifecycleEvent.SimConnected -> TelemetryStatus.SimConnected
                     TelemetryLifecycleEvent.SimDisconnected -> TelemetryStatus.SimDisconnected
@@ -149,7 +149,7 @@ class DevSettingsUseCaseImpl(
     @OptIn(FlowPreview::class)
     private fun observeTelemetryFrames(scope: CoroutineScope) {
         scope.launch {
-            telemetryLifecycle.frames
+            telemetry.frames
                 .sample(TELEMETRY_SAMPLE_MS)
                 .collect { frame ->
                     val session = frame.session

@@ -105,7 +105,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
 
             FrameDecorator { decorator ->
                 App(
-                    providerFactory = features.navigation.entryProviderFactory,
+                    entryFactory = features.navigation.entryProviderFactory,
                     navigationState = navigationState,
                     decorator = decorator,
                     onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },

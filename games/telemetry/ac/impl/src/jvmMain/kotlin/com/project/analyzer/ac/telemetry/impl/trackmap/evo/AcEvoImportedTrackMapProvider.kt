@@ -7,7 +7,6 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMap
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMapBounds
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMapPoint
-import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
@@ -29,7 +28,6 @@ class AcEvoImportedTrackMapProvider internal constructor(
     private val parsers: AcEvoTrackMapAssetParsers,
 ) : TrackMapGameProvider {
 
-    private val logger = logger()
     private val mutex = Mutex()
 
     @Volatile
@@ -59,7 +57,6 @@ class AcEvoImportedTrackMapProvider internal constructor(
     }
 
     private suspend fun ensureMaps(): List<TrackMap> = mutex.withLock {
-        logger.info { "AcEvoImportedTrackMapProvider.ensureMaps start" }
         val snapshot = importer.ensureImported() ?: return emptyList()
         val key = CacheKey(
             packagePath = snapshot.manifest.packagePath,
@@ -68,7 +65,6 @@ class AcEvoImportedTrackMapProvider internal constructor(
             assetCount = snapshot.manifest.assets.size,
         )
         if (cachedKey == key) {
-            logger.info { "AcEvoImportedTrackMapProvider.ensureMaps cache hit maps=${cachedMaps.size}" }
             return cachedMaps
         }
 
@@ -104,7 +100,6 @@ class AcEvoImportedTrackMapProvider internal constructor(
 
         cachedKey = key
         cachedMaps = builtMaps
-        logger.info { "AcEvoImportedTrackMapProvider.ensureMaps built maps=${builtMaps.size}" }
         builtMaps
     }
 
@@ -113,10 +108,7 @@ class AcEvoImportedTrackMapProvider internal constructor(
         val centerline = bundle.splineJsonPath?.let(parsers::parseSplineJson).orEmpty()
             .ifEmpty { bundle.idealLinePath?.let(parsers::parseAiSpline).orEmpty() }
             .ifEmpty { densifyControlPoints(controlPoints) }
-        if (centerline.size < 2) {
-            logger.debug { "Skipping AC EVO imported map without centerline: ${bundle.trackId}" }
-            return null
-        }
+        if (centerline.size < 2) return null
 
         val pitPoints = bundle.pitlanePath?.let(parsers::parseAiSpline).orEmpty()
         val resolvedPoints = if (controlPoints.isEmpty()) {

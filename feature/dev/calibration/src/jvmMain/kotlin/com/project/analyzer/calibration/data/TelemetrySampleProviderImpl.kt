@@ -9,7 +9,7 @@ import com.project.analyzer.math.MIN_LEN
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.calibration.ReferencePointPoseExtractor
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryFrameSource
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.stateIn
 @SingleIn(ScreenScope::class)
 @Inject
 internal class TelemetrySampleProviderImpl(
-    telemetry: TelemetryLifecycle,
+    telemetryFrames: TelemetryFrameSource,
     @Default
     defaultDispatcher: CoroutineDispatcher,
 ) : TelemetrySampleProvider {
@@ -38,7 +38,7 @@ internal class TelemetrySampleProviderImpl(
         extractor = ReferencePointPoseExtractor(point)
     }
 
-    override val sample: StateFlow<CalibrationSample> = telemetry.frames
+    override val sample: StateFlow<CalibrationSample> = telemetryFrames.frames
         .map { frame ->
             val pose = extractor.extract(frame)
             val speed = frame.car?.speedKmh ?: 0f

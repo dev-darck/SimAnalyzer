@@ -23,11 +23,8 @@ internal object TrackCalibrationFileNameResolver {
 
     fun buildTrackIdCandidates(trackId: String, layoutId: String?): List<String> {
         val normalizedTrackId = trackId.trim().takeIf { it.isNotBlank() } ?: return emptyList()
-        val normalizedLayoutId = TrackIdNormalizer.normalizeLayoutId(layoutId)
-        if (normalizedLayoutId == null) return listOf(normalizedTrackId)
-
-        val suffix = "_$normalizedLayoutId"
         val candidates = linkedSetOf(normalizedTrackId)
+        val normalizedLayoutId = TrackIdNormalizer.normalizeLayoutId(layoutId)
         val combinedTrackId = resolveStorageTrackId(
             trackId = normalizedTrackId,
             layoutId = normalizedLayoutId,
@@ -35,9 +32,9 @@ internal object TrackCalibrationFileNameResolver {
         if (combinedTrackId.isNotBlank()) {
             candidates += combinedTrackId
         }
-        if (normalizedTrackId.endsWith(suffix)) {
+        if (normalizedLayoutId != null && normalizedTrackId.endsWith("_$normalizedLayoutId")) {
             normalizedTrackId
-                .removeSuffix(suffix)
+                .removeSuffix("_$normalizedLayoutId")
                 .trimEnd('_')
                 .takeIf { it.isNotBlank() }
                 ?.let(candidates::add)

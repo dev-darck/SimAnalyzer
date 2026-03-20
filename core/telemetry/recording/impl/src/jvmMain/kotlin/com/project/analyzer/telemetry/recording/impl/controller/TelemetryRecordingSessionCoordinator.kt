@@ -142,6 +142,9 @@ internal class TelemetryRecordingSessionCoordinator(
         val endedSessionType = state.sessionInfo
             ?.sessionType
             ?.takeUnless { it == SessionType.UNKNOWN }
+        val endedSessionIdentity = gameId?.let { activeGameId ->
+            state.sessionInfo?.toGroupingIdentity(activeGameId)
+        }
         if (state.startedSessionId == event.sessionId && gameId != null) {
             recorder.endSession(gameId = gameId, sessionId = event.sessionId, reason = event.reason.name)
         }
@@ -149,6 +152,7 @@ internal class TelemetryRecordingSessionCoordinator(
         state = state.clearSessionState(
             preserveSessionGroupId = preserveWeekendGroup,
             preservedLastEndedSessionType = endedSessionType.takeIf { preserveWeekendGroup },
+            preservedLastEndedSessionIdentity = endedSessionIdentity.takeIf { preserveWeekendGroup },
         )
         pendingPreStartSample = null
     }
@@ -241,11 +245,7 @@ internal class TelemetryRecordingSessionCoordinator(
 
     private suspend fun startSession(session: SessionInfo, sample: TelemetryRecordingSample) {
         val startSnapshot = buildSessionStartSnapshot(session, sample.frame)
-        val sessionGroupId = resolveSessionGroupId(
-            sessionType = session.sessionType,
-            gameId = sample.gameId,
-            sessionId = session.sessionId,
-        )
+        val sessionGroupId = resolveSessionGroupId(session = session, gameId = sample.gameId)
         recorder.startSession(startSnapshot.toDescriptor(sample, sessionGroupId))
 
         state = state.withActiveSession(
@@ -282,20 +282,37 @@ internal class TelemetryRecordingSessionCoordinator(
             trackTempC = normalizeTemperature(frame.environment?.roadTempC),
         )
 
-    private fun resolveSessionGroupId(sessionType: SessionType, gameId: String, sessionId: Long): String {
+    private fun resolveSessionGroupId(session: SessionInfo, gameId: String): String {
         val previousSessionType = state.lastEndedSessionType
+        val sameWeekendIdentity = sameWeekendIdentity(
+            previous = state.lastEndedSessionIdentity,
+            current = session.toGroupingIdentity(gameId),
+        )
         val shouldStartNewGroup = when {
             state.sessionGroupId == null -> true
-            sessionType != SessionType.PRACTICE -> false
+            !sameWeekendIdentity -> true
+            session.sessionType != SessionType.PRACTICE -> false
             previousSessionType == null -> true
             previousSessionType == SessionType.PRACTICE -> false
             else -> true
         }
         return if (shouldStartNewGroup) {
-            newSessionGroupId(gameId, sessionId)
+            newSessionGroupId(gameId, session.sessionId)
         } else {
             checkNotNull(state.sessionGroupId)
         }
+    }
+
+    private fun sameWeekendIdentity(
+        previous: SessionGroupingIdentity?,
+        current: SessionGroupingIdentity,
+    ): Boolean {
+        if (previous == null) return false
+        return normalizeGameId(previous.gameId) == normalizeGameId(current.gameId) &&
+            normalizeIdentityLabel(previous.trackId) == normalizeIdentityLabel(current.trackId) &&
+            normalizeIdentityLabel(previous.layoutId) == normalizeIdentityLabel(current.layoutId) &&
+            normalizeCarIdentity(previous.carId, previous.carModel) ==
+            normalizeCarIdentity(current.carId, current.carModel)
     }
 
     private suspend fun maybeUpdateIdentityLabels(frame: TelemetryFrame) {
@@ -390,6 +407,23 @@ internal class TelemetryRecordingSessionCoordinator(
     }
 
     private fun String?.normalizeLabel(): String? = this?.trim()?.takeIf { it.isNotBlank() }
+
+    private fun normalizeGameId(value: String?): String = value.orEmpty().trim().lowercase()
+
+    private fun normalizeIdentityLabel(value: String?): String = value.orEmpty().trim().lowercase()
+
+    private fun normalizeCarIdentity(carId: Int?, carModel: String?): String = carId
+        ?.takeIf { it > 0 }
+        ?.toString()
+        ?: normalizeIdentityLabel(carModel)
+
+    private fun SessionInfo.toGroupingIdentity(gameId: String): SessionGroupingIdentity = SessionGroupingIdentity(
+        gameId = gameId,
+        trackId = trackId,
+        layoutId = layoutId?.trim()?.takeIf { it.isNotBlank() },
+        carId = carId,
+        carModel = carModel,
+    )
 
     private fun SessionStartSnapshot.toDescriptor(
         sample: TelemetryRecordingSample,

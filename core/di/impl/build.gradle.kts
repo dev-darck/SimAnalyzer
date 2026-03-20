@@ -1,5 +1,15 @@
+val metroReportsEnabled = providers.gradleProperty("metroReportsEnabled")
+    .map(String::toBooleanStrictOrNull)
+    .orElse(false)
+val metroReportsDestination = providers.gradleProperty("metroReportsDestination")
+    .orElse("reports/metro")
+
 moduleImpl {
-    metro()
+    metro {
+        if (metroReportsEnabled.get()) {
+            reportsDestination.set(layout.buildDirectory.dir(metroReportsDestination.get()))
+        }
+    }
     dependencies {
         projects.core.di.api.jvmImpl
         projects.core.navigation.api.jvmImpl

@@ -16,13 +16,14 @@ import com.analyzer.trackmap.data.library.TrackMapStatsCalculator
 import com.analyzer.trackmap.domain.TrackMapCaptureController
 import com.analyzer.trackmap.domain.model.TrackMapBuilderState
 import com.project.analyzer.api.di.Default
+import com.project.analyzer.api.di.IO
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.telemetry.ac.api.calibration.ReferencePointPoseExtractor
 import com.project.analyzer.telemetry.ac.api.calibration.TrackCalibrationRepository
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
 import com.project.analyzer.telemetry.api.contract.TelemetryGameSettings
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryFrameSource
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -43,18 +44,21 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<TrackMapCaptureController>())
 @Inject
 class TrackMapRecorder(
-    telemetry: TelemetryLifecycle,
+    telemetryFrames: TelemetryFrameSource,
     private val repository: TrackMapRepository,
     private val calibrationRepository: TrackCalibrationRepository,
     private val gameSettings: TelemetryGameSettings,
-    @Default
-    defaultDispatcher: CoroutineDispatcher,
+    @param:Default
+    private val defaultDispatcher: CoroutineDispatcher,
+    @param:IO
+    private val ioDispatcher: CoroutineDispatcher,
 ) : TrackMapCaptureController {
 
     private val scope = CoroutineScope(SupervisorJob() + defaultDispatcher)
@@ -114,7 +118,7 @@ class TrackMapRecorder(
 
     init {
         scope.launch {
-            telemetry.frames
+            telemetryFrames.frames
                 .conflate()
                 .collect { frame ->
                     try {
@@ -132,104 +136,94 @@ class TrackMapRecorder(
         }
     }
 
-    override fun start() {
-        scope.launch {
-            mutex.withLock {
-                resetLocked(clearMessage = false)
-                val selection = runCatching { gameSettings.currentSelection() }.getOrNull()
-                val (gameId, gameLabel) = when (selection) {
-                    is GameSelection.Manual -> selection.game.id to selection.game.displayName
-                    else -> "" to ""
-                }
-
-                runtimeState.update {
-                    it.copy(
-                        recording = true,
-                        gameId = gameId,
-                        gameLabel = gameLabel,
-                        message = "Recording started",
-                    )
-                }
-            }
+    override suspend fun start() = withRecorderLock {
+        resetLocked(clearMessage = false)
+        val selection = runCatching { gameSettings.currentSelection() }.getOrNull()
+        val (gameId, gameLabel) = when (selection) {
+            is GameSelection.Manual -> selection.game.id to selection.game.displayName
+            else -> "" to ""
+        }
+        runtimeState.update {
+            it.copy(
+                recording = true,
+                gameId = gameId,
+                gameLabel = gameLabel,
+                message = "Recording started",
+            )
         }
     }
 
-    override fun stop() {
-        scope.launch {
-            mutex.withLock {
-                runtimeState.update { it.copy(recording = false, message = "Recording stopped") }
-            }
+    override suspend fun stop() = withRecorderLock {
+        runtimeState.update { current -> current.copy(recording = false, message = "Recording stopped") }
+    }
+
+    override suspend fun reset() = withRecorderLock {
+        resetLocked(clearMessage = true)
+    }
+
+    override suspend fun setReferencePoint(point: ReferencePoint) = withRecorderLock {
+        poseExtractor = ReferencePointPoseExtractor(point)
+        if (runtime.mapPoints.isNotEmpty() || runtime.lapPoints.isNotEmpty()) {
+            resetLocked(clearMessage = false)
+        }
+        runtimeState.update { current ->
+            current.copy(
+                referencePoint = point,
+                message = "Reference point set to ${point.name.lowercase()}",
+            )
         }
     }
 
-    override fun reset() {
-        scope.launch {
-            mutex.withLock {
-                resetLocked(clearMessage = true)
-            }
+    override suspend fun setFallbackHalfWidthMeters(value: Float) = withRecorderLock {
+        val clamped = value.coerceIn(
+            TrackMapWidthProfiler.MIN_SIDE_WIDTH_METERS,
+            TrackMapWidthProfiler.MAX_SIDE_WIDTH_METERS,
+        )
+        runtimeState.update { current ->
+            current.copy(
+                fallbackHalfWidthMeters = clamped,
+                message = "Fallback half-width set to ${"%.1f".format(clamped)}m",
+            )
         }
+        frameProcessor.publishPoints(timestampNs = System.nanoTime(), force = true)
     }
 
-    override fun setReferencePoint(point: ReferencePoint) {
-        scope.launch {
-            mutex.withLock {
-                poseExtractor = ReferencePointPoseExtractor(point)
-                if (runtime.mapPoints.isNotEmpty() || runtime.lapPoints.isNotEmpty()) {
-                    resetLocked(clearMessage = false)
-                }
-                runtimeState.update {
-                    it.copy(
-                        referencePoint = point,
-                        message = "Reference point set to ${point.name.lowercase()}",
-                    )
-                }
-            }
-        }
-    }
-
-    override fun setFallbackHalfWidthMeters(value: Float) {
-        scope.launch {
-            mutex.withLock {
-                val clamped = value.coerceIn(
-                    TrackMapWidthProfiler.MIN_SIDE_WIDTH_METERS,
-                    TrackMapWidthProfiler.MAX_SIDE_WIDTH_METERS,
-                )
-                runtimeState.update {
-                    it.copy(
-                        fallbackHalfWidthMeters = clamped,
-                        message = "Fallback half-width set to ${"%.1f".format(clamped)}m",
-                    )
-                }
-                frameProcessor.publishPoints(timestampNs = System.nanoTime(), force = true)
-            }
-        }
-    }
-
-    override fun markPitEntry() {
+    override suspend fun markPitEntry() {
         setManualPit(true, "Pit entry marked")
     }
 
-    override fun markPitExit() {
+    override suspend fun markPitExit() {
         setManualPit(false, "Pit exit marked")
     }
 
     override suspend fun save() {
-        val saveRequest = mutex.withLock { savePreparer.prepareSaveRequest() } ?: return
+        val saveRequest = withRecorderLock { savePreparer.prepareSaveRequest() } ?: return
+        val trackMap = withContext(defaultDispatcher) {
+            saveRequest.payload.toTrackMap(stats)
+        }
 
         try {
-            repository.save(saveRequest.payload.toTrackMap(stats))
-            val calibrationError = runCatching {
-                if (saveRequest.calibration != null) {
-                    calibrationRepository.save(saveRequest.calibration)
-                }
-            }.exceptionOrNull()
-            applySaveSuccess(saveRequest, calibrationError)
+            val calibrationError = withContext(ioDispatcher) {
+                repository.save(trackMap)
+                runCatching {
+                    if (saveRequest.calibration != null) {
+                        calibrationRepository.save(saveRequest.calibration)
+                    }
+                }.exceptionOrNull()
+            }
+            withContext(defaultDispatcher) {
+                applySaveSuccess(saveRequest, calibrationError)
+            }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (error: Exception) {
-            runtimeState.update {
-                it.copy(
-                    isSaving = false,
-                    message = "Save failed: ${error.message}",
-                )
+            withContext(defaultDispatcher) {
+                runtimeState.update {
+                    it.copy(
+                        isSaving = false,
+                        message = "Save failed: ${error.message}",
+                    )
+                }
             }
         }
     }
@@ -298,13 +292,18 @@ class TrackMapRecorder(
         }
     }
 
-    private fun setManualPit(inPitLane: Boolean, message: String) {
-        scope.launch {
-            mutex.withLock {
-                frameProcessor.setManualPit(inPitLane = inPitLane, message = message)
-            }
+    private suspend fun setManualPit(inPitLane: Boolean, message: String) {
+        withRecorderLock {
+            frameProcessor.setManualPit(inPitLane = inPitLane, message = message)
         }
     }
+
+    private suspend fun <T> withRecorderLock(block: suspend () -> T): T =
+        withContext(defaultDispatcher) {
+            mutex.withLock {
+                block()
+            }
+        }
 
     private companion object {
 

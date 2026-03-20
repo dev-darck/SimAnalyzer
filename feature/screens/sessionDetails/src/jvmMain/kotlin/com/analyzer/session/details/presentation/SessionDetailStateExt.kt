@@ -37,6 +37,32 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
+private val SESSION_DETAIL_SORT_OPTIONS = persistentListOf(
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_BEST),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_TOTAL_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S1),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S1_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S2),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S2_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S3),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S3_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_INCIDENTS),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_INCIDENTS_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_DELTA),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_DELTA_DESC),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS_DESC),
+)
+
+private val SESSION_DETAIL_SHOW_OPTIONS = persistentListOf(
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_ALL),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_VALID),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_INVALID),
+    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_PIT),
+)
+
 internal fun SessionDetailPage.toSessionDetailState(
     query: SessionDetailQuery,
     isLoading: Boolean = false,
@@ -61,12 +87,12 @@ internal fun SessionDetailPage.toSessionDetailState(
     sortFilter = sessionDetailFilterUiModel(
         kind = SessionDetailFilterKind.Sort,
         selectedId = query.sortId,
-        options = sessionDetailSortOptions(),
+        options = SESSION_DETAIL_SORT_OPTIONS,
     ),
     showFilter = sessionDetailFilterUiModel(
         kind = SessionDetailFilterKind.Show,
         selectedId = query.showId,
-        options = sessionDetailShowOptions(),
+        options = SESSION_DETAIL_SHOW_OPTIONS,
     ),
     sessionTypeFilter = sessionDetailFilterUiModel(
         kind = SessionDetailFilterKind.SessionType,
@@ -76,32 +102,6 @@ internal fun SessionDetailPage.toSessionDetailState(
     page = page,
     pageCount = pageCount,
     visibleLaps = laps.map(SessionLapDomainItem::toSessionLapRowUi).toImmutableList(),
-)
-
-private fun sessionDetailSortOptions(): ImmutableList<SessionDetailFilterOptionUi> = persistentListOf(
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_BEST),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_TOTAL_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S1),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S1_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S2),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S2_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S3),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S3_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_INCIDENTS),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_INCIDENTS_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_DELTA),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_DELTA_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS_DESC),
-)
-
-private fun sessionDetailShowOptions(): ImmutableList<SessionDetailFilterOptionUi> = persistentListOf(
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_ALL),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_VALID),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_INVALID),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_PIT),
 )
 
 private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> = buildList {

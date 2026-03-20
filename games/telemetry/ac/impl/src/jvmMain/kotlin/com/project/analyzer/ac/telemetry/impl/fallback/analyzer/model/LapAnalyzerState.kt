@@ -25,6 +25,7 @@ class LapAnalyzerState {
     var sectorStartTimeNs = 0L
 
     var currentSectorIndex = 1
+    var lastObservedGameSectorIndex0Based: Int? = null
 
     var completedLapsCount = 0
 
@@ -85,6 +86,7 @@ class LapAnalyzerState {
         sectorStartTimeNs = 0L
 
         currentSectorIndex = 1
+        lastObservedGameSectorIndex0Based = null
         lastSectorTimeMs = null
 
         gateLastTriggerNs.clear()
@@ -100,6 +102,7 @@ class LapAnalyzerState {
         lapStartTimeNs = 0L
         sectorStartTimeNs = 0L
         currentSectorIndex = 1
+        lastObservedGameSectorIndex0Based = null
         completedLapsCount = 0
         lastLapTimeMs = null
         bestLapTimeMs = null
@@ -207,6 +210,7 @@ class LapAnalyzerState {
 
     fun syncToStartFinish(timestampNs: Long, interpolationFactor: Float) {
         startFinishSyncId += 1
+        isLapRunning = true
         isSyncedToStartFinish = true
         completedLapsCount = 0
 
@@ -220,13 +224,31 @@ class LapAnalyzerState {
         lapStartTimeNs = crossingTimeNs
         sectorStartTimeNs = crossingTimeNs
         currentSectorIndex = 1
+        lastObservedGameSectorIndex0Based = 0
 
         resetLapValidityTracking()
     }
 
-    fun completeSector(timestampNs: Long, interpolationFactor: Float) {
+    fun realignToStartFinish(timestampNs: Long, interpolationFactor: Float) {
+        startFinishSyncId += 1
+        isLapRunning = true
+        isSyncedToStartFinish = true
+
         val crossingTimeNs = interpolateTimestamp(timestampNs, interpolationFactor)
-        val sectorTimeMs = ((crossingTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
+        unsyncedLapStartTimeNs = crossingTimeNs
+        lapStartTimeNs = crossingTimeNs
+        sectorStartTimeNs = crossingTimeNs
+        currentSectorIndex = 1
+        lastSectorTimeMs = null
+        lastObservedGameSectorIndex0Based = 0
+
+        resetLapValidityTracking()
+    }
+
+    fun completeSector(timestampNs: Long, interpolationFactor: Float, sectorTimeMsOverride: Int? = null) {
+        val crossingTimeNs = interpolateTimestamp(timestampNs, interpolationFactor)
+        val sectorTimeMs = sectorTimeMsOverride?.takeIf { it > 0 }
+            ?: ((crossingTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
 
         lastSectorTimeMs = sectorTimeMs
         updateSectorBest(currentSectorIndex, sectorTimeMs)
@@ -235,10 +257,11 @@ class LapAnalyzerState {
         currentSectorIndex += 1
     }
 
-    fun completeLap(timestampNs: Long, interpolationFactor: Float) {
+    fun completeLap(timestampNs: Long, interpolationFactor: Float, finalSectorTimeMsOverride: Int? = null) {
         val crossingTimeNs = interpolateTimestamp(timestampNs, interpolationFactor)
 
-        val finalSectorTimeMs = ((crossingTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
+        val finalSectorTimeMs = finalSectorTimeMsOverride?.takeIf { it > 0 }
+            ?: ((crossingTimeNs - sectorStartTimeNs) / NS_PER_MS).toInt()
         lastSectorTimeMs = finalSectorTimeMs
         updateSectorBest(sectorCount, finalSectorTimeMs)
 
@@ -254,6 +277,7 @@ class LapAnalyzerState {
         lapStartTimeNs = crossingTimeNs
         sectorStartTimeNs = crossingTimeNs
         currentSectorIndex = 1
+        lastObservedGameSectorIndex0Based = 0
 
         resetLapValidityTracking()
     }

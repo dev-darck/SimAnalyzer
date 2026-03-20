@@ -21,6 +21,7 @@ internal data class ControllerState(
     val blockedSessionId: Long? get() = boundary.blockedSessionId
     val sessionGroupId: String? get() = boundary.sessionGroupId
     val lastEndedSessionType: SessionType? get() = boundary.lastEndedSessionType
+    val lastEndedSessionIdentity: SessionGroupingIdentity? get() = boundary.lastEndedSessionIdentity
     val recordingEnabled: Boolean get() = recordingConfig.recordingEnabled
     val maxRecordedLaps: Int get() = recordingConfig.maxRecordedLaps
 
@@ -106,6 +107,7 @@ internal data class ControllerState(
     fun clearSessionState(
         preserveSessionGroupId: Boolean = false,
         preservedLastEndedSessionType: SessionType? = null,
+        preservedLastEndedSessionIdentity: SessionGroupingIdentity? = null,
     ): ControllerState = copy(
         sessionInfo = null,
         activeSession = null,
@@ -113,6 +115,7 @@ internal data class ControllerState(
             blockedSessionId = null,
             sessionGroupId = if (preserveSessionGroupId) boundary.sessionGroupId else null,
             lastEndedSessionType = preservedLastEndedSessionType,
+            lastEndedSessionIdentity = if (preserveSessionGroupId) preservedLastEndedSessionIdentity else null,
         ),
     )
 
@@ -143,6 +146,15 @@ internal data class SessionBoundaryState(
     val blockedSessionId: Long? = null,
     val sessionGroupId: String? = null,
     val lastEndedSessionType: SessionType? = null,
+    val lastEndedSessionIdentity: SessionGroupingIdentity? = null,
 )
 
 internal data class RecordingConfigState(val recordingEnabled: Boolean = true, val maxRecordedLaps: Int = 0)
+
+internal data class SessionGroupingIdentity(
+    val gameId: String,
+    val trackId: String,
+    val layoutId: String?,
+    val carId: Int?,
+    val carModel: String,
+)

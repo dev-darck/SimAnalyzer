@@ -10,7 +10,7 @@ import com.project.analyzer.fuel.presentation.viewmodel.FuelHudViewModel
 import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.SessionPref
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryReadSource
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
@@ -27,7 +27,7 @@ interface FuelHudBindings {
         @Provides
         @SingleIn(HudScope::class)
         private fun provideFuelConsumptionUseCase(
-            telemetry: TelemetryLifecycle,
+            telemetry: TelemetryReadSource,
             engine: FuelConsumptionEngine,
             repository: FuelRepository,
         ): FuelConsumptionUseCase = FuelConsumptionUseCaseImpl(

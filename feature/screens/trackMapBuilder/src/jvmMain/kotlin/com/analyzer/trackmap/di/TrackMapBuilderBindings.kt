@@ -1,7 +1,7 @@
 package com.analyzer.trackmap.di
 
 import androidx.lifecycle.ViewModel
-import com.analyzer.trackmap.domain.usecase.TrackMapBuilderUseCase
+import com.analyzer.trackmap.domain.TrackMapCaptureController
 import com.analyzer.trackmap.presentation.TrackMapBuilderViewModel
 import com.project.analyzer.api.di.ScreenScope
 import dev.zacsweers.metro.BindingContainer
@@ -20,9 +20,7 @@ interface TrackMapBuilderBindings {
         @Provides
         @IntoMap
         @ViewModelKey(TrackMapBuilderViewModel::class)
-        private fun provideTrackMapBuilderViewModel(useCase: TrackMapBuilderUseCase): ViewModel =
-            TrackMapBuilderViewModel(
-                useCase = useCase,
-            )
+        private fun provideTrackMapBuilderViewModel(controller: TrackMapCaptureController): ViewModel =
+            TrackMapBuilderViewModel(controller = controller)
     }
 }

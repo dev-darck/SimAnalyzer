@@ -1,8 +1,9 @@
 package com.project.analyzer.ui.components
 
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -41,51 +42,65 @@ public fun TrackMap(
     val map = trackMap ?: return
     val drawScaleMultiplier = max(scale, 0.1f)
 
-    Canvas(modifier = modifier) {
-        val mapWidth = map.bounds.maxX - map.bounds.minX
-        val mapHeight = map.bounds.maxY - map.bounds.minY
-        if (mapWidth <= 0f || mapHeight <= 0f) return@Canvas
+    Spacer(
+        modifier = modifier.drawWithCache {
+            val emptyDraw = onDrawBehind {}
+            val mapWidth = map.bounds.maxX - map.bounds.minX
+            val mapHeight = map.bounds.maxY - map.bounds.minY
+            if (mapWidth <= 0f || mapHeight <= 0f) {
+                return@drawWithCache emptyDraw
+            }
 
-        val padPx = padding.toPx().coerceAtLeast(0f)
-        val fitScale = min(
-            (size.width - padPx * 2f) / mapWidth,
-            (size.height - padPx * 2f) / mapHeight,
-        )
-        if (!fitScale.isFinite() || fitScale <= 0f) return@Canvas
-
-        val drawScale = fitScale * drawScaleMultiplier
-        val centerX = (map.bounds.minX + map.bounds.maxX) * 0.5f
-        val centerY = (map.bounds.minY + map.bounds.maxY) * 0.5f
-        val offsetX = size.width * 0.5f - centerX * drawScale
-        val offsetY = size.height * 0.5f - centerY * drawScale
-
-        fun toScreen(point: TrackMapPoint): Offset = Offset(
-            x = point.x * drawScale + offsetX,
-            y = point.y * drawScale + offsetY,
-        )
-
-        if (map.pitPoints.size >= 2) {
-            drawPath(
-                path = buildPath(map.pitPoints, ::toScreen),
-                color = pitLineColor,
-                style = Stroke(
-                    width = pitStrokeWidth,
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round,
-                ),
+            val padPx = padding.toPx().coerceAtLeast(0f)
+            val fitScale = min(
+                (size.width - padPx * 2f) / mapWidth,
+                (size.height - padPx * 2f) / mapHeight,
             )
-        }
+            if (!fitScale.isFinite() || fitScale <= 0f) {
+                return@drawWithCache emptyDraw
+            }
 
-        drawPath(
-            path = buildPath(map.points, ::toScreen),
-            color = lineColor,
-            style = Stroke(
-                width = strokeWidth,
-                cap = StrokeCap.Round,
-                join = StrokeJoin.Round,
-            ),
-        )
-    }
+            val drawScale = fitScale * drawScaleMultiplier
+            val centerX = (map.bounds.minX + map.bounds.maxX) * 0.5f
+            val centerY = (map.bounds.minY + map.bounds.maxY) * 0.5f
+            val offsetX = size.width * 0.5f - centerX * drawScale
+            val offsetY = size.height * 0.5f - centerY * drawScale
+
+            fun toScreen(point: TrackMapPoint): Offset = Offset(
+                x = point.x * drawScale + offsetX,
+                y = point.y * drawScale + offsetY,
+            )
+
+            val mainPath = buildPath(map.points, ::toScreen)
+            val pitPath = map.pitPoints
+                .takeIf { it.size >= 2 }
+                ?.let { points -> buildPath(points, ::toScreen) }
+
+            onDrawBehind {
+                pitPath?.let { path ->
+                    drawPath(
+                        path = path,
+                        color = pitLineColor,
+                        style = Stroke(
+                            width = pitStrokeWidth,
+                            cap = StrokeCap.Round,
+                            join = StrokeJoin.Round,
+                        ),
+                    )
+                }
+
+                drawPath(
+                    path = mainPath,
+                    color = lineColor,
+                    style = Stroke(
+                        width = strokeWidth,
+                        cap = StrokeCap.Round,
+                        join = StrokeJoin.Round,
+                    ),
+                )
+            }
+        },
+    )
 }
 
 private fun buildPath(points: ImmutableList<TrackMapPoint>, toScreen: (TrackMapPoint) -> Offset): Path {

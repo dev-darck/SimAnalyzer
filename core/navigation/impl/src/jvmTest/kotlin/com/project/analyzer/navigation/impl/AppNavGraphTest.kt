@@ -28,7 +28,7 @@ class AppNavGraphTest {
                 navigationState = rememberNavigationState() as NavigationStateInternal<Route>
                 AppNavGraph(
                     navigationState = navigationState,
-                    providerFactory = EntryProviderFactory(builders = setOf(testRoutes())),
+                    entryFactory = NavigationEntryFactory(RouteEntryRegistry(setOf(testRoutes()))),
                     modifier = Modifier
                         .uiTestTag(TestTags.NavigationGraph)
                         .trackRecompositions(),

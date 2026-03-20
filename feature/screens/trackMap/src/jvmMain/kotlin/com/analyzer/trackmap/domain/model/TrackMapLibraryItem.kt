@@ -9,6 +9,7 @@ data class TrackMapLibraryItem(
     val points: List<Vec2>,
     val leftWidthsMeters: List<Float>,
     val rightWidthsMeters: List<Float>,
+    val averageTrackWidthMeters: Float,
     val pitPoints: List<Vec2>,
     val bounds: TrackMapBounds?,
     val distanceMeters: Float,

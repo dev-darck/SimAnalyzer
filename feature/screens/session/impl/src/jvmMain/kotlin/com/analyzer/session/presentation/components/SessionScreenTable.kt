@@ -22,6 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -88,10 +89,37 @@ internal fun SessionScreenTable(
     onIntent: (SessionListIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val weights = sessionTableWeights()
+    val weights = remember { sessionTableWeights() }
     val dividerColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.2f)
-
-    val headerColumns = sessionTableHeaderColumns(showGame = true, weights = weights)
+    val dateHeader = stringResource(Res.string.session_table_header_date)
+    val gameHeader = stringResource(Res.string.session_table_header_game)
+    val trackHeader = stringResource(Res.string.session_table_header_track)
+    val mapHeader = stringResource(Res.string.session_table_header_map)
+    val carHeader = stringResource(Res.string.session_table_header_car_model)
+    val lapsHeader = stringResource(Res.string.session_table_header_laps)
+    val bestLapHeader = stringResource(Res.string.session_table_header_best_lap)
+    val headerColumns = remember(
+        weights,
+        dateHeader,
+        gameHeader,
+        trackHeader,
+        mapHeader,
+        carHeader,
+        lapsHeader,
+        bestLapHeader,
+    ) {
+        sessionTableHeaderColumns(
+            showGame = true,
+            weights = weights,
+            dateHeader = dateHeader,
+            gameHeader = gameHeader,
+            trackHeader = trackHeader,
+            mapHeader = mapHeader,
+            carHeader = carHeader,
+            lapsHeader = lapsHeader,
+            bestLapHeader = bestLapHeader,
+        )
+    }
     SortablePagedTable(
         isLoading = state.isLoading,
         isEmpty = state.visibleSessions.isEmpty(),
@@ -165,15 +193,21 @@ private val SESSION_TABLE_SORTS = tableSortMappings(
     ),
 )
 
-@Composable
 private fun sessionTableHeaderColumns(
     showGame: Boolean,
     weights: SessionTableWeights,
+    dateHeader: String,
+    gameHeader: String,
+    trackHeader: String,
+    mapHeader: String,
+    carHeader: String,
+    lapsHeader: String,
+    bestLapHeader: String,
 ): ImmutableList<SortableTableColumn<SessionTableSortColumn>> = buildList {
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_date),
+                title = dateHeader,
                 weight = weights.date,
                 align = TableColumnAlign.Start,
             ),
@@ -184,7 +218,7 @@ private fun sessionTableHeaderColumns(
         add(
             SortableTableColumn(
                 column = TableColumn(
-                    title = stringResource(Res.string.session_table_header_game),
+                    title = gameHeader,
                     weight = weights.game,
                     align = TableColumnAlign.Center,
                 ),
@@ -195,7 +229,7 @@ private fun sessionTableHeaderColumns(
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_track),
+                title = trackHeader,
                 weight = weights.track,
                 align = TableColumnAlign.Center,
             ),
@@ -205,7 +239,7 @@ private fun sessionTableHeaderColumns(
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_map),
+                title = mapHeader,
                 weight = weights.map,
                 align = TableColumnAlign.Center,
             ),
@@ -214,7 +248,7 @@ private fun sessionTableHeaderColumns(
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_car_model),
+                title = carHeader,
                 weight = weights.car,
                 align = TableColumnAlign.Center,
             ),
@@ -224,7 +258,7 @@ private fun sessionTableHeaderColumns(
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_laps),
+                title = lapsHeader,
                 weight = weights.laps,
                 align = TableColumnAlign.Center,
             ),
@@ -234,7 +268,7 @@ private fun sessionTableHeaderColumns(
     add(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_table_header_best_lap),
+                title = bestLapHeader,
                 weight = weights.best,
                 align = TableColumnAlign.Center,
             ),

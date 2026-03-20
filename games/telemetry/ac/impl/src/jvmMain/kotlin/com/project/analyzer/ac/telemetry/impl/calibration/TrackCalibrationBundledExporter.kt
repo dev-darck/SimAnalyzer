@@ -22,7 +22,7 @@ class TrackCalibrationBundledExporter(
         val resourcesDir = resolveResourcesDirectory() ?: return@withContext false
         resourcesDir.mkdirs()
 
-        val bundledCalibration = calibration.copy(source = TrackCalibrationSource.GAME)
+        val bundledCalibration = calibration.normalizeForStorage(source = TrackCalibrationSource.GAME)
         val fileName = TrackCalibrationFileNameResolver.resolveFileName(
             trackId = bundledCalibration.trackId,
             layoutId = bundledCalibration.layoutId,

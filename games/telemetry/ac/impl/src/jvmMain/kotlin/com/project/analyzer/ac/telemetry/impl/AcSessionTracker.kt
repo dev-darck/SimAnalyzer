@@ -14,6 +14,7 @@ import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent.LapFi
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent.LapStarted
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.api.model.session.SessionFrame
+import com.project.analyzer.utils.TrackIdentityAliasMatcher
 import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
 
@@ -285,6 +286,8 @@ internal class AcSessionTracker {
         if (restartForSessionIndexBoundary(frame, source, emit)) return
         syncCurrentSessionIndex(frame)
         if (restartForSessionTypeBoundary(cur, frame, source, emit)) return
+        if (restartForCarIdentityBoundary(cur, frame, source, emit)) return
+        if (restartForTrackIdentityBoundary(cur, frame, source, emit)) return
 
         val changed = linkedSetOf<SessionField>()
         var updated = updateSessionType(
@@ -434,6 +437,52 @@ internal class AcSessionTracker {
 
         logger.atDebug(RATE_LIMITED) {
             message = "SessionType boundary: ${cur.sessionType} -> $newType, starting new session (source=$source)"
+        }
+        startNewSessionFromFrame(frame, source, emit, replacedOld = true)
+        return true
+    }
+
+    private fun restartForCarIdentityBoundary(
+        cur: SessionInfo,
+        frame: TelemetryFrame,
+        source: DataSourceType,
+        emit: (TelemetryLifecycleEvent) -> Unit,
+    ): Boolean {
+        val newCar = frame.session?.car?.carModel.orEmpty().trim()
+        val newCarId = frame.session?.car?.carId?.takeIf { it > 0 }
+        val carChanged = newCar.isNotBlank() && cur.carModel.isNotBlank() && newCar != cur.carModel
+        val carIdChanged = newCarId != null && cur.carId != null && newCarId != cur.carId
+        if (!carChanged && !carIdChanged) return false
+
+        logger.atDebug(RATE_LIMITED) {
+            message = "Car boundary: ${cur.carModel}/${cur.carId} -> $newCar/$newCarId, " +
+                "starting new session (source=$source)"
+        }
+        startNewSessionFromFrame(frame, source, emit, replacedOld = true)
+        return true
+    }
+
+    private fun restartForTrackIdentityBoundary(
+        cur: SessionInfo,
+        frame: TelemetryFrame,
+        source: DataSourceType,
+        emit: (TelemetryLifecycleEvent) -> Unit,
+    ): Boolean {
+        val newTrack = frame.session?.track?.trackId.orEmpty().trim()
+        val newLayout = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() }
+        if (newTrack.isBlank() || cur.trackId.isBlank()) return false
+
+        val equivalentIdentity = TrackIdentityAliasMatcher.areEquivalent(
+            trackId = cur.trackId,
+            layoutId = cur.layoutId,
+            otherTrackId = newTrack,
+            otherLayoutId = newLayout,
+        )
+        if (equivalentIdentity) return false
+
+        logger.atDebug(RATE_LIMITED) {
+            message = "Track boundary: ${cur.trackId}/${cur.layoutId} -> $newTrack/$newLayout, " +
+                "starting new session (source=$source)"
         }
         startNewSessionFromFrame(frame, source, emit, replacedOld = true)
         return true

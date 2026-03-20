@@ -16,6 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class AcSessionTrackerTest {
 
@@ -229,6 +230,146 @@ class AcSessionTrackerTest {
     }
 
     @Test
+    fun `track identity change while running starts a new session`() {
+        val tracker = AcSessionTracker()
+        val events = mutableListOf<TelemetryLifecycleEvent>()
+
+        tracker.onConnectionStateChanged(GameConnectionState.IN_SESSION, DataSourceType.NATIVE, events::add)
+        tracker.onFrame(
+            frame(
+                sessionType = SessionType.PRACTICE,
+                currentLap = 4,
+                completedLaps = 3,
+                sessionTimeLeftSec = 1_500f,
+                trackId = "imola_gp",
+                layoutId = "gp",
+                timestampNs = 1_000_000_000L,
+            ),
+            DataSourceType.NATIVE,
+            events::add,
+        )
+
+        events.clear()
+
+        tracker.onFrame(
+            frame(
+                sessionType = SessionType.PRACTICE,
+                currentLap = 1,
+                completedLaps = 0,
+                sessionTimeLeftSec = 1_800f,
+                trackId = "watkins_glen_gp",
+                layoutId = "gp",
+                timestampNs = 2_000_000_000L,
+            ),
+            DataSourceType.NATIVE,
+            events::add,
+        )
+
+        val ended = events.filterIsInstance<TelemetryLifecycleEvent.SessionEnded>().single()
+        assertEquals(SessionEndReason.REPLACED_BY_NEW_SESSION, ended.reason)
+
+        val started = events.filterIsInstance<TelemetryLifecycleEvent.SessionStarted>().single()
+        assertEquals(2L, started.session.sessionId)
+        assertEquals("watkins_glen_gp", started.session.trackId)
+        assertEquals("gp", started.session.layoutId)
+
+        val lapStarted = events.filterIsInstance<TelemetryLifecycleEvent.LapStarted>().single()
+        assertEquals(1, lapStarted.lapNumber)
+    }
+
+    @Test
+    fun `car identity change while running starts a new session`() {
+        val tracker = AcSessionTracker()
+        val events = mutableListOf<TelemetryLifecycleEvent>()
+
+        tracker.onConnectionStateChanged(GameConnectionState.IN_SESSION, DataSourceType.NATIVE, events::add)
+        tracker.onFrame(
+            frame(
+                sessionType = SessionType.PRACTICE,
+                currentLap = 3,
+                completedLaps = 2,
+                sessionTimeLeftSec = 1_500f,
+                carModel = "ks_bmw_m4_gt3",
+                carId = 101,
+                timestampNs = 1_000_000_000L,
+            ),
+            DataSourceType.NATIVE,
+            events::add,
+        )
+
+        events.clear()
+
+        tracker.onFrame(
+            frame(
+                sessionType = SessionType.PRACTICE,
+                currentLap = 1,
+                completedLaps = 0,
+                sessionTimeLeftSec = 1_800f,
+                carModel = "ks_porsche_992_gt3r",
+                carId = 202,
+                timestampNs = 2_000_000_000L,
+            ),
+            DataSourceType.NATIVE,
+            events::add,
+        )
+
+        val ended = events.filterIsInstance<TelemetryLifecycleEvent.SessionEnded>().single()
+        assertEquals(SessionEndReason.REPLACED_BY_NEW_SESSION, ended.reason)
+
+        val started = events.filterIsInstance<TelemetryLifecycleEvent.SessionStarted>().single()
+        assertEquals(2L, started.session.sessionId)
+        assertEquals("ks_porsche_992_gt3r", started.session.carModel)
+        assertEquals(202, started.session.carId)
+    }
+
+    @Test
+    fun `alias equivalent track refresh does not split active session`() {
+        val tracker = AcSessionTracker()
+        val events = mutableListOf<TelemetryLifecycleEvent>()
+
+        tracker.onConnectionStateChanged(GameConnectionState.IN_SESSION, DataSourceType.NATIVE, events::add)
+        tracker.onFrame(
+            frame(
+                sessionType = SessionType.PRACTICE,
+                currentLap = 2,
+                completedLaps = 1,
+                sessionTimeLeftSec = 1_500f,
+                trackId = "watkins_glen_short_inner_loop",
+                layoutId = "short_inner_loop",
+                timestampNs = 1_000_000_000L,
+            ),
+            DataSourceType.NATIVE,
+            events::add,
+        )
+
+        events.clear()
+
+        tracker.onFrame(
+            frame(
+                sessionType = SessionType.PRACTICE,
+                currentLap = 2,
+                completedLaps = 1,
+                sessionTimeLeftSec = 1_495f,
+                trackId = "watkins_glen_international_short_inner_loop",
+                layoutId = null,
+                timestampNs = 2_000_000_000L,
+            ),
+            DataSourceType.NATIVE,
+            events::add,
+        )
+
+        assertFalse(events.any { it is TelemetryLifecycleEvent.SessionEnded })
+        assertFalse(events.any { it is TelemetryLifecycleEvent.SessionStarted })
+        assertTrue(
+            events
+                .filterIsInstance<TelemetryLifecycleEvent.SessionUpdated>()
+                .single()
+                .changed
+                .contains(com.project.analyzer.telemetry.api.contract.SessionField.TRACK_ID),
+        )
+    }
+
+    @Test
     fun `main menu restart hint starts a new session even with stable counters`() {
         val tracker = AcSessionTracker()
         val events = mutableListOf<TelemetryLifecycleEvent>()
@@ -363,6 +504,10 @@ class AcSessionTrackerTest {
         plannedLaps: Int? = null,
         isTimedRace: Boolean? = false,
         sessionIndex: Int = 0,
+        carModel: String = "ks_bmw_m4_gt3",
+        carId: Int? = null,
+        trackId: String = "brands_hatch_indy",
+        layoutId: String? = null,
         timestampNs: Long = 0L,
     ): TelemetryFrame = TelemetryFrame(
         session = SessionFrame(
@@ -372,8 +517,8 @@ class AcSessionTrackerTest {
             plannedLaps = plannedLaps,
             isTimedRace = isTimedRace,
             sessionIndex = sessionIndex,
-            car = CarInfo(carModel = "ks_bmw_m4_gt3"),
-            track = TrackInfo(trackId = "brands_hatch_indy"),
+            car = CarInfo(carModel = carModel, carId = carId),
+            track = TrackInfo(trackId = trackId, layoutId = layoutId),
         ),
         lap = LapFrame(
             currentLapIndex = currentLap,

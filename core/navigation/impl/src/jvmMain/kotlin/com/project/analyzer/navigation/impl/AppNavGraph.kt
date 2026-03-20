@@ -33,7 +33,7 @@ import com.project.analyzer.navigation.api.Route
 @Composable
 fun AppNavGraph(
     navigationState: NavigationState<Route>,
-    providerFactory: EntryFactory,
+    entryFactory: EntryFactory,
     modifier: Modifier = Modifier,
 ) {
     val owner = rememberNavigationEventDispatcherOwner()
@@ -47,7 +47,7 @@ fun AppNavGraph(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
             ),
-            entryProvider = providerFactory.create(),
+            entryProvider = entryFactory.create(),
         )
 
         require(entries.isNotEmpty()) { "BackStack entries cannot be empty" }

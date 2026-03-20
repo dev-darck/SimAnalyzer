@@ -199,9 +199,7 @@ internal class TrackMapFrameProcessor(
     }
 
     private fun applyLapResult(lapResult: TrackMapLapTransitionResult, lapIndex: Int?) {
-        lapResult.message?.let { message ->
-            runtimeState.update { it.copy(message = message) }
-        }
+        lapResult.message?.let(::updateMessage)
         if (!lapResult.lapAccepted) return
 
         if (runtime.sectorCount == 1) {
@@ -213,9 +211,7 @@ internal class TrackMapFrameProcessor(
         widthProfiler.onLapAccepted(
             runtime = runtime,
             completedLapPoints = lapResult.completedLapPoints,
-        )?.let { guidanceMessage ->
-            runtimeState.update { it.copy(message = guidanceMessage) }
-        }
+        )?.let(::updateMessage)
     }
 
     private fun captureSectorIfNeeded(frameContext: TrackMapFrameContext, inPitLane: Boolean) {
@@ -227,9 +223,7 @@ internal class TrackMapFrameProcessor(
             currentSectorIndex = frameContext.currentSectorIndex,
             currentPosition = currentPos,
             lapIndex = frameContext.lapIndex,
-        )?.let { sectorMessage ->
-            runtimeState.update { it.copy(message = sectorMessage) }
-        }
+        )?.let(::updateMessage)
     }
 
     private fun recordPointIfEligible(
@@ -252,13 +246,23 @@ internal class TrackMapFrameProcessor(
             TrackMapPointDecision.ACCEPTED -> publishPoints(frameContext.timestampNs, force = false)
 
             TrackMapPointDecision.TELEPORT -> {
-                runtimeState.update {
-                    it.copy(recording = false, message = "Teleport detected, recording stopped")
-                }
+                restartSegmentAfterTeleport(
+                    currentPos = currentPos,
+                    timestampNs = frameContext.timestampNs,
+                )
             }
 
             TrackMapPointDecision.REJECTED -> Unit
         }
+    }
+
+    private fun restartSegmentAfterTeleport(currentPos: Vec2, timestampNs: Long) {
+        // A persistent coordinate jump can wedge the recorder on the old anchor forever.
+        // Reset only the in-flight lap segment so capture can continue without restarting the screen.
+        runtime.resetLap(clearMap = false)
+        pointFilter.restartSegment(point = currentPos, runtime = runtime)
+        publishPoints(timestampNs = timestampNs, force = true)
+        updateMessage(MESSAGE_SEGMENT_RESTARTED)
     }
 
     private fun updateRuntimeState(lapIndex: Int?, inPitLane: Boolean) {
@@ -311,9 +315,18 @@ internal class TrackMapFrameProcessor(
         return "Sector S$sectorStartIndex captured (${runtime.sectorMarkers().size}/$resolvedSectorCount)"
     }
 
+    private fun updateMessage(message: String) {
+        runtimeState.update { current -> current.copy(message = message) }
+    }
+
     internal data class Config(
         val pitMinSpacingMeters: Float,
         val uiUpdateIntervalNs: Long,
         val infoUpdateIntervalNs: Long,
     )
+
+    private companion object {
+
+        const val MESSAGE_SEGMENT_RESTARTED = "Position jump detected, segment restarted"
+    }
 }

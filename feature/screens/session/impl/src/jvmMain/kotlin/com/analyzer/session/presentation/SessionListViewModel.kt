@@ -1,7 +1,9 @@
 package com.analyzer.session.presentation
 
+import androidx.lifecycle.viewModelScope
 import com.analyzer.session.domain.model.SessionListQuery
 import com.analyzer.session.domain.usecase.SessionListDataUseCase
+import com.analyzer.session.domain.usecase.SessionTrackMapIdentity
 import com.analyzer.session.domain.usecase.SessionTrackMapUseCase
 import com.analyzer.session.presentation.model.SessionListIntent
 import com.analyzer.session.presentation.model.SessionListState
@@ -10,6 +12,9 @@ import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import com.project.analyzer.ui.components.TrackMapData
 import dev.zacsweers.metro.Inject
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Inject
 internal class SessionListViewModel(
@@ -20,6 +25,9 @@ internal class SessionListViewModel(
     private var query = SessionListQuery()
     private var trackMapsByKey: Map<String, TrackMapData> = emptyMap()
     private var hasLoadedOnce = false
+    private var trackMapLoadJob: Job? = null
+    private var trackMapLoadRequestId: Long = 0L
+    private var searchJob: Job? = null
 
     override suspend fun handleIntent(intent: SessionListIntent) {
         when (intent) {
@@ -30,7 +38,7 @@ internal class SessionListViewModel(
             is SessionListIntent.ChangeCar -> updateQuery { copy(carId = intent.optionId, page = 1) }
             is SessionListIntent.ChangeDate -> updateQuery { copy(dateId = intent.optionId, page = 1) }
             is SessionListIntent.ChangeSort -> updateQuery { copy(sortId = intent.optionId, page = 1) }
-            is SessionListIntent.ChangeSearch -> updateQuery { copy(searchQuery = intent.query, page = 1) }
+            is SessionListIntent.ChangeSearch -> updateSearchQuery(intent.query)
             is SessionListIntent.ChangePage -> updateQuery { copy(page = intent.page) }
             is SessionListIntent.SaveSession -> saveSession(intent.sessionId)
             is SessionListIntent.DeleteSession -> deleteSession(intent.sessionId)
@@ -43,6 +51,7 @@ internal class SessionListViewModel(
     }
 
     private suspend fun refresh(showLoading: Boolean = true, forceRefresh: Boolean = false) {
+        cancelPendingSearch()
         if (showLoading) {
             updateState { copy(isLoading = true, error = null) }
         } else {
@@ -55,7 +64,27 @@ internal class SessionListViewModel(
     }
 
     private suspend fun updateQuery(mutator: SessionListQuery.() -> SessionListQuery) {
+        cancelPendingSearch()
         loadPage(mutator(query))
+    }
+
+    private suspend fun updateSearchQuery(searchQuery: String) {
+        val nextQuery = query.copy(searchQuery = searchQuery, page = 1)
+        if (nextQuery == query) return
+
+        query = nextQuery
+        cancelPendingSearch()
+        updateState {
+            copy(
+                searchQuery = searchQuery,
+                page = 1,
+                error = null,
+            )
+        }
+        searchJob = viewModelScope.launch {
+            delay(250)
+            loadPage(nextQuery)
+        }
     }
 
     private suspend fun saveSession(sessionId: Long) {
@@ -81,23 +110,68 @@ internal class SessionListViewModel(
             query = nextQuery,
             forceRefresh = forceRefresh,
         )
-        trackMapsByKey = sessionTrackMapUseCase.loadTrackMaps(result.page.rows)
         query = result.query
         hasLoadedOnce = true
         val mapped = result.page.toSessionListState(
             query = result.query,
         )
-        setState(
-            mapped.copy(visibleSessions = mapped.visibleSessions.map(::mapTrackMap).toImmutableList()),
-        )
+        setState(mapped.applyTrackMaps(trackMapsByKey))
+        enqueueTrackMapLoad(mapped.visibleSessions)
     }
 
-    private fun mapTrackMap(row: SessionRowUi): SessionRowUi = row.copy(
-        trackMap = sessionTrackMapUseCase.resolveTrackMap(
-            trackMapsByKey = trackMapsByKey,
-            gameId = row.gameId,
-            trackId = row.trackId,
-            layoutId = row.layoutId,
-        ),
+    private fun enqueueTrackMapLoad(rows: List<SessionRowUi>) {
+        trackMapLoadJob?.cancel()
+        val requestId = ++trackMapLoadRequestId
+        val pendingRows = rows.filterNot(::hasCachedTrackMap)
+        if (pendingRows.isEmpty()) return
+        trackMapLoadJob = viewModelScope.launch {
+            val loadedTrackMaps = sessionTrackMapUseCase.loadTrackMaps(
+                items = pendingRows.map { it.toTrackMapIdentity() },
+            )
+            if (loadedTrackMaps.isEmpty() || requestId != trackMapLoadRequestId) return@launch
+            trackMapsByKey = trackMapsByKey + loadedTrackMaps
+            updateState { applyTrackMaps(trackMapsByKey) }
+        }
+    }
+
+    private fun hasCachedTrackMap(row: SessionRowUi): Boolean = sessionTrackMapUseCase.resolveTrackMap(
+        trackMapsByKey = trackMapsByKey,
+        gameId = row.gameId,
+        trackId = row.trackId,
+        layoutId = row.layoutId,
+    ) != null
+
+    private fun SessionRowUi.toTrackMapIdentity() = SessionTrackMapIdentity(
+        gameId = gameId,
+        trackId = trackId,
+        layoutId = layoutId,
     )
+
+    private fun SessionListState.applyTrackMaps(trackMapsByKey: Map<String, TrackMapData>): SessionListState {
+        if (trackMapsByKey.isEmpty() || visibleSessions.isEmpty()) return this
+
+        var changed = false
+        val updatedRows = visibleSessions.map { row ->
+            val resolvedTrackMap = sessionTrackMapUseCase.resolveTrackMap(
+                trackMapsByKey = trackMapsByKey,
+                gameId = row.gameId,
+                trackId = row.trackId,
+                layoutId = row.layoutId,
+            )
+            if (row.trackMap === resolvedTrackMap) {
+                row
+            } else {
+                changed = true
+                row.copy(trackMap = resolvedTrackMap)
+            }
+        }
+
+        if (!changed) return this
+        return copy(visibleSessions = updatedRows.toImmutableList())
+    }
+
+    private fun cancelPendingSearch() {
+        searchJob?.cancel()
+        searchJob = null
+    }
 }

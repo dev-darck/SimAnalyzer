@@ -34,7 +34,7 @@ internal fun SessionScreen() {
     val navigator = LocalNavigator.current
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(viewModel) {
         viewModel.dispatch(SessionListIntent.Start)
     }
 

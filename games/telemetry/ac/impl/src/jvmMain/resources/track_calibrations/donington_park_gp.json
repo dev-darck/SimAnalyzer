@@ -1,122 +1,124 @@
 {
-  "trackId": "donington_park_gp",
-  "trackName": "donington_park_gp",
-  "createdAtEpochMs": 1767559722895,
-  "referencePoint": "FRONT_AXLE",
-  "startFinish": {
-    "center": {
-      "x": -293.1123,
-      "y": 80.61167
+    "trackId": "donington_park_gp",
+    "trackName": "Donington Park GP",
+    "layoutId": "gp",
+    "createdAtEpochMs": 1773529458434,
+    "source": "GAME",
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": -295.94687,
+            "y": 83.894
+        },
+        "forward": {
+            "x": -0.98902994,
+            "y": -0.14771564
+        },
+        "normal": {
+            "x": 0.14771564,
+            "y": -0.98902994
+        },
+        "halfWidthMeters": 9.96523
     },
-    "forward": {
-      "x": -0.9868974,
-      "y": -0.16134931
-    },
-    "normal": {
-      "x": 0.16134931,
-      "y": -0.9868974
-    },
-    "halfWidthMeters": 8.0
-  },
-  "sectors": [
-    {
-      "index": 1,
-      "start": {
-        "center": {
-          "x": -293.1123,
-          "y": 80.61167
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": -295.94687,
+                    "y": 83.894
+                },
+                "forward": {
+                    "x": -0.98902994,
+                    "y": -0.14771564
+                },
+                "normal": {
+                    "x": 0.14771564,
+                    "y": -0.98902994
+                },
+                "halfWidthMeters": 9.96523
+            },
+            "finish": {
+                "center": {
+                    "x": -320.60486,
+                    "y": -200.40796
+                },
+                "forward": {
+                    "x": 0.98598915,
+                    "y": 0.16681004
+                },
+                "normal": {
+                    "x": -0.16681004,
+                    "y": 0.98598915
+                },
+                "halfWidthMeters": 9.96523
+            }
         },
-        "forward": {
-          "x": -0.9868974,
-          "y": -0.16134931
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": -320.60486,
+                    "y": -200.40796
+                },
+                "forward": {
+                    "x": 0.98598915,
+                    "y": 0.16681004
+                },
+                "normal": {
+                    "x": -0.16681004,
+                    "y": 0.98598915
+                },
+                "halfWidthMeters": 9.96523
+            },
+            "finish": {
+                "center": {
+                    "x": 258.08994,
+                    "y": 187.46658
+                },
+                "forward": {
+                    "x": -0.9981895,
+                    "y": -0.060147613
+                },
+                "normal": {
+                    "x": 0.060147613,
+                    "y": -0.9981895
+                },
+                "halfWidthMeters": 9.96523
+            }
         },
-        "normal": {
-          "x": 0.16134931,
-          "y": -0.9868974
-        },
-        "halfWidthMeters": 8.0
-      },
-      "finish": {
-        "center": {
-          "x": -272.02896,
-          "y": -192.34286
-        },
-        "forward": {
-          "x": 0.9999024,
-          "y": 0.013976451
-        },
-        "normal": {
-          "x": -0.013976451,
-          "y": 0.9999024
-        },
-        "halfWidthMeters": 7.0
-      }
-    },
-    {
-      "index": 2,
-      "start": {
-        "center": {
-          "x": -272.02896,
-          "y": -192.34286
-        },
-        "forward": {
-          "x": 0.9999024,
-          "y": 0.013976451
-        },
-        "normal": {
-          "x": -0.013976451,
-          "y": 0.9999024
-        },
-        "halfWidthMeters": 7.0
-      },
-      "finish": {
-        "center": {
-          "x": 232.68613,
-          "y": 189.53188
-        },
-        "forward": {
-          "x": -0.99785656,
-          "y": -0.065440536
-        },
-        "normal": {
-          "x": 0.065440536,
-          "y": -0.99785656
-        },
-        "halfWidthMeters": 8.0
-      }
-    },
-    {
-      "index": 3,
-      "start": {
-        "center": {
-          "x": 232.68613,
-          "y": 189.53188
-        },
-        "forward": {
-          "x": -0.99785656,
-          "y": -0.065440536
-        },
-        "normal": {
-          "x": 0.065440536,
-          "y": -0.99785656
-        },
-        "halfWidthMeters": 8.0
-      },
-      "finish": {
-        "center": {
-          "x": -293.1123,
-          "y": 80.61167
-        },
-        "forward": {
-          "x": -0.9868974,
-          "y": -0.16134931
-        },
-        "normal": {
-          "x": 0.16134931,
-          "y": -0.9868974
-        },
-        "halfWidthMeters": 8.0
-      }
-    }
-  ]
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": 258.08994,
+                    "y": 187.46658
+                },
+                "forward": {
+                    "x": -0.9981895,
+                    "y": -0.060147613
+                },
+                "normal": {
+                    "x": 0.060147613,
+                    "y": -0.9981895
+                },
+                "halfWidthMeters": 9.96523
+            },
+            "finish": {
+                "center": {
+                    "x": -295.94687,
+                    "y": 83.894
+                },
+                "forward": {
+                    "x": -0.98902994,
+                    "y": -0.14771564
+                },
+                "normal": {
+                    "x": 0.14771564,
+                    "y": -0.98902994
+                },
+                "halfWidthMeters": 9.96523
+            }
+        }
+    ]
 }

@@ -16,12 +16,18 @@ import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
 import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
+import com.project.analyzer.api.di.IO
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import com.project.analyzer.utils.TelemetryIdentityIds
 import com.project.analyzer.utils.logger.logger
 import com.project.analyzer.utils.shm.writeWString
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -32,9 +38,16 @@ class AcEvoFallbackShmPatcher(
     private val fileInfoExtractor: EvoFileInfoSource,
     private val lapAnalyzer: FallbackLapAnalyzer,
     private val fuelAnalyzer: FallbackFuelAnalyzer,
+    @param:IO
+    private val ioDispatcher: CoroutineDispatcher,
+    private val useAsyncFilePolling: Boolean = true,
 ) {
 
     private val logger = logger()
+    private val fileInfoScope = CoroutineScope(
+        SupervisorJob() + ioDispatcher.limitedParallelism(1, "AcEvoFileInfoPoller"),
+    )
+    private val fileInfoLock = Any()
 
     private var lastSessionEpoch: Long = -1L
     private val identityResetDetector = IdentityResetDetector()
@@ -47,11 +60,23 @@ class AcEvoFallbackShmPatcher(
     private var lastPatchedSessionType: EvoSessionType = EvoSessionType.UNKNOWN
     private var pendingSessionTypeOverrideFromShm: Int? = null
     private var pendingSessionTypeOverrideToShm: Int? = null
+
+    @Volatile
     private var lastFilePollNs: Long = 0L
+
+    @Volatile
     private var cachedInfo: EvoFileInfo = EvoFileInfo()
+
+    @Volatile
+    private var fileInfoPollScheduled: Boolean = false
+
+    @Volatile
+    private var fileInfoGeneration: Long = 0L
     private var syntheticSessionIndex: Int = 0
     private var pendingSessionRestartHint: AcSessionRestartHint = AcSessionRestartHint.NONE
     private var mainMenuRestartReadyForResume: Boolean = false
+    private var hasPatchedFuelPerLap: Boolean = false
+    private var hasPatchedFuelEstimatedLaps: Boolean = false
 
     private var lastGameState: GameConnectionState = GameConnectionState.DISCONNECTED
     private var lastProcessedPhysicsPacketId: Int = -1
@@ -59,7 +84,21 @@ class AcEvoFallbackShmPatcher(
     private val respawnDetector = RespawnResetDetector()
 
     fun clear() {
-        fileInfoExtractor.clear()
+        fileInfoGeneration += 1L
+        fileInfoPollScheduled = false
+        lastFilePollNs = 0L
+        cachedInfo = EvoFileInfo()
+        if (useAsyncFilePolling) {
+            fileInfoScope.launch {
+                synchronized(fileInfoLock) {
+                    fileInfoExtractor.clear()
+                }
+            }
+        } else {
+            synchronized(fileInfoLock) {
+                fileInfoExtractor.clear()
+            }
+        }
         lapAnalyzer.reset()
         fuelAnalyzer.reset()
         lastSessionEpoch = -1L
@@ -131,7 +170,11 @@ class AcEvoFallbackShmPatcher(
             calibration = calibration,
         )
 
-        val lapSnapshot = processLapFrame(nowNs = loopStartNanos, physics = shm.physics)
+        val lapSnapshot = processLapFrame(
+            nowNs = loopStartNanos,
+            physics = shm.physics,
+            graphics = shm.graphics,
+        )
         val fuelSnapshot = processFuelFrame(
             fuelLiters = shm.physics.fuel,
             lapSnapshot = lapSnapshot,
@@ -197,7 +240,7 @@ class AcEvoFallbackShmPatcher(
             lapAnalyzer.onPenaltyDetected()
             markPenaltySeen(penaltyId)
         }
-        fileInfoExtractor.clearPenalty()
+        clearPenaltyAsync()
     }
 
     private fun normalizedTrackId(info: EvoFileInfo): String? = TrackIdNormalizer
@@ -239,8 +282,17 @@ class AcEvoFallbackShmPatcher(
         clearPenaltyDedup()
     }
 
-    private fun processLapFrame(nowNs: Long, physics: SPageFilePhysics): LapTimingSnapshot {
-        lapAnalyzer.processPhysicsFrame(nowNs, physics)
+    private fun processLapFrame(
+        nowNs: Long,
+        physics: SPageFilePhysics,
+        graphics: SPageFileGraphics,
+    ): LapTimingSnapshot {
+        lapAnalyzer.processPhysicsFrame(
+            timestampNs = nowNs,
+            physics = physics,
+            sectorIndexHint0Based = graphics.currentSectorIndex.takeIf { it >= 0 },
+            lastSectorTimeHintMs = graphics.lastSectorTime.takeIf { it > 0 },
+        )
         return lapAnalyzer.getSnapshot(nowNs)
     }
 
@@ -295,11 +347,72 @@ class AcEvoFallbackShmPatcher(
     }
 
     private fun pollFileInfo(nowNs: Long): EvoFileInfo {
+        if (!useAsyncFilePolling) {
+            if (lastFilePollNs == 0L || (nowNs - lastFilePollNs) >= FILE_POLL_INTERVAL_NS) {
+                refreshFileInfoNow(nowNs)
+            }
+            return cachedInfo
+        }
+        if (lastFilePollNs == 0L && !fileInfoPollScheduled) {
+            refreshFileInfoNow(nowNs)
+            return cachedInfo
+        }
         if ((nowNs - lastFilePollNs) >= FILE_POLL_INTERVAL_NS) {
-            cachedInfo = fileInfoExtractor.poll()
-            lastFilePollNs = nowNs
+            scheduleFileInfoRefresh(nowNs)
         }
         return cachedInfo
+    }
+
+    private fun refreshFileInfoNow(nowNs: Long) {
+        lastFilePollNs = nowNs
+        cachedInfo = synchronized(fileInfoLock) {
+            fileInfoExtractor.poll()
+        }
+    }
+
+    private fun scheduleFileInfoRefresh(nowNs: Long) {
+        if (fileInfoPollScheduled) return
+
+        fileInfoPollScheduled = true
+        lastFilePollNs = nowNs
+        val generation = fileInfoGeneration
+
+        fileInfoScope.launch {
+            val polled = runCatching {
+                synchronized(fileInfoLock) {
+                    fileInfoExtractor.poll()
+                }
+            }.onFailure { error ->
+                logger.warn(error) { "FallbackSHM file info poll failed" }
+            }.getOrNull()
+
+            if (polled != null && fileInfoGeneration == generation) {
+                cachedInfo = polled
+            }
+            fileInfoPollScheduled = false
+        }
+    }
+
+    private fun clearPenaltyAsync() {
+        cachedInfo = cachedInfo.copy(
+            hasPenalty = false,
+            penaltyId = null,
+            penaltyReason = null,
+            penaltyTimestamp = null,
+        )
+        if (!useAsyncFilePolling) {
+            synchronized(fileInfoLock) {
+                fileInfoExtractor.clearPenalty()
+            }
+            return
+        }
+        val generation = fileInfoGeneration
+        fileInfoScope.launch {
+            if (fileInfoGeneration != generation) return@launch
+            synchronized(fileInfoLock) {
+                fileInfoExtractor.clearPenalty()
+            }
+        }
     }
 
     private fun resetAll(reason: String, clearTrack: Boolean, clearCar: Boolean) {
@@ -540,12 +653,23 @@ class AcEvoFallbackShmPatcher(
     }
 
     private fun applyFuelToGraphics(graphics: SPageFileGraphics, fuelSnapshot: FuelSnapshot) {
-        fuelSnapshot.fuelPerLapLiters
-            ?.takeIf { it > 0f }
-            ?.let { graphics.fuelXLap = it }
-        fuelSnapshot.fuelEstimatedLaps
-            ?.takeIf { it > 0f }
-            ?.let { graphics.fuelEstimatedLaps = it }
+        val fuelPerLap = fuelSnapshot.fuelPerLapLiters?.takeIf { it > 0f }
+        if (fuelPerLap != null) {
+            graphics.fuelXLap = fuelPerLap
+            hasPatchedFuelPerLap = true
+        } else if (hasPatchedFuelPerLap) {
+            graphics.fuelXLap = 0f
+            hasPatchedFuelPerLap = false
+        }
+
+        val fuelEstimatedLaps = fuelSnapshot.fuelEstimatedLaps?.takeIf { it > 0f }
+        if (fuelEstimatedLaps != null) {
+            graphics.fuelEstimatedLaps = fuelEstimatedLaps
+            hasPatchedFuelEstimatedLaps = true
+        } else if (hasPatchedFuelEstimatedLaps) {
+            graphics.fuelEstimatedLaps = 0f
+            hasPatchedFuelEstimatedLaps = false
+        }
     }
 
     private companion object {
@@ -554,6 +678,18 @@ class AcEvoFallbackShmPatcher(
         val FILE_POLL_INTERVAL_NS = 100.milliseconds.inWholeNanoseconds
         val IDENTITY_LOG_MIN_INTERVAL_MS = 500.milliseconds.inWholeMilliseconds
     }
+
+    internal constructor(
+        fileInfoExtractor: EvoFileInfoSource,
+        lapAnalyzer: FallbackLapAnalyzer,
+        fuelAnalyzer: FallbackFuelAnalyzer,
+    ) : this(
+        fileInfoExtractor = fileInfoExtractor,
+        lapAnalyzer = lapAnalyzer,
+        fuelAnalyzer = fuelAnalyzer,
+        ioDispatcher = Dispatchers.IO,
+        useAsyncFilePolling = false,
+    )
 
     private fun hasSignal(info: EvoFileInfo): Boolean {
         if (info.sessionEpoch > 0L) return true

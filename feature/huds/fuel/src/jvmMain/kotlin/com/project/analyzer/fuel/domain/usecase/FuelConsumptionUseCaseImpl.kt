@@ -9,8 +9,8 @@ import com.project.analyzer.fuel.domain.repository.FuelRepository
 import com.project.analyzer.hud.api.HudScope
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionInfo
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
+import com.project.analyzer.telemetry.api.contract.TelemetryReadSource
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.merge
 @Inject
 @SingleIn(HudScope::class)
 class FuelConsumptionUseCaseImpl(
-    private val telemetry: TelemetryLifecycle,
+    private val telemetry: TelemetryReadSource,
     private val engine: FuelConsumptionEngine,
     private val repository: FuelRepository,
 ) : FuelConsumptionUseCase {

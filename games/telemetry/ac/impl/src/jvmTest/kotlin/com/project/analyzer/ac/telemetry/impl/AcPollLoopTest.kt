@@ -29,6 +29,12 @@ class AcPollLoopTest {
         return m.invoke(loop)
     }
 
+    private fun invokeStabilize(loop: AcPollLoop, detection: Any): Any {
+        val m = AcPollLoop::class.java.declaredMethods.first { it.name == "stabilizeDetection" }
+        m.isAccessible = true
+        return m.invoke(loop, detection)
+    }
+
     private fun getField(obj: Any, name: String): Any? {
         val f = obj.javaClass.getDeclaredField(name)
         f.isAccessible = true
@@ -189,5 +195,92 @@ class AcPollLoopTest {
         assertTrue(results.first() is PollResult.StateChanged)
         val frames = results.filterIsInstance<PollResult.Frame>()
         assertEquals(2, frames.size)
+    }
+
+    @Test
+    fun `menu exit debounce keeps state in menu until session resumes are confirmed`() {
+        val shm = mockk<AcSharedMemory>()
+        val cfg = mockk<AcPollConfig>(relaxed = true)
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics()
+        val statics = SPageFileStatic()
+
+        every { shm.isAnyAttached() } returns true
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+
+        graphics.packetId = 100
+        graphics.status = 2
+        graphics.session = 0
+        graphics.iCurrentTime = 0
+        statics.smVersion[0] = '1'
+        statics.track.writeWString("imola")
+        statics.carModel.writeWString("car")
+        statics.numCars = 1
+        statics.numberOfSessions = 1
+        statics.sectorCount = 3
+
+        val loop = AcPollLoop(shm, cfg)
+        setField(loop, "currentState", GameConnectionState.IN_MENU)
+        setField(loop, "currentDataSource", DataSourceType.NATIVE)
+        setField(loop, "menuExitDebounceActive", true)
+
+        repeat(9) { index ->
+            physics.packetId = index + 1
+            graphics.packetId += 1
+
+            val rawDetection = invokeDetect(loop)
+            val stabilized = invokeStabilize(loop, rawDetection)
+
+            assertEquals(GameConnectionState.IN_MENU, getField(stabilized, "state"))
+            assertEquals(DataSourceType.NATIVE, getField(stabilized, "dataSource"))
+        }
+
+        physics.packetId += 1
+        graphics.packetId += 1
+
+        val rawDetection = invokeDetect(loop)
+        val stabilized = invokeStabilize(loop, rawDetection)
+
+        assertEquals(GameConnectionState.IN_SESSION, getField(stabilized, "state"))
+        assertEquals(DataSourceType.NATIVE, getField(stabilized, "dataSource"))
+    }
+
+    @Test
+    fun `session detection is immediate when menu exit debounce is not active`() {
+        val shm = mockk<AcSharedMemory>()
+        val cfg = mockk<AcPollConfig>(relaxed = true)
+
+        val physics = SPageFilePhysics()
+        val graphics = SPageFileGraphics()
+        val statics = SPageFileStatic()
+
+        every { shm.isAnyAttached() } returns true
+        every { shm.physics } returns physics
+        every { shm.graphics } returns graphics
+        every { shm.statics } returns statics
+
+        graphics.packetId = 10
+        graphics.status = 2
+        graphics.session = 0
+        statics.smVersion[0] = '1'
+        statics.track.writeWString("imola")
+        statics.carModel.writeWString("car")
+        statics.numCars = 1
+        statics.numberOfSessions = 1
+        statics.sectorCount = 3
+
+        val loop = AcPollLoop(shm, cfg)
+        setField(loop, "currentState", GameConnectionState.IN_MENU)
+        setField(loop, "currentDataSource", DataSourceType.NATIVE)
+        setField(loop, "menuExitDebounceActive", false)
+
+        val rawDetection = invokeDetect(loop)
+        val stabilized = invokeStabilize(loop, rawDetection)
+
+        assertEquals(GameConnectionState.IN_SESSION, getField(stabilized, "state"))
+        assertEquals(DataSourceType.NATIVE, getField(stabilized, "dataSource"))
     }
 }

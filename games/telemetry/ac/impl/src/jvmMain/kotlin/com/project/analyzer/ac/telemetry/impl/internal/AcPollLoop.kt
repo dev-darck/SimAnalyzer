@@ -41,6 +41,10 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
     private var stalePacketCounter: Int = 0
     private var activePacketCounter: Int = 0
     private var graphicsStaleCounter: Int = 0
+    private var pendingTransitionState: GameConnectionState? = null
+    private var pendingTransitionDataSource: DataSourceType? = null
+    private var pendingTransitionHits: Int = 0
+    private var menuExitDebounceActive: Boolean = false
 
     private var disconnectedPollMs: Long = DISCONNECTED_POLL_MIN_MS
     private var frameId: Long = 0L
@@ -61,6 +65,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
                 currentState = GameConnectionState.DISCONNECTED
                 currentDataSource = DataSourceType.NATIVE
                 resetCounters()
+                resetTransitionStability()
                 lastPhysicsPacket = -1
                 lastGraphicsPacket = -1
                 disconnectedPollMs = DISCONNECTED_POLL_MIN_MS
@@ -90,6 +95,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         currentDataSource = DataSourceType.NATIVE
 
         resetCounters()
+        resetTransitionStability()
         disconnectedPollMs = DISCONNECTED_POLL_MIN_MS
         shm.close()
     }
@@ -97,7 +103,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
     private suspend fun dispatch(onResult: (PollResult) -> Unit) {
         shm.readAll()
 
-        val detection = detectGameState()
+        val detection = stabilizeDetection(detectGameState())
         handleStateTransition(detection, onResult)
 
         when (detection.state) {
@@ -116,7 +122,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
             disconnectedPollMs = (disconnectedPollMs * 3 / 2).coerceAtMost(DISCONNECTED_POLL_MAX_MS)
 
             shm.readAll()
-            val detection = detectGameState()
+            val detection = stabilizeDetection(detectGameState())
             if (detection.state != GameConnectionState.DISCONNECTED) {
                 handleStateTransition(detection, onResult)
                 return
@@ -131,7 +137,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
             delay(cfg.menuPollMs)
 
             shm.readAll()
-            val detection = detectGameState()
+            val detection = stabilizeDetection(detectGameState())
             if (detection.state != GameConnectionState.IN_MENU) {
                 handleStateTransition(detection, onResult)
                 return
@@ -159,7 +165,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
             val now = System.nanoTime()
 
             shm.readAll()
-            val detection = detectGameState()
+            val detection = stabilizeDetection(detectGameState())
 
             if (detection.state != GameConnectionState.IN_SESSION) {
                 handleStateTransition(detection, onResult)
@@ -245,6 +251,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
 
         currentState = detection.state
         currentDataSource = detection.dataSource
+        updateMenuExitDebounce(oldState, detection.state)
 
         logStateTransition(oldState, oldSource, detection)
 
@@ -258,6 +265,60 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
                 dataSource = detection.dataSource,
             ),
         )
+    }
+
+    private fun stabilizeDetection(detection: Detection): Detection {
+        val threshold = transitionConfirmationThreshold(detection)
+        if (threshold <= 1) {
+            clearPendingTransition()
+            return detection
+        }
+
+        if (detection.state == currentState && detection.dataSource == currentDataSource) {
+            clearPendingTransition()
+            return detection
+        }
+
+        if (pendingTransitionState == detection.state && pendingTransitionDataSource == detection.dataSource) {
+            pendingTransitionHits = (pendingTransitionHits + 1).coerceAtMost(threshold)
+        } else {
+            pendingTransitionState = detection.state
+            pendingTransitionDataSource = detection.dataSource
+            pendingTransitionHits = 1
+        }
+
+        if (pendingTransitionHits >= threshold) {
+            clearPendingTransition()
+            return detection
+        }
+
+        return detection.copy(
+            state = currentState,
+            dataSource = currentDataSource,
+        )
+    }
+
+    private fun transitionConfirmationThreshold(detection: Detection): Int = when {
+        menuExitDebounceActive &&
+            currentState == GameConnectionState.IN_MENU &&
+            detection.state == GameConnectionState.IN_SESSION -> MENU_EXIT_CONFIRMATION_SAMPLES
+
+        else -> 1
+    }
+
+    private fun updateMenuExitDebounce(oldState: GameConnectionState, newState: GameConnectionState) {
+        menuExitDebounceActive = when {
+            oldState == GameConnectionState.IN_SESSION && newState == GameConnectionState.IN_MENU -> true
+            newState == GameConnectionState.DISCONNECTED -> false
+            oldState == GameConnectionState.IN_MENU && newState == GameConnectionState.IN_SESSION -> false
+            else -> menuExitDebounceActive
+        }
+    }
+
+    private fun clearPendingTransition() {
+        pendingTransitionState = null
+        pendingTransitionDataSource = null
+        pendingTransitionHits = 0
     }
 
     private fun logStateTransition(oldState: GameConnectionState, oldSource: DataSourceType, detection: Detection) {
@@ -466,6 +527,11 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
         graphicsStaleCounter = 0
     }
 
+    private fun resetTransitionStability() {
+        clearPendingTransition()
+        menuExitDebounceActive = false
+    }
+
     private data class Detection(
         val state: GameConnectionState,
         val dataSource: DataSourceType,
@@ -481,6 +547,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
 
         const val STALE_PACKET_THRESHOLD = 30
         const val ACTIVE_PACKET_THRESHOLD = 5
+        const val MENU_EXIT_CONFIRMATION_SAMPLES = 10
 
         val DISCONNECTED_POLL_MIN_MS = 100.milliseconds.inWholeMilliseconds
         val DISCONNECTED_POLL_MAX_MS = 2.seconds.inWholeMilliseconds

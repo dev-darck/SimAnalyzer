@@ -81,4 +81,21 @@ class FallbackFuelAnalyzerTest {
         assertNotNull(s.fuelPerLapLiters)
         assertEquals(1.0f, s.fuelPerLapLiters, 1e-3f)
     }
+
+    @Test
+    fun `sync id change after previous estimate resets next lap fuel baseline`() {
+        val a = FallbackFuelAnalyzer()
+
+        a.processFrame(50f, completedLaps = 0, lastLapTimeMs = 0, startFinishSyncId = 1)
+        a.processFrame(48f, completedLaps = 1, lastLapTimeMs = 90_000, startFinishSyncId = 1)
+
+        a.processFrame(47.5f, completedLaps = 1, lastLapTimeMs = 0, startFinishSyncId = 2)
+        a.processFrame(45.5f, completedLaps = 2, lastLapTimeMs = 90_000, startFinishSyncId = 2)
+
+        val s = a.getSnapshot(45.5f)
+        assertNotNull(s.lastLapFuelPerLapLiters)
+        assertEquals(2.0f, s.lastLapFuelPerLapLiters, 1e-3f)
+        assertNotNull(s.fuelPerLapLiters)
+        assertEquals(2.0f, s.fuelPerLapLiters, 1e-3f)
+    }
 }

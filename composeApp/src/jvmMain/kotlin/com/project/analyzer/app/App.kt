@@ -44,7 +44,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun WindowScope.App(
-    providerFactory: EntryFactory,
+    entryFactory: EntryFactory,
     navigationState: NavigationState<Route>,
     decorator: FrameDecoratorState,
     onCloseRequest: () -> Unit = {},
@@ -66,7 +66,7 @@ fun WindowScope.App(
         navigationContent = {
             AppNavGraph(
                 navigationState = navigationState,
-                providerFactory = providerFactory,
+                entryFactory = entryFactory,
             )
         },
     )

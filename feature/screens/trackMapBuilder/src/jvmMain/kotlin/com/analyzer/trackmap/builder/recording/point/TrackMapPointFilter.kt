@@ -45,6 +45,12 @@ internal class TrackMapPointFilter(
         return TrackMapPointDecision.ACCEPTED
     }
 
+    fun restartSegment(point: Vec2, runtime: TrackMapRecorderRuntime) {
+        if (!point.isFinite()) return
+        runtime.recordLapPoint(point, distanceMeters = 0f, stats = stats)
+        runtime.lastLapDir = null
+    }
+
     private fun effectiveSpacing(
         snapshot: TrackMapRecorderState,
         runtime: TrackMapRecorderRuntime,

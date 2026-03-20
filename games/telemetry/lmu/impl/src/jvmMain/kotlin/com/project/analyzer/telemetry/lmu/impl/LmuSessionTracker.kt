@@ -87,6 +87,8 @@ internal class LmuSessionTracker {
         val cur = currentSession ?: return
         val restart = restartForSessionTypeBoundary(cur, frame, emit)
         if (restart) return
+        if (restartForCarIdentityBoundary(cur, frame, emit)) return
+        if (restartForTrackIdentityBoundary(cur, frame, emit)) return
 
         var updated = cur
         val changed = linkedSetOf<SessionField>()
@@ -149,6 +151,64 @@ internal class LmuSessionTracker {
         currentSession = restarted
         emit(TelemetryLifecycleEvent.SessionStarted(restarted))
         return true
+    }
+
+    private suspend fun restartForCarIdentityBoundary(
+        cur: SessionInfo,
+        frame: TelemetryFrame,
+        emit: suspend (TelemetryLifecycleEvent) -> Unit,
+    ): Boolean {
+        val newCar = frame.session?.car?.carModel.orEmpty().trim()
+        val newCarId = frame.session?.car?.carId?.takeIf { it > 0 }
+        val carChanged = newCar.isNotBlank() && cur.carModel.isNotBlank() && newCar != cur.carModel
+        val carIdChanged = newCarId != null && cur.carId != null && newCarId != cur.carId
+        if (!carChanged && !carIdChanged) return false
+
+        restartSession(
+            current = cur,
+            frame = frame,
+            emit = emit,
+        )
+        return true
+    }
+
+    private suspend fun restartForTrackIdentityBoundary(
+        cur: SessionInfo,
+        frame: TelemetryFrame,
+        emit: suspend (TelemetryLifecycleEvent) -> Unit,
+    ): Boolean {
+        val newTrack = frame.session?.track?.trackId.orEmpty().trim()
+        val newLayoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() }
+        val trackChanged = newTrack.isNotBlank() && cur.trackId.isNotBlank() && newTrack != cur.trackId
+        val layoutChanged = newLayoutId != cur.layoutId
+        if (!trackChanged && !layoutChanged) return false
+
+        restartSession(
+            current = cur,
+            frame = frame,
+            emit = emit,
+        )
+        return true
+    }
+
+    private suspend fun restartSession(
+        current: SessionInfo,
+        frame: TelemetryFrame,
+        emit: suspend (TelemetryLifecycleEvent) -> Unit,
+    ) {
+        emit(TelemetryLifecycleEvent.SessionEnded(current.sessionId, SessionEndReason.REPLACED_BY_NEW_SESSION))
+        sessionId += 1L
+        lastLapIndex = null
+        val restarted = current.copy(
+            sessionId = sessionId,
+            sessionType = frame.session?.sessionType ?: current.sessionType,
+            carModel = frame.session?.car?.carModel.orEmpty().trim().ifBlank { current.carModel },
+            trackId = frame.session?.track?.trackId.orEmpty().trim().ifBlank { current.trackId },
+            carId = frame.session?.car?.carId?.takeIf { it > 0 } ?: current.carId,
+            layoutId = frame.session?.track?.layoutId?.trim()?.takeIf { it.isNotBlank() } ?: current.layoutId,
+        )
+        currentSession = restarted
+        emit(TelemetryLifecycleEvent.SessionStarted(restarted))
     }
 
     private fun shouldRestartForSessionTypeChange(current: SessionType, next: SessionType): Boolean {

@@ -48,7 +48,7 @@ class TrackCalibrationStoreRepository(
     }
 
     override suspend fun load(trackId: String, layoutId: String?): TrackCalibration? = withContext(ioDispatcher) {
-        val normalizedLayoutId = normalizeLayoutId(layoutId)
+        val normalizedLayoutId = normalizeCalibrationLayoutId(layoutId)
         loadDirectCalibration(trackId = trackId, layoutId = normalizedLayoutId)
             ?: findAliasedCalibration(
                 trackId = trackId,
@@ -129,6 +129,16 @@ class TrackCalibrationStoreRepository(
     override suspend fun loadAll(source: TrackCalibrationSource?): List<TrackCalibration> = withContext(ioDispatcher) {
         val calibrations = calibrationFiles()
             .mapNotNull { file -> readCalibration(file.nameWithoutExtension) }
+            .groupBy { calibration -> calibration.trackId to calibration.layoutId.orEmpty() }
+            .values
+            .mapNotNull { duplicates ->
+                duplicates.maxWithOrNull(
+                    compareBy<TrackCalibration>(
+                        { it.source == TrackCalibrationSource.USER },
+                        TrackCalibration::createdAtEpochMs,
+                    ),
+                )
+            }
             .sortedBy(TrackCalibration::trackId)
         if (source == null) {
             calibrations
@@ -156,32 +166,3 @@ class TrackCalibrationStoreRepository(
         }.getOrNull()?.normalizeForRead()
     }
 }
-
-private fun TrackCalibration.normalizeForStorage(source: TrackCalibrationSource): TrackCalibration {
-    val normalizedTrackId = TrackCalibrationFileNameResolver.resolveStorageTrackId(
-        trackId = trackId,
-        layoutId = layoutId,
-    ).ifBlank { trackId.trim() }
-    return copy(
-        trackId = normalizedTrackId,
-        layoutId = normalizeLayoutId(layoutId),
-        source = source,
-    )
-}
-
-private fun TrackCalibration.normalizeForRead(): TrackCalibration = copy(
-    trackId = trackId.trim(),
-    layoutId = normalizeLayoutId(layoutId),
-)
-
-private fun TrackCalibration.withResolvedLayout(layoutId: String?): TrackCalibration {
-    val resolvedLayoutId = layoutId ?: normalizeLayoutId(this.layoutId)
-    return if (resolvedLayoutId == this.layoutId) {
-        this
-    } else {
-        copy(layoutId = resolvedLayoutId)
-    }
-}
-
-private fun normalizeLayoutId(layoutId: String?): String? =
-    com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer.normalizeLayoutId(layoutId)

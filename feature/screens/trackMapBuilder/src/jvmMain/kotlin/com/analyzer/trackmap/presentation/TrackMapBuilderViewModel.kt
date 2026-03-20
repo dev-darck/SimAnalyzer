@@ -1,61 +1,39 @@
 package com.analyzer.trackmap.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.analyzer.trackmap.domain.usecase.TrackMapBuilderUseCase
+import com.analyzer.trackmap.domain.TrackMapCaptureController
+import com.analyzer.trackmap.presentation.model.TrackMapBuilderIntent
 import com.analyzer.trackmap.presentation.model.TrackMapBuilderUiState
-import com.project.analyzer.leak.api.LeakAwareViewModel
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
+import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 @Inject
-internal class TrackMapBuilderViewModel(private val useCase: TrackMapBuilderUseCase) : LeakAwareViewModel() {
-
-    private val _state = MutableStateFlow(TrackMapBuilderUiState())
-    val state: StateFlow<TrackMapBuilderUiState> = _state.asStateFlow()
+internal class TrackMapBuilderViewModel(
+    private val controller: TrackMapCaptureController,
+) : LeakAwareMviViewModel<TrackMapBuilderIntent, TrackMapBuilderUiState>(
+    controller.state.value.toTrackMapBuilderUiState(),
+) {
 
     init {
-        viewModelScope.launch {
-            useCase.observeState().collect { currentState ->
-                _state.value = currentState.toTrackMapBuilderUiState()
-            }
-        }
+        controller.state
+            .map { currentState -> currentState.toTrackMapBuilderUiState() }
+            .onEach(::setState)
+            .launchIn(viewModelScope)
     }
 
-    fun start() {
-        useCase.start()
-    }
-
-    fun stop() {
-        useCase.stop()
-    }
-
-    fun reset() {
-        useCase.reset()
-    }
-
-    fun setReferencePoint(point: ReferencePoint) {
-        useCase.setReferencePoint(point)
-    }
-
-    fun setFallbackHalfWidthMeters(value: Float) {
-        useCase.setFallbackHalfWidthMeters(value)
-    }
-
-    fun markPitEntry() {
-        useCase.markPitEntry()
-    }
-
-    fun markPitExit() {
-        useCase.markPitExit()
-    }
-
-    fun save() {
-        viewModelScope.launch {
-            useCase.save()
+    override suspend fun handleIntent(intent: TrackMapBuilderIntent) {
+        when (intent) {
+            TrackMapBuilderIntent.Start -> controller.start()
+            TrackMapBuilderIntent.Stop -> controller.stop()
+            TrackMapBuilderIntent.Reset -> controller.reset()
+            TrackMapBuilderIntent.Save -> controller.save()
+            TrackMapBuilderIntent.MarkPitEntry -> controller.markPitEntry()
+            TrackMapBuilderIntent.MarkPitExit -> controller.markPitExit()
+            is TrackMapBuilderIntent.SetReferencePoint -> controller.setReferencePoint(intent.point)
+            is TrackMapBuilderIntent.SetFallbackHalfWidthMeters -> controller.setFallbackHalfWidthMeters(intent.value)
         }
     }
 }
