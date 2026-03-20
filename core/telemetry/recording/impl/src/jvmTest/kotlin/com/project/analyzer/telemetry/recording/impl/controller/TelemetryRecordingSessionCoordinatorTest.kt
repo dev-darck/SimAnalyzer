@@ -67,6 +67,70 @@ class TelemetryRecordingSessionCoordinatorTest {
     }
 
     @Test
+    fun `replacement across tracks starts a new session group`() = runTest {
+        val recorder = FakeTelemetryRecorder()
+        val coordinator = TelemetryRecordingSessionCoordinator(
+            recorder = recorder,
+            frameIndexBuilder = TelemetryFrameIndexBuilder(),
+        )
+
+        startSession(
+            coordinator,
+            sessionId = 1L,
+            sessionType = SessionType.PRACTICE,
+            trackId = "imola_gp",
+            layoutId = "gp",
+        )
+        val firstGroup = recorder.startedDescriptors[0].sessionGroupId
+        assertNotNull(firstGroup)
+
+        endSession(coordinator, sessionId = 1L)
+        startSession(
+            coordinator,
+            sessionId = 2L,
+            sessionType = SessionType.PRACTICE,
+            trackId = "watkins_glen_gp",
+            layoutId = "gp",
+        )
+
+        val nextGroup = recorder.startedDescriptors[1].sessionGroupId
+        assertNotNull(nextGroup)
+        assertNotEquals(firstGroup, nextGroup)
+    }
+
+    @Test
+    fun `replacement across cars starts a new session group`() = runTest {
+        val recorder = FakeTelemetryRecorder()
+        val coordinator = TelemetryRecordingSessionCoordinator(
+            recorder = recorder,
+            frameIndexBuilder = TelemetryFrameIndexBuilder(),
+        )
+
+        startSession(
+            coordinator,
+            sessionId = 1L,
+            sessionType = SessionType.PRACTICE,
+            carModel = "ks_bmw_m4_gt3",
+            carId = 101,
+        )
+        val firstGroup = recorder.startedDescriptors[0].sessionGroupId
+        assertNotNull(firstGroup)
+
+        endSession(coordinator, sessionId = 1L)
+        startSession(
+            coordinator,
+            sessionId = 2L,
+            sessionType = SessionType.PRACTICE,
+            carModel = "ks_porsche_992_gt3r",
+            carId = 202,
+        )
+
+        val nextGroup = recorder.startedDescriptors[1].sessionGroupId
+        assertNotNull(nextGroup)
+        assertNotEquals(firstGroup, nextGroup)
+    }
+
+    @Test
     fun `qualifying after main menu replacement starts a new session group`() = runTest {
         val recorder = FakeTelemetryRecorder()
         val coordinator = TelemetryRecordingSessionCoordinator(
@@ -94,6 +158,10 @@ class TelemetryRecordingSessionCoordinatorTest {
         coordinator: TelemetryRecordingSessionCoordinator,
         sessionId: Long,
         sessionType: SessionType,
+        carModel: String = "ks_bmw_m4_gt3",
+        carId: Int? = null,
+        trackId: String = "brands_hatch_indy",
+        layoutId: String? = null,
     ) {
         coordinator.handle(
             TelemetryRecordingInput.TelemetryRecordingEventInput(
@@ -101,8 +169,10 @@ class TelemetryRecordingSessionCoordinatorTest {
                     SessionInfo(
                         sessionId = sessionId,
                         sessionType = sessionType,
-                        carModel = "ks_bmw_m4_gt3",
-                        trackId = "brands_hatch_indy",
+                        carModel = carModel,
+                        trackId = trackId,
+                        carId = carId,
+                        layoutId = layoutId,
                     ),
                 ),
             ),

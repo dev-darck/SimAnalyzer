@@ -1,5 +1,3 @@
-import org.gradle.api.tasks.testing.Test
-
 moduleImpl {
     metro()
     proto()

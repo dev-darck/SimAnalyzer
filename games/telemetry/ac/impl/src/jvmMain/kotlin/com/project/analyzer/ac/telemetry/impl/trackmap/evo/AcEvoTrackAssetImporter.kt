@@ -143,10 +143,6 @@ internal class AcEvoTrackAssetImporter internal constructor(
                 )
             }
 
-            fileName.endsWith(TRACK_LAYOUT_SUFFIX, ignoreCase = true) -> {
-                AcEvoImportedAssetKind.TRACK_LAYOUT to fileName.removeSuffixIgnoreCase(TRACK_LAYOUT_SUFFIX)
-            }
-
             else -> null
         } ?: return null
 
@@ -198,15 +194,7 @@ internal class AcEvoTrackAssetImporter internal constructor(
             ?.trim('_')
             ?.takeIf { it.isNotBlank() }
             ?: return null
-        return when (normalized) {
-            "gp_circuit" -> "gp"
-            "gp_circuit_shortcut", "gp_circuit_short", "gp_shortcut", "short", "shortcut" -> "gp_short"
-            "full_course", "full" -> "gp"
-            "national_circuit" -> "national"
-            "international_circuit" -> "international"
-            "24_hr", "24_hour", "24hours", "24_hour_layout" -> "24h"
-            else -> normalized
-        }
+        return TrackIdNormalizer.normalizeLayoutId(normalized) ?: normalized
     }
 
     private fun resolveRelativePath(root: Path, relativePath: String): Path {
@@ -238,7 +226,7 @@ internal class AcEvoTrackAssetImporter internal constructor(
 
     internal companion object {
 
-        const val IMPORTER_VERSION: Int = 1
+        const val IMPORTER_VERSION: Int = 4
         const val IMPORT_ROOT_DIR_NAME = "ac-evo-content"
         const val ASSETS_DIR_NAME = "assets"
         const val MANIFEST_FILE_NAME = "manifest.json"

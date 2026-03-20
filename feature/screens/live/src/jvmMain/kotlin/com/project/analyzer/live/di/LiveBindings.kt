@@ -6,7 +6,7 @@ import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCase
 import com.project.analyzer.live.domain.usecase.LiveTelemetryUseCaseImpl
 import com.project.analyzer.live.presentation.LiveViewModel
 import com.project.analyzer.live.presentation.mapper.LiveScreenStateMapper
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryReadSource
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
@@ -21,8 +21,8 @@ interface LiveBindings {
 
         @Provides
         @SingleIn(ScreenScope::class)
-        private fun provideLiveTelemetryUseCase(telemetryLifecycle: TelemetryLifecycle): LiveTelemetryUseCase =
-            LiveTelemetryUseCaseImpl(telemetryLifecycle)
+        private fun provideLiveTelemetryUseCase(telemetry: TelemetryReadSource): LiveTelemetryUseCase =
+            LiveTelemetryUseCaseImpl(telemetry)
 
         @Provides
         @IntoMap

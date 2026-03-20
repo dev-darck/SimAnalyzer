@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,6 +27,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.launch
 
 @Inject
 @SingleIn(HudScope::class)
@@ -43,6 +45,8 @@ class TrackMapHudPanel(private val controller: TrackMapCaptureController) : HudP
     @Composable
     override fun Content(modifier: Modifier) {
         val state by controller.state.collectAsStateWithLifecycle()
+        val coroutineScope = rememberCoroutineScope()
+
         Box(modifier = modifier.size(420.dp)) {
             TrackMapPreview(
                 state = state.toTrackMapPreviewUi(),
@@ -62,14 +66,14 @@ class TrackMapHudPanel(private val controller: TrackMapCaptureController) : HudP
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (state.recording) {
-                    Button(onClick = controller::stop) {
+                    Button(onClick = { coroutineScope.launch { controller.stop() } }) {
                         Text(
                             text = "Stop",
                             style = SimAnalyzerTheme.typography.labelMedium,
                         )
                     }
                 } else {
-                    Button(onClick = controller::start) {
+                    Button(onClick = { coroutineScope.launch { controller.start() } }) {
                         Text(
                             text = "Start",
                             style = SimAnalyzerTheme.typography.labelMedium,
@@ -78,7 +82,7 @@ class TrackMapHudPanel(private val controller: TrackMapCaptureController) : HudP
                 }
 
                 Button(
-                    onClick = controller::markPitEntry,
+                    onClick = { coroutineScope.launch { controller.markPitEntry() } },
                     enabled = state.recording,
                 ) {
                     Text(
@@ -88,7 +92,7 @@ class TrackMapHudPanel(private val controller: TrackMapCaptureController) : HudP
                 }
 
                 Button(
-                    onClick = controller::markPitExit,
+                    onClick = { coroutineScope.launch { controller.markPitExit() } },
                     enabled = state.recording,
                 ) {
                     Text(

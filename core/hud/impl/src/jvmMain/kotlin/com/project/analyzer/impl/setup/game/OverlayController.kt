@@ -417,10 +417,12 @@ class OverlayController(
 
     private fun resolveLockedInputClickThrough(window: Window): Boolean? {
         val mouse = MouseInfo.getPointerInfo()?.location ?: return null
-        val regions = hitRegions.snapshot()
         val wx = mouse.x - window.x
         val wy = mouse.y - window.y
         val inside = wx in 0 until window.width && wy in 0 until window.height
+        if (!inside) return true
+
+        val regions = hitRegions.snapshot()
         val overUnlockHandle = inside && isOverLockHandle(wx, wy, regions)
         return !_state.value.isDragging && !overUnlockHandle
     }
@@ -607,6 +609,9 @@ class OverlayController(
     }
 
     private fun currentOverlayHwnd(): HWND? {
+        val cachedHwnd = overlayHwnd
+        if (isValidHwnd(cachedHwnd)) return cachedHwnd
+
         val w = overlayWindow ?: return null
         if (!w.isDisplayable) return null
         val hwnd = resolveHwnd(w) ?: return null
@@ -644,7 +649,7 @@ class OverlayController(
     companion object {
 
         private const val LOCK_HANDLE_SIZE_PX = 32
-        private val CLICK_THROUGH_POLL_INTERVAL = 16.milliseconds
+        private val CLICK_THROUGH_POLL_INTERVAL = 33.milliseconds
         private val BOUNDS_GUARD_POLL_INTERVAL = 500.milliseconds
         private val INPUT_LOCK_FOCUS_GRACE_NS = 1200.milliseconds.inWholeNanoseconds
         private const val DWMWA_NCRENDERING_POLICY = 2

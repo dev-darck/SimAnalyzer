@@ -3,7 +3,7 @@ package com.project.analyzer.telemetry.recording.impl.controller
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.leak.api.LeakCanaryRuntime
-import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
+import com.project.analyzer.telemetry.api.contract.TelemetryEventSource
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingController
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSource
@@ -34,7 +34,7 @@ import kotlinx.coroutines.launch
 @Inject
 @SingleIn(SessionScope::class)
 internal class TelemetryRecordingControllerImpl(
-    private val telemetry: TelemetryLifecycle,
+    private val telemetryEvents: TelemetryEventSource,
     private val sources: Set<@JvmSuppressWildcards TelemetryRecordingSource>,
     private val settings: TelemetryAcquisitionSettings,
     private val coordinator: TelemetryRecordingSessionCoordinator,
@@ -85,7 +85,7 @@ internal class TelemetryRecordingControllerImpl(
     private fun inputFlow(): Flow<TelemetryRecordingInput> {
         val inputs = mutableListOf<Flow<TelemetryRecordingInput>>()
         inputs += settings.observeConfig().map { TelemetryRecordingConfigInput(it) }
-        inputs += telemetry.events.map { TelemetryRecordingEventInput(it) }
+        inputs += telemetryEvents.events.map { TelemetryRecordingEventInput(it) }
         sources.forEach { source ->
             inputs += source.samples.map { TelemetryRecordingSampleInput(it) }
         }

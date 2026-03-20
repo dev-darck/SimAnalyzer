@@ -1,12 +1,11 @@
 brands_hatch_gp.json
 brands_hatch_indy.json
-circuit_de_spa_francorchamps_gp.json
 circuit_of_the_americas_gp.json
 circuit_of_the_americas_national.json
 donington_park_gp.json
 donington_park_national.json
-fuji_speedway_gp.json
-fuji_speedway_gp_short.json
+fuji_gp.json
+fuji_gp_short.json
 imola_gp.json
 laguna_seca_gp.json
 monza_gp.json
@@ -18,8 +17,6 @@ oulton_park_fosters.json
 oulton_park_international.json
 paul_ricard_3a.json
 paul_ricard_3c.json
-red_bull_ring_gp.json
-red_bull_ring_national.json
 redbull_ring_gp.json
 redbull_ring_national.json
 road_atlanta_gp.json

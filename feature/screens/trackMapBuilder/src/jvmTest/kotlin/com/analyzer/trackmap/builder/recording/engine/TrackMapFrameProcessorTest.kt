@@ -11,7 +11,6 @@ import com.project.analyzer.math.Vec2
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TrackMapFrameProcessorTest {
@@ -41,7 +40,7 @@ class TrackMapFrameProcessorTest {
     }
 
     @Test
-    fun `processFrame stops recording on teleport`() {
+    fun `processFrame restarts capture segment after teleport`() {
         val fixture = fixture()
 
         fixture.processor.processFrame(
@@ -50,6 +49,8 @@ class TrackMapFrameProcessorTest {
                 currentPos = Vec2(0f, 0f),
                 lapIndex = 1,
                 safeSpeed = 100f,
+                sectorCount = 3,
+                currentSectorIndex = 0,
             ),
         )
         fixture.processor.processFrame(
@@ -58,13 +59,29 @@ class TrackMapFrameProcessorTest {
                 currentPos = Vec2(100f, 0f),
                 lapIndex = 1,
                 safeSpeed = 100f,
+                sectorCount = 3,
+                currentSectorIndex = 1,
+            ),
+        )
+        fixture.processor.processFrame(
+            frameContext(
+                timestampNs = 3L,
+                currentPos = Vec2(106f, 0f),
+                lapIndex = 1,
+                safeSpeed = 100f,
+                sectorCount = 3,
+                currentSectorIndex = 1,
             ),
         )
 
         val state = fixture.state.value
-        assertFalse(state.recording)
-        assertEquals("Teleport detected, recording stopped", state.message)
-        assertEquals(1, state.pointCount)
+        assertTrue(state.recording)
+        assertEquals("Position jump detected, segment restarted", state.message)
+        assertEquals(Vec2(106f, 0f), state.currentPosition)
+        assertEquals(2, state.pointCount)
+        assertEquals(listOf(Vec2(100f, 0f), Vec2(106f, 0f)), state.points)
+        assertEquals(1, state.capturedSectorCount)
+        assertEquals(2, state.sectorMarkers.single().index)
     }
 
     @Test

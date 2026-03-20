@@ -30,7 +30,7 @@ internal fun SessionDetailsScreen(sessionId: Long) {
     val viewModel = metroViewModel<SessionDetailViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(sessionId) {
+    LaunchedEffect(viewModel, sessionId) {
         viewModel.dispatch(SessionDetailIntent.BindSession(sessionId))
     }
 

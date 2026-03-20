@@ -2,7 +2,7 @@ package com.analyzer.session.di
 
 import androidx.lifecycle.ViewModel
 import com.analyzer.session.data.repository.RecordedSessionRepository
-import com.analyzer.session.data.repository.impl.RecordedSessionRepositoryImpl
+import com.analyzer.session.data.repository.RecordedSessionRepositoryImpl
 import com.analyzer.session.domain.usecase.SessionListDataUseCase
 import com.analyzer.session.domain.usecase.SessionListDataUseCaseImpl
 import com.analyzer.session.domain.usecase.SessionTrackMapUseCase

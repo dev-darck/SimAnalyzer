@@ -1,11 +1,10 @@
 package com.analyzer.session.domain.usecase
 
-import com.analyzer.session.domain.model.SessionListDomainItem
 import com.project.analyzer.ui.components.TrackMapData
 
 internal interface SessionTrackMapUseCase {
 
-    suspend fun loadTrackMaps(items: Collection<SessionListDomainItem>): Map<String, TrackMapData>
+    suspend fun loadTrackMaps(items: Collection<SessionTrackMapIdentity>): Map<String, TrackMapData>
     fun resolveTrackMap(
         trackMapsByKey: Map<String, TrackMapData>,
         gameId: String,
@@ -13,3 +12,9 @@ internal interface SessionTrackMapUseCase {
         layoutId: String? = null,
     ): TrackMapData?
 }
+
+internal data class SessionTrackMapIdentity(
+    val gameId: String,
+    val trackId: String,
+    val layoutId: String? = null,
+)

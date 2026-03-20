@@ -1,0 +1,124 @@
+{
+    "trackId": "fuji_gp_short",
+    "trackName": "Fuji Gp Short",
+    "layoutId": "gp_short",
+    "createdAtEpochMs": 1773532123794,
+    "source": "GAME",
+    "referencePoint": "FRONT_AXLE",
+    "startFinish": {
+        "center": {
+            "x": 120.676834,
+            "y": -403.47653
+        },
+        "forward": {
+            "x": 0.77954715,
+            "y": -0.62634355
+        },
+        "normal": {
+            "x": 0.62634355,
+            "y": 0.77954715
+        },
+        "halfWidthMeters": 7.142025
+    },
+    "sectors": [
+        {
+            "index": 1,
+            "start": {
+                "center": {
+                    "x": 120.676834,
+                    "y": -403.47653
+                },
+                "forward": {
+                    "x": 0.77954715,
+                    "y": -0.62634355
+                },
+                "normal": {
+                    "x": 0.62634355,
+                    "y": 0.77954715
+                },
+                "halfWidthMeters": 7.142025
+            },
+            "finish": {
+                "center": {
+                    "x": 162.82793,
+                    "y": -158.27507
+                },
+                "forward": {
+                    "x": -0.046073895,
+                    "y": 0.9989381
+                },
+                "normal": {
+                    "x": -0.9989381,
+                    "y": -0.046073895
+                },
+                "halfWidthMeters": 7.142025
+            }
+        },
+        {
+            "index": 2,
+            "start": {
+                "center": {
+                    "x": 162.82793,
+                    "y": -158.27507
+                },
+                "forward": {
+                    "x": -0.046073895,
+                    "y": 0.9989381
+                },
+                "normal": {
+                    "x": -0.9989381,
+                    "y": -0.046073895
+                },
+                "halfWidthMeters": 7.142025
+            },
+            "finish": {
+                "center": {
+                    "x": -249.95152,
+                    "y": 123.024925
+                },
+                "forward": {
+                    "x": 0.17022733,
+                    "y": -0.9854048
+                },
+                "normal": {
+                    "x": 0.9854049,
+                    "y": 0.17022735
+                },
+                "halfWidthMeters": 7.142025
+            }
+        },
+        {
+            "index": 3,
+            "start": {
+                "center": {
+                    "x": -249.95152,
+                    "y": 123.024925
+                },
+                "forward": {
+                    "x": 0.17022733,
+                    "y": -0.9854048
+                },
+                "normal": {
+                    "x": 0.9854049,
+                    "y": 0.17022735
+                },
+                "halfWidthMeters": 7.142025
+            },
+            "finish": {
+                "center": {
+                    "x": 120.676834,
+                    "y": -403.47653
+                },
+                "forward": {
+                    "x": 0.77954715,
+                    "y": -0.62634355
+                },
+                "normal": {
+                    "x": 0.62634355,
+                    "y": 0.77954715
+                },
+                "halfWidthMeters": 7.142025
+            }
+        }
+    ]
+}

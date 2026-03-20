@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -66,6 +67,35 @@ internal fun SessionDetailsLapTable(
     onSortChange: (String) -> Unit = {},
 ) {
     val dividerColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.2f)
+    val lapHeader = stringResource(Res.string.session_details_table_lap)
+    val totalTimeHeader = stringResource(Res.string.session_details_table_total_time)
+    val s1Header = stringResource(Res.string.session_details_table_s1)
+    val s2Header = stringResource(Res.string.session_details_table_s2)
+    val s3Header = stringResource(Res.string.session_details_table_s3)
+    val incidentsHeader = stringResource(Res.string.session_details_table_incidents)
+    val deltaHeader = stringResource(Res.string.session_details_table_delta)
+    val statusHeader = stringResource(Res.string.session_details_table_status)
+    val headerColumns = remember(
+        lapHeader,
+        totalTimeHeader,
+        s1Header,
+        s2Header,
+        s3Header,
+        incidentsHeader,
+        deltaHeader,
+        statusHeader,
+    ) {
+        sessionDetailsHeaderColumns(
+            lapHeader = lapHeader,
+            totalTimeHeader = totalTimeHeader,
+            s1Header = s1Header,
+            s2Header = s2Header,
+            s3Header = s3Header,
+            incidentsHeader = incidentsHeader,
+            deltaHeader = deltaHeader,
+            statusHeader = statusHeader,
+        )
+    }
 
     SortablePagedTable(
         isLoading = state.isLoading,
@@ -76,7 +106,7 @@ internal fun SessionDetailsLapTable(
         page = state.page,
         pageCount = state.pageCount,
         onPageChange = onPageChange,
-        columns = sessionDetailsHeaderColumns(),
+        columns = headerColumns,
         activeSort = SESSION_DETAILS_TABLE_SORTS.activeSort(state.sortFilter.selectedId),
         onSortColumnClick = { sortColumn ->
             onSortChange(SESSION_DETAILS_TABLE_SORTS.nextSortId(sortColumn, state.sortFilter.selectedId))
@@ -151,12 +181,20 @@ private enum class SessionDetailsSortColumn {
     Status,
 }
 
-@Composable
-private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> =
+private fun sessionDetailsHeaderColumns(
+    lapHeader: String,
+    totalTimeHeader: String,
+    s1Header: String,
+    s2Header: String,
+    s3Header: String,
+    incidentsHeader: String,
+    deltaHeader: String,
+    statusHeader: String,
+): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> =
     persistentListOf(
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_lap),
+                title = lapHeader,
                 weight = 0.08f,
                 align = TableColumnAlign.Center,
             ),
@@ -164,7 +202,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_total_time),
+                title = totalTimeHeader,
                 weight = 0.18f,
                 align = TableColumnAlign.Center,
             ),
@@ -172,7 +210,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_s1),
+                title = s1Header,
                 weight = 0.1f,
                 align = TableColumnAlign.Center,
             ),
@@ -180,7 +218,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_s2),
+                title = s2Header,
                 weight = 0.1f,
                 align = TableColumnAlign.Center,
             ),
@@ -188,7 +226,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_s3),
+                title = s3Header,
                 weight = 0.1f,
                 align = TableColumnAlign.Center,
             ),
@@ -196,7 +234,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_incidents),
+                title = incidentsHeader,
                 weight = 0.12f,
                 align = TableColumnAlign.Center,
             ),
@@ -204,7 +242,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_delta),
+                title = deltaHeader,
                 weight = 0.18f,
                 align = TableColumnAlign.Center,
             ),
@@ -212,7 +250,7 @@ private fun sessionDetailsHeaderColumns(): ImmutableList<SortableTableColumn<Ses
         ),
         SortableTableColumn(
             column = TableColumn(
-                title = stringResource(Res.string.session_details_table_status),
+                title = statusHeader,
                 weight = 0.14f,
                 align = TableColumnAlign.Center,
             ),

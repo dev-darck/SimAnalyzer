@@ -20,6 +20,7 @@ app {
         projects.core.preference.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.feature.screens.settings.api.jvmImpl
+        projects.feature.screens.session.impl.jvmImpl
         projects.feature.screens.sessionDetails.jvmImpl
         projects.feature.crash.jvmImpl
         projects.core.ui.jvmImpl

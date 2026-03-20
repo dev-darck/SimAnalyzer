@@ -8,12 +8,12 @@ interface TrackMapCaptureController {
 
     val state: StateFlow<TrackMapBuilderState>
 
-    fun start()
-    fun stop()
-    fun reset()
-    fun setReferencePoint(point: ReferencePoint)
-    fun setFallbackHalfWidthMeters(value: Float)
-    fun markPitEntry()
-    fun markPitExit()
+    suspend fun start()
+    suspend fun stop()
+    suspend fun reset()
+    suspend fun setReferencePoint(point: ReferencePoint)
+    suspend fun setFallbackHalfWidthMeters(value: Float)
+    suspend fun markPitEntry()
+    suspend fun markPitExit()
     suspend fun save()
 }

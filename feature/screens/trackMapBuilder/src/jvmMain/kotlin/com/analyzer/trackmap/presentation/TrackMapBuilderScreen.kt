@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.trackmap.presentation.components.TrackMapReferencePointDropdown
 import com.analyzer.trackmap.presentation.components.TrackMapSectionCard
+import com.analyzer.trackmap.presentation.model.TrackMapBuilderIntent
 import com.analyzer.trackmap.presentation.model.TrackMapBuilderUiState
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.Res
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.calibration_capture_settings_subtitle
@@ -98,14 +99,14 @@ fun TrackMapBuilderScreen() {
 
     TrackMapBuilderContent(
         state = state,
-        onStart = viewModel::start,
-        onStop = viewModel::stop,
-        onReset = viewModel::reset,
-        onSave = viewModel::save,
-        onReferencePoint = viewModel::setReferencePoint,
-        onFallbackHalfWidth = viewModel::setFallbackHalfWidthMeters,
-        onPitEntry = viewModel::markPitEntry,
-        onPitExit = viewModel::markPitExit,
+        onStart = { viewModel.dispatch(TrackMapBuilderIntent.Start) },
+        onStop = { viewModel.dispatch(TrackMapBuilderIntent.Stop) },
+        onReset = { viewModel.dispatch(TrackMapBuilderIntent.Reset) },
+        onSave = { viewModel.dispatch(TrackMapBuilderIntent.Save) },
+        onReferencePoint = { viewModel.dispatch(TrackMapBuilderIntent.SetReferencePoint(it)) },
+        onFallbackHalfWidth = { viewModel.dispatch(TrackMapBuilderIntent.SetFallbackHalfWidthMeters(it)) },
+        onPitEntry = { viewModel.dispatch(TrackMapBuilderIntent.MarkPitEntry) },
+        onPitExit = { viewModel.dispatch(TrackMapBuilderIntent.MarkPitExit) },
     )
 }
 
@@ -324,12 +325,12 @@ private fun TrackMapBuilderPreviewSection(state: TrackMapBuilderUiState) {
 @Composable
 private fun TrackMapBuilderActionsSection(
     state: TrackMapBuilderUiState,
-    onStart: () -> Unit,
-    onStop: () -> Unit,
-    onReset: () -> Unit,
-    onSave: () -> Unit,
-    onPitEntry: () -> Unit,
-    onPitExit: () -> Unit,
+    onStart: () -> Unit = {},
+    onStop: () -> Unit = {},
+    onReset: () -> Unit = {},
+    onSave: () -> Unit = {},
+    onPitEntry: () -> Unit = {},
+    onPitExit: () -> Unit = {},
 ) {
     val canSave = state.canSave()
 

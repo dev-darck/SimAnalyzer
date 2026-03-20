@@ -40,7 +40,7 @@ class TrackMapRecorderTest {
             val telemetry = FakeTelemetryLifecycle()
             val repository = FakeTrackMapRepository()
             val recorder = recorder(
-                telemetry = telemetry,
+                telemetryFrames = telemetry,
                 repository = repository,
             )
 
@@ -67,7 +67,7 @@ class TrackMapRecorderTest {
                 saveError = IllegalStateException("disk full"),
             )
             val recorder = recorder(
-                telemetry = telemetry,
+                telemetryFrames = telemetry,
                 repository = repository,
             )
 
@@ -90,11 +90,38 @@ class TrackMapRecorderTest {
         }
     }
 
+    @Test
+    fun `recorder continues after position jump without restart`() {
+        runBlocking {
+            val telemetry = FakeTelemetryLifecycle()
+            val repository = FakeTrackMapRepository()
+            val recorder = recorder(
+                telemetryFrames = telemetry,
+                repository = repository,
+            )
+
+            recorder.start()
+            yield()
+            telemetry.emit(frame(index = 0, x = 0f, sectorCount = 3, currentSectorIndex = 0))
+            telemetry.emit(frame(index = 1, x = 100f, sectorCount = 3, currentSectorIndex = 1))
+            telemetry.emit(frame(index = 2, x = 106f, sectorCount = 3, currentSectorIndex = 1))
+            yield()
+
+            val state = recorder.state.value
+            assertTrue(state.recording)
+            assertEquals("Position jump detected, segment restarted", state.message)
+            assertEquals(2, state.pointCount)
+            assertEquals(1, state.capturedSectorCount)
+            assertEquals(2, state.sectorMarkers.single().index)
+            assertEquals(106f, state.currentPosition?.x)
+        }
+    }
+
     private fun recorder(
-        telemetry: FakeTelemetryLifecycle,
+        telemetryFrames: FakeTelemetryLifecycle,
         repository: FakeTrackMapRepository,
     ): TrackMapRecorder = TrackMapRecorder(
-        telemetry = telemetry,
+        telemetryFrames = telemetryFrames,
         repository = repository,
         calibrationRepository = FakeTrackCalibrationRepository(),
         gameSettings = object : TelemetryGameSettings {
@@ -103,29 +130,40 @@ class TrackMapRecorderTest {
             override suspend fun currentSelection(): GameSelection = GameSelection.Manual(GameId.ACE)
         },
         defaultDispatcher = Dispatchers.Unconfined,
+        ioDispatcher = Dispatchers.Unconfined,
     )
 
-    private fun frame(index: Int, x: Float): TelemetryFrame = TelemetryFrame(
+    private fun frame(
+        index: Int,
+        x: Float,
+        sectorCount: Int = 1,
+        currentSectorIndex: Int = 0,
+    ): TelemetryFrame = TelemetryFrame(
         session = SessionFrame(
             status = SimStatus.LIVE,
             track = TrackInfo(
                 trackId = "spa_gp",
                 trackName = "Spa GP",
-                sectorCount = 1,
+                sectorCount = sectorCount,
             ),
         ),
         lap = LapFrame(
             currentLapIndex = 1,
-            sectorCount = 1,
-            currentSectorIndex = 0,
+            sectorCount = sectorCount,
+            currentSectorIndex = currentSectorIndex,
         ),
         car = CarFrame(
             speedKmh = 120f,
             worldPosition = Vec3(x, 0f, 1f),
             velocity = Vec3(1f, 0f, 0f),
         ),
-        timestampNs = index.toLong() + 1L,
+        timestampNs = (index.toLong() + 1L) * FRAME_INTERVAL_NS,
     )
+
+    private companion object {
+
+        const val FRAME_INTERVAL_NS = 200_000_000L
+    }
 
     private class FakeTelemetryLifecycle : TelemetryLifecycle {
 

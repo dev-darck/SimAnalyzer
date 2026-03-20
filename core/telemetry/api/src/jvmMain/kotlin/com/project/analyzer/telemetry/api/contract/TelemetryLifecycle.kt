@@ -1,21 +1,6 @@
 package com.project.analyzer.telemetry.api.contract
 
-import com.project.analyzer.telemetry.api.model.TelemetryFrame
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
-
-public interface TelemetryLifecycle {
-
-    public val frames: SharedFlow<TelemetryFrame>
-
-    /**
-     * Flow of lifecycle events (SimConnected, SessionStarted, SessionPaused, LapStarted, etc.)
-     */
-    public val events: Flow<TelemetryLifecycleEvent>
-
-    public suspend fun finishTelemetry()
-    public suspend fun launchTelemetry()
-}
+public interface TelemetryLifecycle : TelemetryReadSource, TelemetryRuntimeController
 
 public sealed interface TelemetryLifecycleEvent {
     public data object SimConnected : TelemetryLifecycleEvent

@@ -44,7 +44,12 @@ class AcMapper(
         val calibration = lapAnalyzer.loadCalibration(normalizedTrackId)
         val sectorCountOverride = calibration?.sectors?.size?.coerceAtLeast(1)
         val lapSnapshot = if (calibration != null) {
-            lapAnalyzer.processPhysicsFrame(snapshot.timestampNs, physics)
+            lapAnalyzer.processPhysicsFrame(
+                timestampNs = snapshot.timestampNs,
+                physics = physics,
+                sectorIndexHint0Based = graphics.currentSectorIndex.takeIf { it >= 0 },
+                lastSectorTimeHintMs = graphics.lastSectorTime.takeIf { it > 0 },
+            )
             lapAnalyzer.getSnapshot(snapshot.timestampNs)
         } else {
             null

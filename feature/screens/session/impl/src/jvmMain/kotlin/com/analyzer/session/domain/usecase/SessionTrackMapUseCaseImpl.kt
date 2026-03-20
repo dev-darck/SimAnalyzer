@@ -1,6 +1,5 @@
 package com.analyzer.session.domain.usecase
 
-import com.analyzer.session.domain.model.SessionListDomainItem
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
@@ -26,7 +25,7 @@ internal class SessionTrackMapUseCaseImpl(
     private val ioDispatcher: CoroutineDispatcher,
 ) : SessionTrackMapUseCase {
 
-    override suspend fun loadTrackMaps(items: Collection<SessionListDomainItem>): Map<String, TrackMapData> =
+    override suspend fun loadTrackMaps(items: Collection<SessionTrackMapIdentity>): Map<String, TrackMapData> =
         withContext(
             ioDispatcher,
         ) {

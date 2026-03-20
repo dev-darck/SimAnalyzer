@@ -159,6 +159,82 @@ class TrackCalibrationStoreRepositoryTest {
     }
 
     @Test
+    fun `load resolves ac evo imported aliases to bundled calibration ids`() = runTest {
+        val root = createTempDirectory("track-calibration-evo-alias").toFile()
+        try {
+            val repository = TrackCalibrationStoreRepository(
+                json = json,
+                appDirectories = root.asAppDirectories(),
+                ioDispatcher = StandardTestDispatcher(testScheduler),
+            )
+            data class Case(
+                val queryTrackId: String,
+                val queryLayoutId: String?,
+                val expectedTrackId: String,
+                val expectedLayoutId: String?,
+            )
+
+            val cases = listOf(
+                Case("brands_hatch_gp", "gp", "brands_hatch_gp", "gp"),
+                Case("brands_hatch_indy", "indy", "brands_hatch_indy", "indy"),
+                Case("cota_gp", "gp", "circuit_of_the_americas_gp", "gp"),
+                Case("cota_national", "national", "circuit_of_the_americas_national", "national"),
+                Case("donington_grand_prix", "grand_prix", "donington_park_gp", "gp"),
+                Case("donington_national", "national", "donington_park_national", "national"),
+                Case("fuji_gp", "gp", "fuji_gp", "gp"),
+                Case("fuji_gp_short", "gp_short", "fuji_gp_short", "gp_short"),
+                Case("imola", "imola", "imola_gp", "gp"),
+                Case("laguna_seca", "laguna_seca", "laguna_seca_gp", "gp"),
+                Case("monza_gp", "gp", "monza_gp", "gp"),
+                Case("mount_panorama_track_layout", "track_layout", "mount_panorama_gp", "gp"),
+                Case("nurburgring_24h", "24h", "nurburgring_24h", "24h"),
+                Case("nurburgring_gp_strecke", "gp_strecke", "nurburgring_gp_strecke", "gp_strecke"),
+                Case("nurburgring_sprint", "sprint", "nurburgring_sprint", "sprint"),
+                Case("oulton_park_fosters", "fosters", "oulton_park_fosters", "fosters"),
+                Case("oulton_park_international", "international", "oulton_park_international", "international"),
+                Case("paul_ricard_3a", "3a", "paul_ricard_3a", "3a"),
+                Case("paul_ricard_3c", "3c", "paul_ricard_3c", "3c"),
+                Case("redbull_ring_gp", "gp", "redbull_ring_gp", "gp"),
+                Case("redbull_ring_national", "national", "redbull_ring_national", "national"),
+                Case("road_atlanta_gp", "gp", "road_atlanta_gp", "gp"),
+                Case("spa_gp", "gp", "spa_gp", "gp"),
+                Case("suzuka_east", "east", "suzuka_east", "east"),
+                Case("suzuka_gp", "gp", "suzuka_gp", "gp"),
+                Case("suzuka_west", "west", "suzuka_west", "west"),
+                Case("watkins_glen_gp", "gp", "watkins_glen_gp", "gp"),
+                Case("watkins_glen_short_inner_loop", "short_inner_loop", "watkins_glen_short_inner_loop", "short_inner_loop"),
+            )
+
+            cases
+                .distinctBy { it.expectedTrackId to it.expectedLayoutId.orEmpty() }
+                .forEach { entry ->
+                    repository.save(
+                        calibration = calibration(
+                            trackId = entry.expectedTrackId,
+                            trackName = entry.expectedTrackId,
+                            layoutId = entry.expectedLayoutId,
+                            source = TrackCalibrationSource.GAME,
+                        ),
+                        source = TrackCalibrationSource.GAME,
+                    )
+                }
+
+            cases.forEach { entry ->
+                val resolved = repository.load(
+                    trackId = entry.queryTrackId,
+                    layoutId = entry.queryLayoutId,
+                )
+
+                assertNotNull(resolved, "Expected calibration for ${entry.queryTrackId}/${entry.queryLayoutId.orEmpty()}")
+                assertEquals(entry.expectedTrackId, resolved.trackId)
+                assertEquals(entry.expectedLayoutId, resolved.layoutId)
+            }
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun `loadAll returns calibrations from app folder only`() = runTest {
         val root = createTempDirectory("track-calibration-load-all").toFile()
         try {
