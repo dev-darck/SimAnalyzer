@@ -8,7 +8,7 @@ moduleImpl {
 
     dependencies {
         projects.core.di.api.jvmImpl
-        projects.core.telemetry.api.jvmImpl
+        projects.core.telemetry.runtime.api.jvmImpl
         projects.core.navigation.api.jvmImpl
         projects.core.math.jvmImpl
         projects.core.leak.api.jvmImpl
@@ -19,6 +19,5 @@ moduleImpl {
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
-        lib.navigation3.runtime.jvmImpl
     }
 }

@@ -435,11 +435,7 @@ private fun TrayMenuItem(
 }
 
 @Composable
-private fun StatusPill(
-    text: String,
-    background: Color,
-    foreground: Color
-) {
+private fun StatusPill(text: String, background: Color, foreground: Color) {
     Box(
         modifier = Modifier
             .clip(SimAnalyzerTheme.corners.pill)

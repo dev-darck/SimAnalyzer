@@ -302,6 +302,7 @@ internal class Rf2VehicleTelemetry : Pack4Structure() {
     var expansion: ByteArray = ByteArray(111)
 
     @JvmField
+    @Suppress("UNCHECKED_CAST")
     var wheels: Array<Rf2Wheel> = Rf2Wheel().toArray(4) as Array<Rf2Wheel>
 
     public companion object {

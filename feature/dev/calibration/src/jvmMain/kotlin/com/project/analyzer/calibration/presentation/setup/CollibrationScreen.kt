@@ -7,16 +7,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -67,9 +63,10 @@ import com.project.analyzer.feature.dev.calibration.Res.calibration_track_identi
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last_saved
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.adaptive.ResponsiveGridMode
+import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import com.project.analyzer.ui.modifier.TestTags
 import com.project.analyzer.ui.modifier.uiTestTag
-import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -92,30 +89,27 @@ internal fun CalibrationContent(
     onVerify: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val screenScrollState = rememberScrollState()
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background),
+    ResponsiveScreen(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        verticalSpacing = 12.dp,
+        gridMode = ResponsiveGridMode.Grid,
+        mediumColumns = 1,
+        expandedColumns = 1,
+        backgroundColor = SimAnalyzerTheme.material.background,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(screenScrollState)
-                .padding(16.dp)
-                .padding(end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        item(key = "calibration-header", isContentFull = true) {
             CalibrationHeader(state)
-
+        }
+        item(key = "calibration-track-identity", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_track_identity_title),
                 subtitle = stringResource(Res.string.calibration_track_identity_subtitle),
             ) {
                 TrackNameBlock(state) { dispatchEvent(CalibrationIntent.TrackNameChanged(it)) }
             }
-
+        }
+        item(key = "calibration-settings", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_capture_settings_title),
                 subtitle = stringResource(Res.string.calibration_capture_settings_subtitle),
@@ -126,7 +120,8 @@ internal fun CalibrationContent(
                     onRadius = { dispatchEvent(CalibrationIntent.TriggerRadiusChanged(it)) },
                 )
             }
-
+        }
+        item(key = "calibration-gates", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_gate_capture_title),
                 subtitle = stringResource(Res.string.calibration_gate_capture_subtitle),
@@ -145,7 +140,8 @@ internal fun CalibrationContent(
                     dispatch = dispatchEvent,
                 )
             }
-
+        }
+        item(key = "calibration-actions", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_actions_title),
                 subtitle = stringResource(Res.string.calibration_actions_subtitle),
@@ -174,7 +170,8 @@ internal fun CalibrationContent(
                     MessageBanner(message)
                 }
             }
-
+        }
+        item(key = "calibration-saved", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_saved_calibrations_title),
                 subtitle = stringResource(Res.string.calibration_saved_calibrations_subtitle),
@@ -185,8 +182,9 @@ internal fun CalibrationContent(
                     onVerify = onVerify,
                 )
             }
-
-            state.debugTelemetry?.let { debugText ->
+        }
+        state.debugTelemetry?.let { debugText ->
+            item(key = "calibration-debug-telemetry", isContentFull = true) {
                 CalibrationSectionCard(
                     title = stringResource(Res.string.calibration_live_telemetry_title),
                     subtitle = stringResource(Res.string.calibration_live_telemetry_subtitle),
@@ -212,13 +210,6 @@ internal fun CalibrationContent(
                 }
             }
         }
-        AppVerticalScrollbar(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .padding(vertical = 6.dp),
-            adapter = com.project.analyzer.ui.scrollbar.AppScrollbarAdapter(rememberScrollbarAdapter(screenScrollState)),
-        )
     }
 }
 

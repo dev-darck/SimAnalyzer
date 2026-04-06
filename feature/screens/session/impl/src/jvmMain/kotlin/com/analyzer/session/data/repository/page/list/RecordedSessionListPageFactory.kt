@@ -208,32 +208,43 @@ internal class RecordedSessionListPageFactory {
     private fun sessionSummaryComparator(sort: RecordedSessionSummarySort): Comparator<RecordedSessionSummary> =
         when (sort) {
             RecordedSessionSummarySort.StartedAtDesc -> compareByDescending(RecordedSessionSummary::startedAtMs)
+
             RecordedSessionSummarySort.StartedAtAsc -> compareBy(RecordedSessionSummary::startedAtMs)
+
             RecordedSessionSummarySort.GameAsc -> compareByLabel(true) { summary ->
                 gameLabel(normalizeGameId(summary.gameId))
             }
+
             RecordedSessionSummarySort.GameDesc -> compareByLabel(false) { summary ->
                 gameLabel(normalizeGameId(summary.gameId))
             }
+
             RecordedSessionSummarySort.TrackAsc -> compareByLabel(true) { summary ->
                 summary.trackName.toDisplayTrackLabel(trackId = summary.trackId, layoutId = summary.layoutId)
             }
+
             RecordedSessionSummarySort.TrackDesc -> compareByLabel(false) { summary ->
                 summary.trackName.toDisplayTrackLabel(trackId = summary.trackId, layoutId = summary.layoutId)
             }
+
             RecordedSessionSummarySort.CarAsc -> compareByLabel(true) { summary ->
                 summary.carName.toDisplayCarLabel(summary.carModel)
             }
+
             RecordedSessionSummarySort.CarDesc -> compareByLabel(false) { summary ->
                 summary.carName.toDisplayCarLabel(summary.carModel)
             }
+
             RecordedSessionSummarySort.LapCountAsc -> compareBy<RecordedSessionSummary> { it.lapCount }
                 .thenByDescending(RecordedSessionSummary::startedAtMs)
+
             RecordedSessionSummarySort.LapCountDesc -> compareByDescending<RecordedSessionSummary> { it.lapCount }
                 .thenByDescending(RecordedSessionSummary::startedAtMs)
+
             RecordedSessionSummarySort.BestLapAsc -> compareBy<RecordedSessionSummary> {
                 it.bestLapTimeMs ?: Int.MAX_VALUE
             }.thenByDescending(RecordedSessionSummary::startedAtMs)
+
             RecordedSessionSummarySort.BestLapDesc -> compareBy<RecordedSessionSummary> { it.bestLapTimeMs == null }
                 .thenByDescending { it.bestLapTimeMs ?: Int.MIN_VALUE }
                 .thenByDescending(RecordedSessionSummary::startedAtMs)

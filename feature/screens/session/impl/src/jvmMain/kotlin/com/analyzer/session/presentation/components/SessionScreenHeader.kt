@@ -76,7 +76,10 @@ internal fun SessionScreenHeader(
                     value = state.searchQuery,
                     placeholder = stringResource(Res.string.session_search_placeholder),
                     onValueChange = { onIntent(SessionListIntent.ChangeSearch(it)) },
-                    modifier = Modifier.widthIn(min = 220.dp, max = 320.dp),
+                    modifier = Modifier.widthIn(
+                        min = SESSION_HEADER_SEARCH_MIN_WIDTH,
+                        max = SESSION_HEADER_SEARCH_MAX_WIDTH,
+                    ),
                 )
             }
         }
@@ -84,6 +87,8 @@ internal fun SessionScreenHeader(
 }
 
 private val SESSION_HEADER_COMPACT_BREAKPOINT = 960.dp
+private val SESSION_HEADER_SEARCH_MIN_WIDTH = 272.dp
+private val SESSION_HEADER_SEARCH_MAX_WIDTH = 320.dp
 
 @Composable
 private fun SessionFiltersStrip(

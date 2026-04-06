@@ -13,13 +13,12 @@ moduleImpl {
         projects.core.navigation.api.jvmImpl
         projects.core.theme.jvmImpl
         projects.core.ui.jvmImpl
-        projects.core.telemetry.api.jvmImpl
+        projects.core.telemetry.runtime.api.jvmImpl
         projects.core.preference.api.jvmImpl
         projects.feature.dev.calibration.jvmImpl
         projects.core.math.jvmImpl
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
-        lib.navigation3.runtime.jvmImpl
     }
 }

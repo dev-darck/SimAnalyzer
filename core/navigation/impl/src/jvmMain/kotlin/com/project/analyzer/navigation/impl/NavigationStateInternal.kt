@@ -1,7 +1,11 @@
 package com.project.analyzer.navigation.impl
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.savedstate.compose.serialization.serializers.MutableStateSerializer
 import androidx.savedstate.compose.serialization.serializers.SnapshotStateMapSerializer
@@ -14,49 +18,33 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.reflect.KClass
 
+@Stable
 @Serializable
-class NavigationStateInternal<T : Route>(
+internal class NavigationStateInternal(
     val startTopLevel: Root,
 
     @Serializable(with = SnapshotStateMapSerializer::class)
-    private val stacks: SnapshotStateMap<Root, BackStack<T>>,
+    private val stacks: SnapshotStateMap<Root, BackStack<NavRouteKey>>,
 
     @Serializable(with = MutableStateSerializer::class)
     private val currentTopLevelState: MutableState<Root> = mutableStateOf(startTopLevel),
-) : NavigationState<T> {
+) : NavigationState<Route> {
 
     private sealed interface ForwardAction {
-        data class PushRoute(val topLevel: Root, val route: Route) : ForwardAction
+        data class PushRoute(val topLevel: Root, val routeKey: NavRouteKey) : ForwardAction
         data class SwitchTopLevel(val topLevel: Root) : ForwardAction
     }
 
     @Transient
-    private val forwardValidators: MutableMap<KClass<out T>, (T) -> Boolean> = mutableMapOf()
+    private val routeKeyFactoryState: MutableState<((Route) -> NavRouteKey)?> = mutableStateOf(null)
 
     @Transient
-    private val forwardActions: ArrayDeque<ForwardAction> = ArrayDeque()
+    private val forwardValidators: SnapshotStateMap<KClass<out Route>, (Route) -> Boolean> = mutableStateMapOf()
 
-    override val isCurrentRouteRoot: Boolean
-        get() = backStack.last().isRoot
+    @Transient
+    private val forwardActions: SnapshotStateList<ForwardAction> = mutableStateListOf()
 
-    override val canGoForward: Boolean
-        get() {
-            val nextAction = forwardActions.lastOrNull() ?: return false
-            return when (nextAction) {
-                is ForwardAction.SwitchTopLevel -> true
-
-                is ForwardAction.PushRoute -> {
-                    val validator = forwardValidators[nextAction.route::class]
-                    @Suppress("UNCHECKED_CAST")
-                    validator?.invoke(nextAction.route as T) ?: true
-                }
-            }
-        }
-
-    override val currentTopLevel: Root
-        get() = currentTopLevelState.value
-
-    override val backStack: ImmutableList<T>
+    internal val navBackStack: ImmutableList<NavRouteKey>
         get() {
             val current = currentTopLevelState.value
             val currentStack = stack(current)
@@ -72,76 +60,97 @@ class NavigationStateInternal<T : Route>(
             return StartPlusStack(startRoot, currentStack).toImmutableList()
         }
 
+    override val backStack: ImmutableList<Route>
+        get() = navBackStack.map(NavRouteKey::route).toImmutableList()
+
+    override val isCurrentRouteRoot: Boolean
+        get() = navBackStack.last().route.isRoot
+
+    override val canGoForward: Boolean
+        get() {
+            val nextAction = forwardActions.lastOrNull() ?: return false
+            return when (nextAction) {
+                is ForwardAction.SwitchTopLevel -> true
+                is ForwardAction.PushRoute -> {
+                    val route = nextAction.routeKey.route
+                    val validator = forwardValidators[route::class]
+                    validator?.invoke(route) ?: true
+                }
+            }
+        }
+
+    override val currentTopLevel: Root
+        get() = currentTopLevelState.value
+
     override fun switchTopLevel(topLevel: Root) {
-        val current = currentTopLevel
-        if (current == topLevel) return
+        if (currentTopLevel == topLevel) return
 
         clearForward()
-
         currentTopLevelState.value = topLevel
 
         require(stack(topLevel).isNotEmpty()) { "TopLevel=$topLevel has empty stack" }
     }
 
-    override fun navigate(route: T) {
+    override fun navigate(route: Route) {
         clearForward()
 
-        val tl = route.topLevel
-        if (currentTopLevelState.value != tl) {
-            currentTopLevelState.value = tl
+        val topLevel = route.topLevel
+        if (currentTopLevelState.value != topLevel) {
+            currentTopLevelState.value = topLevel
         }
 
-        val stack = stacks.getValue(tl)
+        val stack = stack(topLevel)
+        val routeKey = routeKey(route)
 
         if (route.isRoot) {
             if (stack.isEmpty()) {
-                stack.add(route)
+                stack.add(routeKey)
             } else {
-                stack[0] = route
+                stack[0] = routeKey
                 while (stack.size > 1) stack.removeLast()
             }
             return
         }
 
-        stack.add(route)
+        stack.add(routeKey)
     }
 
-    override fun navigateToTopLevel(route: T) {
+    override fun navigateToTopLevel(route: Route) {
         clearForward()
 
-        val tl = route.topLevel
-        if (currentTopLevelState.value != tl) {
-            currentTopLevelState.value = tl
+        val topLevel = route.topLevel
+        if (currentTopLevelState.value != topLevel) {
+            currentTopLevelState.value = topLevel
         }
 
         if (route.isRoot) {
-            setRoot(root = route)
+            setRoot(route)
             return
         }
 
-        stacks.getValue(tl).add(route)
+        stack(topLevel).add(routeKey(route))
     }
 
-    override fun registerForwardValidator(route: KClass<out T>, validator: (T) -> Boolean) {
+    override fun registerForwardValidator(route: KClass<out Route>, validator: (Route) -> Boolean) {
         forwardValidators[route] = validator
     }
 
-    override fun unregisterForwardValidator(route: KClass<out T>) {
+    override fun unregisterForwardValidator(route: KClass<out Route>) {
         forwardValidators.remove(route)
     }
 
     override fun handleBack(): Boolean {
-        val tl = currentTopLevelState.value
-        val stack = stacks.getValue(tl)
+        val topLevel = currentTopLevelState.value
+        val stack = stack(topLevel)
 
         if (stack.size > 1) {
             val popped = stack.removeLast()
-            forwardActions.addLast(ForwardAction.PushRoute(topLevel = tl, route = popped))
+            forwardActions.addLast(ForwardAction.PushRoute(topLevel = topLevel, routeKey = popped))
             return true
         }
 
-        if (tl != startTopLevel) {
-            forwardActions.addLast(ForwardAction.SwitchTopLevel(topLevel = tl))
+        if (topLevel != startTopLevel) {
+            forwardActions.addLast(ForwardAction.SwitchTopLevel(topLevel = topLevel))
             currentTopLevelState.value = startTopLevel
             return true
         }
@@ -153,15 +162,15 @@ class NavigationStateInternal<T : Route>(
         val action = forwardActions.lastOrNull() ?: return false
 
         if (action is ForwardAction.PushRoute) {
-            val validator = forwardValidators[action.route::class]
-            @Suppress("UNCHECKED_CAST")
-            if (validator?.invoke(action.route as T) == false) {
-                forwardActions.removeLast()
+            val route = action.routeKey.route
+            val validator = forwardValidators[route::class]
+            if (validator?.invoke(route) == false) {
+                forwardActions.removeAt(forwardActions.lastIndex)
                 return handleForward()
             }
         }
 
-        forwardActions.removeLast()
+        forwardActions.removeAt(forwardActions.lastIndex)
         return when (action) {
             is ForwardAction.SwitchTopLevel -> {
                 currentTopLevelState.value = action.topLevel
@@ -169,37 +178,44 @@ class NavigationStateInternal<T : Route>(
             }
 
             is ForwardAction.PushRoute -> {
-                val tl = action.topLevel
-                currentTopLevelState.value = tl
-                val stack = stacks.getValue(tl)
-                @Suppress("UNCHECKED_CAST")
-                stack.add(action.route as T)
+                val topLevel = action.topLevel
+                currentTopLevelState.value = topLevel
+                stack(topLevel).add(action.routeKey)
                 true
             }
         }
     }
 
-    private fun stack(topLevel: Root): BackStack<T> = stacks.getValue(topLevel)
+    internal fun bindRouteKeyFactory(factory: (Route) -> NavRouteKey): NavigationStateInternal = apply {
+        routeKeyFactoryState.value = factory
+    }
+
+    private fun stack(topLevel: Root): BackStack<NavRouteKey> = stacks.getValue(topLevel)
+
+    private fun routeKey(route: Route): NavRouteKey =
+        routeKeyFactoryState.value?.invoke(route)
+            ?: error("NavigationStateInternal is not bound to a NavRouteKey factory")
 
     private fun clearForward() {
         if (forwardActions.isNotEmpty()) forwardActions.clear()
     }
 
-    private fun setRoot(root: T, resetStack: Boolean = true, switchToTopLevel: Boolean = true) {
+    private fun setRoot(root: Route, resetStack: Boolean = true, switchToTopLevel: Boolean = true) {
         require(root.isRoot) { "setRoot expects a root route, got=$root" }
 
-        val tl = root.topLevel
-        val stack = stacks.getValue(tl)
+        val topLevel = root.topLevel
+        val stack = stack(topLevel)
+        val routeKey = routeKey(root)
 
         if (resetStack) {
             stack.clear()
-            stack.add(root)
+            stack.add(routeKey)
         } else {
-            if (stack.isEmpty()) stack.add(root) else stack[0] = root
+            if (stack.isEmpty()) stack.add(routeKey) else stack[0] = routeKey
         }
 
         if (switchToTopLevel) {
-            currentTopLevelState.value = tl
+            currentTopLevelState.value = topLevel
         }
     }
 }
@@ -209,5 +225,6 @@ private class StartPlusStack<T>(private val startRoot: T, private val tail: List
     RandomAccess {
 
     override val size: Int get() = 1 + tail.size
+
     override fun get(index: Int): T = if (index == 0) startRoot else tail[index - 1]
 }

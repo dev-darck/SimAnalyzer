@@ -167,10 +167,7 @@ internal fun TelemetryAcquisitionBlock(
 }
 
 @Composable
-private fun RecordingEnabledSection(
-    enabled: Boolean,
-    onEnabledChange: (Boolean) -> Unit
-) {
+private fun RecordingEnabledSection(enabled: Boolean, onEnabledChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -196,10 +193,7 @@ private fun RecordingEnabledSection(
 }
 
 @Composable
-private fun SamplingRateSection(
-    samplingRateHz: Int,
-    onSamplingRateChange: (Int) -> Unit
-) {
+private fun SamplingRateSection(samplingRateHz: Int, onSamplingRateChange: (Int) -> Unit) {
     var sliderPosition by remember(samplingRateHz) {
         mutableFloatStateOf(samplingRateHz.toFloat())
     }
@@ -273,10 +267,7 @@ private fun SamplingRateSection(
 }
 
 @Composable
-private fun MaxRecordedLapsSection(
-    maxRecordedLaps: Int,
-    onMaxRecordedLapsChange: (Int) -> Unit
-) {
+private fun MaxRecordedLapsSection(maxRecordedLaps: Int, onMaxRecordedLapsChange: (Int) -> Unit) {
     var sliderPosition by remember(maxRecordedLaps) {
         mutableFloatStateOf(maxRecordedLaps.toFloat())
     }

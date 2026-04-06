@@ -29,6 +29,11 @@ internal fun Project.configureDetekt(block: DetektExtension.() -> Unit = {}) {
 
     tasks.withType<Detekt>().configureEach {
         exclude("**/build/**", "**/build/generated/**")
+        exclude { fileTreeElement ->
+            fileTreeElement.file.path
+                .replace('\\', '/')
+                .contains("/build/")
+        }
         autoCorrect.set(true)
         reports {
             html.required.set(true)

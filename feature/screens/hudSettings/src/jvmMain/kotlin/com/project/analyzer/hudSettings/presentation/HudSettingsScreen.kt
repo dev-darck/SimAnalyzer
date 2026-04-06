@@ -147,8 +147,7 @@ private fun HudSettingsPanel(panel: HudPanel?, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(16.dp)
-                .padding(end = 10.dp),
+                .padding(16.dp),
         ) {
             Text(
                 text = stringResource(Res.string.hud_settings_title),
@@ -229,8 +228,7 @@ private fun HudListPanel(
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = 10.dp),
+                    .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 items(panels, key = { it.id }) { panel ->

@@ -251,8 +251,7 @@ private fun OverviewPanel(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(20.dp)
-                .padding(end = 10.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Card(

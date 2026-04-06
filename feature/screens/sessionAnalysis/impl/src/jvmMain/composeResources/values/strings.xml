@@ -1,0 +1,473 @@
+<resources>
+    <string name="session_analysis_title">Telemetry Analysis</string>
+    <string name="session_analysis_loading_title">Telemetry Analysis</string>
+    <string name="session_analysis_loading_message">Preparing reference lap, timing deltas and driver coaching cues...
+    </string>
+    <string name="session_analysis_error_title">Telemetry Analysis</string>
+    <string name="session_analysis_error_unavailable">Telemetry analysis is not available for this session yet.</string>
+    <string name="session_analysis_overview_subtitle">Read the session like a rider: pick a segment, compare against the
+        reference lap and surface the zones that actually cost time.
+    </string>
+    <string name="session_analysis_session_filter">Session</string>
+    <string name="session_analysis_lap_filter">Lap</string>
+    <string name="session_analysis_type_label">Type</string>
+    <string name="session_analysis_car_label">Car</string>
+    <string name="session_analysis_track_label">Track</string>
+    <string name="session_analysis_class_label">Class</string>
+    <string name="session_analysis_compound_label">Compound</string>
+    <string name="session_analysis_temps_label">Temps</string>
+    <string name="session_analysis_temps_value">%1$s air / %2$s track</string>
+    <string name="session_analysis_best_lap">Best Lap</string>
+    <string name="session_analysis_selected_lap">Selected Lap</string>
+    <string name="session_analysis_lap_time">Lap Time</string>
+    <string name="session_analysis_valid_laps">Valid Laps</string>
+    <string name="session_analysis_top_speed">Top Speed</string>
+    <string name="session_analysis_peak_brake">Peak Brake</string>
+    <string name="session_analysis_peak_core">Peak Core</string>
+    <string name="session_analysis_samples">Samples</string>
+    <string name="session_analysis_workspace_title">Lap Workspace</string>
+    <string name="session_analysis_workspace_subtitle">Reference lap versus selected lap, pinned sample inspection and a
+        scrubber with real lap and sector markers.
+    </string>
+    <string name="session_analysis_screen_building_title">Building session analysis</string>
+    <string name="session_analysis_screen_building_message">Loading reference lap, telemetry alignment and coaching
+        insights.
+    </string>
+    <string name="session_analysis_screen_unavailable_title">Session analysis unavailable</string>
+    <string name="session_analysis_screen_unavailable_message">The offline telemetry bundle is missing or incomplete for
+        this session.
+    </string>
+    <string name="session_analysis_screen_empty_title">No telemetry loaded</string>
+    <string name="session_analysis_screen_empty_message">Select a recorded session with valid lap telemetry to open
+        analysis.
+    </string>
+    <string name="session_analysis_screen_updating_title">Updating analysis</string>
+    <string name="session_analysis_screen_updating_message">Keeping the current workspace visible while new data is
+        prepared.
+    </string>
+    <string name="session_analysis_workspace_track_position">Track Pos</string>
+    <string name="session_analysis_workspace_sector">Sector</string>
+    <string name="session_analysis_workspace_sample">Sample</string>
+    <string name="session_analysis_workspace_timeline">Timeline</string>
+    <string name="session_analysis_workspace_map_empty">Track map is not available for this session.</string>
+    <string name="session_analysis_workspace_empty_lap">No telemetry samples are available for the selected lap.
+    </string>
+    <string name="session_analysis_workspace_scrubber_value">%1$d / %2$d</string>
+    <string name="session_analysis_workspace_hover_hint">Hover to preview. Click the map to pin the current point.
+    </string>
+    <string name="session_analysis_workspace_locked_hint">Point is pinned. Move the slider or click again to release
+        it.
+    </string>
+    <string name="session_analysis_workspace_lock_action">Pin Current Point</string>
+    <string name="session_analysis_workspace_unlock_action">Release Pinned Point</string>
+    <string name="session_analysis_workspace_locked_title">Pinned Point</string>
+    <string name="session_analysis_workspace_live_title">Live Preview</string>
+    <string name="session_analysis_workspace_selected_lap_short">Lap %1$d</string>
+    <string name="session_analysis_telemetry_title">Detailed Telemetry</string>
+    <string name="session_analysis_telemetry_inputs">Inputs</string>
+    <string name="session_analysis_telemetry_dynamics">Dynamics</string>
+    <string name="session_analysis_reference_title">Pinned Sample</string>
+    <string name="session_analysis_no_sample_title">No sample selected</string>
+    <string name="session_analysis_no_sample_message">Move across the timeline or the track to inspect a telemetry
+        sample.
+    </string>
+    <string name="session_analysis_metric_throttle">Throttle</string>
+    <string name="session_analysis_metric_brake">Brake</string>
+    <string name="session_analysis_metric_steer">Steer</string>
+    <string name="session_analysis_metric_speed">Speed</string>
+    <string name="session_analysis_metric_rpm">RPM</string>
+    <string name="session_analysis_metric_lateral_g">Lateral G</string>
+    <string name="session_analysis_metric_yaw_rate">Yaw Rate</string>
+    <string name="session_analysis_metric_delta">Delta</string>
+    <string name="session_analysis_metric_track_position">Track Position</string>
+    <string name="session_analysis_handling_title">Handling</string>
+    <string name="session_analysis_handling_neutral">Balance is currently inside the neutral window.</string>
+    <string name="session_analysis_handling_understeer">Front response is below steering demand in this zone.</string>
+    <string name="session_analysis_handling_oversteer">Rear rotation is exceeding steering demand in this zone.</string>
+    <string name="session_analysis_highlights_title">Highlights</string>
+    <string name="session_analysis_highlights_subtitle">Session-level takeaways with location and delta context on top
+        of the lap coach view.
+    </string>
+    <string name="session_analysis_highlights_empty_title">No highlights yet</string>
+    <string name="session_analysis_highlights_empty_message">This session does not have enough telemetry to surface
+        notable zones.
+    </string>
+    <string name="session_analysis_highlight_meta">%1$s Lap %2$d @ %3$d%%</string>
+    <string name="session_analysis_highlight_meta_no_position">%1$s Lap %2$d</string>
+    <string name="session_analysis_highlight_meta_lap">Lap %1$d</string>
+    <string name="session_analysis_highlight_meta_progress">%1$d%% through lap</string>
+    <string name="session_analysis_highlight_meta_start_finish">Start / finish</string>
+    <string name="session_analysis_highlight_meta_delta">Delta %1$s</string>
+    <string name="session_analysis_tyres_title">Tyres</string>
+    <string name="session_analysis_tyres_subtitle">Current tyre window, balance and brake load for the selected
+        sample.
+    </string>
+    <string name="session_analysis_tyres_no_sample">Select a telemetry sample to inspect tyre state.</string>
+    <string name="session_analysis_tyres_compound">Compound</string>
+    <string name="session_analysis_tyres_surface_window">Surface Window</string>
+    <string name="session_analysis_tyres_core_window">Core Window</string>
+    <string name="session_analysis_tyres_brake_window">Brake Window</string>
+    <string name="session_analysis_tyres_front_axle">Front Axle</string>
+    <string name="session_analysis_tyres_rear_axle">Rear Axle</string>
+    <string name="session_analysis_tyres_peak_brake">Brake Peak</string>
+    <string name="session_analysis_tyre_pressure">Pressure</string>
+    <string name="session_analysis_tyre_core">Core</string>
+    <string name="session_analysis_tyre_surface">Surface</string>
+    <string name="session_analysis_tyre_brake">Brake</string>
+    <string name="session_analysis_tyre_inner">Inner</string>
+    <string name="session_analysis_tyre_middle">Middle</string>
+    <string name="session_analysis_tyre_outer">Outer</string>
+    <string name="session_analysis_tyre_load">Load</string>
+    <string name="session_analysis_tyre_slip">Slip</string>
+    <string name="session_analysis_tyre_fl">FL</string>
+    <string name="session_analysis_tyre_fr">FR</string>
+    <string name="session_analysis_tyre_rl">RL</string>
+    <string name="session_analysis_tyre_rr">RR</string>
+    <string name="session_analysis_tyre_unknown">No data</string>
+    <string name="session_analysis_tyre_band_cold">Cold</string>
+    <string name="session_analysis_tyre_band_warming">Warming</string>
+    <string name="session_analysis_tyre_band_optimal">Optimal</string>
+    <string name="session_analysis_tyre_band_warm">Warm</string>
+    <string name="session_analysis_tyre_band_hot">Hot</string>
+    <string name="session_analysis_tyre_band_overheated">Overheated</string>
+    <string name="session_analysis_tyre_band_critical">Critical</string>
+    <string name="session_analysis_laps_title">Lap Summary</string>
+    <string name="session_analysis_laps_empty">No laps recorded for the selected session yet.</string>
+    <string name="session_analysis_lap_valid">Valid</string>
+    <string name="session_analysis_lap_invalid">Invalid</string>
+    <string name="session_analysis_lap_pit">Pit</string>
+    <string name="session_analysis_lap_incomplete">Incomplete</string>
+    <string name="session_analysis_lap_best_prefix">Lap %1$d</string>
+    <string name="session_analysis_lap_delta_none">--</string>
+    <string name="session_analysis_session_option">%1$s %2$s</string>
+    <string name="session_analysis_session_unknown">Session</string>
+    <string name="session_analysis_session_latest">Latest</string>
+    <string name="session_analysis_no_selection">--</string>
+    <string name="session_analysis_action_open">Analysis</string>
+    <string name="session_analysis_lap_label">Lap %1$d</string>
+    <string name="session_analysis_header_refresh">Refresh</string>
+    <string name="session_analysis_header_meta">%1$s • %2$s</string>
+    <string name="session_analysis_header_started">Started</string>
+    <string name="session_analysis_header_compare">Compare</string>
+    <string name="session_analysis_header_compare_value">%1$s vs %2$s</string>
+    <string name="session_analysis_header_cursor">Cursor</string>
+    <string name="session_analysis_header_cursor_live">Live</string>
+    <string name="session_analysis_header_cursor_pinned">Pinned</string>
+    <string name="session_analysis_header_biggest_loss">Biggest Loss</string>
+    <string name="session_analysis_header_sessions">Sessions</string>
+    <string name="session_analysis_diagnostic_overview_title">Diagnostic Overview</string>
+    <string name="session_analysis_diagnostic_overview_summary">Driving and setup signals for the current lap
+        selection.
+    </string>
+    <string name="session_analysis_diagnostic_overview_loading">Building driving and setup diagnostics.</string>
+    <string name="session_analysis_diagnostic_overview_pending">Signals detected, waiting for a stable summary.</string>
+    <string name="session_analysis_diagnostic_overview_empty">No diagnostic summary available yet.</string>
+    <string name="session_analysis_diagnostic_turns">%1$d turns</string>
+    <string name="session_analysis_diagnostic_loading_short">Loading</string>
+    <string name="session_analysis_diagnostic_cues">%1$d cues</string>
+    <string name="session_analysis_diagnostic_score_band_consistent">Stable</string>
+    <string name="session_analysis_diagnostic_score_band_attention">Watch</string>
+    <string name="session_analysis_diagnostic_score_band_work">Work</string>
+    <string name="session_analysis_diagnostic_score_overall">Overall</string>
+    <string name="session_analysis_diagnostic_score_driving">Driving</string>
+    <string name="session_analysis_diagnostic_score_setup">Setup</string>
+    <string name="session_analysis_diagnostic_focus_driving">Driving Focus</string>
+    <string name="session_analysis_diagnostic_focus_setup">Setup Focus</string>
+    <string name="session_analysis_diagnostic_no_major_issue">No major issue isolated.</string>
+    <string name="session_analysis_diagnostic_corner_chip">T%1$d</string>
+    <string name="session_analysis_diagnostic_gain_chip">+%1$dms</string>
+    <string name="session_analysis_diagnostic_fix_prefix">Fix: %1$s</string>
+    <string name="session_analysis_hero_selected">Selected</string>
+    <string name="session_analysis_hero_reference">Reference</string>
+    <string name="session_analysis_hero_reference_lap">Ref %1$d</string>
+    <string name="session_analysis_hero_ideal">Ideal</string>
+    <string name="session_analysis_hero_focus_on">Focus On</string>
+    <string name="session_analysis_hero_focus_off">Focus Off</string>
+    <string name="session_analysis_hero_collapse">Collapse</string>
+    <string name="session_analysis_hero_expand">Expand</string>
+    <string name="session_analysis_hero_pinned">Pinned</string>
+    <string name="session_analysis_hero_position">Position</string>
+    <string name="session_analysis_hero_gear_rpm">Gear / RPM</string>
+    <string name="session_analysis_hero_fuel">Fuel</string>
+    <string name="session_analysis_track_focus_turn">Turn %1$d</string>
+    <string name="session_analysis_track_focus_score">Score %1$d</string>
+    <string name="session_analysis_highlight_title_top_speed">Top speed zone</string>
+    <string name="session_analysis_highlight_title_throttle">Throttle commitment</string>
+    <string name="session_analysis_graph_empty_title">Telemetry traces are unavailable</string>
+    <string name="session_analysis_graph_empty_message">This lap does not contain enough aligned telemetry samples to
+        render charts.
+    </string>
+    <string name="session_analysis_graph_title">Telemetry traces</string>
+    <string name="session_analysis_graph_subtitle">%1$s vs %2$s, aligned by distance around the lap. Positive gap means
+        the lap is behind reference.
+    </string>
+    <string name="session_analysis_graph_cursor_pinned">Cursor pinned</string>
+    <string name="session_analysis_graph_cursor_live">Cursor live</string>
+    <string name="session_analysis_graph_legend_lap">Lap</string>
+    <string name="session_analysis_graph_legend_ref">Ref</string>
+    <string name="session_analysis_graph_selection_pinned">Pinned</string>
+    <string name="session_analysis_graph_chart_gap_vs_ref">Gap vs ref</string>
+    <string name="session_analysis_graph_status_behind">Behind %1$s</string>
+    <string name="session_analysis_graph_status_ahead">Ahead %1$s</string>
+    <string name="session_analysis_graph_status_on_pace">On pace</string>
+    <string name="session_analysis_graph_tooltip_status">Status</string>
+    <string name="session_analysis_graph_tooltip_diff">Diff</string>
+    <string name="session_analysis_navigator_title">Lap browser</string>
+    <string name="session_analysis_navigator_subtitle">Switch segment and lap without losing the telemetry cursor.
+    </string>
+    <string name="session_analysis_navigator_section_sessions">Sessions</string>
+    <string name="session_analysis_navigator_section_laps">Laps</string>
+    <string name="session_analysis_navigator_section_focus_zones">Focus zones</string>
+    <string name="session_analysis_navigator_laps_hint">Tap a lap to open it. Use Set ref to compare it against another
+        lap.
+    </string>
+    <string name="session_analysis_navigator_compare_ready">Selected lap is ready against the current reference.
+    </string>
+    <string name="session_analysis_navigator_compare_pick_reference">Pick a reference lap first, then compare traces and
+        corner losses.
+    </string>
+    <string name="session_analysis_navigator_action_use_best_as_ref">Use best as ref</string>
+    <string name="session_analysis_navigator_action_use_best">Use best</string>
+    <string name="session_analysis_navigator_action_set_ref">Set ref</string>
+    <string name="session_analysis_navigator_badge_selected_ref">Selected ref</string>
+    <string name="session_analysis_navigator_badge_reference">Reference</string>
+    <string name="session_analysis_navigator_badge_selected">Selected</string>
+    <string name="session_analysis_navigator_badge_selected_ref_short">S/R</string>
+    <string name="session_analysis_navigator_badge_reference_short">REF</string>
+    <string name="session_analysis_navigator_badge_selected_short">SEL</string>
+    <string name="session_analysis_navigator_ref_action_short">SET</string>
+    <string name="session_analysis_navigator_badge_valid">Valid</string>
+    <string name="session_analysis_navigator_badge_invalid">Invalid</string>
+    <string name="session_analysis_navigator_info_selected">Selected</string>
+    <string name="session_analysis_navigator_info_reference">Reference</string>
+    <string name="session_analysis_navigator_info_best">Best</string>
+    <string name="session_analysis_navigator_history_label">History</string>
+    <string name="session_analysis_navigator_my_laps_label">My laps</string>
+    <string name="session_analysis_navigator_focus_label">Focus</string>
+    <string name="session_analysis_navigator_header_lap">Lap</string>
+    <string name="session_analysis_navigator_header_time">Time</string>
+    <string name="session_analysis_navigator_header_delta">Delta</string>
+    <string name="session_analysis_navigator_header_ref">Ref</string>
+    <string name="session_analysis_navigator_header_turn">Turn</string>
+    <string name="session_analysis_navigator_header_issue">Issue</string>
+    <string name="session_analysis_navigator_metric_gap_to_best">Gap to best</string>
+    <string name="session_analysis_navigator_metric_driver_score">Driver score</string>
+    <string name="session_analysis_navigator_focus_priority">Priority %1$d</string>
+    <string name="session_analysis_navigator_focus_zone_fallback">Current loss area</string>
+    <string name="session_analysis_navigator_score">Score %1$d</string>
+    <string name="session_analysis_inspector_title">Driver diagnosis</string>
+    <string name="session_analysis_inspector_subtitle">Read each card in order: watch this area, try the first change,
+        then decide if the fix is in driving or the car.
+    </string>
+    <string name="session_analysis_inspector_metric_lap">Lap</string>
+    <string name="session_analysis_inspector_metric_reference">Reference</string>
+    <string name="session_analysis_inspector_card_corner_breakdown">Corner breakdown</string>
+    <string name="session_analysis_inspector_corner_empty">No corner-level issues were isolated for this lap range.
+    </string>
+    <string name="session_analysis_inspector_corner_hint">Top card means the biggest loss. Tap a corner to pin it on the
+        map, then compare entry, apex and exit.
+    </string>
+    <string name="session_analysis_inspector_next_action">Next action</string>
+    <string name="session_analysis_inspector_label_watch">Watch</string>
+    <string name="session_analysis_inspector_label_change_first">Change first</string>
+    <string name="session_analysis_inspector_label_fix_in">Fix in</string>
+    <string name="session_analysis_inspector_label_why">Why this shows up</string>
+    <string name="session_analysis_inspector_turn">Turn %1$d</string>
+    <string name="session_analysis_inspector_score">Score</string>
+    <string name="session_analysis_diagnosis_setup">Setup</string>
+    <string name="session_analysis_diagnosis_mixed">Mixed</string>
+    <string name="session_analysis_diagnosis_driving">Driving</string>
+    <string name="session_analysis_inspector_card_setup_advice">Setup advice</string>
+    <string name="session_analysis_inspector_setup_score">Setup score</string>
+    <string name="session_analysis_inspector_setup_issues">Setup issues</string>
+    <string name="session_analysis_inspector_setup_empty">No repeated setup-limited pattern was strong enough to
+        recommend a chassis change yet.
+    </string>
+    <string name="session_analysis_inspector_card_lap_summary">Lap summary</string>
+    <string name="session_analysis_inspector_lap_delta">Lap delta</string>
+    <string name="session_analysis_inspector_consistency">Consistency</string>
+    <string name="session_analysis_inspector_card_sectors">Sectors</string>
+    <string name="session_analysis_inspector_selected">Selected</string>
+    <string name="session_analysis_inspector_reference">Reference</string>
+    <string name="session_analysis_inspector_card_tyre_windows">Tyre windows</string>
+    <string name="session_analysis_inspector_card_live_tyre_state">Live tyre state</string>
+    <string name="session_analysis_inspector_card_tyre_analytics">Tyre analytics</string>
+    <string name="session_analysis_inspector_surface_window">Surface window</string>
+    <string name="session_analysis_inspector_core_window">Core window</string>
+    <string name="session_analysis_inspector_brake_window">Brake window</string>
+    <string name="session_analysis_inspector_fl_core">FL core</string>
+    <string name="session_analysis_inspector_fr_core">FR core</string>
+    <string name="session_analysis_inspector_rl_core">RL core</string>
+    <string name="session_analysis_inspector_rr_core">RR core</string>
+    <string name="session_analysis_inspector_fl_pressure">FL pressure</string>
+    <string name="session_analysis_inspector_fr_pressure">FR pressure</string>
+    <string name="session_analysis_inspector_rl_pressure">RL pressure</string>
+    <string name="session_analysis_inspector_rr_pressure">RR pressure</string>
+    <string name="session_analysis_inspector_avg_core">Avg core</string>
+    <string name="session_analysis_inspector_avg_core_vs_ref">Avg core vs ref</string>
+    <string name="session_analysis_inspector_pressure_spread">Pressure spread</string>
+    <string name="session_analysis_inspector_hottest_corner">Hottest corner</string>
+    <string name="session_analysis_inspector_peak_slip">Peak slip</string>
+    <string name="session_analysis_inspector_card_current_point">Current point</string>
+    <string name="session_analysis_inspector_reference_speed">Reference speed</string>
+    <string name="session_analysis_inspector_reference_throttle">Reference throttle</string>
+    <string name="session_analysis_inspector_reference_brake">Reference brake</string>
+    <string name="session_analysis_inspector_reference_steer">Reference steer</string>
+    <string name="session_analysis_inspector_card_live_cursor">Live cursor</string>
+    <string name="session_analysis_inspector_pos">Pos</string>
+    <string name="session_analysis_inspector_tab_pace">Pace</string>
+    <string name="session_analysis_inspector_tab_corners">Corners</string>
+    <string name="session_analysis_inspector_tab_line">Line</string>
+    <string name="session_analysis_inspector_tab_setup">Setup</string>
+    <string name="session_analysis_inspector_tab_inputs">Inputs</string>
+    <string name="session_analysis_inspector_tab_tyres">Tyres</string>
+    <string name="session_analysis_setup_system_tyres">Tyres</string>
+    <string name="session_analysis_setup_system_aero">Aero</string>
+    <string name="session_analysis_setup_system_brakes">Brakes</string>
+    <string name="session_analysis_setup_system_suspension">Suspension</string>
+    <string name="session_analysis_setup_system_balance">Balance</string>
+    <string name="session_analysis_highlight_title_brake">Brake pressure zone</string>
+    <string name="session_analysis_highlight_title_time_loss">Time loss hotspot</string>
+    <string name="session_analysis_highlight_title_understeer">Understeer hotspot</string>
+    <string name="session_analysis_highlight_title_oversteer">Oversteer hotspot</string>
+    <string name="session_analysis_highlight_title_tyre_hot">Tyre overheating</string>
+    <string name="session_analysis_highlight_title_tyre_cold">Cold tyre zone</string>
+    <string name="session_analysis_highlight_description_top_speed">This is the fastest section in the selected session
+        segment.
+    </string>
+    <string name="session_analysis_highlight_description_throttle">Strong throttle application with the car already
+        committed through the section.
+    </string>
+    <string name="session_analysis_highlight_description_brake">Heavy brake pressure is concentrated in this braking
+        zone.
+    </string>
+    <string name="session_analysis_highlight_description_time_loss">This point is losing %1$d ms against the segment
+        benchmark.
+    </string>
+    <string name="session_analysis_highlight_description_time_loss_generic">This point is currently the biggest
+        time-loss area in the segment.
+    </string>
+    <string name="session_analysis_highlight_description_understeer">Front axle response is below steering demand
+        through this section.
+    </string>
+    <string name="session_analysis_highlight_description_oversteer">Rear rotation exceeds the steering request through
+        this section.
+    </string>
+    <string name="session_analysis_highlight_description_tyre_hot">Tyre temperature rises above the configured operating
+        window here.
+    </string>
+    <string name="session_analysis_highlight_description_tyre_cold">Tyres are still below the operating window in this
+        part of the lap.
+    </string>
+    <string name="session_analysis_highlight_meta_top_speed">Top Speed</string>
+    <string name="session_analysis_highlight_meta_throttle">Throttle</string>
+    <string name="session_analysis_highlight_meta_brake">Brake</string>
+    <string name="session_analysis_highlight_meta_time_loss">Time Loss</string>
+    <string name="session_analysis_highlight_meta_understeer">Understeer</string>
+    <string name="session_analysis_highlight_meta_oversteer">Oversteer</string>
+    <string name="session_analysis_highlight_meta_tyre_hot">Tyre Hot</string>
+    <string name="session_analysis_highlight_meta_tyre_cold">Tyre Cold</string>
+    <string name="session_analysis_session_info_section">Session Details</string>
+    <string name="session_analysis_tyres_info_section">Tyre Information</string>
+    <string name="session_analysis_no_selection_placeholder">--</string>
+    <string name="session_analysis_sector_short">S%1$d</string>
+    <string name="session_analysis_sector_note_telemetry_gap">Telemetry gap</string>
+    <string name="session_analysis_sector_note_calibration_gap">Calibration gap</string>
+    <string name="session_analysis_sector_note_on_target">On target</string>
+    <string name="session_analysis_sector_note_losing_time">Losing time</string>
+    <string name="session_analysis_summary_no_major_loss">No major loss</string>
+    <string name="session_analysis_generated_highlight_biggest_loss_title">Biggest loss zone</string>
+    <string name="session_analysis_generated_highlight_biggest_loss_description">The lap is %1$s off reference around
+        %2$s. Start here first.
+    </string>
+    <string name="session_analysis_generated_highlight_biggest_loss_recommendation">Open this point on the graph and
+        compare brake release, minimum speed and throttle pickup against reference.
+    </string>
+    <string name="session_analysis_generated_highlight_entry_overslowing_title">Entry overslowing</string>
+    <string name="session_analysis_generated_highlight_entry_overslowing_description">Reference carries %1$d km/h more
+        through %2$s. Brake release or turn-in is costing entry speed.
+    </string>
+    <string name="session_analysis_generated_highlight_entry_overslowing_recommendation">Release the brake a touch
+        earlier or reduce peak braking so the car reaches the apex with more speed.
+    </string>
+    <string name="session_analysis_generated_highlight_late_throttle_title">Late throttle pickup</string>
+    <string name="session_analysis_generated_highlight_late_throttle_description">Throttle is %1$d%% behind reference at
+        %2$s. Exit drive is delayed.
+    </string>
+    <string name="session_analysis_generated_highlight_late_throttle_recommendation">Open steering earlier and start a
+        progressive throttle pickup before the exit delta grows.
+    </string>
+    <string name="session_analysis_generated_highlight_brake_mismatch_title">Brake pressure mismatch</string>
+    <string name="session_analysis_generated_highlight_brake_mismatch_description">Brake trace diverges from reference
+        at %1$s. The pressure shape is moving the whole corner window.
+    </string>
+    <string name="session_analysis_generated_highlight_brake_mismatch_recommendation">Match the reference pressure shape
+        first, then adjust the braking marker only if the entry speed is still wrong.
+    </string>
+    <string name="session_analysis_coach_metric_brake_timing">Brake timing</string>
+    <string name="session_analysis_coach_metric_throttle_pickup">Throttle pickup</string>
+    <string name="session_analysis_coach_metric_line_deviation">Line deviation</string>
+    <string name="session_analysis_coach_metric_balance">Balance</string>
+    <string name="session_analysis_coach_metric_trail_braking">Trail braking</string>
+    <string name="session_analysis_coach_metric_coasting">Coasting</string>
+    <string name="session_analysis_coach_metric_tyre_management">Tyre management</string>
+    <string name="session_analysis_coach_metric_consistency">Consistency</string>
+    <string name="session_analysis_coach_metric_setup_confidence">Setup confidence</string>
+    <string name="session_analysis_coach_reference_lap">Reference lap %1$d %2$s</string>
+    <string name="session_analysis_coach_reference_lap_no_time">Reference lap %1$d</string>
+    <string name="session_analysis_coach_reference_lap_unavailable">Reference lap unavailable</string>
+    <string name="session_analysis_coach_phase_entry_timing">Entry timing</string>
+    <string name="session_analysis_coach_phase_exit_drive">Exit drive</string>
+    <string name="session_analysis_coach_phase_mid_corner_speed">Mid-corner speed</string>
+    <string name="session_analysis_coach_focus_loss_description">Main loss is around %1$s where the lap is %2$s off
+        reference%3$s.
+    </string>
+    <string name="session_analysis_coach_focus_loss_speed_down">and %1$d km/h down</string>
+    <string name="session_analysis_coach_focus_loss_speed_up">and %1$d km/h up</string>
+    <string name="session_analysis_coach_focus_exit_drive_description">Throttle is coming in later than the reference
+        lap, so the car leaves time on corner exit.
+    </string>
+    <string name="session_analysis_coach_focus_brake_timing_description">Brake onset is drifting away from the reference
+        markers, which shifts the whole corner entry window.
+    </string>
+    <string name="session_analysis_coach_focus_line_placement_title">Line placement</string>
+    <string name="session_analysis_coach_focus_line_placement_description">Car placement is moving away from the
+        reference line, so you are leaving track width unused in key zones.
+    </string>
+    <string name="session_analysis_coach_focus_balance_control_title">Balance control</string>
+    <string name="session_analysis_coach_focus_balance_control_description">The loaded parts of the lap show a
+        repeatable balance issue compared to the reference lap.
+    </string>
+    <string name="session_analysis_coach_focus_reference_close_title">Reference is close</string>
+    <string name="session_analysis_coach_focus_reference_close_description">Inputs, line and balance are broadly aligned
+        with the reference lap. Focus on repeating the same execution.
+    </string>
+    <string name="session_analysis_coach_insight_biggest_loss_zone">Biggest loss zone</string>
+    <string name="session_analysis_coach_insight_to_reference">to reference</string>
+    <string name="session_analysis_coach_speed_slower">slower</string>
+    <string name="session_analysis_coach_speed_faster">faster</string>
+    <string name="session_analysis_coach_insight_brake_marker_trend">Brake marker trend</string>
+    <string name="session_analysis_coach_braking_starts_earlier">Braking starts %1$s earlier than reference.</string>
+    <string name="session_analysis_coach_braking_starts_later">Braking starts %1$s later than reference.</string>
+    <string name="session_analysis_coach_insight_corner_exit_trend">Corner exit trend</string>
+    <string name="session_analysis_coach_throttle_commit_earlier">Throttle reaches commit %1$s earlier</string>
+    <string name="session_analysis_coach_throttle_commit_later">Throttle reaches commit %1$s later</string>
+    <string name="session_analysis_coach_apex_speed">apex speed</string>
+    <string name="session_analysis_coach_insight_line_discipline">Line discipline</string>
+    <string name="session_analysis_coach_line_gap_description">Average gap to reference line is %1$s.</string>
+    <string name="session_analysis_coach_insight_balance_pattern">Balance pattern</string>
+    <string name="session_analysis_coach_balance_stable">Stable</string>
+    <string name="session_analysis_coach_balance_understeer">Understeer %1$d%%</string>
+    <string name="session_analysis_coach_balance_oversteer">Oversteer %1$d%%</string>
+    <string name="session_analysis_coach_balance_stable_description">Loaded corners stay mostly neutral versus the
+        reference lap.
+    </string>
+    <string name="session_analysis_coach_balance_understeer_description">Loaded corners spend %1$d%% of the time in
+        understeer.
+    </string>
+    <string name="session_analysis_coach_balance_oversteer_description">Loaded corners spend %1$d%% of the time in
+        oversteer.
+    </string>
+    <string name="session_analysis_coach_corner_prefix">Corner %1$d: %2$s</string>
+    <string name="session_analysis_coach_this_section">this section</string>
+</resources>

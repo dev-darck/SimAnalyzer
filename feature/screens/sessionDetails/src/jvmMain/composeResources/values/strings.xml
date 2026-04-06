@@ -27,6 +27,7 @@
     <string name="session_details_chip_type_prefix">Type:</string>
     <string name="session_details_chip_air_prefix">Air:</string>
     <string name="session_details_chip_track_prefix">Track:</string>
+    <string name="session_details_action_analysis">Analysis</string>
     <string name="session_details_stats_best_lap">Best Lap</string>
     <string name="session_details_stats_average_lap">Avg Lap (Valid)</string>
     <string name="session_details_stats_incidents">Total Incidents</string>

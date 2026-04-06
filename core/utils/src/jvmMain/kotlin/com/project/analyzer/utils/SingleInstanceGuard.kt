@@ -29,8 +29,9 @@ public object SingleInstanceGuard {
         )
         lockPath = path
 
+        val ch = channel ?: return@withContext
         lock = try {
-            channel!!.tryLock()
+            ch.tryLock()
         } catch (_: OverlappingFileLockException) {
             null
         }

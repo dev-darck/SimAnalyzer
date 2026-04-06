@@ -3,7 +3,7 @@ moduleImpl {
     logger()
 
     dependencies {
-        projects.core.telemetry.api.jvmImpl
+        projects.core.telemetry.runtime.api.jvmImpl
         projects.core.telemetry.recording.api.jvmImpl
         projects.games.telemetry.lmu.api.jvmImpl
         projects.core.di.api.jvmImpl

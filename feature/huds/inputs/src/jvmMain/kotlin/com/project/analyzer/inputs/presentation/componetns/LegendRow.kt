@@ -10,14 +10,21 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.huds.inputs.Res.*
+import com.project.analyzer.feature.huds.inputs.Res.Res
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_b
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_c
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_s
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_t
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_tooltip_brake
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_tooltip_clutch
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_tooltip_steering
+import com.project.analyzer.feature.huds.inputs.Res.inputs_legend_tooltip_throttle
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.tooltip.Tooltip
 import org.jetbrains.compose.resources.stringResource
@@ -62,7 +69,7 @@ private fun LegendItem(label: String, color: Color, tooltip: String, isToolTipEn
             Box(
                 modifier = Modifier
                     .size(size = 8.dp)
-                    .background(color = color, shape = CircleShape),
+                    .background(color = color, shape = SimAnalyzerTheme.corners.pill),
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(

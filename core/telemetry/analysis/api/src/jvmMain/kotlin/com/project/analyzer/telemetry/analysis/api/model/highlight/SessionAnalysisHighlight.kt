@@ -1,0 +1,20 @@
+package com.project.analyzer.telemetry.analysis.api.model.highlight
+public data class SessionAnalysisHighlight(
+    val id: String = "",
+    val category: SessionAnalysisHighlightCategory,
+    val severity: SessionAnalysisHighlightSeverity,
+    val segmentId: Long = 0L,
+    val lapNumber: Int = 0,
+    val sampleIndexInLap: Int = 0,
+    val trackPosition: Float? = null,
+    val title: String,
+    val description: String,
+    val deltaMs: Int? = null,
+    val diagnosisSource: SessionAnalysisDiagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
+    val recommendation: String = "",
+    val cornerNumber: Int? = null,
+    val score: Int? = null,
+    val priority: Int = 1,
+    val affectedLaps: List<Int> = emptyList(),
+    val relatedHighlightIds: List<String> = emptyList(),
+)

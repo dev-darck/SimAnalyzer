@@ -1,0 +1,25 @@
+package com.project.analyzer.telemetry.recording.api.session
+
+public data class RecordedTelemetryPayload(
+    val gameId: String,
+    val carModel: String? = null,
+    val carLabel: String? = null,
+    val trackLabel: String? = null,
+    val vehicleClassHint: String? = null,
+    val tyreCompoundLabel: String? = null,
+    val isRainTyres: Boolean? = null,
+    val speedKmh: Float? = null,
+    val gear: Int? = null,
+    val rpm: Float? = null,
+    val throttle: Float? = null,
+    val brake: Float? = null,
+    val steeringAngleRad: Float? = null,
+    val lateralG: Float? = null,
+    val yawRateRad: Float? = null,
+    val fuelLiters: Float? = null,
+    val fuelCapacityLiters: Float? = null,
+    val tyreFl: RecordedTelemetryTyreSnapshot? = null,
+    val tyreFr: RecordedTelemetryTyreSnapshot? = null,
+    val tyreRl: RecordedTelemetryTyreSnapshot? = null,
+    val tyreRr: RecordedTelemetryTyreSnapshot? = null,
+)

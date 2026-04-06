@@ -96,6 +96,35 @@ class TrackMapStoreRepositoryTest {
     }
 
     @Test
+    fun `load keeps imported svg path for game map`() = runTest {
+        val root = createTempDirectory("track-map-store-svg").toFile()
+        try {
+            val gameMap = map(
+                trackId = "suzuka_gp",
+                layoutId = "gp",
+                createdAt = 300L,
+                pointOffset = 9f,
+                svgPath = root.resolve("user/trackmaps/suzuka-gp.svg").absolutePath,
+            )
+            val repository = TrackMapStoreRepository(
+                appDirectories = root.asAppDirectories(),
+                gameProvider = FakeTrackMapGameProvider(maps = listOf(gameMap)),
+            )
+
+            val resolved = repository.load(
+                gameId = "ace",
+                trackId = "suzuka_gp",
+                layoutId = "gp",
+            )
+
+            assertNotNull(resolved)
+            assertEquals(gameMap.svgPath, resolved.svgPath)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun `load resolves imported alias map for runtime track id variant`() = runTest {
         val root = createTempDirectory("track-map-store-red-bull-alias").toFile()
         try {
@@ -272,6 +301,7 @@ class TrackMapStoreRepositoryTest {
         layoutId: String?,
         createdAt: Long,
         pointOffset: Float,
+        svgPath: String? = null,
     ): TrackMap = TrackMap(
         gameId = "ace",
         trackId = trackId,
@@ -282,6 +312,7 @@ class TrackMapStoreRepositoryTest {
             TrackMapPoint(x = pointOffset, y = 0f),
             TrackMapPoint(x = pointOffset + 1f, y = 1f),
         ),
+        svgPath = svgPath,
     )
 
     private fun File.asAppDirectories(): AppDirectories = object : AppDirectories {

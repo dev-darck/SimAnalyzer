@@ -1,0 +1,21 @@
+package com.project.analyzer.telemetry.analysis.api.model.lap
+public data class SessionAnalysisLap(
+    val segmentId: Long = 0L,
+    val sessionTypeLabel: String = "",
+    val lapNumber: Int,
+    val isValid: Boolean,
+    val isPitLap: Boolean,
+    val isComplete: Boolean,
+    val durationMs: Int? = null,
+    val sampleCount: Int = 0,
+    val avgSpeedKmh: Float? = null,
+    val maxSpeedKmh: Float? = null,
+    val deltaToBestMs: Int? = null,
+    val peakThrottle: Float? = null,
+    val peakBrake: Float? = null,
+    val maxRpm: Float? = null,
+    val endFuelLiters: Float? = null,
+    val fuelUsedLiters: Float? = null,
+    val peakCoreTempC: Float? = null,
+    val peakBrakeTempC: Float? = null,
+)

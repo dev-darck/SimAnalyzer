@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.SceneInfo
@@ -25,15 +26,12 @@ import androidx.navigationevent.compose.LocalNavigationEventDispatcherOwner
 import androidx.navigationevent.compose.NavigationEventHandler
 import androidx.navigationevent.compose.rememberNavigationEventDispatcherOwner
 import androidx.navigationevent.compose.rememberNavigationEventState
-import com.project.analyzer.navigation.api.EntryFactory
 import com.project.analyzer.navigation.api.LocalNavigator
-import com.project.analyzer.navigation.api.NavigationState
-import com.project.analyzer.navigation.api.Route
 
 @Composable
-fun AppNavGraph(
-    navigationState: NavigationState<Route>,
-    entryFactory: EntryFactory,
+internal fun AppNavGraph(
+    navigationState: NavigationStateInternal,
+    entryProvider: (NavRouteKey) -> NavEntry<NavRouteKey>,
     modifier: Modifier = Modifier,
 ) {
     val owner = rememberNavigationEventDispatcherOwner()
@@ -42,12 +40,12 @@ fun AppNavGraph(
         val mouseInput = remember { MouseBackForwardNavigationEventInput() }
 
         val entries = rememberDecoratedNavEntries(
-            backStack = navigationState.backStack,
+            backStack = navigationState.navBackStack,
             entryDecorators = listOf(
                 rememberSaveableStateHolderNavEntryDecorator(),
                 rememberViewModelStoreNavEntryDecorator(),
             ),
-            entryProvider = entryFactory.create(),
+            entryProvider = entryProvider,
         )
 
         require(entries.isNotEmpty()) { "BackStack entries cannot be empty" }
@@ -105,8 +103,8 @@ fun AppNavGraph(
 
 class MouseBackForwardNavigationEventInput : NavigationEventInput() {
 
-    fun fireBack(): Unit = dispatchOnBackCompleted()
-    fun fireForward(): Unit = dispatchOnForwardCompleted()
+    fun fireBack() = dispatchOnBackCompleted()
+    fun fireForward() = dispatchOnForwardCompleted()
 }
 
 private fun Modifier.bindMouseBackForward(input: MouseBackForwardNavigationEventInput): Modifier =

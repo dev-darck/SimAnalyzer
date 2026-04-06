@@ -10,24 +10,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
-import com.project.analyzer.game.api.GameDetectorFactory
-import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.impl.setup.region.internal.InMemoryHitRegions
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.concurrent.Executors
 
 @Composable
 fun OverlayWindow(
     onCloseRequest: () -> Unit,
-    panels: ImmutableSet<HudPanel>,
-    gameDetectorFactory: GameDetectorFactory,
+    dependencies: OverlayWindowDependencies,
     visible: Boolean = true,
     state: WindowState = rememberWindowState(),
 ) {
     if (!visible) return
+
+    val panels = remember(dependencies) { dependencies.panels }
+    val gameDetectorFactory = remember(dependencies) { dependencies.gameDetectorFactory }
 
     val scope = rememberCoroutineScope()
     val hitRegions: HitRegions = remember { InMemoryHitRegions() }

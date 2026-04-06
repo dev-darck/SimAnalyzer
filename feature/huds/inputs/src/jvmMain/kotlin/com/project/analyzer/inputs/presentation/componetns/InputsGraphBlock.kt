@@ -23,7 +23,10 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.huds.inputs.Res.*
+import com.project.analyzer.feature.huds.inputs.Res.Res
+import com.project.analyzer.feature.huds.inputs.Res.inputs_graph_axis_0
+import com.project.analyzer.feature.huds.inputs.Res.inputs_graph_axis_100
+import com.project.analyzer.feature.huds.inputs.Res.inputs_graph_axis_50
 import com.project.analyzer.inputs.presentation.InputsHudUiState
 import com.project.analyzer.inputs.presentation.model.InputsSeries
 import com.project.analyzer.theme.SimAnalyzerTheme

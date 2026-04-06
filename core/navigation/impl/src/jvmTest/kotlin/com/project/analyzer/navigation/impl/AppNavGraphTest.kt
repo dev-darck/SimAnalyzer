@@ -22,13 +22,15 @@ class AppNavGraphTest {
     @Test
     fun `app nav graph renders current destination and navigates with bounded recompositions`() =
         runDesktopComposeUiTest {
-            lateinit var navigationState: NavigationStateInternal<Route>
+            lateinit var navigationState: NavigationStateInternal
+            val entryFactory = NavigationEntryFactory(RouteEntryRegistry(setOf(testRoutes())))
+            val entryProvider = entryFactory.create()
 
             setContent {
-                navigationState = rememberNavigationState() as NavigationStateInternal<Route>
+                navigationState = rememberNavigationState(entryFactory = entryFactory)
                 AppNavGraph(
                     navigationState = navigationState,
-                    entryFactory = NavigationEntryFactory(RouteEntryRegistry(setOf(testRoutes()))),
+                    entryProvider = entryProvider,
                     modifier = Modifier
                         .uiTestTag(TestTags.NavigationGraph)
                         .trackRecompositions(),
@@ -55,7 +57,13 @@ private fun testRoutes(): RouteEntryBuilder = RouteEntryBuilder {
     entry(Route.SessionRoot.Session) {
         Text("session")
     }
-    entry(Route.SessionRoot.SessionDetails::class) { route: Route.SessionRoot.SessionDetails ->
-        Text("session-${route.sessionId}")
+    entry(Route.SetupRoot.Setup) {
+        Text("setup")
+    }
+    entry(Route.SettingsRoot.Settings) {
+        Text("settings")
+    }
+    entry(Route.SessionRoot.SessionDetails::class) {
+        Text("session-$sessionId")
     }
 }

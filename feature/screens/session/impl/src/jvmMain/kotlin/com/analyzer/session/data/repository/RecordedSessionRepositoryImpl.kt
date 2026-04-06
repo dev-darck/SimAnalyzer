@@ -21,13 +21,12 @@ internal class RecordedSessionRepositoryImpl(
     override suspend fun loadSessionListPage(
         request: RecordedSessionListRequest,
         forceRefresh: Boolean,
-    ): RecordedSessionListPage =
-        withContext(ioDispatcher) {
-            pageFactory.buildSessionListPage(
-                summaries = bundleStore.loadSummaries(forceRefresh = forceRefresh),
-                request = request,
-            )
-        }
+    ): RecordedSessionListPage = withContext(ioDispatcher) {
+        pageFactory.buildSessionListPage(
+            summaries = bundleStore.loadSummaries(forceRefresh = forceRefresh),
+            request = request,
+        )
+    }
 
     override suspend fun loadSessionDetailPage(
         sessionId: Long,

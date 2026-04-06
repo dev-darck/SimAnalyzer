@@ -1,189 +1,117 @@
 package com.analyzer.session.data.repository
 
 import com.analyzer.session.data.analysis.IndexAnalysis
-import com.analyzer.session.data.model.RecordedSessionMetadata
 import com.analyzer.session.data.model.RecordedSessionSummary
 import com.analyzer.session.data.model.SessionBundleLocation
 import com.analyzer.session.data.model.SessionLocation
-import com.analyzer.session.data.repository.cache.BundleIndexCache
-import com.analyzer.session.data.repository.cache.RootFingerprint
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionBundle
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionLocation
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionStorage
 import dev.zacsweers.metro.Inject
-import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
-import com.project.analyzer.utils.logger.logger
-import kotlinx.serialization.json.Json
-import java.io.File
-import java.util.concurrent.atomic.AtomicReference
 
 @Inject
 internal class RecordedSessionBundleStore(
-    private val settings: TelemetryAcquisitionSettings,
-    private val json: Json,
-    private val bundleAssembler: RecordedSessionBundleAssembler,
+    private val storage: RecordedTelemetrySessionStorage,
     private val indexReader: RecordedSessionIndexReader,
 ) {
 
-    private val logger = logger()
+    private var cachedSummaries: List<RecordedSessionSummary>? = null
 
-    suspend fun loadSummaries(forceRefresh: Boolean = false): List<RecordedSessionSummary> = resolveRoot()
-        ?.let { root ->
-            loadIndex(
-                root = root,
-                forceRefresh = forceRefresh,
-            ).summaries
+    suspend fun loadSummaries(forceRefresh: Boolean = false): List<RecordedSessionSummary> {
+        if (!forceRefresh) {
+            cachedSummaries?.let { return it }
         }
-        .orEmpty()
+        val summaries = storage
+            .loadBundles(forceRefresh = forceRefresh)
+            .map(::buildBundleSummary)
+        cachedSummaries = summaries
+        return summaries
+    }
 
     suspend fun findBundle(sessionId: Long, forceRefresh: Boolean = false): SessionBundleLocation? {
-        val root = resolveRoot() ?: return null
-        return loadIndex(
-            root = root,
+        val bundle = storage.findBundle(
+            sessionId = sessionId,
             forceRefresh = forceRefresh,
-        ).sessionIndex[sessionId]
+        ) ?: return null
+        return mapBundle(bundle)
     }
 
-    suspend fun saveSession(sessionId: Long): Boolean {
-        val bundle = findBundle(sessionId) ?: return false
-        if (bundle.summary.isSaved) return true
-
-        val saved = bundle.locations.all { location ->
-            if (location.metadata.isSaved) {
-                true
-            } else {
-                val updatedMetadata = location.metadata.copy(isSaved = true)
-                writeMetadata(File(location.dir, META_FILE_NAME), updatedMetadata)
-            }
-        }
-        if (saved) {
-            refreshIndex()
-        }
-        return saved
-    }
-
-    suspend fun deleteSession(sessionId: Long): Boolean {
-        val bundle = findBundle(sessionId) ?: return false
-        val deleted = bundle.locations.all { location ->
-            runCatching {
-                location.dir.deleteRecursively()
-            }.getOrElse { error ->
-                logger.error(error) { "failed to delete session dir: ${location.dir.absolutePath}" }
-                false
+    suspend fun saveSession(sessionId: Long): Boolean = storage.saveSession(sessionId)
+        .also { saved ->
+            if (saved) {
+                invalidateCaches()
             }
         }
 
-        if (deleted) {
-            logger.info { "deleted session bundle $sessionId (${bundle.locations.size} dirs)" }
-            refreshIndex()
+    suspend fun deleteSession(sessionId: Long): Boolean = storage.deleteSession(sessionId)
+        .also { deleted ->
+            if (deleted) {
+                invalidateCaches()
+            }
         }
-        return deleted
-    }
 
     fun resolveAnalysis(location: SessionLocation): IndexAnalysis? = location.analysis
-        ?: indexReader.readAnalysis(location.metadata, location.dir)
+        ?: indexReader.readAnalysis(location.source)
 
-    private suspend fun refreshIndex() {
-        val root = resolveRoot()
-        if (root == null) {
-            clearSharedCache()
-            return
-        }
-        loadIndex(
-            root = root,
-            forceRefresh = true,
+    private fun mapBundle(bundle: RecordedTelemetrySessionBundle): SessionBundleLocation {
+        val locations = bundle.locations.map(::mapLocation)
+        return SessionBundleLocation(
+            summary = buildSummary(
+                locations = locations,
+                persistedSessionId = bundle.sessionId,
+            ),
+            locations = locations,
         )
     }
 
-    private fun loadIndex(root: File, forceRefresh: Boolean): BundleIndexCache {
-        val fingerprint = buildRootFingerprint(root)
-        if (!forceRefresh) {
-            peekSharedCache(
-                rootPath = root.absolutePath,
-                fingerprint = fingerprint,
-            )?.let { return it }
-        }
-
-        val rebuilt = rebuildIndex(
-            root = root,
-            fingerprint = fingerprint,
-        )
-        storeSharedCache(rebuilt)
-        return rebuilt
-    }
-
-    private fun rebuildIndex(root: File, fingerprint: RootFingerprint): BundleIndexCache {
-        val locations = loadLocations(root)
-        val bundles = bundleAssembler.build(locations)
-        val summaries = bundles.map(SessionBundleLocation::summary)
-        val sessionIndex = linkedMapOf<Long, SessionBundleLocation>()
-        bundles.forEach { bundle ->
-            val previous = sessionIndex.put(bundle.summary.sessionId, bundle)
-            if (previous != null) {
-                logger.warn {
-                    "stable session bundle id collision for ${bundle.summary.sessionId}; replacing previous bundle"
-                }
-            }
-        }
-        return BundleIndexCache(
-            rootPath = root.absolutePath,
-            fingerprint = fingerprint,
-            summaries = summaries,
-            bundles = bundles,
-            sessionIndex = sessionIndex,
-        )
-    }
-
-    private fun loadLocations(root: File): List<SessionLocation> = root.listFiles()
-        ?.asSequence()
-        ?.filter(File::isDirectory)
-        ?.mapNotNull(::readSessionLocation)
-        ?.toList()
-        .orEmpty()
-
-    private fun readSessionLocation(dir: File): SessionLocation? {
-        val metaFile = File(dir, META_FILE_NAME)
-        if (!metaFile.exists()) return null
-
-        val metadata = readMetadata(metaFile) ?: return null
-        val analysis = indexReader.readAnalysis(metadata, dir)
-        val summary = buildSummary(
-            metadata = metadata,
-            analysis = analysis,
-            persistedSessionId = stablePersistedSessionId(metadata, dir),
-        )
-
+    private fun mapLocation(location: RecordedTelemetrySessionLocation): SessionLocation {
+        val analysis = indexReader.readAnalysis(location)
         return SessionLocation(
-            summary = summary,
-            dir = dir,
-            metadata = metadata,
+            source = location,
+            summary = buildSummary(
+                locations = emptyList(),
+                persistedSessionId = location.persistedSessionId,
+                singleLocation = location,
+                analysis = analysis,
+            ),
             analysis = analysis,
         )
     }
 
-    private fun readMetadata(metaFile: File): RecordedSessionMetadata? = runCatching {
-        json.decodeFromString(RecordedSessionMetadata.serializer(), metaFile.readText())
-    }.onFailure { error ->
-        logger.warn(error) { "failed to decode metadata: ${metaFile.absolutePath}" }
-    }.getOrNull()
-
-    private fun writeMetadata(metaFile: File, metadata: RecordedSessionMetadata): Boolean = runCatching {
-        val encoded = json.encodeToString(RecordedSessionMetadata.serializer(), metadata)
-        val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
-        tmp.writeText(encoded)
-        if (!tmp.renameTo(metaFile)) {
-            metaFile.writeText(encoded)
-            tmp.delete()
-        }
-        true
-    }.getOrElse { error ->
-        logger.error(error) { "failed to write metadata: ${metaFile.absolutePath}" }
-        false
-    }
+    private fun buildBundleSummary(bundle: RecordedTelemetrySessionBundle): RecordedSessionSummary = buildSummary(
+        locations = bundle.locations.map(::mapLocation),
+        persistedSessionId = bundle.sessionId,
+    )
 
     private fun buildSummary(
-        metadata: RecordedSessionMetadata,
-        analysis: IndexAnalysis?,
+        locations: List<SessionLocation>,
         persistedSessionId: Long,
+        singleLocation: RecordedTelemetrySessionLocation? = null,
+        analysis: IndexAnalysis? = null,
     ): RecordedSessionSummary {
-        val laps = analysis?.laps.orEmpty()
+        val primaryLocation = singleLocation ?: locations.lastOrNull()?.source ?: return RecordedSessionSummary(
+            sessionId = persistedSessionId,
+            startedAtMs = 0L,
+            endedAtMs = null,
+            gameId = "",
+            sessionType = null,
+            carModel = null,
+            carName = null,
+            carId = null,
+            trackId = null,
+            trackName = null,
+            layoutId = null,
+            lapCount = 0,
+            bestLapTimeMs = null,
+            totalIncidents = 0,
+            distanceKm = 0.0,
+            isSaved = false,
+            airTempC = null,
+            trackTempC = null,
+        )
+        val metadata = primaryLocation.metadata
+        val resolvedAnalysis = analysis ?: locations.lastOrNull()?.analysis
+        val laps = resolvedAnalysis?.laps.orEmpty()
         val completedLaps = laps.count { lap -> lap.complete }
         val bestLapMs = laps
             .asSequence()
@@ -191,121 +119,64 @@ internal class RecordedSessionBundleStore(
             .mapNotNull { lap -> lap.totalTimeMs }
             .minOrNull()
         val incidents = laps.count { lap -> lap.invalid }
+        val distanceKm = if (singleLocation == null) {
+            locations.sumOf { it.analysis?.distanceKm ?: 0.0 }
+        } else {
+            resolvedAnalysis?.distanceKm ?: 0.0
+        }
+        val lapCount = if (singleLocation == null) {
+            locations.sumOf { location -> location.analysis?.laps?.count { lap -> lap.complete } ?: 0 }
+        } else {
+            completedLaps
+        }
+        val allLocations = singleLocation?.let { listOf(it) } ?: locations.map(SessionLocation::source)
+        val latestMetadata =
+            allLocations.maxByOrNull { location -> location.metadata.startedAtMs }?.metadata ?: metadata
+        val endedAtMs = allLocations.maxOfOrNull { location -> location.metadata.endedAtMs ?: Long.MIN_VALUE }
+            ?.takeIf { it != Long.MIN_VALUE }
+        val bestAcrossBundle = if (singleLocation == null) {
+            locations.asSequence()
+                .flatMap { location -> location.analysis?.laps.orEmpty().asSequence() }
+                .filter { lap -> lap.complete && !lap.invalid && !lap.inPit }
+                .mapNotNull { lap -> lap.totalTimeMs }
+                .minOrNull()
+        } else {
+            bestLapMs
+        }
+        val bundleIncidents = if (singleLocation == null) {
+            locations.sumOf { location -> location.analysis?.laps?.count { lap -> lap.invalid } ?: 0 }
+        } else {
+            incidents
+        }
 
         return RecordedSessionSummary(
             sessionId = persistedSessionId,
-            startedAtMs = metadata.startedAtMs,
-            endedAtMs = metadata.endedAtMs,
-            gameId = metadata.gameId,
-            sessionType = metadata.sessionType,
-            carModel = metadata.carModel,
-            carName = metadata.carName,
-            carId = metadata.carId,
-            trackId = metadata.trackId,
-            trackName = metadata.trackName,
-            layoutId = metadata.layoutId,
-            lapCount = completedLaps,
-            bestLapTimeMs = bestLapMs,
-            totalIncidents = incidents,
-            distanceKm = analysis?.distanceKm ?: 0.0,
-            isSaved = metadata.isSaved,
-            airTempC = metadata.airTempC,
-            trackTempC = metadata.trackTempC,
+            startedAtMs = allLocations.minOfOrNull { location -> location.metadata.startedAtMs }
+                ?: metadata.startedAtMs,
+            endedAtMs = endedAtMs ?: latestMetadata.endedAtMs,
+            gameId = latestMetadata.gameId,
+            sessionType = latestMetadata.sessionType,
+            carModel = latestMetadata.carModel,
+            carName = allLocations.asSequence()
+                .mapNotNull { location -> location.metadata.carName?.takeIf(String::isNotBlank) }
+                .lastOrNull(),
+            carId = latestMetadata.carId,
+            trackId = latestMetadata.trackId,
+            trackName = allLocations.asSequence()
+                .mapNotNull { location -> location.metadata.trackName?.takeIf(String::isNotBlank) }
+                .lastOrNull(),
+            layoutId = latestMetadata.layoutId,
+            lapCount = lapCount,
+            bestLapTimeMs = bestAcrossBundle,
+            totalIncidents = bundleIncidents,
+            distanceKm = distanceKm,
+            isSaved = allLocations.all { location -> location.metadata.isSaved },
+            airTempC = latestMetadata.airTempC,
+            trackTempC = latestMetadata.trackTempC,
         )
     }
 
-    private suspend fun resolveRoot(): File? {
-        val path = runCatching { settings.currentConfig().storageLocation }
-            .getOrNull()
-            .orEmpty()
-            .trim()
-        if (path.isBlank()) return null
-
-        val dir = File(path)
-        return dir.takeIf { it.exists() && it.isDirectory }
-    }
-
-    private fun stablePersistedSessionId(metadata: RecordedSessionMetadata, dir: File): Long {
-        val source = buildString(96) {
-            append(normalizeGameId(metadata.gameId))
-            append('|')
-            append(metadata.startedAtMs)
-            append('|')
-            append(metadata.sessionId)
-            append('|')
-            append(dir.absolutePath)
-        }
-        val hash = fnv1a64(source)
-        return (hash and Long.MAX_VALUE).let { if (it == 0L) 1L else it }
-    }
-
-    private fun normalizeGameId(gameId: String?): String = gameId.orEmpty().trim().lowercase()
-
-    private fun buildRootFingerprint(root: File): RootFingerprint {
-        var directoryCount = 0
-        var directoryHash = FNV1A_64_OFFSET
-        root.listFiles()
-            ?.asSequence()
-            ?.filter(File::isDirectory)
-            ?.sortedBy { dir -> dir.name }
-            ?.forEach { dir ->
-                directoryCount += 1
-                directoryHash = directoryHash.fnv1aAppend(dir.name)
-                directoryHash = directoryHash.fnv1aAppend(dir.lastModified())
-            }
-        return RootFingerprint(
-            rootLastModified = root.lastModified(),
-            directoryCount = directoryCount,
-            directoryHash = directoryHash,
-        )
-    }
-
-    private fun Long.fnv1aAppend(value: String): Long {
-        var hash = this
-        value.forEach { ch ->
-            hash = hash xor ch.code.toLong()
-            hash *= FNV1A_64_PRIME
-        }
-        return hash
-    }
-
-    private fun Long.fnv1aAppend(value: Long): Long {
-        var hash = this
-        repeat(Long.SIZE_BYTES) { byteIndex ->
-            val shift = byteIndex * Byte.SIZE_BITS
-            hash = hash xor ((value ushr shift) and 0xFFL)
-            hash *= FNV1A_64_PRIME
-        }
-        return hash
-    }
-
-    private fun clearSharedCache() {
-        sharedCache.set(null)
-    }
-
-    private fun peekSharedCache(rootPath: String, fingerprint: RootFingerprint): BundleIndexCache? = sharedCache.get()
-        ?.takeIf { cache ->
-            cache.rootPath == rootPath && cache.fingerprint == fingerprint
-        }
-
-    private fun storeSharedCache(cache: BundleIndexCache) {
-        sharedCache.set(cache)
-    }
-
-    private fun fnv1a64(value: String): Long {
-        var hash = FNV1A_64_OFFSET
-        value.forEach { ch ->
-            hash = hash xor ch.code.toLong()
-            hash *= FNV1A_64_PRIME
-        }
-        return hash
-    }
-
-    private companion object {
-
-        private const val FNV1A_64_OFFSET = -0x340d631b7bdddcdbL
-        private const val FNV1A_64_PRIME = 0x100000001b3L
-
-        private val sharedCache = AtomicReference<BundleIndexCache?>()
+    private fun invalidateCaches() {
+        cachedSummaries = null
     }
 }

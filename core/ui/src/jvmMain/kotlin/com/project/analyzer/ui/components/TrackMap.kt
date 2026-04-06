@@ -6,19 +6,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.geometry.buildSegmentedTrackPath
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
 
-public data class TrackMapPoint(val x: Float, val y: Float)
+public data class TrackMapPoint(
+    val x: Float,
+    val y: Float,
+    val leftWidthMeters: Float = 0f,
+    val rightWidthMeters: Float = 0f,
+)
 
 public data class TrackMapBounds(val minX: Float, val minY: Float, val maxX: Float, val maxY: Float)
 
@@ -34,10 +40,8 @@ public fun TrackMap(
     modifier: Modifier = Modifier,
     scale: Float = 1f,
     lineColor: Color = SimAnalyzerTheme.material.primary,
-    pitLineColor: Color = SimAnalyzerTheme.extended.teal,
     padding: Dp = 2.dp,
     strokeWidth: Float = 1.8f,
-    pitStrokeWidth: Float = 1.3f,
 ) {
     val map = trackMap ?: return
     val drawScaleMultiplier = max(scale, 0.1f)
@@ -45,6 +49,7 @@ public fun TrackMap(
     Spacer(
         modifier = modifier.drawWithCache {
             val emptyDraw = onDrawBehind {}
+            val mainPoints = map.points.trimLoopClosureDuplicate()
             val mapWidth = map.bounds.maxX - map.bounds.minX
             val mapHeight = map.bounds.maxY - map.bounds.minY
             if (mapWidth <= 0f || mapHeight <= 0f) {
@@ -71,24 +76,16 @@ public fun TrackMap(
                 y = point.y * drawScale + offsetY,
             )
 
-            val mainPath = buildPath(map.points, ::toScreen)
-            val pitPath = map.pitPoints
-                .takeIf { it.size >= 2 }
-                ?.let { points -> buildPath(points, ::toScreen) }
+            val minimumGapPx = maxOf(strokeWidth * 6f, 8f)
+            val mainOffsets = mainPoints.map(::toScreen)
+            val mainPath = buildSegmentedTrackPath(
+                points = mainOffsets,
+                gapMultiplier = trackMapGapMultiplier,
+                minimumGapPx = minimumGapPx,
+                closeLoop = true,
+            )
 
             onDrawBehind {
-                pitPath?.let { path ->
-                    drawPath(
-                        path = path,
-                        color = pitLineColor,
-                        style = Stroke(
-                            width = pitStrokeWidth,
-                            cap = StrokeCap.Round,
-                            join = StrokeJoin.Round,
-                        ),
-                    )
-                }
-
                 drawPath(
                     path = mainPath,
                     color = lineColor,
@@ -103,15 +100,34 @@ public fun TrackMap(
     )
 }
 
-private fun buildPath(points: ImmutableList<TrackMapPoint>, toScreen: (TrackMapPoint) -> Offset): Path {
-    val path = Path()
-    points.forEachIndexed { index, point ->
-        val mapped = toScreen(point)
-        if (index == 0) {
-            path.moveTo(mapped.x, mapped.y)
-        } else {
-            path.lineTo(mapped.x, mapped.y)
+private const val trackMapGapMultiplier = 8f
+
+private fun List<TrackMapPoint>.trimLoopClosureDuplicate(): List<TrackMapPoint> {
+    if (size < 4) return this
+    val segmentLengths = buildList {
+        for (index in 1 until size) {
+            val previous = this@trimLoopClosureDuplicate[index - 1]
+            val current = this@trimLoopClosureDuplicate[index]
+            val length = hypot(current.x - previous.x, current.y - previous.y)
+            if (length.isFinite() && length > 0.0001f) add(length)
         }
     }
-    return path
+    val medianSegmentLength = segmentLengths.medianOrNull() ?: return this
+    val closureDistance = hypot(last().x - first().x, last().y - first().y)
+    return if (closureDistance <= maxOf(1f, medianSegmentLength * 1.5f)) {
+        dropLast(1)
+    } else {
+        this
+    }
+}
+
+private fun List<Float>.medianOrNull(): Float? {
+    if (isEmpty()) return null
+    val sorted = sorted()
+    val middleIndex = sorted.lastIndex / 2
+    return if (sorted.size % 2 == 0) {
+        (sorted[middleIndex] + sorted[middleIndex + 1]) * 0.5f
+    } else {
+        sorted[middleIndex]
+    }
 }

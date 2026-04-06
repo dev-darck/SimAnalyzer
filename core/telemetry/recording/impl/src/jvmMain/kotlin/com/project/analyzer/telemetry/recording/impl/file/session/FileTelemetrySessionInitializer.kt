@@ -1,6 +1,7 @@
 package com.project.analyzer.telemetry.recording.impl.file.session
 
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionConfig
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionDescriptor
 import com.project.analyzer.telemetry.recording.impl.file.EVENTS_FILE_NAME
 import com.project.analyzer.telemetry.recording.impl.file.EVENT_STARTED
@@ -13,7 +14,6 @@ import com.project.analyzer.telemetry.recording.impl.file.INDEX_VERSION
 import com.project.analyzer.telemetry.recording.impl.file.codec.FrameStorageCodecFactory
 import com.project.analyzer.telemetry.recording.impl.file.model.ActiveSession
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionEvent
-import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
 import com.project.analyzer.utils.logger.logger
 
 internal class FileTelemetrySessionInitializer(
@@ -93,7 +93,7 @@ internal class FileTelemetrySessionInitializer(
     }
 
     private fun createSession(
-        metadata: SessionMetadata,
+        metadata: RecordedTelemetrySessionMetadata,
         outputs: FileTelemetrySessionOutputs,
         sessionFrameStorageCodec: com.project.analyzer.telemetry.recording.impl.file.codec.FrameStorageSessionCodec,
     ): ActiveSession = ActiveSession(
@@ -110,7 +110,7 @@ internal class FileTelemetrySessionInitializer(
         config: TelemetryAcquisitionConfig,
         normalizedGameId: String,
         codecId: String,
-    ): SessionMetadata = SessionMetadata(
+    ): RecordedTelemetrySessionMetadata = RecordedTelemetrySessionMetadata(
         sessionId = descriptor.sessionId,
         gameId = normalizedGameId,
         sessionGroupId = descriptor.sessionGroupId,
@@ -136,6 +136,7 @@ internal class FileTelemetrySessionInitializer(
         frameCount = 0,
         receivedFrames = 0,
         droppedFrames = 0,
+        skippedFrames = 0,
         firstTimestampNs = null,
         lastTimestampNs = null,
         fileVersion = FILE_VERSION,

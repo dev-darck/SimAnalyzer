@@ -35,8 +35,8 @@ internal class SectorsFilter(private val holdAfterLap: Duration) {
         val until = holdUntil
         val inHoldWindow = (until != null && now < until)
 
-        if (inHoldWindow && currentIsEmpty && latchedAfterFinish != null) {
-            return latchedAfterFinish!!
+        if (inHoldWindow && currentIsEmpty) {
+            return latchedAfterFinish ?: current
         }
 
         return current

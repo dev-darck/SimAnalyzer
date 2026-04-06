@@ -1,23 +1,16 @@
-val metroReportsEnabled = providers.gradleProperty("metroReportsEnabled")
-    .map(String::toBooleanStrictOrNull)
-    .orElse(false)
-val metroReportsDestination = providers.gradleProperty("metroReportsDestination")
-    .orElse("reports/metro")
-
 moduleImpl {
-    metro {
-        if (metroReportsEnabled.get()) {
-            reportsDestination.set(layout.buildDirectory.dir(metroReportsDestination.get()))
-        }
-    }
+    metro()
+    logger()
     dependencies {
         projects.core.di.api.jvmImpl
         projects.core.navigation.api.jvmImpl
         projects.core.navigation.impl.jvmImpl
         projects.games.telemetry.ac.impl.jvmImpl
-        projects.core.telemetry.impl.jvmImpl
+        projects.core.telemetry.runtime.impl.jvmImpl
         projects.games.telemetry.lmu.impl.jvmImpl
-        projects.core.telemetry.api.jvmImpl
+        projects.core.telemetry.runtime.api.jvmImpl
+        projects.core.telemetry.analysis.api.jvmImpl
+        projects.core.telemetry.analysis.impl.jvmImpl
         projects.core.telemetry.recording.impl.jvmImpl
         projects.core.telemetry.recording.api.jvmImpl
         projects.feature.dev.calibration.jvmImpl
@@ -44,6 +37,7 @@ moduleImpl {
         projects.feature.screens.trackMapLibrary.jvmImpl
         projects.feature.screens.trackMapEditor.jvmImpl
         projects.feature.screens.session.impl.jvmImpl
+        projects.feature.screens.sessionAnalysis.impl.jvmImpl
         projects.feature.screens.sessionDetails.jvmImpl
 
         lib.metro.runtime.jvmImpl

@@ -2,6 +2,11 @@ package com.project.analyzer.ac.telemetry.impl.trackmap.evo
 
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import com.project.analyzer.ac.telemetry.impl.trackmap.TrackMapGameProvider
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedAssetKind
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedContentSnapshot
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.CacheKey
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.TrackAssetBundle
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.TrackAssetBundleBuilder
 import com.project.analyzer.game.api.AC_KEY
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMap
@@ -14,18 +19,18 @@ import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Locale
-import kotlin.math.ceil
-import kotlin.math.hypot
 
+@Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<TrackMapGameProvider>())
-@Inject
 @Suppress("unused")
 class AcEvoImportedTrackMapProvider internal constructor(
     private val importer: AcEvoTrackAssetImporter,
     private val parsers: AcEvoTrackMapAssetParsers,
+    private val centerLineResolver: AcEvoTrackCenterLineResolver,
 ) : TrackMapGameProvider {
 
     private val mutex = Mutex()
@@ -36,19 +41,39 @@ class AcEvoImportedTrackMapProvider internal constructor(
     @Volatile
     private var cachedMaps: List<TrackMap> = emptyList()
 
+    @Volatile
+    private var cachedMapsByBundleKey: Map<String, TrackMap> = emptyMap()
+
     override suspend fun load(gameId: String, trackId: String, layoutId: String?): TrackMap? {
         if (!isAceGame(gameId)) return null
         val normalizedTrackId = trackId.trim().lowercase(Locale.US).takeIf { it.isNotBlank() } ?: return null
         val normalizedLayoutId = layoutId.normalizedLayoutId()
-        val maps = ensureMaps()
-        val candidates = maps.filter { it.trackId == normalizedTrackId }
-        if (candidates.isEmpty()) return null
-        if (normalizedLayoutId.isNotEmpty()) {
-            return candidates.firstOrNull { it.layoutId.normalizedLayoutId() == normalizedLayoutId }
-                ?: candidates.firstOrNull { it.layoutId.normalizedLayoutId().isEmpty() }
+
+        return mutex.withLock {
+            val snapshot = importer.ensureImported() ?: return@withLock null
+
+            invalidateCacheIfNeeded(snapshot.toCacheKey())
+
+            val bundles = buildBundles(snapshot = snapshot, trackIdFilter = normalizedTrackId)
+            val candidateBundles = selectCandidateBundles(
+                bundles = bundles.values.map(TrackAssetBundleBuilder::toImmutable),
+                normalizedLayoutId = normalizedLayoutId,
+            )
+
+            if (candidateBundles.isEmpty()) return@withLock null
+
+            candidateBundles.firstNotNullOfOrNull { bundle ->
+                val bundleKey = trackBundleKey(trackId = bundle.trackId, layoutId = bundle.layoutId)
+
+                cachedMapsByBundleKey[bundleKey]
+                    ?: buildTrackMap(
+                        bundle = bundle,
+                        createdAtEpochMs = snapshot.manifest.packageLastModifiedEpochMs,
+                    )?.also { builtMap ->
+                        cachedMapsByBundleKey = cachedMapsByBundleKey + (bundleKey to builtMap)
+                    }
+            }
         }
-        return candidates.firstOrNull { it.layoutId.normalizedLayoutId().isEmpty() }
-            ?: candidates.maxByOrNull { it.createdAtEpochMs }
     }
 
     override suspend fun loadAll(gameId: String?): List<TrackMap> {
@@ -58,20 +83,38 @@ class AcEvoImportedTrackMapProvider internal constructor(
 
     private suspend fun ensureMaps(): List<TrackMap> = mutex.withLock {
         val snapshot = importer.ensureImported() ?: return emptyList()
-        val key = CacheKey(
-            packagePath = snapshot.manifest.packagePath,
-            packageSizeBytes = snapshot.manifest.packageSizeBytes,
-            packageLastModifiedEpochMs = snapshot.manifest.packageLastModifiedEpochMs,
-            assetCount = snapshot.manifest.assets.size,
-        )
-        if (cachedKey == key) {
+        invalidateCacheIfNeeded(snapshot.toCacheKey())
+        if (cachedMaps.isNotEmpty()) {
             return cachedMaps
         }
 
+        val bundles = buildBundles(snapshot = snapshot)
+
+        val builtMaps = bundles.values.mapNotNull { bundle ->
+            val immutableBundle = bundle.toImmutable()
+            val bundleKey = trackBundleKey(trackId = immutableBundle.trackId, layoutId = immutableBundle.layoutId)
+            cachedMapsByBundleKey[bundleKey]
+                ?: buildTrackMap(
+                    bundle = immutableBundle,
+                    createdAtEpochMs = snapshot.manifest.packageLastModifiedEpochMs,
+                )?.also { builtMap ->
+                    cachedMapsByBundleKey = cachedMapsByBundleKey + (bundleKey to builtMap)
+                }
+        }
+            .sortedBy { map -> trackBundleKey(trackId = map.trackId, layoutId = map.layoutId) }
+
+        cachedMaps = builtMaps
+        builtMaps
+    }
+
+    private fun buildBundles(
+        snapshot: AcEvoImportedContentSnapshot,
+        trackIdFilter: String? = null,
+    ): LinkedHashMap<String, TrackAssetBundleBuilder> {
         val bundles = linkedMapOf<String, TrackAssetBundleBuilder>()
         snapshot.manifest.assets.forEach { asset ->
             val trackId = asset.trackId?.trim()?.takeIf { it.isNotBlank() } ?: return@forEach
-            if (asset.kind == AcEvoImportedAssetKind.TRACKMAP_SVG) return@forEach
+            if (trackIdFilter != null && trackId != trackIdFilter) return@forEach
             val bundleKey = trackBundleKey(trackId = trackId, layoutId = asset.layoutId)
             val builder = bundles.getOrPut(bundleKey) {
                 TrackAssetBundleBuilder(
@@ -87,27 +130,49 @@ class AcEvoImportedTrackMapProvider internal constructor(
                 AcEvoImportedAssetKind.PITLANE_AI -> builder.pitlanePath = assetPath
                 AcEvoImportedAssetKind.TRACK_CONTROL_POINTS -> builder.controlPointsPath = assetPath
                 AcEvoImportedAssetKind.TRACK_LAYOUT -> builder.trackLayoutPath = assetPath
+                AcEvoImportedAssetKind.TRACKMAP_SVG -> builder.trackMapSvgPath = assetPath
             }
         }
+        return bundles
+    }
 
-        val builtMaps = bundles.values.mapNotNull { bundle ->
-            buildTrackMap(
-                bundle = bundle.toImmutable(),
-                createdAtEpochMs = snapshot.manifest.packageLastModifiedEpochMs,
+    private fun selectCandidateBundles(
+        bundles: List<TrackAssetBundle>,
+        normalizedLayoutId: String,
+    ): List<TrackAssetBundle> {
+        if (bundles.isEmpty()) return emptyList()
+        val sortedBundles = bundles.sortedBy { bundle ->
+            trackBundleKey(trackId = bundle.trackId, layoutId = bundle.layoutId)
+        }
+        if (normalizedLayoutId.isNotEmpty()) {
+            val exactBundle = sortedBundles.firstOrNull { it.layoutId.normalizedLayoutId() == normalizedLayoutId }
+            if (exactBundle != null) return listOf(exactBundle)
+            return listOfNotNull(
+                sortedBundles.firstOrNull { it.layoutId.normalizedLayoutId().isEmpty() },
             )
         }
-            .sortedBy { map -> trackBundleKey(trackId = map.trackId, layoutId = map.layoutId) }
+        return listOfNotNull(
+            sortedBundles.firstOrNull { it.layoutId.normalizedLayoutId().isEmpty() }
+                ?: sortedBundles.firstOrNull(),
+        )
+    }
 
+    private fun invalidateCacheIfNeeded(key: CacheKey) {
+        if (cachedKey == key) return
         cachedKey = key
-        cachedMaps = builtMaps
-        builtMaps
+        cachedMaps = emptyList()
+        cachedMapsByBundleKey = emptyMap()
     }
 
     private fun buildTrackMap(bundle: TrackAssetBundle, createdAtEpochMs: Long): TrackMap? {
         val controlPoints = bundle.controlPointsPath?.let(parsers::parseTrackControlPoints).orEmpty()
-        val centerline = bundle.splineJsonPath?.let(parsers::parseSplineJson).orEmpty()
-            .ifEmpty { bundle.idealLinePath?.let(parsers::parseAiSpline).orEmpty() }
-            .ifEmpty { densifyControlPoints(controlPoints) }
+        val idealLine = bundle.idealLinePath?.let(parsers::parseAiSpline).orEmpty()
+        val splineCenterLine = bundle.splineJsonPath?.let(parsers::parseSplineJson).orEmpty()
+        val centerline = centerLineResolver.resolve(
+            splineSamples = splineCenterLine,
+            controlPoints = controlPoints,
+            idealLine = idealLine,
+        )
         if (centerline.size < 2) return null
 
         val pitPoints = bundle.pitlanePath?.let(parsers::parseAiSpline).orEmpty()
@@ -137,7 +202,15 @@ class AcEvoImportedTrackMapProvider internal constructor(
                 y = point.y,
             )
         }
-        val bounds = computeBounds(resolvedPoints + resolvedPitPoints) ?: return null
+        val resolvedIdealPoints = idealLine.map { point ->
+            TrackMapPoint(
+                x = point.x,
+                y = point.y,
+                leftWidthMeters = point.leftWidthMeters,
+                rightWidthMeters = point.rightWidthMeters,
+            )
+        }
+        val bounds = computeBounds(resolvedPoints + resolvedPitPoints + resolvedIdealPoints) ?: return null
 
         return TrackMap(
             gameId = AC_KEY,
@@ -148,37 +221,20 @@ class AcEvoImportedTrackMapProvider internal constructor(
             referencePoint = ReferencePoint.FRONT_AXLE,
             points = resolvedPoints,
             pitPoints = resolvedPitPoints,
+            idealLinePoints = resolvedIdealPoints,
             bounds = bounds,
+            svgPath = bundle.trackMapSvgPath
+                ?.takeIf(Files::isRegularFile)
+                ?.toAbsolutePath()
+                ?.normalize()
+                ?.toString(),
         )
     }
-
-    private fun densifyControlPoints(points: List<AcEvoTrackSample>): List<AcEvoTrackSample> {
-        if (points.size < 2) return points
-        val densified = mutableListOf<AcEvoTrackSample>()
-        for (index in 0 until points.lastIndex) {
-            val start = points[index]
-            val end = points[index + 1]
-            val distance = hypot((end.x - start.x).toDouble(), (end.y - start.y).toDouble())
-            val segments = maxOf(1, ceil(distance / CONTROL_POINT_RESAMPLE_STEP_METERS).toInt())
-            repeat(segments) { segmentIndex ->
-                val t = segmentIndex.toFloat() / segments.toFloat()
-                densified += lerp(start, end, t)
-            }
-        }
-        densified += points.last()
-        return densified
-    }
-
-    private fun lerp(start: AcEvoTrackSample, end: AcEvoTrackSample, t: Float): AcEvoTrackSample = AcEvoTrackSample(
-        x = start.x + (end.x - start.x) * t,
-        y = start.y + (end.y - start.y) * t,
-        leftWidthMeters = start.leftWidthMeters + (end.leftWidthMeters - start.leftWidthMeters) * t,
-        rightWidthMeters = start.rightWidthMeters + (end.rightWidthMeters - start.rightWidthMeters) * t,
-    )
 
     private fun nearestControlPoint(point: AcEvoTrackSample, controlPoints: List<AcEvoTrackSample>): AcEvoTrackSample? {
         var bestPoint: AcEvoTrackSample? = null
         var bestDistanceSq = Float.POSITIVE_INFINITY
+
         controlPoints.forEach { candidate ->
             val dx = candidate.x - point.x
             val dy = candidate.y - point.y
@@ -188,6 +244,7 @@ class AcEvoImportedTrackMapProvider internal constructor(
                 bestPoint = candidate
             }
         }
+
         return bestPoint
     }
 
@@ -197,13 +254,16 @@ class AcEvoImportedTrackMapProvider internal constructor(
         var minY = points.first().y
         var maxX = points.first().x
         var maxY = points.first().y
+
         points.forEach { point ->
             if (point.x < minX) minX = point.x
             if (point.y < minY) minY = point.y
             if (point.x > maxX) maxX = point.x
             if (point.y > maxY) maxY = point.y
         }
+
         if (maxX <= minX || maxY <= minY) return null
+
         return TrackMapBounds(
             minX = minX,
             minY = minY,
@@ -214,23 +274,26 @@ class AcEvoImportedTrackMapProvider internal constructor(
 
     private fun buildTrackDisplayName(trackFolder: String, layoutId: String?): String {
         val base = humanizeToken(trackFolder)
+
         val layout = layoutId
             ?.takeIf { it.isNotBlank() && !it.equals("track_layout", ignoreCase = true) }
             ?.let(::humanizeToken)
+
         return if (layout == null || layout.equals(base, ignoreCase = true)) base else "$base $layout"
     }
 
-    private fun humanizeToken(raw: String): String = raw
-        .split('_')
+    private fun humanizeToken(raw: String): String = raw.split('_')
         .filter(String::isNotBlank)
         .joinToString(" ") { token -> token.replaceFirstChar { ch -> ch.titlecase(Locale.US) } }
         .ifBlank { raw }
 
     private fun resolveRelativePath(root: Path, relativePath: String): Path {
         var current = root
+
         relativePath.split('/').filter(String::isNotBlank).forEach { segment ->
             current = current.resolve(segment)
         }
+
         return current.normalize()
     }
 
@@ -243,50 +306,11 @@ class AcEvoImportedTrackMapProvider internal constructor(
     private fun String?.normalizedLayoutId(): String = TrackIdNormalizer.normalizeLayoutId(this).orEmpty()
 
     private fun isAceGame(gameId: String): Boolean = gameId.trim().lowercase(Locale.US) == AC_KEY
-
-    private companion object {
-
-        const val CONTROL_POINT_RESAMPLE_STEP_METERS = 5.0
-    }
 }
 
-private data class TrackAssetBundle(
-    val trackId: String,
-    val trackFolder: String,
-    val layoutId: String?,
-    val splineJsonPath: Path?,
-    val idealLinePath: Path?,
-    val pitlanePath: Path?,
-    val controlPointsPath: Path?,
-    val trackLayoutPath: Path?,
-)
-
-private data class TrackAssetBundleBuilder(
-    val trackId: String,
-    val trackFolder: String,
-    val layoutId: String?,
-    var splineJsonPath: Path? = null,
-    var idealLinePath: Path? = null,
-    var pitlanePath: Path? = null,
-    var controlPointsPath: Path? = null,
-    var trackLayoutPath: Path? = null,
-) {
-
-    fun toImmutable(): TrackAssetBundle = TrackAssetBundle(
-        trackId = trackId,
-        trackFolder = trackFolder,
-        layoutId = layoutId,
-        splineJsonPath = splineJsonPath,
-        idealLinePath = idealLinePath,
-        pitlanePath = pitlanePath,
-        controlPointsPath = controlPointsPath,
-        trackLayoutPath = trackLayoutPath,
-    )
-}
-
-private data class CacheKey(
-    val packagePath: String,
-    val packageSizeBytes: Long,
-    val packageLastModifiedEpochMs: Long,
-    val assetCount: Int,
+private fun AcEvoImportedContentSnapshot.toCacheKey(): CacheKey = CacheKey(
+    packagePath = manifest.packagePath,
+    packageSizeBytes = manifest.packageSizeBytes,
+    packageLastModifiedEpochMs = manifest.packageLastModifiedEpochMs,
+    assetCount = manifest.assets.size,
 )

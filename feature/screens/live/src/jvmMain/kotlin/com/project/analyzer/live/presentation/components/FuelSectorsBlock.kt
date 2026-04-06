@@ -23,7 +23,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.live.Res.*
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.fuel
+import com.project.analyzer.feature.screens.live.Res.race_info_est_laps
+import com.project.analyzer.feature.screens.live.Res.race_info_fuel
+import com.project.analyzer.feature.screens.live.Res.race_info_fuel_per_lap
+import com.project.analyzer.feature.screens.live.Res.race_info_fuel_value
+import com.project.analyzer.feature.screens.live.Res.race_info_sector
+import com.project.analyzer.feature.screens.live.Res.race_info_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
 import kotlinx.collections.immutable.ImmutableList

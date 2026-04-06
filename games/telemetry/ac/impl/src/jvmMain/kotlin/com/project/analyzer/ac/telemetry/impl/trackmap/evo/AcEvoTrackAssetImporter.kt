@@ -1,6 +1,12 @@
 package com.project.analyzer.ac.telemetry.impl.trackmap.evo
 
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportCandidate
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedAsset
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedAssetKind
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedContentManifest
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedContentSnapshot
+import com.project.analyzer.ac.telemetry.impl.trackmap.evo.model.AcEvoImportedTrackMapCacheKey
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.utils.AppDirectories
 import com.project.analyzer.utils.logger.logger
@@ -11,7 +17,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.nio.file.Files
 import java.nio.file.Path
@@ -31,6 +36,12 @@ internal class AcEvoTrackAssetImporter internal constructor(
     private val logger = logger()
     private val mutex = Mutex()
 
+    @Volatile
+    private var cachedKey: AcEvoImportedTrackMapCacheKey? = null
+
+    @Volatile
+    private var cachedSnapshot: AcEvoImportedContentSnapshot? = null
+
     suspend fun ensureImported(): AcEvoImportedContentSnapshot? = withContext(ioDispatcher) {
         mutex.withLock {
             val packagePath = locator.locate() ?: return@withLock null
@@ -38,6 +49,20 @@ internal class AcEvoTrackAssetImporter internal constructor(
             val packageLastModifiedEpochMs = runCatching {
                 Files.getLastModifiedTime(packagePath).toMillis()
             }.getOrDefault(0L)
+            val packageCacheKey = AcEvoImportedTrackMapCacheKey(
+                packagePath = packagePath.toAbsolutePath().normalize().toString(),
+                packageSizeBytes = packageSizeBytes,
+                packageLastModifiedEpochMs = packageLastModifiedEpochMs,
+                assetCount = -1,
+            )
+
+            cachedSnapshot
+                ?.takeIf { snapshot ->
+                    cachedKey?.isSamePackage(packageCacheKey) == true && Files.isDirectory(snapshot.assetsRoot)
+                }
+                ?.let { snapshot ->
+                    return@withLock snapshot
+                }
 
             val importRoot = appDirectories.userDataDir.toPath().resolve(IMPORT_ROOT_DIR_NAME)
             val assetsRoot = importRoot.resolve(ASSETS_DIR_NAME)
@@ -51,10 +76,13 @@ internal class AcEvoTrackAssetImporter internal constructor(
                     assetsRoot = assetsRoot,
                 )
             }?.let { manifest ->
-                return@withLock AcEvoImportedContentSnapshot(
+                val snapshot = AcEvoImportedContentSnapshot(
                     assetsRoot = assetsRoot,
                     manifest = manifest,
                 )
+                cachedKey = manifest.toCacheKey()
+                cachedSnapshot = snapshot
+                return@withLock snapshot
             }
 
             val archive = kspkgReader.open(packagePath)
@@ -78,6 +106,7 @@ internal class AcEvoTrackAssetImporter internal constructor(
                 importedAtEpochMs = System.currentTimeMillis(),
                 assets = importCandidates.map { it.asset }.sortedBy { it.relativePath },
             )
+
             Files.createDirectories(importRoot)
             Files.writeString(
                 manifestPath,
@@ -92,12 +121,16 @@ internal class AcEvoTrackAssetImporter internal constructor(
             AcEvoImportedContentSnapshot(
                 assetsRoot = assetsRoot,
                 manifest = manifest,
-            )
+            ).also { snapshot ->
+                cachedKey = manifest.toCacheKey()
+                cachedSnapshot = snapshot
+            }
         }
     }
 
     private fun readManifest(manifestPath: Path): AcEvoImportedContentManifest? {
         if (!Files.isRegularFile(manifestPath)) return null
+
         return runCatching {
             json.decodeFromString(
                 AcEvoImportedContentManifest.serializer(),
@@ -148,6 +181,7 @@ internal class AcEvoTrackAssetImporter internal constructor(
 
         val layoutId = normalizeRuntimeLayoutId(assetKindAndLayout.second)
         val trackId = TrackIdNormalizer.normalize(trackFolder, layoutId).takeIf { it.isNotBlank() } ?: return null
+
         return AcEvoImportedAsset(
             relativePath = relativePath,
             kind = assetKindAndLayout.first,
@@ -163,18 +197,22 @@ internal class AcEvoTrackAssetImporter internal constructor(
         ) {
             return null
         }
+
         val fileName = relativePath.substringAfterLast('/')
         val stem = fileName.removeSuffixIgnoreCase(SVG_SUFFIX)
         val hyphenIndex = stem.lastIndexOf('-')
         val trackFolder = stem.substringBeforeLast('-', missingDelimiterValue = stem)
             .trim()
             .takeIf { it.isNotBlank() }
+
         val layoutId = if (hyphenIndex > 0 && hyphenIndex < stem.lastIndex) {
             normalizeRuntimeLayoutId(stem.substring(hyphenIndex + 1))
         } else {
             null
         }
+
         val trackId = trackFolder?.let { TrackIdNormalizer.normalize(it, layoutId).takeIf(String::isNotBlank) }
+
         return AcEvoImportedAsset(
             relativePath = relativePath,
             kind = AcEvoImportedAssetKind.TRACKMAP_SVG,
@@ -194,6 +232,7 @@ internal class AcEvoTrackAssetImporter internal constructor(
             ?.trim('_')
             ?.takeIf { it.isNotBlank() }
             ?: return null
+
         return TrackIdNormalizer.normalizeLayoutId(normalized) ?: normalized
     }
 
@@ -235,65 +274,19 @@ internal class AcEvoTrackAssetImporter internal constructor(
         const val IDEAL_LINE_SUFFIX = ".ideal_line.aisplinedata"
         const val PITLANE_SUFFIX = ".pitlane.aisplinedata"
         const val TRACK_CONTROL_POINTS_SUFFIX = ".trackcontrolpoints"
-        const val TRACK_LAYOUT_SUFFIX = ".track_layout"
         const val SVG_SUFFIX = ".svg"
         const val SVG_DIR_PREFIX = "uiresources/images/trackmaps/"
     }
 }
 
-internal data class AcEvoImportedContentSnapshot(val assetsRoot: Path, val manifest: AcEvoImportedContentManifest)
+private fun AcEvoImportedTrackMapCacheKey.isSamePackage(other: AcEvoImportedTrackMapCacheKey): Boolean =
+    packagePath == other.packagePath &&
+        packageSizeBytes == other.packageSizeBytes &&
+        packageLastModifiedEpochMs == other.packageLastModifiedEpochMs
 
-@Serializable
-internal data class AcEvoImportedContentManifest(
-    val importerVersion: Int,
-    val packagePath: String,
-    val packageSizeBytes: Long,
-    val packageLastModifiedEpochMs: Long,
-    val importedAtEpochMs: Long,
-    val assets: List<AcEvoImportedAsset>,
-) {
-
-    fun isCurrentFor(
-        packagePath: Path,
-        packageSizeBytes: Long,
-        packageLastModifiedEpochMs: Long,
-        assetsRoot: Path,
-    ): Boolean {
-        if (importerVersion != AcEvoTrackAssetImporter.IMPORTER_VERSION) return false
-        if (this.packagePath != packagePath.toAbsolutePath().normalize().toString()) return false
-        if (this.packageSizeBytes != packageSizeBytes) return false
-        if (this.packageLastModifiedEpochMs != packageLastModifiedEpochMs) return false
-        if (!Files.isDirectory(assetsRoot)) return false
-        return assets.all { asset -> Files.isRegularFile(resolveRelativePath(assetsRoot, asset.relativePath)) }
-    }
-
-    private fun resolveRelativePath(root: Path, relativePath: String): Path {
-        var current = root
-        relativePath.split('/').filter(String::isNotBlank).forEach { segment ->
-            current = current.resolve(segment)
-        }
-        return current.normalize()
-    }
-}
-
-@Serializable
-internal data class AcEvoImportedAsset(
-    val relativePath: String,
-    val kind: AcEvoImportedAssetKind,
-    val trackFolder: String? = null,
-    val layoutId: String? = null,
-    val trackId: String? = null,
+private fun AcEvoImportedContentManifest.toCacheKey(): AcEvoImportedTrackMapCacheKey = AcEvoImportedTrackMapCacheKey(
+    packagePath = packagePath,
+    packageSizeBytes = packageSizeBytes,
+    packageLastModifiedEpochMs = packageLastModifiedEpochMs,
+    assetCount = assets.size,
 )
-
-@Serializable
-internal enum class AcEvoImportedAssetKind {
-
-    SPLINEDATA_JSON,
-    IDEAL_LINE_AI,
-    PITLANE_AI,
-    TRACK_CONTROL_POINTS,
-    TRACK_LAYOUT,
-    TRACKMAP_SVG,
-}
-
-private data class AcEvoImportCandidate(val entry: AcEvoKspkgEntry, val asset: AcEvoImportedAsset)

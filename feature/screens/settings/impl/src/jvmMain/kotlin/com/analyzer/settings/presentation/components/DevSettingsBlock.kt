@@ -27,10 +27,7 @@ import com.project.analyzer.ui.components.SimAnalyzerButtonVariant
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun DevSettingsBlock(
-    modifier: Modifier = Modifier,
-    onOpen: () -> Unit = {}
-) {
+internal fun DevSettingsBlock(modifier: Modifier = Modifier, onOpen: () -> Unit = {}) {
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)

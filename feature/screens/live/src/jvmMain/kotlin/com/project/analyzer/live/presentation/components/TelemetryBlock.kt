@@ -41,7 +41,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.live.Res.*
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.telemetry_reverse_gear
+import com.project.analyzer.feature.screens.live.Res.telemetry_rpm_unit
+import com.project.analyzer.feature.screens.live.Res.telemetry_speed_unit
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.max

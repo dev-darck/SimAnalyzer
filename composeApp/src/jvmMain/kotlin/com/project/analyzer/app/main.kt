@@ -22,18 +22,17 @@ import com.project.analyzer.composeApp.Res.Res
 import com.project.analyzer.composeApp.Res.app_icon
 import com.project.analyzer.crash.presentation.CrashBoundary
 import com.project.analyzer.impl.compose.OverlayWindow
+import com.project.analyzer.impl.compose.installOverlayRenderCompatibilityDefaults
+import com.project.analyzer.impl.compose.rememberOverlayCompatibilityConflict
 import com.project.analyzer.impl.di.AppComponent
 import com.project.analyzer.impl.di.createAppComponent
-import com.project.analyzer.impl.di.createFeatureComponents
 import com.project.analyzer.navigation.api.Root
-import com.project.analyzer.navigation.impl.rememberNavigationState
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.theme.ThemeMode
 import com.project.analyzer.utils.SingleInstanceGuard
 import com.project.analyzer.utils.logger.LogbackConfigurator
 import com.project.analyzer.utils.resolveAppDirectories
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
-import kotlinx.collections.immutable.toImmutableSet
 import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
 import java.awt.SystemTray
@@ -41,10 +40,10 @@ import java.awt.SystemTray
 suspend fun main() {
     val appDirectories = resolveAppDirectories()
     SingleInstanceGuard.acquireOrExit(appDirectories.lockFile)
-    val appGraph = createAppComponent(appDirectories)
     LogbackConfigurator.configure(appDirectories.logsDir)
+    installOverlayRenderCompatibilityDefaults()
+    val appGraph = createAppComponent(appDirectories)
     try {
-        appGraph.appLifecycle.start()
         awaitApplication {
             CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.metroViewModelFactory) {
                 val themeMode by appGraph.themeRepository.observeThemeMode().collectAsState(ThemeMode.System)
@@ -64,21 +63,36 @@ suspend fun main() {
 
 @Composable
 private fun ApplicationScope.App(appGraph: AppComponent) {
-    val features = remember(appGraph) { appGraph.createFeatureComponents() }
     var showAppWindow by remember { mutableStateOf(true) }
     val showHud by appGraph.hudPreferences.observeHudEnabled().collectAsState(true)
-    var showOverlay by remember { mutableStateOf(features.hud.hudPanels.isNotEmpty()) }
-    val hudPanels = remember(features.hud.hudPanels) { features.hud.hudPanels.toImmutableSet() }
+    var showOverlay by remember { mutableStateOf(true) }
     val isSystemTraySupported = remember { SystemTray.isSupported() }
-    val navigationState = rememberNavigationState()
+    val navigationState = appGraph.navigationHost.rememberNavigationState()
+    val overlayRequested = showHud && showOverlay
+    val overlayCompatibilityConflict = rememberOverlayCompatibilityConflict(overlayRequested)
+    val overlayVisible = overlayRequested && overlayCompatibilityConflict == null
 
     val appState = rememberWindowState(
         position = WindowPosition(Alignment.Center),
     )
 
+    LaunchedEffect(appGraph) {
+        appGraph.appLifecycle.start()
+    }
+
+    LaunchedEffect(overlayCompatibilityConflict) {
+        if (overlayCompatibilityConflict != null && showOverlay) {
+            showOverlay = false
+        }
+    }
+
+    val overlayDependencies = remember(appGraph) {
+        AppOverlayWindowDependencies(appGraph)
+    }
+
     CustomTray(
         brandName = BuildConfig.APP_NAME,
-        overlayVisible = showOverlay,
+        overlayVisible = overlayVisible,
         onMainAction = { showAppWindow = true },
         onOverlayToggle = { showOverlay = !showOverlay },
         onOpenSession = {
@@ -105,7 +119,7 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
 
             FrameDecorator { decorator ->
                 App(
-                    entryFactory = features.navigation.entryProviderFactory,
+                    navigationHost = appGraph.navigationHost,
                     navigationState = navigationState,
                     decorator = decorator,
                     onCloseRequest = { if (isSystemTraySupported) showAppWindow = false else exitApplication() },
@@ -115,10 +129,9 @@ private fun ApplicationScope.App(appGraph: AppComponent) {
     }
 
     OverlayWindow(
-        visible = showHud && showOverlay,
+        visible = overlayVisible,
         onCloseRequest = { showOverlay = false },
-        panels = hudPanels,
-        gameDetectorFactory = features.gameDetector.gameDetectorFactory,
+        dependencies = overlayDependencies,
         state = rememberWindowState(),
     )
 }

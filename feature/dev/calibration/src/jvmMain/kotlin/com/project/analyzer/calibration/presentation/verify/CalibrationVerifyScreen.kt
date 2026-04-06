@@ -9,10 +9,10 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -66,6 +66,8 @@ import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_stop
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_stopped
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_title
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.adaptive.ResponsiveGridMode
+import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
@@ -80,21 +82,15 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         viewModel.start(trackId)
     }
 
-    val screenScrollState = rememberScrollState()
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background),
+    ResponsiveScreen(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        verticalSpacing = 12.dp,
+        gridMode = ResponsiveGridMode.Grid,
+        mediumColumns = 1,
+        expandedColumns = 1,
+        backgroundColor = SimAnalyzerTheme.material.background,
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(screenScrollState)
-                .padding(16.dp)
-                .padding(end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        item(key = "calibration-verify-status", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_verify_title),
                 subtitle = state.calibration?.trackName ?: trackId,
@@ -153,7 +149,8 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     MessageBanner(message)
                 }
             }
-
+        }
+        item(key = "calibration-verify-lap-timing", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_verify_lap_timing_title),
                 subtitle = stringResource(Res.string.calibration_verify_lap_timing_subtitle),
@@ -183,7 +180,8 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     state.bestS3Ms,
                 )
             }
-
+        }
+        item(key = "calibration-verify-direction", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_verify_direction_title),
                 subtitle = stringResource(Res.string.calibration_verify_direction_subtitle),
@@ -205,8 +203,9 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     onRadius = viewModel::onRadiusChanged,
                 )
             }
-
+        }
             state.debugTelemetry?.let { debugText ->
+                item(key = "calibration-verify-snapshot", isContentFull = true) {
                 CalibrationSectionCard(
                     title = stringResource(Res.string.calibration_verify_snapshot_title),
                     subtitle = stringResource(Res.string.calibration_verify_snapshot_subtitle),
@@ -232,7 +231,8 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     }
                 }
             }
-
+            }
+        item(key = "calibration-verify-events", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_verify_recent_events_title),
                 subtitle = stringResource(Res.string.calibration_verify_recent_events_subtitle),
@@ -262,8 +262,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .verticalScroll(eventsScrollState)
-                                .padding(end = 10.dp),
+                                .verticalScroll(eventsScrollState),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             state.events.forEach { event ->
@@ -286,15 +285,6 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                 }
             }
         }
-        AppVerticalScrollbar(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .padding(vertical = 6.dp),
-            adapter = AppScrollbarAdapter(
-                rememberScrollbarAdapter(screenScrollState)
-            ),
-        )
     }
 }
 

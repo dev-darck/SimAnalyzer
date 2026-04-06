@@ -18,9 +18,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.utils.logger.logger
 
 @Composable
-fun WindowScope.FrameDecorator(
-    content: @Composable (FrameDecoratorState) -> Unit = {}
-) {
+fun WindowScope.FrameDecorator(content: @Composable (FrameDecoratorState) -> Unit = {}) {
     val paddingInsets = remember { MutableWindowInsets() }
 
     val winController = remember(window) {

@@ -20,3 +20,5 @@ internal fun isBoundaryPlaceholder(location: SessionLocation, analysis: IndexAna
     return laps.none { it.complete } &&
         laps.all { lap -> lap.lap == 1 && !lap.complete && lap.totalTimeMs == null }
 }
+
+private const val DETAIL_PLACEHOLDER_MAX_FRAMES: Long = 5L

@@ -52,8 +52,7 @@ public fun ScrollableScreenColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
-                .padding(contentPadding)
-                .padding(end = 10.dp),
+                .padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(verticalSpacing),
             content = content,
         )

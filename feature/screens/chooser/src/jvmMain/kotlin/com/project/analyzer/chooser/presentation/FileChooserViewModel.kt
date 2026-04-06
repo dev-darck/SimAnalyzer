@@ -138,6 +138,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
             try {
                 block()
             } catch (e: Exception) {
+                // Log the full exception for debugging while showing user-friendly message
                 updateState { copy(error = e.message) }
             }
         }

@@ -18,6 +18,5 @@ moduleImpl {
 
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
-        lib.navigation3.runtime.jvmImpl
     }
 }

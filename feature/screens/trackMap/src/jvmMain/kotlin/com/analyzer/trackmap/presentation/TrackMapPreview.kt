@@ -21,6 +21,7 @@ import com.analyzer.trackmap.presentation.model.TrackMapPreviewBoundsUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewPointUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewUi
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.geometry.hasTrackPathSelfIntersection
 import kotlin.math.min
 
 @Composable
@@ -115,6 +116,8 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
     val currentColor = SimAnalyzerTheme.extended.teal
     val corridorColor = SimAnalyzerTheme.material.primary
     val boundaryColor = SimAnalyzerTheme.material.primary.copy(alpha = 0.55f)
+    val trackSurfaceColor = SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.22f)
+    val trackSurfaceEdgeColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.24f)
     val pitEntryColor = SimAnalyzerTheme.extended.amber
     val pitExitColor = SimAnalyzerTheme.extended.lightGreen
     val pitLineColor = SimAnalyzerTheme.extended.amber
@@ -143,6 +146,11 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
             val mapped = toScreen(point)
             if (index == 0) path.moveTo(mapped.x, mapped.y) else path.lineTo(mapped.x, mapped.y)
         }
+        val trackSurfaceStrokePx = (state.averageTrackWidthMeters * scale)
+            .takeIf { value -> value.isFinite() && value > 0f }
+            ?.coerceIn(8f, min(size.width, size.height) * 0.22f)
+            ?: 10f
+        var drewTrackSurface = false
 
         val hasWidths = state.leftWidthsMeters.size == points.size && state.rightWidthsMeters.size == points.size
         if (hasWidths && points.size >= 3) {
@@ -153,26 +161,46 @@ private fun TrackMapPreviewCanvas(state: TrackMapPreviewUi, modifier: Modifier =
                 leftWorld += points[index] + normal * state.leftWidthsMeters[index].coerceAtLeast(0f)
                 rightWorld += points[index] - normal * state.rightWidthsMeters[index].coerceAtLeast(0f)
             }
-            val corridorPath = Path()
-            leftWorld.forEachIndexed { index, point ->
-                val mapped = toScreen(point)
-                if (index == 0) corridorPath.moveTo(mapped.x, mapped.y) else corridorPath.lineTo(mapped.x, mapped.y)
+            val supportsCorridorFill = !points.toOffsets().hasTrackPathSelfIntersection() &&
+                !leftWorld.toOffsets().hasTrackPathSelfIntersection() &&
+                !rightWorld.toOffsets().hasTrackPathSelfIntersection()
+            val leftOffsets = leftWorld.map(::toScreen)
+            val rightOffsets = rightWorld.map(::toScreen)
+            if (supportsCorridorFill) {
+                val corridorPath = Path()
+                leftOffsets.forEachIndexed { index, mapped ->
+                    if (index == 0) corridorPath.moveTo(mapped.x, mapped.y) else corridorPath.lineTo(mapped.x, mapped.y)
+                }
+                for (index in rightOffsets.lastIndex downTo 0) {
+                    val mapped = rightOffsets[index]
+                    corridorPath.lineTo(mapped.x, mapped.y)
+                }
+                corridorPath.close()
+                drawPath(path = corridorPath, color = corridorColor.copy(alpha = 0.08f))
+                drewTrackSurface = true
             }
-            for (index in rightWorld.lastIndex downTo 0) {
-                val mapped = toScreen(rightWorld[index])
-                corridorPath.lineTo(mapped.x, mapped.y)
-            }
-            corridorPath.close()
-            drawPath(path = corridorPath, color = corridorColor.copy(alpha = 0.08f))
             drawPath(
-                path = buildPath(leftWorld, ::toScreen),
+                path = buildOffsetPath(leftOffsets),
                 color = boundaryColor,
                 style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
             drawPath(
-                path = buildPath(rightWorld, ::toScreen),
+                path = buildOffsetPath(rightOffsets),
                 color = boundaryColor,
                 style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+        }
+
+        if (!drewTrackSurface) {
+            drawPath(
+                path = path,
+                color = trackSurfaceEdgeColor,
+                style = Stroke(width = trackSurfaceStrokePx + 2f, cap = StrokeCap.Round, join = StrokeJoin.Round),
+            )
+            drawPath(
+                path = path,
+                color = trackSurfaceColor,
+                style = Stroke(width = trackSurfaceStrokePx, cap = StrokeCap.Round, join = StrokeJoin.Round),
             )
         }
 
@@ -267,6 +295,14 @@ private fun buildPath(points: List<TrackMapPreviewPointUi>, mapper: (TrackMapPre
     return path
 }
 
+private fun buildOffsetPath(points: List<Offset>): Path {
+    val path = Path()
+    points.forEachIndexed { index, point ->
+        if (index == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
+    }
+    return path
+}
+
 private fun computeBounds(points: List<TrackMapPreviewPointUi>): TrackMapPreviewBoundsUi? {
     if (points.isEmpty()) return null
     var minX = points[0].x
@@ -280,6 +316,10 @@ private fun computeBounds(points: List<TrackMapPreviewPointUi>): TrackMapPreview
         if (point.y > maxY) maxY = point.y
     }
     return TrackMapPreviewBoundsUi(minX = minX, minY = minY, maxX = maxX, maxY = maxY)
+}
+
+private fun List<TrackMapPreviewPointUi>.toOffsets(): List<Offset> = map { point ->
+    Offset(x = point.x, y = point.y)
 }
 
 private operator fun TrackMapPreviewPointUi.plus(other: TrackMapPreviewPointUi): TrackMapPreviewPointUi =

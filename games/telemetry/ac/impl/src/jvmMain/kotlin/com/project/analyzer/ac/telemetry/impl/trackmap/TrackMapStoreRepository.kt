@@ -1,5 +1,6 @@
 package com.project.analyzer.ac.telemetry.impl.trackmap
 
+import androidx.datastore.core.CorruptionException
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
 import com.project.analyzer.game.api.AC_KEY
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMap
@@ -14,6 +15,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import kotlinx.coroutines.flow.first
+import java.io.File
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class, binding = binding<TrackMapRepository>())
@@ -23,7 +25,8 @@ class TrackMapStoreRepository internal constructor(
     private val gameProvider: TrackMapGameProvider,
 ) : TrackMapRepository {
 
-    private val store = createTrackMapStoreDataStore(
+    private val storeFile = File(appDirectories.preferencesDir, FILE_NAME)
+    private var store = createTrackMapStoreDataStore(
         directory = appDirectories.preferencesDir,
         fileName = FILE_NAME,
     )
@@ -58,26 +61,21 @@ class TrackMapStoreRepository internal constructor(
             trackId = trackId.trim(),
             layoutId = layoutId.normalizedLayoutId(),
         )
-        return resolveUserMap(request) ?: resolveGameMap(request)
+        return resolveStoredMap(request) ?: resolveGameMap(request)
     }
 
     override suspend fun loadAll(gameId: String?): List<TrackMap> {
         val normalizedGameId = gameId?.normalizedGameId()
-        val userMaps = store.data.first().maps.map(::sanitize)
-        val filteredUserMaps = if (normalizedGameId.isNullOrBlank()) {
-            userMaps
-        } else {
-            userMaps.filter { it.gameId == normalizedGameId }
-        }
+        val storedMaps = readStoredMaps(gameId = normalizedGameId)
         val gameMaps = gameProvider.loadAll(normalizedGameId).map(::sanitize)
-        if (gameMaps.isEmpty()) return filteredUserMaps
-        if (filteredUserMaps.isEmpty()) return gameMaps
+        if (gameMaps.isEmpty()) return storedMaps
+        if (storedMaps.isEmpty()) return gameMaps
 
         val merged = linkedMapOf<String, TrackMap>()
         gameMaps.forEach { map ->
             merged[map.mergeKey()] = map
         }
-        filteredUserMaps.forEach { map ->
+        storedMaps.forEach { map ->
             merged[map.mergeKey()] = map
         }
         return merged.values.toList()
@@ -94,9 +92,9 @@ class TrackMapStoreRepository internal constructor(
             }
         }
 
-    private suspend fun resolveUserMap(request: TrackMapLookupRequest): TrackMap? {
+    private suspend fun resolveStoredMap(request: TrackMapLookupRequest): TrackMap? {
         val candidates = selectCandidates(
-            maps = store.data.first().maps.map(::sanitize),
+            maps = readStoredMaps(gameId = request.gameId),
             gameId = request.gameId,
             trackId = request.trackId,
             layoutId = request.layoutId,
@@ -115,11 +113,16 @@ class TrackMapStoreRepository internal constructor(
     }
 
     private suspend fun resolveGameMap(request: TrackMapLookupRequest): TrackMap? {
-        gameProvider.load(
-            gameId = request.gameId,
-            trackId = request.trackId,
-            layoutId = request.layoutId.ifBlank { null },
-        )?.let(::sanitize)?.let { return it }
+        buildDirectGameLookupRequests(request)
+            .firstNotNullOfOrNull { candidate ->
+                gameProvider.load(
+                    gameId = candidate.gameId,
+                    trackId = candidate.trackId,
+                    layoutId = candidate.layoutId.ifBlank { null },
+                )
+            }
+            ?.let(::sanitize)
+            ?.let { return it }
 
         val candidates = selectCandidates(
             maps = gameProvider.loadAll(request.gameId).map(::sanitize),
@@ -128,6 +131,23 @@ class TrackMapStoreRepository internal constructor(
             layoutId = request.layoutId,
         )
         return candidates.resolvePreferredMap(layoutId = request.layoutId)
+    }
+
+    private fun buildDirectGameLookupRequests(request: TrackMapLookupRequest): List<TrackMapLookupRequest> = buildList {
+        add(request)
+
+        val explicitLayoutId = request.layoutId.ifBlank { null }
+        TrackIdNormalizer.normalize(request.trackId, explicitLayoutId)
+            .takeIf { it.isNotBlank() }
+            ?.let { normalizedTrackId ->
+                add(request.copy(trackId = normalizedTrackId))
+            }
+
+        explicitTrackIdAliases(request.trackId).forEach { aliasTrackId ->
+            add(request.copy(trackId = aliasTrackId))
+        }
+    }.distinctBy { candidate ->
+        "${candidate.gameId}|${candidate.trackId}|${candidate.layoutId}"
     }
 
     private fun selectCandidates(
@@ -267,7 +287,10 @@ class TrackMapStoreRepository internal constructor(
         val normalizedLayout = map.layoutId.normalizedLayoutId()
         val normalizedPoints = map.points.map(::sanitizePoint)
         val normalizedPitPoints = map.pitPoints.map(::sanitizePoint)
-        val normalizedBounds = map.bounds ?: computeBounds(normalizedPoints) ?: TrackMapBounds(0f, 0f, 0f, 0f)
+        val normalizedIdealPoints = map.idealLinePoints.map(::sanitizePoint)
+        val normalizedBounds = map.bounds
+            ?: computeBounds(normalizedPoints + normalizedPitPoints + normalizedIdealPoints)
+            ?: TrackMapBounds(0f, 0f, 0f, 0f)
         val maxIndex = normalizedPoints.lastIndex
         val pitEntry = map.pitEntryIndex.takeIf { it in 0..maxIndex } ?: -1
         val pitExit = map.pitExitIndex.takeIf { it in 0..maxIndex } ?: -1
@@ -276,11 +299,30 @@ class TrackMapStoreRepository internal constructor(
             layoutId = normalizedLayout,
             points = normalizedPoints,
             pitPoints = normalizedPitPoints,
+            idealLinePoints = normalizedIdealPoints,
             bounds = normalizedBounds,
+            svgPath = map.svgPath.orEmpty(),
             pitEntryIndex = pitEntry,
             pitExitIndex = pitExit,
         )
         return if (sanitizedMap == map) map else sanitizedMap
+    }
+
+    private suspend fun readStoredMaps(gameId: String? = null): List<TrackMap> = try {
+        store.data.first().maps
+            .map(::sanitize)
+            .filter { map -> gameId.isNullOrBlank() || map.gameId == gameId }
+    } catch (_: CorruptionException) {
+        recoverCorruptedStore()
+        emptyList()
+    }
+
+    private fun recoverCorruptedStore() {
+        storeFile.delete()
+        store = createTrackMapStoreDataStore(
+            directory = storeFile.parentFile,
+            fileName = storeFile.name,
+        )
     }
 
     private fun sanitizePoint(point: TrackMapPoint): TrackMapPoint {
