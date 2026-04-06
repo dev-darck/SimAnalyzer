@@ -10,7 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_best
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_cur
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_label_suffix
+import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_last
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.stringResource
 import java.util.concurrent.TimeUnit

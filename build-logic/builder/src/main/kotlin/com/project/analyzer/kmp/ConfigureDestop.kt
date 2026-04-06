@@ -17,7 +17,9 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
         vendor.set(JvmVendorSpec.ADOPTIUM)
     }.get().metadata.installationPath.asFile.absolutePath
 
-    val compose = extensions.getByName("compose") as ComposeExtension
+    val compose = extensions.getByName("compose") as? ComposeExtension
+        ?: throw IllegalStateException("Compose extension not found")
+
     compose.extensions.configure<DesktopExtension>("desktop") {
         application {
             mainClass = "com.project.analyzer.app.MainKt"
@@ -61,4 +63,4 @@ internal fun Project.configureDesktop(scope: JvmApplication.() -> Unit = {}) {
 
 private fun Project.appVersionBase(): String =
     rootProject.extensions.extraProperties["appVersionBase"] as? String
-        ?: error("appVersionBase is not configured")
+        ?: error("appVersionBase is not configured in project properties")

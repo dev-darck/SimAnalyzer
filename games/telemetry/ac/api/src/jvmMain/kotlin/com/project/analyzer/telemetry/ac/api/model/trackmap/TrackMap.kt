@@ -44,6 +44,8 @@ public data class TrackMap(
     val points: List<TrackMapPoint>,
     val pitPoints: List<TrackMapPoint> = emptyList(),
     val bounds: TrackMapBounds? = null,
+    val svgPath: String? = null,
     val pitEntryIndex: Int = -1,
     val pitExitIndex: Int = -1,
+    val idealLinePoints: List<TrackMapPoint> = emptyList(),
 )

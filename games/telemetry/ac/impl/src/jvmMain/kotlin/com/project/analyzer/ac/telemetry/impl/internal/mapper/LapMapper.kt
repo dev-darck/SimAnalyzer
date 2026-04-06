@@ -91,7 +91,7 @@ class LapMapper(private val cache: AcSessionCache, private val lapState: AcLapSt
         }
 
         return LapFrame(
-            currentLapIndex = completedLaps + 1,
+            currentLapIndex = (completedLaps + 1).takeIf { it > 0 },
             completedLaps = completedLaps,
 
             currentLapTimeMs = currentLapTimeMs,

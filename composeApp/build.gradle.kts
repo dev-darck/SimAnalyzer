@@ -14,7 +14,6 @@ app {
         projects.core.leak.api.jvmImpl
         projects.core.di.impl.jvmImpl
         projects.core.navigation.api.jvmImpl
-        projects.core.navigation.impl.jvmImpl
         projects.core.hud.api.jvmImpl
         projects.core.hud.impl.jvmImpl
         projects.core.preference.api.jvmImpl

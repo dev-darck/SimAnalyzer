@@ -494,17 +494,18 @@ internal class AcSessionTracker {
         source: DataSourceType,
         emit: (TelemetryLifecycleEvent) -> Unit,
     ) {
+        val normalizedLapIndex = newLapIndex?.takeIf { it > 0 }
         val prevLap = lastLapIndex
 
         when {
-            newLapIndex != null && prevLap == null -> {
+            normalizedLapIndex != null && prevLap == null -> {
                 logger.atDebug(RATE_LIMITED) {
-                    message = "LapStarted lap=$newLapIndex (source=$source)"
+                    message = "LapStarted lap=$normalizedLapIndex (source=$source)"
                 }
-                emit(LapStarted(newLapIndex))
+                emit(LapStarted(normalizedLapIndex))
             }
 
-            newLapIndex != null && prevLap != null && newLapIndex != prevLap -> {
+            normalizedLapIndex != null && prevLap != null && normalizedLapIndex != prevLap -> {
                 val lastLapTime = frame.lap?.lastLapTimeMs
                 logger.atDebug(RATE_LIMITED) {
                     message = "LapFinished lap=$prevLap validity=$lastLapValidity " +
@@ -513,13 +514,13 @@ internal class AcSessionTracker {
                 emit(LapFinished(prevLap, lastLapValidity))
 
                 logger.atDebug(RATE_LIMITED) {
-                    message = "LapStarted lap=$newLapIndex (source=$source)"
+                    message = "LapStarted lap=$normalizedLapIndex (source=$source)"
                 }
-                emit(LapStarted(newLapIndex))
+                emit(LapStarted(normalizedLapIndex))
             }
         }
 
-        lastLapIndex = newLapIndex
+        lastLapIndex = normalizedLapIndex
     }
 
     private fun logInferredBoundaries(frame: TelemetryFrame, source: DataSourceType) {

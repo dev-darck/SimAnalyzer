@@ -22,7 +22,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.settings.impl.Res.*
+import com.project.analyzer.feature.screens.settings.impl.Res.Res
+import com.project.analyzer.feature.screens.settings.impl.Res.appearance_theme_dark
+import com.project.analyzer.feature.screens.settings.impl.Res.appearance_theme_light
+import com.project.analyzer.feature.screens.settings.impl.Res.appearance_theme_mode
+import com.project.analyzer.feature.screens.settings.impl.Res.appearance_theme_system
+import com.project.analyzer.feature.screens.settings.impl.Res.appearance_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.theme.ThemeMode
 import com.project.analyzer.ui.icons.Dark

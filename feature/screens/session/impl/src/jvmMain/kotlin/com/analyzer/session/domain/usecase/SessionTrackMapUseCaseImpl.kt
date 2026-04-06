@@ -1,19 +1,19 @@
 package com.analyzer.session.domain.usecase
 
+import com.analyzer.session.domain.mapper.toTrackMapData
+import com.analyzer.session.domain.model.NormalizedTrackMapRequest
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
-import com.project.analyzer.ui.components.TrackMapBounds
 import com.project.analyzer.ui.components.TrackMapData
-import com.project.analyzer.ui.components.TrackMapPoint
 import com.project.analyzer.utils.trackmap.TrackMapPreparationUtil
-import com.project.analyzer.utils.trackmap.TrackMapPreparedBounds
-import com.project.analyzer.utils.trackmap.TrackMapPreparedPoint
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
-import kotlinx.collections.immutable.toImmutableList
 import java.util.Locale
 
 @Inject
@@ -26,64 +26,25 @@ internal class SessionTrackMapUseCaseImpl(
 ) : SessionTrackMapUseCase {
 
     override suspend fun loadTrackMaps(items: Collection<SessionTrackMapIdentity>): Map<String, TrackMapData> =
-        withContext(
-            ioDispatcher,
-        ) {
-            if (items.isEmpty()) return@withContext emptyMap()
+        withContext(ioDispatcher) {
+            val requests = normalizeRequests(items)
+            if (requests.isEmpty()) return@withContext emptyMap()
 
-            val identitiesByKey = linkedMapOf<String, Triple<String, String, String?>>()
-            items.forEach { item ->
-                val normalizedGameId =
-                    item.gameId.trim().lowercase(Locale.US).takeIf { it.isNotBlank() } ?: return@forEach
-                val normalizedTrackId = item.trackId.trim().lowercase(
-                    Locale.US,
-                ).takeIf { it.isNotBlank() } ?: return@forEach
-                val normalizedLayoutId = item.layoutId?.trim()?.lowercase(Locale.US)?.takeIf { it.isNotBlank() }
-                val key = trackMapPreparationUtil.key(
-                    gameId = normalizedGameId,
-                    trackId = normalizedTrackId,
-                    layoutId = normalizedLayoutId,
-                ) ?: return@forEach
-                identitiesByKey.putIfAbsent(key, Triple(normalizedGameId, normalizedTrackId, normalizedLayoutId))
+            coroutineScope {
+                val resolved = requests.map { request ->
+                    async {
+                        request.requestedKey to loadTrackMap(request)
+                    }
+                }.awaitAll()
+
+                buildMap {
+                    resolved.forEach { (requestedKey, map) ->
+                        if (map != null) {
+                            put(requestedKey, map)
+                        }
+                    }
+                }
             }
-
-            if (identitiesByKey.isEmpty()) return@withContext emptyMap()
-
-            val result = linkedMapOf<String, TrackMapData>()
-            identitiesByKey.forEach { (key, identity) ->
-                val map = runCatching {
-                    trackMapRepository.load(
-                        gameId = identity.first,
-                        trackId = identity.second,
-                        layoutId = identity.third,
-                    )
-                }.getOrNull() ?: return@forEach
-
-                val prepared = trackMapPreparationUtil.prepare(
-                    points = map.points.map { point -> TrackMapPreparedPoint(x = point.x, y = point.y) },
-                    pitPoints = map.pitPoints.map { point -> TrackMapPreparedPoint(x = point.x, y = point.y) },
-                    bounds = map.bounds?.let { bounds ->
-                        TrackMapPreparedBounds(
-                            minX = bounds.minX,
-                            minY = bounds.minY,
-                            maxX = bounds.maxX,
-                            maxY = bounds.maxY,
-                        )
-                    },
-                ) ?: return@forEach
-
-                result[key] = TrackMapData(
-                    points = prepared.points.map { point -> TrackMapPoint(x = point.x, y = point.y) }.toImmutableList(),
-                    pitPoints = prepared.pitPoints.map { point -> TrackMapPoint(x = point.x, y = point.y) }.toImmutableList(),
-                    bounds = TrackMapBounds(
-                        minX = prepared.bounds.minX,
-                        minY = prepared.bounds.minY,
-                        maxX = prepared.bounds.maxX,
-                        maxY = prepared.bounds.maxY,
-                    ),
-                )
-            }
-            result
         }
 
     override fun resolveTrackMap(
@@ -96,4 +57,50 @@ internal class SessionTrackMapUseCaseImpl(
         trackId = trackId,
         layoutId = layoutId,
     )?.let(trackMapsByKey::get)
+
+    private fun normalizeRequests(items: Collection<SessionTrackMapIdentity>): List<NormalizedTrackMapRequest> {
+        if (items.isEmpty()) return emptyList()
+
+        val requestsByKey = linkedMapOf<String, NormalizedTrackMapRequest>()
+        items.forEach { item ->
+            val normalizedGameId = item.gameId.normalizedGameId() ?: return@forEach
+            val normalizedTrackId = item.trackId.normalizedTrackId() ?: return@forEach
+            val normalizedLayoutId = item.layoutId.normalizedLayoutId()
+            val requestedKey = trackMapPreparationUtil.key(
+                gameId = normalizedGameId,
+                trackId = normalizedTrackId,
+                layoutId = normalizedLayoutId,
+            ) ?: return@forEach
+            requestsByKey.putIfAbsent(
+                requestedKey,
+                NormalizedTrackMapRequest(
+                    requestedKey = requestedKey,
+                    gameId = normalizedGameId,
+                    trackId = normalizedTrackId,
+                    layoutId = normalizedLayoutId,
+                ),
+            )
+        }
+        return requestsByKey.values.toList()
+    }
+
+    private suspend fun loadTrackMap(request: NormalizedTrackMapRequest): TrackMapData? =
+        loadRepositoryTrackMap(request)
+
+    private suspend fun loadRepositoryTrackMap(request: NormalizedTrackMapRequest): TrackMapData? = runCatching {
+        trackMapRepository.load(
+            gameId = request.gameId,
+            trackId = request.trackId,
+            layoutId = request.layoutId,
+        )
+    }.getOrNull()?.toTrackMapData(trackMapPreparationUtil)
+
+    private fun String.normalizedGameId(): String? = trim().lowercase(Locale.US).takeIf { it.isNotBlank() }
+
+    private fun String.normalizedTrackId(): String? = trim().lowercase(Locale.US).takeIf { it.isNotBlank() }
+
+    private fun String?.normalizedLayoutId(): String? = this
+        ?.trim()
+        ?.lowercase(Locale.US)
+        ?.takeIf { it.isNotBlank() }
 }

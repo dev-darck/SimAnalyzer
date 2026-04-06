@@ -65,7 +65,7 @@ internal class RecordedSessionDetailPageFactory {
         analysisLoader: (SessionLocation) -> IndexAnalysis?,
     ): SessionDetailDataset {
         datasetCache.get()
-            ?.takeIf { cache -> cache.source === bundle }
+            ?.takeIf { cache -> cache.source == bundle }
             ?.data
             ?.let { return it }
 
@@ -97,7 +97,7 @@ internal class RecordedSessionDetailPageFactory {
         )
 
         projectionCache.get()
-            ?.takeIf { cache -> cache.source === dataset.source && cache.key == key }
+            ?.takeIf { cache -> cache.source == dataset.source && cache.key == key }
             ?.data
             ?.let { return it }
 
@@ -198,20 +198,20 @@ internal class RecordedSessionDetailPageFactory {
         )
     }
 
-    private fun LapSummary.matches(
-        show: RecordedSessionLapShow,
-        bestLapTimeMs: Int?,
-        firstLapNumber: Int?,
-    ): Boolean = when (show) {
-        RecordedSessionLapShow.All -> true
-        RecordedSessionLapShow.Valid -> lapStatus(bestLapTimeMs, firstLapNumber).let { status ->
-            status == RecordedLapStatus.Clean || status == RecordedLapStatus.BestLap
+    private fun LapSummary.matches(show: RecordedSessionLapShow, bestLapTimeMs: Int?, firstLapNumber: Int?): Boolean =
+        when (show) {
+            RecordedSessionLapShow.All -> true
+
+            RecordedSessionLapShow.Valid -> lapStatus(bestLapTimeMs, firstLapNumber).let { status ->
+                status == RecordedLapStatus.Clean || status == RecordedLapStatus.BestLap
+            }
+
+            RecordedSessionLapShow.Invalid -> lapStatus(bestLapTimeMs, firstLapNumber).let { status ->
+                status == RecordedLapStatus.Invalid || status == RecordedLapStatus.Dirty
+            }
+
+            RecordedSessionLapShow.Pit -> lapStatus(bestLapTimeMs, firstLapNumber) == RecordedLapStatus.PitIn
         }
-        RecordedSessionLapShow.Invalid -> lapStatus(bestLapTimeMs, firstLapNumber).let { status ->
-            status == RecordedLapStatus.Invalid || status == RecordedLapStatus.Dirty
-        }
-        RecordedSessionLapShow.Pit -> lapStatus(bestLapTimeMs, firstLapNumber) == RecordedLapStatus.PitIn
-    }
 
     private fun lapSummaryComparator(
         sort: RecordedSessionLapSort,
@@ -219,41 +219,54 @@ internal class RecordedSessionDetailPageFactory {
         firstLapNumber: Int?,
     ): Comparator<LapSummary> = when (sort) {
         RecordedSessionLapSort.LapAsc -> compareBy(LapSummary::lap)
+
         RecordedSessionLapSort.LapDesc -> compareByDescending<LapSummary> { it.lap }
+
         RecordedSessionLapSort.TotalTimeAsc -> compareByNullableInt(true) { lap -> lap.totalTimeMs }
+
         RecordedSessionLapSort.TotalTimeDesc -> compareByNullableInt(false) { lap -> lap.totalTimeMs }
+
         RecordedSessionLapSort.Sector1Asc -> compareByNullableInt(true) { lap -> lap.sectorTimesMs.getOrNull(0) }
+
         RecordedSessionLapSort.Sector1Desc -> compareByNullableInt(false) { lap -> lap.sectorTimesMs.getOrNull(0) }
+
         RecordedSessionLapSort.Sector2Asc -> compareByNullableInt(true) { lap -> lap.sectorTimesMs.getOrNull(1) }
+
         RecordedSessionLapSort.Sector2Desc -> compareByNullableInt(false) { lap -> lap.sectorTimesMs.getOrNull(1) }
+
         RecordedSessionLapSort.Sector3Asc -> compareByNullableInt(true) { lap -> lap.sectorTimesMs.getOrNull(2) }
+
         RecordedSessionLapSort.Sector3Desc -> compareByNullableInt(false) { lap -> lap.sectorTimesMs.getOrNull(2) }
+
         RecordedSessionLapSort.IncidentsAsc -> compareBy<LapSummary> { it.invalid.incidentCount() }
             .thenBy(LapSummary::lap)
+
         RecordedSessionLapSort.IncidentsDesc -> compareByDescending<LapSummary> { it.invalid.incidentCount() }
             .thenBy(LapSummary::lap)
+
         RecordedSessionLapSort.DeltaAsc -> compareByNullableInt(true) { lap -> lap.deltaMs(bestLapTimeMs) }
+
         RecordedSessionLapSort.DeltaDesc -> compareByNullableInt(false) { lap -> lap.deltaMs(bestLapTimeMs) }
+
         RecordedSessionLapSort.StatusAsc -> compareBy<LapSummary> {
             it.lapStatus(bestLapTimeMs, firstLapNumber).name
         }.thenBy(LapSummary::lap)
+
         RecordedSessionLapSort.StatusDesc -> compareByDescending<LapSummary> {
             it.lapStatus(bestLapTimeMs, firstLapNumber).name
         }.thenBy(LapSummary::lap)
     }
 
-    private fun compareByNullableInt(
-        ascending: Boolean,
-        selector: (LapSummary) -> Int?,
-    ): Comparator<LapSummary> = if (ascending) {
-        compareBy<LapSummary> { lap -> selector(lap) == null }
-            .thenBy { lap -> selector(lap) ?: Int.MAX_VALUE }
-            .thenBy(LapSummary::lap)
-    } else {
-        compareBy<LapSummary> { lap -> selector(lap) == null }
-            .thenByDescending { lap -> selector(lap) ?: Int.MIN_VALUE }
-            .thenBy(LapSummary::lap)
-    }
+    private fun compareByNullableInt(ascending: Boolean, selector: (LapSummary) -> Int?): Comparator<LapSummary> =
+        if (ascending) {
+            compareBy<LapSummary> { lap -> selector(lap) == null }
+                .thenBy { lap -> selector(lap) ?: Int.MAX_VALUE }
+                .thenBy(LapSummary::lap)
+        } else {
+            compareBy<LapSummary> { lap -> selector(lap) == null }
+                .thenByDescending { lap -> selector(lap) ?: Int.MIN_VALUE }
+                .thenBy(LapSummary::lap)
+        }
 
     private fun RecordedSessionSummary.sessionTypeId(): String? = sessionType
         ?.trim()

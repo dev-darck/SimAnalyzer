@@ -1,5 +1,6 @@
 package com.analyzer.trackmap.presentation.components
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -10,6 +11,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationViewport
 
+@Immutable
 internal data class TrackMapCalibrationCanvasPalette(
     val surfaceColor: Color,
     val baseTrackGlow: Color,

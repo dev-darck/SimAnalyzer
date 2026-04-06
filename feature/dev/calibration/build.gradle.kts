@@ -2,11 +2,12 @@ moduleImpl {
     metro()
     compose()
     resources()
+    logger()
     test {
         ui()
     }
     dependencies {
-        projects.core.telemetry.api.jvmImpl
+        projects.core.telemetry.runtime.api.jvmImpl
         projects.games.telemetry.ac.api.jvmImpl
         projects.core.di.api.jvmImpl
         projects.core.leak.api.jvmImpl

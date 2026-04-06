@@ -22,7 +22,8 @@ import com.analyzer.session.presentation.model.SessionStatsUi
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
-import com.project.analyzer.ui.components.ScrollableScreenColumn
+import com.project.analyzer.ui.adaptive.ResponsiveGridMode
+import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -54,22 +55,34 @@ internal fun SessionListContent(
     onIntent: (SessionListIntent) -> Unit = {},
     onOpenDetails: (Long) -> Unit = {},
 ) {
-    ScrollableScreenColumn(modifier = modifier) {
-        SessionScreenStatsRow(
-            stats = state.stats,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        SessionScreenHeader(
-            state = state,
-            modifier = Modifier.fillMaxWidth(),
-            onIntent = onIntent,
-        )
-        SessionScreenTable(
-            state = state,
-            modifier = Modifier.fillMaxWidth(),
-            onOpenDetails = onOpenDetails,
-            onIntent = onIntent,
-        )
+    ResponsiveScreen(
+        modifier = modifier,
+        gridMode = ResponsiveGridMode.Grid,
+        mediumColumns = 1,
+        expandedColumns = 1,
+        backgroundColor = SimAnalyzerTheme.material.background,
+    ) {
+        item(key = "session-stats", isContentFull = true) {
+            SessionScreenStatsRow(
+                stats = state.stats,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        item(key = "session-header", isContentFull = true) {
+            SessionScreenHeader(
+                state = state,
+                modifier = Modifier.fillMaxWidth(),
+                onIntent = onIntent,
+            )
+        }
+        item(key = "session-table", isContentFull = true) {
+            SessionScreenTable(
+                state = state,
+                modifier = Modifier.fillMaxWidth(),
+                onOpenDetails = onOpenDetails,
+                onIntent = onIntent,
+            )
+        }
     }
 }
 

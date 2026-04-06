@@ -375,8 +375,7 @@ internal fun DevHudSettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(end = 10.dp),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             SectionCard(
@@ -519,8 +518,7 @@ internal fun TelemetryInspectorScreen(
                 state = listState,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(end = 10.dp),
+                    .fillMaxSize(),
             ) {
                 items(state.entries, key = { it.path }) { entry ->
                     TelemetryEntryRow(entry = entry)

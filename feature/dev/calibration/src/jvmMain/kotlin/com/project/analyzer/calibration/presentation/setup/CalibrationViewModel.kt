@@ -19,6 +19,7 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.model.calibration.SectorCalibration
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibrationSource
+import com.project.analyzer.utils.logger.logger
 import com.project.analyzer.utils.toSlugId
 import dev.zacsweers.metro.Inject
 import kotlinx.collections.immutable.toPersistentList
@@ -34,6 +35,8 @@ internal class CalibrationViewModel(
     private val sampleProvider: TelemetrySampleProvider,
     overlayDebugBus: OverlayDebugBus,
 ) : LeakAwareViewModel() {
+
+    private val logger = logger()
 
     private val _state = MutableStateFlow(CalibrationState())
     val state: StateFlow<CalibrationState> = _state
@@ -234,6 +237,7 @@ internal class CalibrationViewModel(
             } catch (e: GateCaptureException) {
                 _state.update { it.copy(message = "❌ ${e.message}") }
             } catch (e: Exception) {
+                logger.error(e) { "Gate capture failed" }
                 _state.update { it.copy(message = "❌ Error: ${e.message}") }
             } finally {
                 _state.update { it.copy(isBusy = false) }
@@ -280,6 +284,7 @@ internal class CalibrationViewModel(
                     )
                 }
             } catch (e: Exception) {
+                logger.error(e) { "Failed to save calibration" }
                 _state.update { it.copy(message = "❌ Error saving: ${e.message}") }
             } finally {
                 _state.update { it.copy(isBusy = false) }

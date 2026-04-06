@@ -40,6 +40,8 @@ import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 
+private val WideLayoutMinWidth = 1120.dp
+
 @Composable
 fun TrackMapCalibrationEditorScreen(
     gameId: String,
@@ -91,7 +93,7 @@ fun TrackMapCalibrationEditorScreen(
         }
 
         TrackMapCalibrationEditorLoadedContent(
-            isWideLayout = maxWidth >= 1120.dp,
+            isWideLayout = maxWidth >= WideLayoutMinWidth,
             workspaceUiState = workspaceUiState,
             sidebarUiState = sidebarUiState,
             onAddPointModeChange = { enabled ->
@@ -240,8 +242,7 @@ private fun TrackMapCalibrationEditorCompactLayout(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(end = 10.dp),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             TrackMapCalibrationEditorWorkspace(

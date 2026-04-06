@@ -1,0 +1,43 @@
+package com.project.analyzer.telemetry.recording.api.session
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+public data class RecordedTelemetrySessionMetadata(
+    val sessionId: Long,
+    val gameId: String,
+    val sessionGroupId: String? = null,
+    val sessionType: String?,
+    val carModel: String?,
+    val carName: String? = null,
+    val carId: Int? = null,
+    val trackId: String?,
+    val trackName: String? = null,
+    val layoutId: String? = null,
+    val airTempC: Float? = null,
+    val trackTempC: Float? = null,
+    val startedAtMs: Long,
+    val endedAtMs: Long?,
+    val isSaved: Boolean = true,
+    val dataSource: String?,
+    val payloadType: String,
+    val payloadSize: Int,
+    val frameStorageCodec: String = "raw",
+    val frameStoragePayloadType: String? = null,
+    val frameStoragePayloadSize: Int? = null,
+    val samplingRateHz: Int,
+    val frameCount: Long,
+    val receivedFrames: Long,
+    val droppedFrames: Long,
+    val skippedFrames: Long = 0,
+    val firstTimestampNs: Long?,
+    val lastTimestampNs: Long?,
+    val fileVersion: Int,
+    val indexVersion: Int,
+    val indexRecordSize: Int,
+    val indexFields: List<String>,
+    val framesFile: String,
+    val indexFile: String,
+    val eventsFile: String,
+    val compression: String? = null,
+)

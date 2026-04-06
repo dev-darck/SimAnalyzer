@@ -235,10 +235,7 @@ private fun SidebarItem(
 }
 
 @Composable
-private fun animateScale(
-    selected: Boolean,
-    hovered: Boolean
-): State<Float> {
+private fun animateScale(selected: Boolean, hovered: Boolean): State<Float> {
     val target = when {
         selected -> 1.04f
         hovered -> 1.02f

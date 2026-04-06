@@ -57,7 +57,7 @@ class AcPollLoop(private val shm: AcSharedMemory, private val cfg: AcPollConfig)
                 dispatch(onResult)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: Throwable) {
+            } catch (e: Exception) {
                 val wasState = currentState
 
                 runCatching { shm.close() }

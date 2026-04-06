@@ -16,12 +16,12 @@ import dev.zacsweers.metro.SingleIn
 class TrackMapCalibrationEditorEntry : RouteEntryBuilder {
 
     override fun NavigationEntryBuilder.build() {
-        entry(Route.SettingsRoot.TrackMapCalibrationEditor::class) { route ->
+        entry(Route.SettingsRoot.TrackMapCalibrationEditor::class) {
             val navigator = LocalNavigator.current
             TrackMapCalibrationEditorScreen(
-                gameId = route.gameId,
-                trackId = route.trackId,
-                layoutId = route.layoutId,
+                gameId = gameId,
+                trackId = trackId,
+                layoutId = layoutId,
                 onBack = navigator::handleBack,
             )
         }

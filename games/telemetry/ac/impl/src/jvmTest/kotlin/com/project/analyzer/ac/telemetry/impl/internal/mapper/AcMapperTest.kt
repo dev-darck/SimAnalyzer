@@ -24,6 +24,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class AcMapperTest {
 
@@ -227,5 +228,53 @@ class AcMapperTest {
         assertEquals(3, lap.sectorCount)
         assertEquals(listOf(30_000, 31_000, 32_000), lap.sectors.map { it.timeMs })
         assertEquals(listOf(29_000, 30_000, 31_000), lap.sectors.map { it.bestTimeMs })
+    }
+
+    @Test
+    fun `map keeps current lap index null before first completed lap`() = runTest {
+        val cache = AcSessionCache()
+        val sessionMapper = SessionMapper(cache)
+        val lapMapper = LapMapper(cache, AcLapState(cache))
+        val carMapper = mockk<CarMapper>()
+        val wheelsMapper = mockk<WheelsMapper>()
+        val damageMapper = mockk<DamageMapper>()
+        val environmentMapper = mockk<EnvironmentMapper>()
+        val lapAnalyzer = mockk<FallbackLapAnalyzer>(relaxUnitFun = true)
+
+        every { carMapper.map(any(), any(), any()) } returns CarFrame()
+        every { wheelsMapper.map(any(), any()) } returns WheelsFrame()
+        every { damageMapper.map(any()) } returns DamageFrame()
+        every { environmentMapper.map(any(), any()) } returns EnvironmentFrame()
+        every { lapAnalyzer.loadCalibration(any()) } returns null
+
+        val mapper = AcMapper(
+            cache = cache,
+            sessionMapper = sessionMapper,
+            lapMapper = lapMapper,
+            carMapper = carMapper,
+            wheelsMapper = wheelsMapper,
+            damageMapper = damageMapper,
+            environmentMapper = environmentMapper,
+            lapAnalyzer = lapAnalyzer,
+        )
+
+        val snapshot = AcRawSnapshot(
+            physics = SPageFilePhysics(),
+            graphics = SPageFileGraphics(),
+            statics = SPageFileStatic(),
+            timestampNs = 123L,
+        ).apply {
+            statics.track.writeWString("Paul Ricard")
+            statics.trackConfiguration.writeWString("Layout 3C")
+            statics.sectorCount = 3
+            graphics.completedLaps = -1
+            graphics.currentSectorIndex = 0
+        }
+
+        val frame = mapper.map(snapshot)
+        val lap = assertNotNull(frame.lap)
+
+        assertNull(lap.currentLapIndex)
+        assertEquals(-1, lap.completedLaps)
     }
 }

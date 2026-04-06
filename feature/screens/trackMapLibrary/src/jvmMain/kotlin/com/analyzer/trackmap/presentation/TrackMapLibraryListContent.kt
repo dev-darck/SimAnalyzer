@@ -88,8 +88,7 @@ private fun ColumnScope.TrackMapLibraryItemsList(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxSize()
-                .padding(end = 10.dp),
+                .fillMaxSize(),
         ) {
             items(
                 items = items,

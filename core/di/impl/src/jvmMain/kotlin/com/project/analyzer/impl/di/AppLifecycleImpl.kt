@@ -3,6 +3,7 @@ package com.project.analyzer.impl.di
 import com.project.analyzer.api.di.AppLifecycle
 import com.project.analyzer.api.di.AppLifecycleTask
 import com.project.analyzer.api.di.IO
+import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -24,8 +25,13 @@ internal class AppLifecycleImpl(
 ) : AppLifecycle {
 
     private val started = AtomicBoolean(false)
+    private val logger = logger()
     private val lifecycleDispatcher: CoroutineDispatcher = ioDispatcher.limitedParallelism(2, "AppLifecycle")
-    private val scope = CoroutineScope(SupervisorJob() + lifecycleDispatcher + CoroutineExceptionHandler { _, _ -> })
+    private val scope = CoroutineScope(
+        SupervisorJob() + lifecycleDispatcher + CoroutineExceptionHandler { _, throwable ->
+            logger.error(throwable) { "Unhandled exception in AppLifecycle" }
+        },
+    )
     private var startupJob: Job? = null
     private val startTasks: List<AppLifecycleTask> = lifecycleTasks.sortedBy(AppLifecycleTask::startOrder)
     private val stopTasks: List<AppLifecycleTask> = lifecycleTasks.sortedBy(AppLifecycleTask::stopOrder)

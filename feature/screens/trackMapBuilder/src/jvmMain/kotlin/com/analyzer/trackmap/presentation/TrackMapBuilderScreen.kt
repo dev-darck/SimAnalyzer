@@ -7,16 +7,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -81,12 +77,12 @@ import com.project.analyzer.feature.screens.trackMapBuilder.Res.track_map_width_
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.track_map_yes
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.adaptive.ResponsiveGridMode
+import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import com.project.analyzer.ui.format.formatDecimal
 import com.project.analyzer.ui.format.formatPercent
 import com.project.analyzer.ui.modifier.TestTags
 import com.project.analyzer.ui.modifier.uiTestTag
-import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
-import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
@@ -123,29 +119,30 @@ internal fun TrackMapBuilderContent(
     onPitExit: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val screenScrollState = rememberScrollState()
-
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SimAnalyzerTheme.material.background),
+    ResponsiveScreen(
+        modifier = modifier,
+        scrollContainerModifier = Modifier.uiTestTag(TestTags.TrackMapBuilderScroll),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        verticalSpacing = 12.dp,
+        gridMode = ResponsiveGridMode.Grid,
+        mediumColumns = 1,
+        expandedColumns = 1,
+        backgroundColor = SimAnalyzerTheme.material.background,
     ) {
-        Column(
-            modifier = Modifier
-                .uiTestTag(TestTags.TrackMapBuilderScroll)
-                .fillMaxSize()
-                .verticalScroll(screenScrollState)
-                .padding(16.dp)
-                .padding(end = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+        item(key = "track-map-builder-overview", isContentFull = true) {
             TrackMapBuilderOverviewSection(state = state)
+        }
+        item(key = "track-map-builder-settings", isContentFull = true) {
             TrackMapBuilderCaptureSettingsSection(
                 state = state,
                 onReferencePoint = onReferencePoint,
                 onFallbackHalfWidth = onFallbackHalfWidth,
             )
+        }
+        item(key = "track-map-builder-preview", isContentFull = true) {
             TrackMapBuilderPreviewSection(state = state)
+        }
+        item(key = "track-map-builder-actions", isContentFull = true) {
             TrackMapBuilderActionsSection(
                 state = state,
                 onStart = onStart,
@@ -156,13 +153,6 @@ internal fun TrackMapBuilderContent(
                 onPitExit = onPitExit,
             )
         }
-        AppVerticalScrollbar(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .fillMaxHeight()
-                .padding(vertical = 6.dp),
-            adapter = AppScrollbarAdapter(rememberScrollbarAdapter(screenScrollState)),
-        )
     }
 }
 

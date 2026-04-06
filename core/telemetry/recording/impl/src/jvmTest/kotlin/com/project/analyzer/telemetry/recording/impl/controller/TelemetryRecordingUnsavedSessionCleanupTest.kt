@@ -2,8 +2,8 @@ package com.project.analyzer.telemetry.recording.impl.controller
 
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionConfig
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.impl.file.META_FILE_NAME
-import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -65,9 +65,14 @@ class TelemetryRecordingUnsavedSessionCleanupTest {
         }
     }
 
-    private fun writeSessionDir(root: File, dirName: String, metadata: SessionMetadata): File {
+    private fun writeSessionDir(root: File, dirName: String, metadata: RecordedTelemetrySessionMetadata): File {
         val dir = File(root, dirName).apply { mkdirs() }
-        File(dir, META_FILE_NAME).writeText(json.encodeToString(SessionMetadata.serializer(), metadata))
+        File(dir, META_FILE_NAME).writeText(
+            json.encodeToString(
+                RecordedTelemetrySessionMetadata.serializer(),
+                metadata
+            )
+        )
         return dir
     }
 
@@ -75,22 +80,33 @@ class TelemetryRecordingUnsavedSessionCleanupTest {
         sessionId: Long,
         endedAtMs: Long?,
         isSaved: Boolean,
-    ): SessionMetadata = SessionMetadata(
+    ): RecordedTelemetrySessionMetadata = RecordedTelemetrySessionMetadata(
         sessionId = sessionId,
         gameId = "ac",
+        sessionGroupId = null,
         sessionType = "PRACTICE",
         carModel = "ks_bmw_m4_gt3",
+        carName = "BMW M4 GT3 Evo",
+        carId = 1,
         trackId = "brands_hatch_indy",
+        trackName = "Brands Hatch Indy",
+        layoutId = null,
+        airTempC = null,
+        trackTempC = null,
         startedAtMs = 1_000L,
         endedAtMs = endedAtMs,
         isSaved = isSaved,
         dataSource = "NATIVE",
         payloadType = "ac_shm_v1",
         payloadSize = 3208,
+        frameStorageCodec = "raw",
+        frameStoragePayloadType = null,
+        frameStoragePayloadSize = null,
         samplingRateHz = 100,
         frameCount = 0,
         receivedFrames = 0,
         droppedFrames = 0,
+        skippedFrames = 0,
         firstTimestampNs = null,
         lastTimestampNs = null,
         fileVersion = 2,
@@ -100,6 +116,7 @@ class TelemetryRecordingUnsavedSessionCleanupTest {
         framesFile = "frames.bin",
         indexFile = "index.bin",
         eventsFile = "events.jsonl",
+        compression = null,
     )
 
     private class TestSettings(

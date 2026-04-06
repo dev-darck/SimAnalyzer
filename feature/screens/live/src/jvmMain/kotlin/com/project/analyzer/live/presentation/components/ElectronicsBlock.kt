@@ -12,18 +12,30 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.live.Res.*
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.electronics_dynamics
+import com.project.analyzer.feature.screens.live.Res.electronics_item_abs
+import com.project.analyzer.feature.screens.live.Res.electronics_item_bb
+import com.project.analyzer.feature.screens.live.Res.electronics_item_load
+import com.project.analyzer.feature.screens.live.Res.electronics_item_map
+import com.project.analyzer.feature.screens.live.Res.electronics_item_slip_max
+import com.project.analyzer.feature.screens.live.Res.electronics_item_tc
+import com.project.analyzer.feature.screens.live.Res.electronics_item_tyre_avg
+import com.project.analyzer.feature.screens.live.Res.electronics_title
+import com.project.analyzer.feature.screens.live.Res.electronics_warning_abs
+import com.project.analyzer.feature.screens.live.Res.electronics_warning_tc
+import com.project.analyzer.feature.screens.live.Res.electronics_warning_tc_abs
 import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -149,7 +161,7 @@ internal fun ElectronicsBlock(data: ElectronicsBlockUi, modifier: Modifier = Mod
 @Composable
 private fun ElectronicsTile(
     item: ElectronicItemUi,
-    tileShape: RoundedCornerShape,
+    tileShape: Shape,
     tileBg: Color,
     highlightBg: Color,
     titleColor: Color,

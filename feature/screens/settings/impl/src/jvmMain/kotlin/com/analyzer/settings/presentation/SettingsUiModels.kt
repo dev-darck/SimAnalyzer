@@ -7,10 +7,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 internal data class GameSelectionOptionUi(val selection: GameSelection)
 
-internal data class GameSelectionUi(
-    val selection: GameSelection,
-    val options: ImmutableList<GameSelectionOptionUi>
-)
+internal data class GameSelectionUi(val selection: GameSelection, val options: ImmutableList<GameSelectionOptionUi>)
 
 internal fun defaultGameSelectionOptions(): List<GameSelectionOptionUi> = listOf(
     GameSelectionOptionUi(selection = GameSelection.Auto),

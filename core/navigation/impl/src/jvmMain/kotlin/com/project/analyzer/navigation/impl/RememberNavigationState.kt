@@ -6,23 +6,25 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.savedstate.serialization.SavedStateConfiguration
-import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.api.Route
 
 @Composable
-fun rememberNavigationState(startTopLevel: Root = Root.Live): NavigationState<Route> = rememberSerializable(
+internal fun rememberNavigationState(
+    entryFactory: NavigationEntryFactory,
+    startTopLevel: Root = Root.Live,
+): NavigationStateInternal = rememberSerializable(
     configuration = SavedStateConfiguration.DEFAULT,
-    serializer = NavigationStateInternal.serializer(Route.serializer()),
+    serializer = NavigationStateInternal.serializer(),
 ) {
     NavigationStateInternal(
         startTopLevel = startTopLevel,
-        stacks = mutableStateMapOf(
-            Root.Live to BackStack(mutableStateListOf(Route.LiveRoot.Live)),
-            Root.Session to BackStack(mutableStateListOf(Route.SessionRoot.Session)),
-            Root.Setup to BackStack(mutableStateListOf(Route.SetupRoot.Setup)),
-            Root.Settings to BackStack(mutableStateListOf(Route.SettingsRoot.Settings)),
+        stacks = mutableStateMapOf<Root, BackStack<NavRouteKey>>(
+            Root.Live to BackStack(mutableStateListOf(entryFactory.toKey(Route.LiveRoot.Live))),
+            Root.Session to BackStack(mutableStateListOf(entryFactory.toKey(Route.SessionRoot.Session))),
+            Root.Setup to BackStack(mutableStateListOf(entryFactory.toKey(Route.SetupRoot.Setup))),
+            Root.Settings to BackStack(mutableStateListOf(entryFactory.toKey(Route.SettingsRoot.Settings))),
         ),
         currentTopLevelState = mutableStateOf(startTopLevel),
     )
-}
+}.bindRouteKeyFactory(entryFactory::toKey)

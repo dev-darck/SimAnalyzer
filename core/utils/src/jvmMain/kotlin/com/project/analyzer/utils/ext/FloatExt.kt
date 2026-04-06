@@ -14,6 +14,11 @@ public fun Float.fmt(decimals: Int = 3): String = String.format(Locale.US, "%.${
 
 public fun Float?.orZero(): Float = this ?: 0f
 
+/**
+ * Keeps empty float collections from silently producing `NaN` in callers that expect optional aggregates.
+ */
+public fun List<Float>.averageOrNull(): Float? = if (isEmpty()) null else average().toFloat()
+
 public fun Float.toSteerDegrees(
     invert: Boolean = false,
     deadZoneDeg: Float = 0.5f,

@@ -1,12 +1,11 @@
 package com.project.analyzer.navigation.api
 
 import androidx.compose.runtime.Immutable
-import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
 @Immutable
 @Serializable
-public sealed class Route(public val isRoot: Boolean, public val topLevel: Root) : NavKey {
+public sealed class Route(public val isRoot: Boolean, public val topLevel: Root) {
 
     @Serializable
     public sealed class LiveRoot(public val root: Boolean = false) : Route(root, Root.Live) {
@@ -26,6 +25,9 @@ public sealed class Route(public val isRoot: Boolean, public val topLevel: Root)
 
         @Serializable
         public data class SessionDetails(public val sessionId: Long) : SessionRoot(false)
+
+        @Serializable
+        public data class SessionAnalysis(public val sessionId: Long) : SessionRoot(false)
     }
 
     @Serializable

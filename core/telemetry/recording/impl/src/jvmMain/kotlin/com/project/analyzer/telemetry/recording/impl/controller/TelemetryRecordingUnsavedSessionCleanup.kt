@@ -2,8 +2,8 @@ package com.project.analyzer.telemetry.recording.impl.controller
 
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.impl.file.META_FILE_NAME
-import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -33,7 +33,7 @@ internal class TelemetryRecordingUnsavedSessionCleanup(
                 if (!metaFile.exists()) return@forEach
 
                 val metadata = runCatching {
-                    json.decodeFromString(SessionMetadata.serializer(), metaFile.readText())
+                    json.decodeFromString(RecordedTelemetrySessionMetadata.serializer(), metaFile.readText())
                 }.getOrNull() ?: return@forEach
 
                 if (metadata.isSaved) return@forEach

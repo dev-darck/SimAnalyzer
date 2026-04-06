@@ -3,7 +3,12 @@ package com.project.analyzer.utils.trackmap
 import dev.zacsweers.metro.Inject
 import java.util.Locale
 
-public data class TrackMapPreparedPoint(val x: Float, val y: Float)
+public data class TrackMapPreparedPoint(
+    val x: Float,
+    val y: Float,
+    val leftWidthMeters: Float = 0f,
+    val rightWidthMeters: Float = 0f,
+)
 
 public data class TrackMapPreparedBounds(val minX: Float, val minY: Float, val maxX: Float, val maxY: Float)
 
@@ -32,15 +37,18 @@ public class TrackMapPreparationUtil {
             ?.lowercase(Locale.US)
             ?.takeIf { it.isNotBlank() }
             ?: return null
+
         val normalizedTrackId = trackId
             ?.trim()
             ?.lowercase(Locale.US)
             ?.takeIf { it.isNotBlank() }
             ?: return null
+
         val normalizedLayoutId = layoutId
             ?.trim()
             ?.lowercase(Locale.US)
             ?.takeIf { it.isNotBlank() }
+
         return if (normalizedLayoutId == null) {
             "$normalizedGameId|$normalizedTrackId"
         } else {
@@ -70,17 +78,20 @@ public class TrackMapPreparationUtil {
     public fun latestByKey(sources: Iterable<TrackMapSourceData>): Map<String, TrackMapPreparedData> {
         val latestByKey = linkedMapOf<String, PreparedSnapshot>()
         sources.forEach { source ->
+
             val sourceKey = key(
                 gameId = source.gameId,
                 trackId = source.trackId,
                 layoutId = source.layoutId,
             ) ?: return@forEach
+
             val prepared = prepare(
                 points = source.points,
                 pitPoints = source.pitPoints,
                 bounds = source.bounds,
             ) ?: return@forEach
             val existing = latestByKey[sourceKey]
+
             if (existing == null || source.createdAtMs >= existing.createdAtMs) {
                 latestByKey[sourceKey] = PreparedSnapshot(
                     createdAtMs = source.createdAtMs,

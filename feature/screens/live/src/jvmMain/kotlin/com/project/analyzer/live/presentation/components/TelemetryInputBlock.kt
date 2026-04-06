@@ -25,7 +25,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.live.Res.*
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.inputs_brk
+import com.project.analyzer.feature.screens.live.Res.inputs_clt
+import com.project.analyzer.feature.screens.live.Res.inputs_left
+import com.project.analyzer.feature.screens.live.Res.inputs_percent
+import com.project.analyzer.feature.screens.live.Res.inputs_right
+import com.project.analyzer.feature.screens.live.Res.inputs_steer_value
+import com.project.analyzer.feature.screens.live.Res.inputs_thr
+import com.project.analyzer.feature.screens.live.Res.inputs_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatPercent
 import org.jetbrains.compose.resources.stringResource

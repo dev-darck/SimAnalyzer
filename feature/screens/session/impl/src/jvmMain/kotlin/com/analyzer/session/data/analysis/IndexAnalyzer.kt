@@ -45,14 +45,7 @@ internal class IndexAnalyzer {
         }
 
         if (lap != currentLap) {
-            val previousBuilder = lapBuilders[currentLap]
-            if (previousBuilder != null) {
-                val sector = currentSector
-                if (sector != null && !previousBuilder.sectorTimes.containsKey(sector)) {
-                    previousBuilder.sectorTimes[sector] = record.timestampNs - currentSectorStartNs
-                }
-                previousBuilder.endNs = record.timestampNs
-            }
+            finalizeActiveLap(record.timestampNs)
             currentLap = lap
             currentSector = normalizeSector(record.sector)
             currentSectorStartNs = record.timestampNs
@@ -71,6 +64,7 @@ internal class IndexAnalyzer {
     }
 
     fun build(): IndexAnalysis {
+        finalizeActiveLap(prevTimestampNs)
         val laps = lapBuilders.values
             .sortedBy(LapBuilder::lap)
             .map(LapBuilder::toSummary)
@@ -78,6 +72,22 @@ internal class IndexAnalyzer {
             laps = laps,
             distanceKm = distanceKm,
         )
+    }
+
+    private fun finalizeActiveLap(endTimestampNs: Long?) {
+        val lap = currentLap ?: return
+        val builder = lapBuilders[lap] ?: return
+        val safeEndTimestampNs = endTimestampNs ?: return
+        val sector = currentSector
+        if (sector != null && !builder.sectorTimes.containsKey(sector)) {
+            builder.sectorTimes[sector] = (safeEndTimestampNs - currentSectorStartNs).coerceAtLeast(0L)
+        }
+        val previousEndNs = builder.endNs
+        builder.endNs = if (previousEndNs == null) {
+            safeEndTimestampNs
+        } else {
+            maxOf(previousEndNs, safeEndTimestampNs)
+        }
     }
 
     private fun integrateDistance(

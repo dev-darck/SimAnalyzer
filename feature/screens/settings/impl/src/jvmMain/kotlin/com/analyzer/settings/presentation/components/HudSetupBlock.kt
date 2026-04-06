@@ -28,7 +28,11 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.settings.impl.Res.*
+import com.project.analyzer.feature.screens.settings.impl.Res.Res
+import com.project.analyzer.feature.screens.settings.impl.Res.hud_setup_display
+import com.project.analyzer.feature.screens.settings.impl.Res.hud_setup_edit
+import com.project.analyzer.feature.screens.settings.impl.Res.hud_setup_label
+import com.project.analyzer.feature.screens.settings.impl.Res.hud_setup_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import org.jetbrains.compose.resources.stringResource

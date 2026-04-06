@@ -12,8 +12,8 @@ import dev.zacsweers.metro.createGraphFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 
 interface AppComponent :
-    ViewModelGraph,
     NavigationGraph,
+    ViewModelGraph,
     HudGraph,
     GameDetectorGraph.Dependencies {
 

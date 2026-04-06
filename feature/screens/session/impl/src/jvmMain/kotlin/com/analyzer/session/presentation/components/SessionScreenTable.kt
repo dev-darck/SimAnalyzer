@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -348,6 +348,7 @@ private fun SessionTableRow(
                 trackMap = session.trackMap,
                 scale = 1.12f,
                 lineColor = SimAnalyzerTheme.material.primary,
+                padding = 2.dp,
                 modifier = Modifier
                     .width(66.dp)
                     .height(32.dp),
@@ -370,8 +371,9 @@ private fun SessionTableRow(
         Row(
             modifier = Modifier
                 .weight(weights.actions)
+                .fillMaxWidth()
                 .padding(end = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.End),
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (session.isSaved) {
@@ -440,7 +442,7 @@ private fun SessionActionButton(
         val clickable = onClickEnabled
         Box(
             modifier = Modifier
-                .size(24.dp)
+                .requiredSize(30.dp)
                 .then(if (clickable) Modifier.onClick(onClick = onClick) else Modifier),
             contentAlignment = Alignment.Center,
         ) {
@@ -448,7 +450,7 @@ private fun SessionActionButton(
                 imageVector = icon,
                 contentDescription = null,
                 tint = tint,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.requiredSize(18.dp),
             )
         }
     }
@@ -466,14 +468,14 @@ private data class SessionTableWeights(
 )
 
 private fun sessionTableWeights(): SessionTableWeights = SessionTableWeights(
-    date = .1f,
-    game = .1f,
-    track = .1f,
-    map = .1f,
-    car = .1f,
-    laps = .1f,
-    best = .1f,
-    actions = .1f,
+    date = .15f,
+    game = .08f,
+    track = .15f,
+    map = .11f,
+    car = .15f,
+    laps = .08f,
+    best = .10f,
+    actions = .18f,
 )
 
 @Preview

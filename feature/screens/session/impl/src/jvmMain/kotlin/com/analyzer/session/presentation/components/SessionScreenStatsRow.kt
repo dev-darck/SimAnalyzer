@@ -16,10 +16,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun SessionScreenStatsRow(
-    stats: SessionStatsUi,
-    modifier: Modifier = Modifier
-) {
+internal fun SessionScreenStatsRow(stats: SessionStatsUi, modifier: Modifier = Modifier) {
     StatsRow(
         stats = persistentListOf(
             StatItem(title = stringResource(Res.string.session_stats_total_distance), value = stats.totalDistanceLabel),

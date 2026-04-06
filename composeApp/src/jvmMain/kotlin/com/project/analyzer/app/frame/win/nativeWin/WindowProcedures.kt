@@ -15,14 +15,8 @@ import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.HTTOP
 import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.HTTOPLEFT
 import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.HTTOPRIGHT
 import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.HTTRANSPARENT
-import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_LBUTTONDOWN
-import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_LBUTTONUP
-import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_MOUSEMOVE
 import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_NCCALCSIZE
 import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_NCHITTEST
-import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_NCLBUTTONDOWN
-import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_NCLBUTTONUP
-import com.project.analyzer.app.frame.win.nativeWin.WinUserConst.WM_NCMOUSEMOVE
 import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.utils.logger.logger
 import com.sun.jna.Native
@@ -61,8 +55,6 @@ internal class ComposeWindowProcedure(
 
     val windowHandle = HWND(windowPointer)
 
-    private var hitResult = HTCLIENT
-
     private val margins = WindowMargins(
         leftBorderWidth = -1,
         topBorderHeight = -1,
@@ -86,58 +78,15 @@ internal class ComposeWindowProcedure(
     private var padding = 0
     private var isMaximized = User32Extend.instance?.isWindowInMaximized(windowHandle) == true
 
-    private val skiaLayerProcedure = (window as? ComposeWindow)?.findSkiaLayer()?.let {
-        SkiaLayerWindowProcedure(
-            skiaLayer = it,
-            hitTest = { x, y ->
-                updateWindowInfo()
-                val logicalX = toLogicalX(x)
-                val logicalY = toLogicalY(y)
-
-                val horizontalPadding = frameX
-                val verticalPadding = frameY
-
-                hitResult = when {
-                    isMaximized -> hitTest(logicalX, logicalY)
-
-                    logicalX <= horizontalPadding &&
-                        logicalY > verticalPadding &&
-                        logicalY < height - verticalPadding -> HTLEFT
-
-                    logicalX <= horizontalPadding && logicalY <= verticalPadding -> HTTOPLEFT
-
-                    logicalX <= horizontalPadding -> HTBOTTOMLEFT
-
-                    logicalY <= verticalPadding &&
-                        logicalX > horizontalPadding &&
-                        logicalX < width - horizontalPadding -> HTTOP
-
-                    logicalY <= verticalPadding && logicalX <= horizontalPadding -> HTTOPLEFT
-
-                    logicalY <= verticalPadding -> HTTOPRIGHT
-
-                    logicalX >= width - horizontalPadding &&
-                        logicalY > verticalPadding &&
-                        logicalY < height - verticalPadding -> HTRIGHT
-
-                    logicalX >= width - horizontalPadding && logicalY <= verticalPadding -> HTTOPRIGHT
-
-                    logicalX >= width - horizontalPadding -> HTBOTTOMRIGHT
-
-                    logicalY >= height - verticalPadding &&
-                        logicalX > horizontalPadding &&
-                        logicalX < width - horizontalPadding -> HTBOTTOM
-
-                    logicalY >= height - verticalPadding && logicalX <= horizontalPadding -> HTBOTTOMLEFT
-
-                    logicalY >= height - verticalPadding -> HTBOTTOMRIGHT
-
-                    else -> hitTest(logicalX, logicalY)
-                }
-
-                hitResult
-            },
-        )
+    private val skiaLayerProcedure = if (isSkiaChildWndProcEnabled()) {
+        (window as? ComposeWindow)?.findSkiaLayer()?.let {
+            SkiaLayerWindowProcedure(
+                skiaLayer = it,
+                hitTest = { x, y -> resolveHitTest(x = x, y = y) },
+            )
+        }
+    } else {
+        null
     }
 
     init {
@@ -174,14 +123,9 @@ internal class ComposeWindowProcedure(
                 }
             }
 
-            WM_NCHITTEST -> LRESULT(hitResult.toLong())
+            WM_NCHITTEST -> LRESULT(resolveHitTest(lParam).toLong())
 
-            else -> {
-                if (uMsg == WM_NCMOUSEMOVE) {
-                    skiaLayerProcedure?.let { user32.PostMessage(it.contentHandle, uMsg, wParam, lParam) }
-                }
-                callDefaultProc(user32, hWnd, uMsg, wParam, lParam)
-            }
+            else -> callDefaultProc(user32, hWnd, uMsg, wParam, lParam)
         }
     }
 
@@ -211,6 +155,73 @@ internal class ComposeWindowProcedure(
                 height = toLogicalY(rect.bottom - rect.top)
             }
             rect.clear()
+        }
+    }
+
+    private fun resolveHitTest(lParam: LPARAM): Int {
+        val lParamValue = lParam.toInt()
+        val x = lParamValue.lowWord.toShort().toInt()
+        val y = lParamValue.highWord.toShort().toInt()
+        return resolveHitTest(x = x.toFloat(), y = y.toFloat(), screenCoords = true)
+    }
+
+    private fun resolveHitTest(x: Float, y: Float, screenCoords: Boolean = false): Int {
+        updateWindowInfo()
+
+        val point = POINT(x.toInt(), y.toInt())
+        if (screenCoords) {
+            User32Extend.instance?.ScreenToClient(windowHandle, point)
+            point.read()
+        }
+
+        val logicalX = toLogicalX(point.x.toFloat())
+        val logicalY = toLogicalY(point.y.toFloat())
+        point.clear()
+
+        val horizontalPadding = frameX
+        val verticalPadding = frameY
+
+        val clientHit = when (val code = hitTest(logicalX, logicalY)) {
+            HTMAXBUTTON, HTMINBUTTON, HTCLOSE -> HTCLIENT
+            else -> code
+        }
+
+        return when {
+            isMaximized -> clientHit
+
+            logicalX <= horizontalPadding &&
+                logicalY > verticalPadding &&
+                logicalY < height - verticalPadding -> HTLEFT
+
+            logicalX <= horizontalPadding && logicalY <= verticalPadding -> HTTOPLEFT
+
+            logicalX <= horizontalPadding -> HTBOTTOMLEFT
+
+            logicalY <= verticalPadding &&
+                logicalX > horizontalPadding &&
+                logicalX < width - horizontalPadding -> HTTOP
+
+            logicalY <= verticalPadding && logicalX <= horizontalPadding -> HTTOPLEFT
+
+            logicalY <= verticalPadding -> HTTOPRIGHT
+
+            logicalX >= width - horizontalPadding &&
+                logicalY > verticalPadding &&
+                logicalY < height - verticalPadding -> HTRIGHT
+
+            logicalX >= width - horizontalPadding && logicalY <= verticalPadding -> HTTOPRIGHT
+
+            logicalX >= width - horizontalPadding -> HTBOTTOMRIGHT
+
+            logicalY >= height - verticalPadding &&
+                logicalX > horizontalPadding &&
+                logicalX < width - horizontalPadding -> HTBOTTOM
+
+            logicalY >= height - verticalPadding && logicalX <= horizontalPadding -> HTBOTTOMLEFT
+
+            logicalY >= height - verticalPadding -> HTBOTTOMRIGHT
+
+            else -> clientHit
         }
     }
 
@@ -312,6 +323,23 @@ internal class ComposeWindowProcedure(
     }
 }
 
+private fun isSkiaChildWndProcEnabled(): Boolean {
+    val property = System.getProperty(WIN_FRAME_CHILD_WNDPROC_PROP)
+    val env = System.getenv(WIN_FRAME_CHILD_WNDPROC_ENV)
+
+    property?.let { return parseBoolFlag(it) }
+    env?.let { return parseBoolFlag(it) }
+    return true
+}
+
+private fun parseBoolFlag(value: String?): Boolean {
+    val normalized = value?.trim()?.lowercase() ?: return false
+    return normalized == "1" || normalized == "true" || normalized == "yes" || normalized == "on"
+}
+
+private const val WIN_FRAME_CHILD_WNDPROC_PROP = "simanalyzer.winframe.childwndproc"
+private const val WIN_FRAME_CHILD_WNDPROC_ENV = "SIMANALYZER_WINFRAME_CHILD_WNDPROC"
+
 internal class SkiaLayerWindowProcedure(skiaLayer: SkiaLayer, private val hitTest: (x: Float, y: Float) -> Int) :
     WindowProcedure {
 
@@ -337,24 +365,9 @@ internal class SkiaLayerWindowProcedure(skiaLayer: SkiaLayer, private val hitTes
             WM_NCHITTEST -> {
                 hitResult = lParam.useMousePoint { x, y -> hitTest(x.toFloat(), y.toFloat()) }
                 when (hitResult) {
-                    HTCLIENT, HTMAXBUTTON, HTMINBUTTON, HTCLOSE -> LRESULT(hitResult.toLong())
+                    HTCLIENT, HTMAXBUTTON, HTMINBUTTON, HTCLOSE -> LRESULT(HTCLIENT.toLong())
                     else -> LRESULT(HTTRANSPARENT.toLong())
                 }
-            }
-
-            WM_NCMOUSEMOVE -> {
-                user32.SendMessage(contentHandle, WM_MOUSEMOVE, wParam, lParam)
-                LRESULT(0)
-            }
-
-            WM_NCLBUTTONDOWN -> {
-                user32.SendMessage(contentHandle, WM_LBUTTONDOWN, wParam, lParam)
-                LRESULT(0)
-            }
-
-            WM_NCLBUTTONUP -> {
-                user32.SendMessage(contentHandle, WM_LBUTTONUP, wParam, lParam)
-                LRESULT(0)
             }
 
             else -> {

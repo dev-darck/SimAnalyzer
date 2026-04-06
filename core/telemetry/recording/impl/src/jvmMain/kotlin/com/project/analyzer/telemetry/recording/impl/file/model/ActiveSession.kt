@@ -1,5 +1,6 @@
 package com.project.analyzer.telemetry.recording.impl.file.model
 
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.impl.file.FLUSH_INTERVAL_NS
 import com.project.analyzer.telemetry.recording.impl.file.codec.FrameStorageSessionCodec
 import java.io.BufferedWriter
@@ -7,7 +8,7 @@ import java.io.DataOutputStream
 import java.io.File
 
 internal class ActiveSession(
-    var metadata: SessionMetadata,
+    var metadata: RecordedTelemetrySessionMetadata,
     val metaFile: File,
     val frameStorageCodec: FrameStorageSessionCodec,
     val dataOut: DataOutputStream,

@@ -65,7 +65,7 @@ internal class LmuSessionTracker {
     }
 
     private suspend fun processLapIndex(frame: TelemetryFrame, emit: suspend (TelemetryLifecycleEvent) -> Unit) {
-        val newLapIndex = frame.lap?.currentLapIndex
+        val newLapIndex = frame.lap?.currentLapIndex?.takeIf { it > 0 }
         val prevLap = lastLapIndex
 
         when {

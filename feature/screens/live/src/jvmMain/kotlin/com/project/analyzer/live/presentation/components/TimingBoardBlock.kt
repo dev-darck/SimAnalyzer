@@ -20,7 +20,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.screens.live.Res.*
+import com.project.analyzer.feature.screens.live.Res.Res
+import com.project.analyzer.feature.screens.live.Res.timing_board_best_lap
+import com.project.analyzer.feature.screens.live.Res.timing_board_current_lap
+import com.project.analyzer.feature.screens.live.Res.timing_board_header_delta
+import com.project.analyzer.feature.screens.live.Res.timing_board_header_time
+import com.project.analyzer.feature.screens.live.Res.timing_board_header_type
+import com.project.analyzer.feature.screens.live.Res.timing_board_lap
+import com.project.analyzer.feature.screens.live.Res.timing_board_last_lap
+import com.project.analyzer.feature.screens.live.Res.timing_board_no_delta
+import com.project.analyzer.feature.screens.live.Res.timing_board_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.stringResource
 

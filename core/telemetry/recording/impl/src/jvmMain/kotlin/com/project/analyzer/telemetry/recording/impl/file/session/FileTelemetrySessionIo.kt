@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.recording.impl.file.session
 
 import com.project.analyzer.telemetry.recording.api.index.TelemetryFrameIndex
 import com.project.analyzer.telemetry.recording.api.payload.TelemetryFramePayload
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.impl.file.EVENTS_FILE_NAME
 import com.project.analyzer.telemetry.recording.impl.file.FILE_MAGIC
 import com.project.analyzer.telemetry.recording.impl.file.FILE_VERSION
@@ -15,7 +16,6 @@ import com.project.analyzer.telemetry.recording.impl.file.INDEX_VERSION
 import com.project.analyzer.telemetry.recording.impl.file.META_FILE_NAME
 import com.project.analyzer.telemetry.recording.impl.file.model.ActiveSession
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionEvent
-import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
 import com.project.analyzer.utils.logger.logger
 import kotlinx.serialization.json.Json
 import java.io.BufferedOutputStream
@@ -143,9 +143,9 @@ internal class FileTelemetrySessionIo(private val json: Json) {
         writeMetadataFile(session.metaFile, session.metadata)
     }
 
-    fun writeMetadataFile(metaFile: File, metadata: SessionMetadata) {
+    fun writeMetadataFile(metaFile: File, metadata: RecordedTelemetrySessionMetadata) {
         runCatching {
-            val encoded = json.encodeToString(SessionMetadata.serializer(), metadata)
+            val encoded = json.encodeToString(RecordedTelemetrySessionMetadata.serializer(), metadata)
             val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
             tmp.writeText(encoded)
             if (!tmp.renameTo(metaFile)) {

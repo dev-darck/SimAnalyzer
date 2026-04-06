@@ -1,8 +1,8 @@
 package com.project.analyzer.telemetry.recording.impl.file
 
 import com.project.analyzer.api.di.SessionScope
+import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.impl.file.model.SessionCompressionTask
-import com.project.analyzer.telemetry.recording.impl.file.model.SessionMetadata
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
@@ -77,12 +77,12 @@ internal class TelemetrySessionCompressor(private val json: Json) : TelemetrySes
         return tmp.renameTo(target)
     }
 
-    private fun writeMetadata(metaFile: File, metadata: SessionMetadata) {
+    private fun writeMetadata(metaFile: File, metadata: RecordedTelemetrySessionMetadata) {
         runCatching {
             val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
-            tmp.writeText(json.encodeToString(SessionMetadata.serializer(), metadata))
+            tmp.writeText(json.encodeToString(RecordedTelemetrySessionMetadata.serializer(), metadata))
             if (!tmp.renameTo(metaFile)) {
-                metaFile.writeText(json.encodeToString(SessionMetadata.serializer(), metadata))
+                metaFile.writeText(json.encodeToString(RecordedTelemetrySessionMetadata.serializer(), metadata))
                 tmp.delete()
             }
         }.onFailure { e ->

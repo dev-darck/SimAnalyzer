@@ -2,8 +2,8 @@ package com.analyzer.session.data.repository
 
 import com.analyzer.session.data.analysis.IndexAnalysis
 import com.analyzer.session.data.model.RecordedSessionDetailPage
-import com.analyzer.session.data.model.RecordedSessionSummary
 import com.analyzer.session.data.model.RecordedSessionListPage
+import com.analyzer.session.data.model.RecordedSessionSummary
 import com.analyzer.session.data.model.SessionBundleLocation
 import com.analyzer.session.data.model.SessionLocation
 import com.analyzer.session.data.repository.page.detail.RecordedSessionDetailPageFactory

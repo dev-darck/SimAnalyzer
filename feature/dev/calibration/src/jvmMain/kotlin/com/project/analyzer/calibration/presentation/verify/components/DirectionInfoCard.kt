@@ -13,7 +13,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.feature.dev.calibration.Res.*
+import com.project.analyzer.feature.dev.calibration.Res.Res
+import com.project.analyzer.feature.dev.calibration.Res.calibration_direction_forward
+import com.project.analyzer.feature.dev.calibration.Res.calibration_direction_heading
+import com.project.analyzer.feature.dev.calibration.Res.calibration_direction_title
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal

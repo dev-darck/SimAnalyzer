@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,6 +46,7 @@ public enum class ResponsiveGridMode {
 @Composable
 public fun ResponsiveScreen(
     modifier: Modifier = Modifier,
+    scrollContainerModifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp),
     verticalSpacing: Dp = 16.dp,
     horizontalSpacing: Dp = 16.dp,
@@ -84,22 +87,15 @@ public fun ResponsiveScreen(
         when (size) {
             ResponsiveSize.Compact -> {
                 val listState = rememberLazyListState()
-                Box(modifier = Modifier.fillMaxSize()) {
+                ResponsiveScrollHost(adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState))) {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = scrollContainerModifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(verticalSpacing),
                         contentPadding = effectivePadding,
                     ) {
                         ListScopeAdapter(this).currentContent()
                     }
-                    AppVerticalScrollbar(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .fillMaxHeight()
-                            .padding(vertical = 4.dp),
-                        adapter = AppScrollbarAdapter(rememberScrollbarAdapter(listState)),
-                    )
                 }
             }
 
@@ -110,6 +106,7 @@ public fun ResponsiveScreen(
                     effectivePadding = effectivePadding,
                     verticalSpacing = verticalSpacing,
                     horizontalSpacing = horizontalSpacing,
+                    scrollContainerModifier = scrollContainerModifier,
                     content = currentContent,
                 )
             }
@@ -121,6 +118,7 @@ public fun ResponsiveScreen(
                     effectivePadding = effectivePadding,
                     verticalSpacing = verticalSpacing,
                     horizontalSpacing = horizontalSpacing,
+                    scrollContainerModifier = scrollContainerModifier,
                     content = currentContent,
                 )
             }
@@ -135,14 +133,17 @@ private fun ResponsiveGrid(
     effectivePadding: PaddingValues,
     verticalSpacing: Dp,
     horizontalSpacing: Dp,
+    scrollContainerModifier: Modifier,
     content: ResponsiveScope.() -> Unit,
 ) {
     val safeColumns = columns.coerceAtLeast(1)
 
     when (gridMode) {
         ResponsiveGridMode.Staggered -> {
+            val gridState = rememberLazyStaggeredGridState()
             LazyVerticalStaggeredGrid(
-                modifier = Modifier.fillMaxSize(),
+                state = gridState,
+                modifier = scrollContainerModifier.fillMaxSize(),
                 columns = StaggeredGridCells.Fixed(safeColumns),
                 horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
                 verticalItemSpacing = verticalSpacing,
@@ -153,15 +154,36 @@ private fun ResponsiveGrid(
         }
 
         ResponsiveGridMode.Grid -> {
-            LazyVerticalGrid(
-                modifier = Modifier.fillMaxSize(),
-                columns = GridCells.Fixed(safeColumns),
-                horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
-                verticalArrangement = Arrangement.spacedBy(verticalSpacing),
-                contentPadding = effectivePadding,
-            ) {
-                GridScopeAdapter(this).content()
+            val gridState = rememberLazyGridState()
+            ResponsiveScrollHost(adapter = AppScrollbarAdapter(rememberScrollbarAdapter(gridState))) {
+                LazyVerticalGrid(
+                    state = gridState,
+                    modifier = scrollContainerModifier.fillMaxSize(),
+                    columns = GridCells.Fixed(safeColumns),
+                    horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+                    verticalArrangement = Arrangement.spacedBy(verticalSpacing),
+                    contentPadding = effectivePadding,
+                ) {
+                    GridScopeAdapter(this).content()
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun ResponsiveScrollHost(
+    adapter: AppScrollbarAdapter,
+    content: @Composable () -> Unit,
+) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        content()
+        AppVerticalScrollbar(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            adapter = adapter,
+        )
     }
 }

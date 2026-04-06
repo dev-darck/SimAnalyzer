@@ -1,11 +1,13 @@
 package com.analyzer.session.details.presentation
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.session.details.presentation.components.SessionDetailsHeader
 import com.analyzer.session.details.presentation.components.SessionDetailsLapTable
@@ -19,8 +21,11 @@ import com.analyzer.session.details.presentation.model.SessionDetailIntent
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
+import com.project.analyzer.navigation.api.LocalNavigator
+import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme
-import com.project.analyzer.ui.components.ScrollableScreenColumn
+import com.project.analyzer.ui.adaptive.ResponsiveGridMode
+import com.project.analyzer.ui.adaptive.ResponsiveScreen
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -28,6 +33,7 @@ import kotlinx.collections.immutable.persistentListOf
 @Composable
 internal fun SessionDetailsScreen(sessionId: Long) {
     val viewModel = metroViewModel<SessionDetailViewModel>()
+    val navigator = LocalNavigator.current
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel, sessionId) {
@@ -36,6 +42,9 @@ internal fun SessionDetailsScreen(sessionId: Long) {
 
     SessionDetailsContent(
         state = state,
+        onAnalysisClick = {
+            navigator.navigate(Route.SessionRoot.SessionAnalysis(sessionId))
+        },
         onIntent = viewModel::dispatch,
     )
 }
@@ -44,29 +53,45 @@ internal fun SessionDetailsScreen(sessionId: Long) {
 internal fun SessionDetailsContent(
     state: SessionDetailState,
     modifier: Modifier = Modifier,
+    onAnalysisClick: () -> Unit = {},
     onIntent: (SessionDetailIntent) -> Unit = {},
 ) {
-    ScrollableScreenColumn(modifier = modifier) {
-        SessionDetailsStatsRow(
-            stats = state.stats,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        SessionDetailsHeader(
-            header = state.header,
-            sortFilter = state.sortFilter,
-            showFilter = state.showFilter,
-            sessionTypeFilter = state.sessionTypeFilter,
-            modifier = Modifier.fillMaxWidth(),
-            onSortSelect = { onIntent(SessionDetailIntent.ChangeSort(it)) },
-            onShowSelect = { onIntent(SessionDetailIntent.ChangeFilter(it)) },
-            onSessionTypeSelect = { onIntent(SessionDetailIntent.ChangeSessionTypeFilter(it)) },
-        )
-        SessionDetailsLapTable(
-            state = state,
-            modifier = Modifier.fillMaxWidth(),
-            onPageChange = { onIntent(SessionDetailIntent.ChangePage(it)) },
-            onSortChange = { onIntent(SessionDetailIntent.ChangeSort(it)) },
-        )
+    ResponsiveScreen(
+        modifier = modifier,
+        contentPadding = PaddingValues(horizontal = 12.dp),
+        verticalSpacing = 10.dp,
+        gridMode = ResponsiveGridMode.Grid,
+        mediumColumns = 1,
+        expandedColumns = 1,
+        backgroundColor = SimAnalyzerTheme.material.background,
+    ) {
+        item(key = "session-details-stats", isContentFull = true) {
+            SessionDetailsStatsRow(
+                stats = state.stats,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        item(key = "session-details-header", isContentFull = true) {
+            SessionDetailsHeader(
+                header = state.header,
+                sortFilter = state.sortFilter,
+                showFilter = state.showFilter,
+                sessionTypeFilter = state.sessionTypeFilter,
+                modifier = Modifier.fillMaxWidth(),
+                onSortSelect = { onIntent(SessionDetailIntent.ChangeSort(it)) },
+                onShowSelect = { onIntent(SessionDetailIntent.ChangeFilter(it)) },
+                onSessionTypeSelect = { onIntent(SessionDetailIntent.ChangeSessionTypeFilter(it)) },
+                onAnalysisClick = onAnalysisClick,
+            )
+        }
+        item(key = "session-details-table", isContentFull = true) {
+            SessionDetailsLapTable(
+                state = state,
+                modifier = Modifier.fillMaxWidth(),
+                onPageChange = { onIntent(SessionDetailIntent.ChangePage(it)) },
+                onSortChange = { onIntent(SessionDetailIntent.ChangeSort(it)) },
+            )
+        }
     }
 }
 
@@ -76,6 +101,7 @@ private fun SessionDetailsContentPreview() {
     SimAnalyzerTheme {
         SessionDetailsContent(
             state = previewState(),
+            onAnalysisClick = {},
             onIntent = {},
         )
     }

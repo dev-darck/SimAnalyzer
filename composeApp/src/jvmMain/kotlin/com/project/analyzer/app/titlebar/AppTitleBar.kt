@@ -205,12 +205,7 @@ fun WindowScope.AppTitleBar(
 }
 
 @Composable
-private fun NavButtons(
-    canGoBack: Boolean,
-    canGoForward: Boolean,
-    onBack: () -> Unit,
-    onForward: () -> Unit
-) {
+private fun NavButtons(canGoBack: Boolean, canGoForward: Boolean, onBack: () -> Unit, onForward: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         TitleBarPillButton(enabled = canGoBack, onClick = onBack) { tint ->
             Icon(
@@ -235,11 +230,7 @@ private fun NavButtons(
 }
 
 @Composable
-private fun TitleBarPillButton(
-    enabled: Boolean,
-    onClick: () -> Unit,
-    icon: @Composable (tint: Color) -> Unit = {}
-) {
+private fun TitleBarPillButton(enabled: Boolean, onClick: () -> Unit, icon: @Composable (tint: Color) -> Unit = {}) {
     val m = SimAnalyzerTheme.material
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()

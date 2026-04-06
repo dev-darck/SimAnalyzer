@@ -26,11 +26,10 @@ import com.project.analyzer.composeApp.Res.app_nav_live
 import com.project.analyzer.composeApp.Res.app_nav_session
 import com.project.analyzer.composeApp.Res.app_nav_settings
 import com.project.analyzer.composeApp.Res.logo
-import com.project.analyzer.navigation.api.EntryFactory
+import com.project.analyzer.navigation.api.NavigationHost
 import com.project.analyzer.navigation.api.NavigationState
 import com.project.analyzer.navigation.api.Root
 import com.project.analyzer.navigation.api.Route
-import com.project.analyzer.navigation.impl.AppNavGraph
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.icons.Live
 import com.project.analyzer.ui.icons.Session
@@ -44,7 +43,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun WindowScope.App(
-    entryFactory: EntryFactory,
+    navigationHost: NavigationHost,
     navigationState: NavigationState<Route>,
     decorator: FrameDecoratorState,
     onCloseRequest: () -> Unit = {},
@@ -64,9 +63,8 @@ fun WindowScope.App(
             )
         },
         navigationContent = {
-            AppNavGraph(
+            navigationHost.Content(
                 navigationState = navigationState,
-                entryFactory = entryFactory,
             )
         },
     )

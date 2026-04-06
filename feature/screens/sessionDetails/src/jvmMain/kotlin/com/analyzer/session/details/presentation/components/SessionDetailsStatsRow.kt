@@ -32,7 +32,7 @@ internal fun SessionDetailsStatsRow(
             ),
         ),
         modifier = modifier,
-        horizontalSpacing = 12,
+        horizontalSpacing = 10,
     )
 }
 
