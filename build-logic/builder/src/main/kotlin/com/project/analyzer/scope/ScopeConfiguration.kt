@@ -5,7 +5,6 @@ import com.project.analyzer.kmp.configureComposeKmp
 import com.project.analyzer.kmp.configureComposeResources
 import com.project.analyzer.kmp.configureDesktop
 import com.project.analyzer.kmp.configureKmpLibrary
-import com.project.analyzer.kmp.configureStorytale
 import com.project.analyzer.versioncatalog.checker.registerDependencyWatcher
 import dev.detekt.gradle.extensions.DetektExtension
 import org.gradle.kotlin.dsl.configure
@@ -39,11 +38,8 @@ internal fun ProjectScope.configureLibraryImpl() {
     configureKmpLibrary()
 }
 
-internal fun ProjectScope.composeImpl(storytale: Boolean = false) {
+internal fun ProjectScope.composeImpl() {
     configureComposeKmp()
-    if (storytale) {
-        configureStorytale()
-    }
 }
 
 internal fun ProjectScope.resourcesImpl() {

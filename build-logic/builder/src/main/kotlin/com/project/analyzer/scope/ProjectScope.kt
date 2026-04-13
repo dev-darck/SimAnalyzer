@@ -38,8 +38,8 @@ class ProjectScope(
         configureLibraryImpl()
     }
 
-    fun compose(storytale: Boolean = false) {
-        composeImpl(storytale)
+    fun compose() {
+        composeImpl()
     }
 
     fun resources() {

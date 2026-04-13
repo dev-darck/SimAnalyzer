@@ -23,7 +23,6 @@ kotlin-logging = "8.0.01"
 logback = "1.5.32"
 junit-platform = "6.0.2"
 mockk = "1.14.9"
-storytale = "0.0.4-alpha01+dev22"
 tomlParser = "1.1.1"
 
 [libraries]
@@ -120,7 +119,6 @@ sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 detekt = { id = "dev.detekt", version.ref = "detekt" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-storytale = { id = "org.jetbrains.compose.storytale", version.ref = "storytale" }
 
 convention-app-plugin = { id = "convention-compose-app" }
 convention-module-api-plugin = { id = "convention-module-api" }
