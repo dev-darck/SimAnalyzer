@@ -11,6 +11,8 @@ import com.sun.jna.Structure
     "endEt",
     "maxLaps",
     "lapDist",
+    "resultsStreamPointer",
+    "numVehicles",
     "gamePhase",
     "yellowFlagState",
     "sectorFlag",
@@ -35,6 +37,7 @@ import com.sun.jna.Structure
     "startEt",
     "avgPathWetness",
     "expansion",
+    "vehiclePointer",
 )
 internal class Rf2ScoringInfo : Pack4Structure() {
 
@@ -59,6 +62,12 @@ internal class Rf2ScoringInfo : Pack4Structure() {
 
     @JvmField
     var lapDist: Double = 0.0
+
+    @JvmField
+    var resultsStreamPointer: ByteArray = ByteArray(8)
+
+    @JvmField
+    var numVehicles: Int = 0
 
     @JvmField
     var gamePhase: Byte = 0
@@ -132,9 +141,12 @@ internal class Rf2ScoringInfo : Pack4Structure() {
     @JvmField
     var expansion: ByteArray = ByteArray(200)
 
+    @JvmField
+    var vehiclePointer: ByteArray = ByteArray(8)
+
     public companion object {
 
-        public const val SIZE: Int = 528
+        public const val SIZE: Int = 548
         public const val OFFSET: Int = 12
     }
 }

@@ -4,6 +4,7 @@ import com.project.analyzer.telemetry.api.model.car.wheels.WheelFrame
 import com.project.analyzer.telemetry.api.model.car.wheels.WheelsFrame
 import com.project.analyzer.telemetry.lmu.api.model.LmuVehicleTelemetry
 import com.project.analyzer.telemetry.lmu.api.model.LmuWheel
+import com.project.analyzer.telemetry.lmu.impl.common.LmuTelemetryConversions
 
 internal fun mapWheels(telemetry: LmuVehicleTelemetry): WheelsFrame {
     val wheels = telemetry.wheels
@@ -16,20 +17,20 @@ internal fun mapWheels(telemetry: LmuVehicleTelemetry): WheelsFrame {
 }
 
 private fun readWheel(w: LmuWheel): WheelFrame {
-    val inner = w.temperature[0].toFloat()
-    val middle = w.temperature[1].toFloat()
-    val outer = w.temperature[2].toFloat()
-    val avg = (inner + middle + outer) / TEMP_AVG_DIVISOR
+    val inner = w.temperature.getOrNull(0)?.let(LmuTelemetryConversions::kelvinToCelsius)
+    val middle = w.temperature.getOrNull(1)?.let(LmuTelemetryConversions::kelvinToCelsius)
+    val outer = w.temperature.getOrNull(2)?.let(LmuTelemetryConversions::kelvinToCelsius)
+    val avg = listOfNotNull(inner, middle, outer).takeIf { it.isNotEmpty() }?.average()?.toFloat()
 
     return WheelFrame(
-        pressurePsi = w.pressure.toFloat(),
+        pressurePsi = LmuTelemetryConversions.kpaToPsi(w.pressure),
         wear = w.wear.toFloat(),
-        coreTempC = w.tireCarcassTemperature.toFloat(),
+        coreTempC = LmuTelemetryConversions.kelvinToCelsius(w.tireCarcassTemperature),
         innerTempC = inner,
         middleTempC = middle,
         outerTempC = outer,
         avgTempC = avg,
-        brakeTempC = w.brakeTemp.toFloat(),
+        brakeTempC = LmuTelemetryConversions.finiteFloat(w.brakeTemp),
         brakePressure = w.brakePressure.toFloat(),
         load = w.tireLoad.toFloat(),
         angularSpeed = w.rotation.toFloat(),
@@ -39,5 +40,3 @@ private fun readWheel(w: LmuWheel): WheelFrame {
         lateralForce = w.lateralForce.toFloat(),
     )
 }
-
-private const val TEMP_AVG_DIVISOR = 3f

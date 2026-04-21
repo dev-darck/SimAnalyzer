@@ -9,8 +9,10 @@ import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.lmu.api.model.LmuTelemetrySnapshot
 import com.project.analyzer.telemetry.lmu.impl.mapper.LmuTelemetryMapper
 import com.project.analyzer.telemetry.lmu.impl.recording.LmuTelemetryRecordingEmitter
+import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +20,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -49,12 +52,14 @@ internal class LmuTelemetryLifecycle(
     private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
         replay = 1,
         extraBufferCapacity = 32,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val events = _events.asSharedFlow()
 
     private val _frames = MutableSharedFlow<TelemetryFrame>(
         replay = 1,
         extraBufferCapacity = 16,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
 
@@ -71,9 +76,9 @@ internal class LmuTelemetryLifecycle(
     }
 
     override suspend fun finishTelemetry() {
-        feed.close()
         loopJob?.cancelAndJoin()
         loopJob = null
+        feed.close()
 
         if (sessionTracker.isConnected) {
             sessionTracker.onDisconnected(SessionEndReason.SIM_DISCONNECTED, ::emitEvent)
@@ -88,7 +93,15 @@ internal class LmuTelemetryLifecycle(
     private suspend fun listenLoop() {
         try {
             feed.collectFrames { snapshot ->
-                onSnapshot(snapshot)
+                runCatching {
+                    onSnapshot(snapshot)
+                }.onFailure { error ->
+                    if (error is CancellationException) throw error
+                    logger.atError(RATE_LIMITED) {
+                        message = "[lmu] frame processing error"
+                        cause = error
+                    }
+                }
             }
         } finally {
             if (sessionTracker.isConnected && currentCoroutineContext().isActive) {
@@ -100,7 +113,7 @@ internal class LmuTelemetryLifecycle(
     private suspend fun onSnapshot(snapshot: LmuTelemetrySnapshot) {
         val frame = mapper.map(snapshot)
         val result = sessionTracker.onFrame(frame, ::emitEvent)
-        _frames.emit(result.frame)
+        _frames.tryEmit(result.frame)
         emitSampleIfNeeded(snapshot, result)
     }
 
@@ -110,7 +123,7 @@ internal class LmuTelemetryLifecycle(
     }
 
     private suspend fun emitEvent(event: TelemetryLifecycleEvent) {
-        _events.emit(event)
+        _events.tryEmit(event)
     }
 
     private fun createScope(): CoroutineScope = CoroutineScope(

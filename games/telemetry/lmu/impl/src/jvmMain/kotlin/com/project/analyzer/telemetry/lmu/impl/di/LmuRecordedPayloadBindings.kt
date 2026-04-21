@@ -16,8 +16,7 @@ interface LmuRecordedPayloadBindings {
 
         @Provides
         @IntoSet
-        private fun provideRecordedPayloadDecoder(
-            impl: LmuRecordedPayloadDecoder,
-        ): RecordedTelemetryPayloadDecoder = impl
+        private fun provideRecordedPayloadDecoder(impl: LmuRecordedPayloadDecoder): RecordedTelemetryPayloadDecoder =
+            impl
     }
 }

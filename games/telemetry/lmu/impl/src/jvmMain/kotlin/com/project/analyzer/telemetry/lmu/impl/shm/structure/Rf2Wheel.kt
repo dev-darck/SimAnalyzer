@@ -33,6 +33,9 @@ import com.sun.jna.Structure
     "toe",
     "tireCarcassTemperature",
     "tireInnerLayerTemperature",
+    "optimalTemp",
+    "compoundIndex",
+    "compoundType",
     "expansion",
 )
 internal class Rf2Wheel : Pack4Structure() {
@@ -126,7 +129,16 @@ internal class Rf2Wheel : Pack4Structure() {
     var tireInnerLayerTemperature: DoubleArray = DoubleArray(3)
 
     @JvmField
-    var expansion: ByteArray = ByteArray(24)
+    var optimalTemp: Float = 0f
+
+    @JvmField
+    var compoundIndex: Byte = 0
+
+    @JvmField
+    var compoundType: Byte = 0
+
+    @JvmField
+    var expansion: ByteArray = ByteArray(18)
 
     public companion object {
 

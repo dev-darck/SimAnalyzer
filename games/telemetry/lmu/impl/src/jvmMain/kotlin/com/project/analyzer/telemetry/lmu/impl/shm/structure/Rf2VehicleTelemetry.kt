@@ -66,16 +66,51 @@ import com.sun.jna.Structure
     "speedLimiterAvailable",
     "antiStallActivated",
     "unused",
+    "visualSteeringWheelRange",
     "rearBrakeBias",
     "turboBoostPressure",
     "physicsToGraphicsOffset",
     "physicalSteeringWheelRange",
+    "deltaBest",
     "batteryChargeFraction",
     "electricBoostMotorTorque",
     "electricBoostMotorRpm",
     "electricBoostMotorTemperature",
     "electricBoostWaterTemperature",
     "electricBoostMotorState",
+    "lapInvalidated",
+    "absActive",
+    "tcActive",
+    "speedLimiterActive",
+    "wiperState",
+    "tc",
+    "tcMax",
+    "tcSlip",
+    "tcSlipMax",
+    "tcCut",
+    "tcCutMax",
+    "abs",
+    "absMax",
+    "motorMap",
+    "motorMapMax",
+    "migration",
+    "migrationMax",
+    "frontAntiSway",
+    "frontAntiSwayMax",
+    "rearAntiSway",
+    "rearAntiSwayMax",
+    "liftAndCoastProgress",
+    "trackLimitsSteps",
+    "regen",
+    "stateOfCharge",
+    "virtualEnergy",
+    "timeGapCarAhead",
+    "timeGapCarBehind",
+    "timeGapPlaceAhead",
+    "timeGapPlaceBehind",
+    "vehicleModel",
+    "vehicleClass",
+    "vehicleChampionship",
     "expansion",
     "wheels",
 )
@@ -269,6 +304,9 @@ internal class Rf2VehicleTelemetry : Pack4Structure() {
     var unused: ByteArray = ByteArray(2)
 
     @JvmField
+    var visualSteeringWheelRange: Float = 0f
+
+    @JvmField
     var rearBrakeBias: Double = 0.0
 
     @JvmField
@@ -279,6 +317,9 @@ internal class Rf2VehicleTelemetry : Pack4Structure() {
 
     @JvmField
     var physicalSteeringWheelRange: Float = 0f
+
+    @JvmField
+    var deltaBest: Double = 0.0
 
     @JvmField
     var batteryChargeFraction: Double = 0.0
@@ -299,7 +340,106 @@ internal class Rf2VehicleTelemetry : Pack4Structure() {
     var electricBoostMotorState: Byte = 0
 
     @JvmField
-    var expansion: ByteArray = ByteArray(111)
+    var lapInvalidated: Byte = 0
+
+    @JvmField
+    var absActive: Byte = 0
+
+    @JvmField
+    var tcActive: Byte = 0
+
+    @JvmField
+    var speedLimiterActive: Byte = 0
+
+    @JvmField
+    var wiperState: Byte = 0
+
+    @JvmField
+    var tc: Byte = 0
+
+    @JvmField
+    var tcMax: Byte = 0
+
+    @JvmField
+    var tcSlip: Byte = 0
+
+    @JvmField
+    var tcSlipMax: Byte = 0
+
+    @JvmField
+    var tcCut: Byte = 0
+
+    @JvmField
+    var tcCutMax: Byte = 0
+
+    @JvmField
+    var abs: Byte = 0
+
+    @JvmField
+    var absMax: Byte = 0
+
+    @JvmField
+    var motorMap: Byte = 0
+
+    @JvmField
+    var motorMapMax: Byte = 0
+
+    @JvmField
+    var migration: Byte = 0
+
+    @JvmField
+    var migrationMax: Byte = 0
+
+    @JvmField
+    var frontAntiSway: Byte = 0
+
+    @JvmField
+    var frontAntiSwayMax: Byte = 0
+
+    @JvmField
+    var rearAntiSway: Byte = 0
+
+    @JvmField
+    var rearAntiSwayMax: Byte = 0
+
+    @JvmField
+    var liftAndCoastProgress: Byte = 0
+
+    @JvmField
+    var trackLimitsSteps: Byte = 0
+
+    @JvmField
+    var regen: Float = 0f
+
+    @JvmField
+    var stateOfCharge: Float = 0f
+
+    @JvmField
+    var virtualEnergy: Float = 0f
+
+    @JvmField
+    var timeGapCarAhead: Float = 0f
+
+    @JvmField
+    var timeGapCarBehind: Float = 0f
+
+    @JvmField
+    var timeGapPlaceAhead: Float = 0f
+
+    @JvmField
+    var timeGapPlaceBehind: Float = 0f
+
+    @JvmField
+    var vehicleModel: ByteArray = ByteArray(30)
+
+    @JvmField
+    var vehicleClass: Byte = 0
+
+    @JvmField
+    var vehicleChampionship: Byte = 0
+
+    @JvmField
+    var expansion: ByteArray = ByteArray(20)
 
     @JvmField
     @Suppress("UNCHECKED_CAST")
