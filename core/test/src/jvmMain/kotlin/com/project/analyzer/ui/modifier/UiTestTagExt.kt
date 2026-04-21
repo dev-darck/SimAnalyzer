@@ -25,8 +25,11 @@ public fun Modifier.uiTestTag(vararg parts: Any?): Modifier = testTag(buildUiTes
 
 private fun normalizeUiTestTagPart(part: Any?): List<String> = when (part) {
     null -> emptyList()
+
     is UiTestTag -> listOf(part.value)
+
     is Enum<*> -> listOf(part.name.lowercase())
+
     else -> part.toString()
         .split(TestTags.SegmentSeparator)
         .mapNotNull(::normalizeUiTestTagSegment)

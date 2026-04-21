@@ -163,9 +163,9 @@ private fun List<SessionAnalysisFractionPointUi>.buildCornerMarkerCandidate(
             sideNormal * outwardDistance +
             context.geometry.tangentDirection * tangentDistance
         ).clampToViewport(
-            canvasSize = context.input.canvasSize,
-            margin = placement.viewportMarginPx,
-        )
+        canvasSize = context.input.canvasSize,
+        margin = placement.viewportMarginPx,
+    )
     val markerCollision = context.occupiedPositions.any { occupied ->
         occupied.distanceTo(position) < placement.spacingPx
     }

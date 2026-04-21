@@ -1,6 +1,6 @@
 package com.project.analyzer.ac.telemetry.impl.internal
 
-import com.project.analyzer.ac.telemetry.impl.internal.mapper.AcSessionCache
+import com.project.analyzer.ac.telemetry.impl.internal.mapper.common.AcSessionCache
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.telemetry.api.model.lap.SectorFrame
 import com.project.analyzer.telemetry.api.model.lap.SectorStatus

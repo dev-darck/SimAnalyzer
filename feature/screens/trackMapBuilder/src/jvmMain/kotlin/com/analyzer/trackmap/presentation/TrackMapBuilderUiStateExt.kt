@@ -53,7 +53,9 @@ fun TrackMapBuilderState.toTrackMapPreviewUi(): TrackMapPreviewUi = TrackMapPrev
     pitPoints = pitPoints.map { it.toTrackMapPreviewPointUi() }.toImmutableList(),
     pitEntryPoint = pitEntryPoint?.toTrackMapPreviewPointUi(),
     pitExitPoint = pitExitPoint?.toTrackMapPreviewPointUi(),
-    sectorMarkerPositions = sectorMarkers.map { marker -> marker.position.toTrackMapPreviewPointUi() }.toImmutableList(),
+    sectorMarkerPositions = sectorMarkers.map { marker ->
+        marker.position.toTrackMapPreviewPointUi()
+    }.toImmutableList(),
     averageTrackWidthMeters = averageTrackWidthMeters,
     guidanceText = guidanceText,
 )

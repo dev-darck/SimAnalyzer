@@ -63,12 +63,7 @@ public fun buildPaginationUi(page: Int, pageCount: Int): PaginationUi {
 }
 
 @Composable
-public fun Pagination(
-    page: Int,
-    pageCount: Int,
-    onPageChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
+public fun Pagination(page: Int, pageCount: Int, onPageChange: (Int) -> Unit, modifier: Modifier = Modifier) {
     val paginationUi = remember(page, pageCount) { buildPaginationUi(page = page, pageCount = pageCount) }
     Pagination(
         pagination = paginationUi,
@@ -78,11 +73,7 @@ public fun Pagination(
 }
 
 @Composable
-public fun Pagination(
-    pagination: PaginationUi,
-    onPageChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
+public fun Pagination(pagination: PaginationUi, onPageChange: (Int) -> Unit, modifier: Modifier = Modifier) {
     if (pagination.pageCount <= 1) return
 
     val pageItemShape = SimAnalyzerTheme.corners.compact

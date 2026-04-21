@@ -172,10 +172,7 @@ private fun ResponsiveGrid(
 }
 
 @Composable
-private fun ResponsiveScrollHost(
-    adapter: AppScrollbarAdapter,
-    content: @Composable () -> Unit,
-) {
+private fun ResponsiveScrollHost(adapter: AppScrollbarAdapter, content: @Composable () -> Unit) {
     Box(modifier = Modifier.fillMaxSize()) {
         content()
         AppVerticalScrollbar(

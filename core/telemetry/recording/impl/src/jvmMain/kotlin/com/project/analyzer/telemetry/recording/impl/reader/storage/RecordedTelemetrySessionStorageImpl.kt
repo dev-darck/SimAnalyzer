@@ -38,10 +38,7 @@ internal class RecordedTelemetrySessionStorageImpl(
         ).bundles
     }
 
-    override suspend fun findBundle(
-        sessionId: Long,
-        forceRefresh: Boolean,
-    ): RecordedTelemetrySessionBundle? {
+    override suspend fun findBundle(sessionId: Long, forceRefresh: Boolean): RecordedTelemetrySessionBundle? {
         val root = resolveRoot() ?: return null
         return loadIndex(
             root = root,

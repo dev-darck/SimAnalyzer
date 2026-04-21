@@ -14,9 +14,7 @@ internal fun defaultGameSelectionOptions(): List<GameSelectionOptionUi> = listOf
     GameSelectionOptionUi(selection = GameSelection.Manual(GameId.AC)),
     GameSelectionOptionUi(selection = GameSelection.Manual(GameId.ACC)),
     GameSelectionOptionUi(selection = GameSelection.Manual(GameId.ACE)),
-//    GameSelectionOptionUi(
-//        selection = GameSelection.Manual(GameId.LMU)
-//    ),
+    GameSelectionOptionUi(selection = GameSelection.Manual(GameId.LMU)),
 )
 
 internal fun buildGameSelectionUi(
@@ -45,7 +43,7 @@ internal fun buildGameSelectionUi(
 
 private fun GameId.isAcFamily(): Boolean = when (this) {
     GameId.AC, GameId.ACC, GameId.ACE -> true
-//    GameId.LMU -> false
+    GameId.LMU -> false
 }
 
 internal enum class RecordingWarningKind {

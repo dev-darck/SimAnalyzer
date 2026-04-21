@@ -12,8 +12,7 @@ import kotlinx.coroutines.flow.onEach
 internal class DevSettingsViewModel(
     private val useCase: DevSettingsUseCase,
     private val stateMapper: DevSettingsStateMapper,
-) :
-    LeakAwareMviViewModel<DevSettingsIntent, DevSettingsState>(DevSettingsState()) {
+) : LeakAwareMviViewModel<DevSettingsIntent, DevSettingsState>(DevSettingsState()) {
 
     init {
         useCase.start(viewModelScope)

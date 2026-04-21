@@ -6,7 +6,7 @@ import com.project.analyzer.ac.telemetry.impl.fallback.analyzer.model.LapTimingS
 import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.PhysicsPoseExtractor
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFilePhysics
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
@@ -290,8 +290,11 @@ class FallbackLapAnalyzer(
         val expectedSectorIndex0Based = (state.currentSectorIndex - 1).coerceIn(0, sectorCount - 1)
         val forwardSteps = when {
             sectorIndexHint0Based == expectedSectorIndex0Based -> 0
+
             sectorIndexHint0Based > expectedSectorIndex0Based -> sectorIndexHint0Based - expectedSectorIndex0Based
+
             expectedSectorIndex0Based == sectorCount - 1 && sectorIndexHint0Based == 0 -> 1
+
             else -> {
                 logger.debug {
                     "LAP: Ignore non-monotonic native sector hint " +

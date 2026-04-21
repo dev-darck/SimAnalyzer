@@ -23,19 +23,18 @@ private class RecompositionCounter {
     var count: Int = 0
 }
 
-public fun Modifier.trackRecompositions(): Modifier =
-    if (BuildConfig.IS_DEBUG) {
-        composed {
-            val counter = remember { RecompositionCounter() }
+public fun Modifier.trackRecompositions(): Modifier = if (BuildConfig.IS_DEBUG) {
+    composed {
+        val counter = remember { RecompositionCounter() }
 
-            SideEffect {
-                counter.count += 1
-            }
-
-            semantics {
-                this[RecompositionCountKey] = { counter.count }
-            }
+        SideEffect {
+            counter.count += 1
         }
-    } else {
-        this
+
+        semantics {
+            this[RecompositionCountKey] = { counter.count }
+        }
     }
+} else {
+    this
+}

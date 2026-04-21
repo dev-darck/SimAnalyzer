@@ -338,11 +338,7 @@ private fun HudCommonSettingsPanel(
 }
 
 @Composable
-private fun HudMonitorPanel(
-    panel: HudPanel? = null,
-    hudOpacity: Float = 1f,
-    modifier: Modifier = Modifier
-) {
+private fun HudMonitorPanel(panel: HudPanel? = null, hudOpacity: Float = 1f, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(color = SimAnalyzerTheme.material.surface, shape = SimAnalyzerTheme.shapes.large)

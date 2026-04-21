@@ -47,7 +47,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
             copy(
                 drives = data.drives.toPersistentList(),
                 places = data.places.toPersistentList(),
-                error = null
+                error = null,
             )
         }
     }

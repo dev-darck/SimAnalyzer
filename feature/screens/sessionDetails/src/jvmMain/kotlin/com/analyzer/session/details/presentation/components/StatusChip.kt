@@ -22,10 +22,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun StatusChip(
-    status: LapStatus,
-    modifier: Modifier = Modifier
-) {
+internal fun StatusChip(status: LapStatus, modifier: Modifier = Modifier) {
     val accent = when (status) {
         LapStatus.Clean -> SimAnalyzerTheme.extended.teal
         LapStatus.OutLap -> SimAnalyzerTheme.extended.yellow

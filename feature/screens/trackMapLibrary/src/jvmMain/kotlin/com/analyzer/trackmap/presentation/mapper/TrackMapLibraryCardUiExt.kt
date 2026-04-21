@@ -5,14 +5,14 @@ import com.analyzer.trackmap.domain.model.mapKey
 import com.analyzer.trackmap.presentation.model.TrackMapLibraryCardUi
 import com.analyzer.trackmap.presentation.model.TrackMapLibraryHeaderUi
 import com.analyzer.trackmap.presentation.model.TrackMapLibraryPointsPreviewUi
+import com.analyzer.trackmap.presentation.model.TrackMapLibraryStatsUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewBoundsUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewPointUi
-import com.analyzer.trackmap.presentation.model.TrackMapLibraryStatsUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewUi
 import com.analyzer.trackmap.presentation.model.toTrackMapPreviewPointUi
 import com.project.analyzer.math.Vec2
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import java.time.Instant
 import java.time.ZoneId

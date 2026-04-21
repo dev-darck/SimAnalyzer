@@ -22,4 +22,5 @@ public data class WheelsFrame(
     // Brake compounds
     val frontBrakeCompound: Int? = null,
     val rearBrakeCompound: Int? = null,
+    val useSingleCompound: Boolean? = null,
 )

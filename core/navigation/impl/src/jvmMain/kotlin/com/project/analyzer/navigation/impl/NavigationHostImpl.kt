@@ -17,22 +17,16 @@ import com.project.analyzer.navigation.impl.rememberNavigationState as rememberN
 @Inject
 @SingleIn(NavigationScope::class)
 @ContributesBinding(NavigationScope::class, binding = binding<NavigationHost>())
-class NavigationHostImpl(
-    private val entryFactory: NavigationEntryFactory,
-) : NavigationHost {
+class NavigationHostImpl(private val entryFactory: NavigationEntryFactory) : NavigationHost {
 
     @Composable
-    override fun rememberNavigationState(startTopLevel: Root): NavigationState<Route> =
-        rememberNavigationStateInternal(
-            entryFactory = entryFactory,
-            startTopLevel = startTopLevel,
-        )
+    override fun rememberNavigationState(startTopLevel: Root): NavigationState<Route> = rememberNavigationStateInternal(
+        entryFactory = entryFactory,
+        startTopLevel = startTopLevel,
+    )
 
     @Composable
-    override fun Content(
-        navigationState: NavigationState<Route>,
-        modifier: Modifier,
-    ) {
+    override fun Content(navigationState: NavigationState<Route>, modifier: Modifier) {
         val runtimeState = navigationState as? NavigationStateInternal
             ?: error("NavigationHost requires state created by NavigationHost.rememberNavigationState()")
         val entryProvider = remember { entryFactory.create() }

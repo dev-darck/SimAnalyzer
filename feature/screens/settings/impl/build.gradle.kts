@@ -2,6 +2,7 @@ moduleImpl {
     compose()
     resources()
     metro()
+    logger()
     test {
         ui()
     }
@@ -27,6 +28,7 @@ moduleImpl {
         projects.feature.screens.settings.api.jvmImpl
         projects.feature.screens.chooser.jvmImpl
 
+        lib.kotlinx.serialization.json.jvmImpl
         lib.metro.metrox.viewmodel.compose.jvmImpl
         lib.metro.metrox.viewmodel.base.jvmImpl
     }

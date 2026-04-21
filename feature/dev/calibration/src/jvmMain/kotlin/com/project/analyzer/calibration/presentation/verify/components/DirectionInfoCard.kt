@@ -23,11 +23,7 @@ import com.project.analyzer.ui.format.formatDecimal
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun DirectionInfoCard(
-    forward: Vec2?,
-    headingDegrees: Float,
-    modifier: Modifier = Modifier
-) {
+fun DirectionInfoCard(forward: Vec2?, headingDegrees: Float, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()

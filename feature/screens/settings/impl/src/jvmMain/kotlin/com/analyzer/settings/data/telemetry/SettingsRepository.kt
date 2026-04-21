@@ -1,5 +1,6 @@
 package com.analyzer.settings.data.telemetry
 
+import com.analyzer.settings.api.AppCloseBehavior
 import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
 import com.project.analyzer.game.api.GameId
@@ -11,9 +12,11 @@ interface SettingsRepository {
     fun observeSettings(): Flow<TelemetrySettings>
     fun observeGameSelectionVariant(): Flow<GameId?>
     fun observeHudEnabled(): Flow<Boolean>
+    fun observeAppCloseBehavior(): Flow<AppCloseBehavior>
     fun observeRecordingNoticeShown(): Flow<Boolean>
     suspend fun loadSettings(): TelemetrySettings
     suspend fun updateSamplingRate(hz: Int)
+    suspend fun updateAppCloseBehavior(behavior: AppCloseBehavior)
     suspend fun updateHudEnabled(enabled: Boolean)
     suspend fun copyFromOldDir(currentTelemetryPath: String, targetTelemetryPath: String): Boolean
     suspend fun updateStorageLocation(path: String)

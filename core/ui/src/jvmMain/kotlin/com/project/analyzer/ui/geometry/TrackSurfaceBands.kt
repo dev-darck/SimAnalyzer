@@ -125,10 +125,7 @@ public fun List<Offset>.isTrackPathClosedLoop(
     return closureDistance <= jumpThreshold
 }
 
-public fun List<Offset>.computeTrackPathJumpThreshold(
-    gapMultiplier: Float,
-    minimumGapPx: Float,
-): Float {
+public fun List<Offset>.computeTrackPathJumpThreshold(gapMultiplier: Float, minimumGapPx: Float): Float {
     val segmentLengths = buildList {
         for (index in 1 until this@computeTrackPathJumpThreshold.size) {
             val previous = this@computeTrackPathJumpThreshold[index - 1]
@@ -175,11 +172,7 @@ private data class TrackSurfaceBandSegment(
     val endRight: Offset,
 )
 
-private data class TrackSurfaceBandJumpThresholds(
-    val center: Float,
-    val left: Float,
-    val right: Float,
-)
+private data class TrackSurfaceBandJumpThresholds(val center: Float, val left: Float, val right: Float)
 
 private fun Offset.distanceTo(other: Offset): Float = hypot(other.x - x, other.y - y)
 

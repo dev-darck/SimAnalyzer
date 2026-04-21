@@ -210,7 +210,7 @@ private fun SessionAnalysisHighlightCategory.accent(palette: TrackDiagnosticPale
     SessionAnalysisHighlightCategory.LateApexEntry,
     SessionAnalysisHighlightCategory.CoastingZone,
     SessionAnalysisHighlightCategory.InconsistentLine,
-        -> palette.warning
+    -> palette.warning
 
     SessionAnalysisHighlightCategory.Understeer -> palette.warning
 

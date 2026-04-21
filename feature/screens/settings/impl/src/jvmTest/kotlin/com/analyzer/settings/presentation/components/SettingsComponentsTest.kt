@@ -17,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import com.analyzer.settings.api.AppCloseBehavior
 import com.analyzer.settings.presentation.GameSelectionUi
 import com.analyzer.settings.presentation.RecordingWarningKind
 import com.analyzer.settings.presentation.StorageSizeInfo
@@ -60,6 +61,36 @@ class SettingsComponentsTest {
             assertEquals(ThemeMode.Dark, state.selectedTheme)
         }
         onNodeWithTag(TestTags.AppearanceSettings.value).assertRecompositionCountAtMost(3)
+    }
+
+    @Test
+    fun `close behavior block changes selection with bounded recompositions`() = runDesktopComposeUiTest {
+        val state = CloseBehaviorSelectionState(selectedBehavior = AppCloseBehavior.AskEveryTime)
+
+        setContent {
+            SimAnalyzerTheme {
+                CloseBehaviorBlock(
+                    selectedBehavior = state.selectedBehavior,
+                    onBehaviorSelected = { state.selectedBehavior = it },
+                    modifier = Modifier
+                        .uiTestTag(TestTags.CloseBehaviorSettings)
+                        .trackRecompositions(),
+                )
+            }
+        }
+
+        onNodeWithTag(TestTags.CloseBehaviorSettings.value).assertRecompositionCountAtMost(1)
+
+        onNodeWithText("Ask every time").performClick()
+        waitForIdle()
+
+        onNodeWithText("Minimize to tray").performClick()
+        waitForIdle()
+
+        runOnIdle {
+            assertEquals(AppCloseBehavior.MinimizeToTray, state.selectedBehavior)
+        }
+        onNodeWithTag(TestTags.CloseBehaviorSettings.value).assertRecompositionCountAtMost(3)
     }
 
     @Test
@@ -185,6 +216,11 @@ class SettingsComponentsTest {
 private class ThemeSelectionState(selectedTheme: ThemeMode) {
 
     var selectedTheme by mutableStateOf(selectedTheme)
+}
+
+private class CloseBehaviorSelectionState(selectedBehavior: AppCloseBehavior) {
+
+    var selectedBehavior by mutableStateOf(selectedBehavior)
 }
 
 private class HudSetupState(isEnabled: Boolean) {

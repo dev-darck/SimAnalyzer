@@ -38,7 +38,7 @@ import org.jetbrains.compose.resources.stringResource
 internal fun TrackMapLibraryListContent(
     modifier: Modifier = Modifier,
     items: ImmutableList<TrackMapLibraryCardUi>,
-    onOpenEditor: (TrackMapLibraryCardUi) -> Unit
+    onOpenEditor: (TrackMapLibraryCardUi) -> Unit,
 ) {
     Column(
         modifier = modifier

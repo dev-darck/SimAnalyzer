@@ -472,5 +472,4 @@ private fun TrackMapBuilderUiState.sectorProgressLabel(): String = if (sectorCou
 private fun TrackMapBuilderUiState.widthCoverageLabel(): String =
     "L ${formatPercent((leftCoverageRatio * 100f).toInt())} / R ${formatPercent((rightCoverageRatio * 100f).toInt())}"
 
-private fun TrackMapBuilderUiState.canSave(): Boolean =
-    !recording && !isSaving && pointCount >= MIN_POINTS_TO_SAVE_UI
+private fun TrackMapBuilderUiState.canSave(): Boolean = !recording && !isSaving && pointCount >= MIN_POINTS_TO_SAVE_UI

@@ -54,8 +54,8 @@ internal class SessionAnalysisCornerHighlightsHighlightStage : SessionAnalysisHi
                     },
                     title = "Corner ${corner.cornerNumber} is costing time",
                     description =
-                        "Corner ${corner.cornerNumber} gives away ${corner.timeLossMs} ms versus the benchmark lap. " +
-                            corner.timeLossContextText(),
+                    "Corner ${corner.cornerNumber} gives away ${corner.timeLossMs} ms versus the benchmark lap. " +
+                        corner.timeLossContextText(),
                     diagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
                     recommendation = corner.timeLossRecommendationText(),
                     deltaMs = corner.timeLossMs,

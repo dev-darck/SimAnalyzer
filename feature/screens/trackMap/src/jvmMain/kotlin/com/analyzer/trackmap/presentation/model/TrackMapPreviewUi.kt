@@ -28,12 +28,7 @@ data class TrackMapPreviewUi(
 data class TrackMapPreviewPointUi(val x: Float, val y: Float)
 
 @Immutable
-data class TrackMapPreviewBoundsUi(
-    val minX: Float,
-    val minY: Float,
-    val maxX: Float,
-    val maxY: Float,
-)
+data class TrackMapPreviewBoundsUi(val minX: Float, val minY: Float, val maxX: Float, val maxY: Float)
 
 fun Vec2.toTrackMapPreviewPointUi(): TrackMapPreviewPointUi = TrackMapPreviewPointUi(x = x, y = y)
 

@@ -9,10 +9,25 @@ public sealed interface GameSelection {
 
         public const val AUTO_ID: String = "auto"
 
-        public fun fromPreference(value: String?): GameSelection {
+        public fun fromPreference(value: String?, variantOverride: GameId? = null): GameSelection {
             if (value.isNullOrBlank() || value.equals(AUTO_ID, ignoreCase = true)) return Auto
             val game = GameId.fromId(value) ?: return Auto
-            return Manual(game)
+            return Manual(resolveManualGame(game, variantOverride))
+        }
+
+        private fun resolveManualGame(game: GameId, variantOverride: GameId?): GameId {
+            if (game != GameId.AC) return game
+
+            return when (variantOverride) {
+                GameId.AC,
+                GameId.ACC,
+                GameId.ACE,
+                -> variantOverride
+
+                null,
+                GameId.LMU,
+                -> game
+            }
         }
     }
 }

@@ -303,10 +303,7 @@ internal class TelemetryRecordingSessionCoordinator(
         }
     }
 
-    private fun sameWeekendIdentity(
-        previous: SessionGroupingIdentity?,
-        current: SessionGroupingIdentity,
-    ): Boolean {
+    private fun sameWeekendIdentity(previous: SessionGroupingIdentity?, current: SessionGroupingIdentity): Boolean {
         if (previous == null) return false
         return normalizeGameId(previous.gameId) == normalizeGameId(current.gameId) &&
             normalizeIdentityLabel(previous.trackId) == normalizeIdentityLabel(current.trackId) &&

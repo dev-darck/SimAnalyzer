@@ -71,6 +71,7 @@ internal class NavigationStateInternal(
             val nextAction = forwardActions.lastOrNull() ?: return false
             return when (nextAction) {
                 is ForwardAction.SwitchTopLevel -> true
+
                 is ForwardAction.PushRoute -> {
                     val route = nextAction.routeKey.route
                     val validator = forwardValidators[route::class]
@@ -192,9 +193,8 @@ internal class NavigationStateInternal(
 
     private fun stack(topLevel: Root): BackStack<NavRouteKey> = stacks.getValue(topLevel)
 
-    private fun routeKey(route: Route): NavRouteKey =
-        routeKeyFactoryState.value?.invoke(route)
-            ?: error("NavigationStateInternal is not bound to a NavRouteKey factory")
+    private fun routeKey(route: Route): NavRouteKey = routeKeyFactoryState.value?.invoke(route)
+        ?: error("NavigationStateInternal is not bound to a NavRouteKey factory")
 
     private fun clearForward() {
         if (forwardActions.isNotEmpty()) forwardActions.clear()

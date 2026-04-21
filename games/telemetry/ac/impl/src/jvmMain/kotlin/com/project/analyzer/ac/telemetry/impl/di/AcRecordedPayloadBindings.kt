@@ -1,6 +1,7 @@
 package com.project.analyzer.ac.telemetry.impl.di
 
 import com.project.analyzer.ac.telemetry.impl.recording.analysis.AcRecordedPayloadDecoder
+import com.project.analyzer.ac.telemetry.impl.recording.analysis.AceRecordedPayloadDecoder
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetryPayloadDecoder
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
@@ -16,8 +17,13 @@ interface AcRecordedPayloadBindings {
 
         @Provides
         @IntoSet
-        private fun provideRecordedPayloadDecoder(
-            impl: AcRecordedPayloadDecoder,
+        private fun provideRecordedPayloadDecoder(impl: AcRecordedPayloadDecoder): RecordedTelemetryPayloadDecoder =
+            impl
+
+        @Provides
+        @IntoSet
+        private fun provideAceRecordedPayloadDecoder(
+            impl: AceRecordedPayloadDecoder,
         ): RecordedTelemetryPayloadDecoder = impl
     }
 }

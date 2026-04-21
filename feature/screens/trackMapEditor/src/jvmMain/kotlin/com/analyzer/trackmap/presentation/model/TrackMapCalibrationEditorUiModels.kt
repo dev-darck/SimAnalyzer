@@ -27,12 +27,7 @@ internal data class TrackMapMarkerRowUi(
 internal data class TrackMapEditorPointUi(val x: Float, val y: Float)
 
 @Immutable
-internal data class TrackMapEditorBoundsUi(
-    val minX: Float,
-    val minY: Float,
-    val maxX: Float,
-    val maxY: Float,
-)
+internal data class TrackMapEditorBoundsUi(val minX: Float, val minY: Float, val maxX: Float, val maxY: Float)
 
 @Immutable
 internal data class TrackMapEditorGateUi(
@@ -140,7 +135,9 @@ internal fun TrackMapCalibrationEditorState.toWorkspaceUiState(
     ),
 )
 
-internal fun TrackMapCalibrationEditorState.toSidebarUiState(isAddPointMode: Boolean): TrackMapCalibrationSidebarUiState {
+internal fun TrackMapCalibrationEditorState.toSidebarUiState(
+    isAddPointMode: Boolean,
+): TrackMapCalibrationSidebarUiState {
     val markerRows = buildTrackMapMarkerRows(markers)
     val selectedRow = markerRows.firstOrNull { it.gateId == selectedMarkerId } ?: markerRows.firstOrNull()
     val selectedMarker = markers.firstOrNull { it.gateId == selectedRow?.gateId }
@@ -188,21 +185,22 @@ internal fun TrackMapCalibrationEditorState.toCanvasUiState(
     isAddPointMode = isAddPointMode,
 )
 
-internal fun buildTrackMapMarkerRows(markers: List<TrackMapCalibrationEditorMarker>): ImmutableList<TrackMapMarkerRowUi> =
-    markers.mapIndexed { index, marker ->
-        val previousMarker = if (markers.isEmpty()) {
-            null
-        } else {
-            markers.getOrNull(if (index == 0) markers.lastIndex else index - 1)
-        }
-        TrackMapMarkerRowUi(
-            gateId = marker.gateId,
-            title = marker.title,
-            startLabel = formatMeters(previousMarker?.meters ?: marker.meters),
-            endLabel = formatMeters(marker.meters),
-            colorHex = marker.colorHex,
-        )
-    }.toImmutableList()
+internal fun buildTrackMapMarkerRows(
+    markers: List<TrackMapCalibrationEditorMarker>,
+): ImmutableList<TrackMapMarkerRowUi> = markers.mapIndexed { index, marker ->
+    val previousMarker = if (markers.isEmpty()) {
+        null
+    } else {
+        markers.getOrNull(if (index == 0) markers.lastIndex else index - 1)
+    }
+    TrackMapMarkerRowUi(
+        gateId = marker.gateId,
+        title = marker.title,
+        startLabel = formatMeters(previousMarker?.meters ?: marker.meters),
+        endLabel = formatMeters(marker.meters),
+        colorHex = marker.colorHex,
+    )
+}.toImmutableList()
 
 internal fun TrackMapMarkerRowUi.color(): androidx.compose.ui.graphics.Color =
     androidx.compose.ui.graphics.Color(colorHex)

@@ -88,7 +88,10 @@ internal class TrackMapCalibrationPolylineMetrics(uiState: TrackMapCalibrationCa
         return anchorAt(bestIndex)
     }
 
-    fun buildMovedGate(anchor: TrackMapCalibrationTrackAnchor, currentGate: TrackMapEditorGateUi): TrackMapEditorGateUi {
+    fun buildMovedGate(
+        anchor: TrackMapCalibrationTrackAnchor,
+        currentGate: TrackMapEditorGateUi,
+    ): TrackMapEditorGateUi {
         val forward = currentGate.forward.toVec2().safeNormalized(anchor.forward)
         val normal = deriveNormal(
             forward = forward,
@@ -180,7 +183,10 @@ internal class TrackMapCalibrationPolylineMetrics(uiState: TrackMapCalibrationCa
         return result
     }
 
-    fun buildMarkerGeometry(marker: TrackMapEditorMarkerUi, gate: TrackMapEditorGateUi?): TrackMapCalibrationMarkerGeometry {
+    fun buildMarkerGeometry(
+        marker: TrackMapEditorMarkerUi,
+        gate: TrackMapEditorGateUi?,
+    ): TrackMapCalibrationMarkerGeometry {
         val anchor = anchorAt(marker.pointIndex)
         return TrackMapCalibrationMarkerGeometry(
             gateId = marker.gateId,

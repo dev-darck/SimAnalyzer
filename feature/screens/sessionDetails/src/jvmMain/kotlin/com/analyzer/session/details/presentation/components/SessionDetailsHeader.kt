@@ -113,10 +113,7 @@ private val SESSION_DETAILS_HEADER_COMPACT_BREAKPOINT = 920.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun SessionDetailsInfoRow(
-    header: SessionDetailHeaderUi,
-    modifier: Modifier = Modifier,
-) {
+private fun SessionDetailsInfoRow(header: SessionDetailHeaderUi, modifier: Modifier = Modifier) {
     FlowRow(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(18.dp),
@@ -147,10 +144,7 @@ private fun SessionDetailsInfoRow(
 }
 
 @Composable
-private fun SessionInfoItem(
-    icon: ImageVector,
-    text: String,
-) {
+private fun SessionInfoItem(icon: ImageVector, text: String) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,

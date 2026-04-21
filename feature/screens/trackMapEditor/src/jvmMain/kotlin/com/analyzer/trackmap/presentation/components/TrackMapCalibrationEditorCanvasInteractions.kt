@@ -58,6 +58,7 @@ internal fun TrackMapCalibrationEditorCanvasScene.selectionUiState(
         ?.position
     val handleCenter = when (editMode) {
         TrackMapCalibrationEditorMode.Move -> draggedPosition ?: viewport.worldToScreen(geometry.center)
+
         TrackMapCalibrationEditorMode.Direction -> {
             val gateForPreview = activeDrag
                 ?.takeIf { it.gateId == geometry.gateId }
@@ -69,6 +70,7 @@ internal fun TrackMapCalibrationEditorCanvasScene.selectionUiState(
             )
             draggedPosition ?: viewport.worldToScreen(directionAnchor.center)
         }
+
         TrackMapCalibrationEditorMode.Width -> draggedPosition ?: viewport.worldToScreen(geometry.widthHandlePoint)
     }
     val handleColor = when (editMode) {
@@ -96,12 +98,14 @@ internal fun TrackMapCalibrationEditorCanvasScene.startHandleDrag(
             screenPoint = screenPoint,
             hintPointIndex = geometry.anchor.pointIndex,
         )
+
         TrackMapCalibrationEditorMode.Direction -> buildDirectionDrag(
             geometry = geometry,
             persistedGate = persistedGate,
             screenPoint = screenPoint,
             hintPointIndex = geometry.anchor.pointIndex,
         )
+
         TrackMapCalibrationEditorMode.Width -> buildWidthDrag(
             geometry = geometry,
             persistedGate = persistedGate,
@@ -123,12 +127,14 @@ internal fun TrackMapCalibrationEditorCanvasScene.updateHandleDrag(
             screenPoint = screenPoint,
             hintPointIndex = activeDrag?.anchorPointIndex ?: geometry.anchor.pointIndex,
         )
+
         TrackMapCalibrationEditorMode.Direction -> buildDirectionDrag(
             geometry = geometry,
             persistedGate = persistedGate,
             screenPoint = screenPoint,
             hintPointIndex = activeDrag?.anchorPointIndex ?: geometry.anchor.pointIndex,
         )
+
         TrackMapCalibrationEditorMode.Width -> buildWidthDrag(
             geometry = geometry,
             persistedGate = persistedGate,
@@ -137,10 +143,7 @@ internal fun TrackMapCalibrationEditorCanvasScene.updateHandleDrag(
     }
 }
 
-internal fun commitHandleDrag(
-    activeDrag: TrackMapCalibrationActiveDrag?,
-    onUpdateGate: (String, Gate) -> Unit,
-) {
+internal fun commitHandleDrag(activeDrag: TrackMapCalibrationActiveDrag?, onUpdateGate: (String, Gate) -> Unit) {
     activeDrag?.previewGate?.let { previewGate ->
         onUpdateGate(activeDrag.gateId, previewGate.toGate())
     }

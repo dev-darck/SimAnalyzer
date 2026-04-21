@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Inject
 @SingleIn(AppScope::class)
-internal class HudPreferences(
+class HudPreferences(
     @param:UserPref
     private val preference: Preference,
 ) : HudPreferencesStore {

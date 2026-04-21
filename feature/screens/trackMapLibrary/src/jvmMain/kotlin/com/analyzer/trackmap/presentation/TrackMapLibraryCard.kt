@@ -39,10 +39,7 @@ import org.jetbrains.compose.resources.stringResource
 import java.util.Locale
 
 @Composable
-internal fun TrackMapLibraryCard(
-    card: TrackMapLibraryCardUi,
-    onOpenEditor: () -> Unit,
-) {
+internal fun TrackMapLibraryCard(card: TrackMapLibraryCardUi, onOpenEditor: () -> Unit) {
     var showPoints by remember(card.mapKey) { mutableStateOf(false) }
 
     Column(
@@ -141,11 +138,7 @@ private fun TrackMapLibraryStat(text: String) {
 }
 
 @Composable
-private fun TrackMapLibraryCardActions(
-    showPoints: Boolean,
-    onOpenEditor: () -> Unit,
-    onTogglePoints: () -> Unit,
-) {
+private fun TrackMapLibraryCardActions(showPoints: Boolean, onOpenEditor: () -> Unit, onTogglePoints: () -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onOpenEditor) {
             Text(

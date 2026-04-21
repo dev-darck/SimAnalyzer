@@ -1,5 +1,6 @@
 package com.project.analyzer.impl.di
 
+import com.analyzer.settings.api.AppCloseBehaviorRepository
 import com.analyzer.settings.api.ThemeRepository
 import com.project.analyzer.api.di.AppLifecycle
 import com.project.analyzer.game.api.GameDetectorGraph
@@ -18,6 +19,7 @@ interface AppComponent :
     GameDetectorGraph.Dependencies {
 
     val appLifecycle: AppLifecycle
+    val appCloseBehaviorRepository: AppCloseBehaviorRepository
     val themeRepository: ThemeRepository
     val hudPreferences: HudPreferencesStore
 }

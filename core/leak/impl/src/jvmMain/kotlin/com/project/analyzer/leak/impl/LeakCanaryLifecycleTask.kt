@@ -11,9 +11,7 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @ContributesIntoSet(AppScope::class)
 @SingleIn(AppScope::class)
-class LeakCanaryLifecycleTask(
-    private val leakCanaryController: LeakCanaryController,
-) : AppLifecycleTask {
+class LeakCanaryLifecycleTask(private val leakCanaryController: LeakCanaryController) : AppLifecycleTask {
 
     override val startOrder: Int = 0
     override val stopOrder: Int = 30

@@ -333,7 +333,9 @@ private operator fun TrackMapPreviewPointUi.times(scalar: Float): TrackMapPrevie
 
 private fun TrackMapPreviewPointUi.len2(): Float = x * x + y * y
 
-private fun TrackMapPreviewPointUi.safeNormalized(fallback: TrackMapPreviewPointUi = previewPointUp): TrackMapPreviewPointUi {
+private fun TrackMapPreviewPointUi.safeNormalized(
+    fallback: TrackMapPreviewPointUi = previewPointUp,
+): TrackMapPreviewPointUi {
     val lengthSquared = len2()
     return if (lengthSquared > 1e-6f) {
         val invLength = 1f / kotlin.math.sqrt(lengthSquared)

@@ -5,13 +5,10 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-private const val TrackPathIntersectionEpsilon = 1e-4f
-private const val TrackPathSegmentLengthEpsilon = 1e-4f
+private const val TRACK_PATH_INTERSECTION_EPSILON = 1e-4f
+private const val TRACK_PATH_SEGMENT_LENGTH_EPSILON = 1e-4f
 
-public fun List<Offset>.hasTrackPathSelfIntersection(
-    closed: Boolean = false,
-    maxSamplePoints: Int = 480,
-): Boolean {
+public fun List<Offset>.hasTrackPathSelfIntersection(closed: Boolean = false, maxSamplePoints: Int = 480): Boolean {
     val sampledPoints = sampleTrackPathPoints(maxSamplePoints)
     if (sampledPoints.size < 4) return false
 
@@ -53,12 +50,7 @@ private fun List<Offset>.sampleTrackPathPoints(maxSamplePoints: Int): List<Offse
     return sampled
 }
 
-private fun segmentIndicesAreAdjacent(
-    firstIndex: Int,
-    secondIndex: Int,
-    segmentCount: Int,
-    closed: Boolean,
-): Boolean {
+private fun segmentIndicesAreAdjacent(firstIndex: Int, secondIndex: Int, segmentCount: Int, closed: Boolean): Boolean {
     if (secondIndex - firstIndex <= 1) return true
     return closed && firstIndex == 0 && secondIndex == segmentCount - 1
 }
@@ -78,34 +70,29 @@ private fun boundingBoxesOverlap(
     val secondMinY = min(secondStart.y, secondEnd.y)
     val secondMaxY = max(secondStart.y, secondEnd.y)
 
-    return firstMaxX >= secondMinX - TrackPathIntersectionEpsilon &&
-        secondMaxX >= firstMinX - TrackPathIntersectionEpsilon &&
-        firstMaxY >= secondMinY - TrackPathIntersectionEpsilon &&
-        secondMaxY >= firstMinY - TrackPathIntersectionEpsilon
+    return firstMaxX >= secondMinX - TRACK_PATH_INTERSECTION_EPSILON &&
+        secondMaxX >= firstMinX - TRACK_PATH_INTERSECTION_EPSILON &&
+        firstMaxY >= secondMinY - TRACK_PATH_INTERSECTION_EPSILON &&
+        secondMaxY >= firstMinY - TRACK_PATH_INTERSECTION_EPSILON
 }
 
-private fun segmentsIntersect(
-    firstStart: Offset,
-    firstEnd: Offset,
-    secondStart: Offset,
-    secondEnd: Offset,
-): Boolean {
+private fun segmentsIntersect(firstStart: Offset, firstEnd: Offset, secondStart: Offset, secondEnd: Offset): Boolean {
     val rx = firstEnd.x - firstStart.x
     val ry = firstEnd.y - firstStart.y
     val sx = secondEnd.x - secondStart.x
     val sy = secondEnd.y - secondStart.y
     val cross = cross(rx, ry, sx, sy)
-    if (abs(cross) <= TrackPathIntersectionEpsilon) return false
+    if (abs(cross) <= TRACK_PATH_INTERSECTION_EPSILON) return false
 
     val qpx = secondStart.x - firstStart.x
     val qpy = secondStart.y - firstStart.y
     val t = cross(qpx, qpy, sx, sy) / cross
     val u = cross(qpx, qpy, rx, ry) / cross
 
-    return t > TrackPathIntersectionEpsilon &&
-        t < 1f - TrackPathIntersectionEpsilon &&
-        u > TrackPathIntersectionEpsilon &&
-        u < 1f - TrackPathIntersectionEpsilon
+    return t > TRACK_PATH_INTERSECTION_EPSILON &&
+        t < 1f - TRACK_PATH_INTERSECTION_EPSILON &&
+        u > TRACK_PATH_INTERSECTION_EPSILON &&
+        u < 1f - TRACK_PATH_INTERSECTION_EPSILON
 }
 
 private fun cross(ax: Float, ay: Float, bx: Float, by: Float): Float = ax * by - ay * bx
@@ -113,5 +100,5 @@ private fun cross(ax: Float, ay: Float, bx: Float, by: Float): Float = ax * by -
 private fun Offset.isDegenerateTo(other: Offset): Boolean {
     val dx = x - other.x
     val dy = y - other.y
-    return dx * dx + dy * dy <= TrackPathSegmentLengthEpsilon * TrackPathSegmentLengthEpsilon
+    return dx * dx + dy * dy <= TRACK_PATH_SEGMENT_LENGTH_EPSILON * TRACK_PATH_SEGMENT_LENGTH_EPSILON
 }

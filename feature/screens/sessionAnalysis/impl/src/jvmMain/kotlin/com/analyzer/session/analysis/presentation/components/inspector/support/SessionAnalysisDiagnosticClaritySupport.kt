@@ -30,7 +30,7 @@ internal fun SessionAnalysisHighlightCategory?.toSetupLookAtLabel(
     SessionAnalysisHighlightCategory.TyreTempImbalance,
     SessionAnalysisHighlightCategory.TyreOverheat,
     SessionAnalysisHighlightCategory.TyreCold,
-        -> "inside, middle and outside tyre temps after the loaded corners"
+    -> "inside, middle and outside tyre temps after the loaded corners"
 
     SessionAnalysisHighlightCategory.BrakeBalance ->
         "heavy braking zones with near-straight steering"
@@ -38,7 +38,7 @@ internal fun SessionAnalysisHighlightCategory?.toSetupLookAtLabel(
     SessionAnalysisHighlightCategory.AeroBalance,
     SessionAnalysisHighlightCategory.SetupUndersteer,
     SessionAnalysisHighlightCategory.SetupOversteer,
-        -> cornerNumber?.let { corner -> "Turn $corner balance from entry to apex and minimum speed" }
+    -> cornerNumber?.let { corner -> "Turn $corner balance from entry to apex and minimum speed" }
         ?: "the repeated corners where the car keeps pushing wide or rotating too much"
 
     SessionAnalysisHighlightCategory.DamperIssue ->
@@ -59,21 +59,21 @@ internal fun SessionAnalysisHighlightCategory?.toDrivingLookAtLabel(cornerNumber
         SessionAnalysisHighlightCategory.BrakePoint,
         SessionAnalysisHighlightCategory.TrailBrakingMissing,
         SessionAnalysisHighlightCategory.WheelLockup,
-            -> zonePrefix + "entry brake trace, release timing and minimum speed"
+        -> zonePrefix + "entry brake trace, release timing and minimum speed"
 
         SessionAnalysisHighlightCategory.EarlyApexEntry,
         SessionAnalysisHighlightCategory.LateApexEntry,
         SessionAnalysisHighlightCategory.InconsistentLine,
-            -> zonePrefix + "turn-in point, apex location and steering trace"
+        -> zonePrefix + "turn-in point, apex location and steering trace"
 
         SessionAnalysisHighlightCategory.CoastingZone,
         SessionAnalysisHighlightCategory.WheelSpin,
         SessionAnalysisHighlightCategory.ThrottleCommitment,
-            -> zonePrefix + "first throttle pickup, steering unwind and exit speed"
+        -> zonePrefix + "first throttle pickup, steering unwind and exit speed"
 
         SessionAnalysisHighlightCategory.Understeer,
         SessionAnalysisHighlightCategory.Oversteer,
-            -> zonePrefix + "steering angle versus car rotation through the loaded phase"
+        -> zonePrefix + "steering angle versus car rotation through the loaded phase"
 
         else -> if (cornerNumber != null) {
             "Turn $cornerNumber: reference line, speed trace and input delta"

@@ -7,9 +7,8 @@ public enum class GameId(public val id: String, public val displayName: String) 
     AC(AC_KEY, "Assetto Corsa"),
     ACC(AC_KEY, "Assetto Corsa Competizione"),
     ACE(AC_KEY, "Assetto Corsa Evo"),
+    LMU(LMU_KEY, "Le Mans Ultimate"),
     ;
-
-    //    LMU(LMU_KEY, "Le Mans Ultimate");
 
     public companion object {
 
@@ -17,6 +16,14 @@ public enum class GameId(public val id: String, public val displayName: String) 
             if (value.isNullOrBlank()) return null
 
             return entries.firstOrNull { it.id.equals(value, ignoreCase = true) }
+        }
+
+        public fun fromName(value: String?): GameId? {
+            if (value.isNullOrBlank()) return null
+
+            return entries.firstOrNull { it.name.equals(value, ignoreCase = true) }
+                ?: entries.firstOrNull { it.displayName.equals(value, ignoreCase = true) }
+                ?: fromId(value)
         }
     }
 }

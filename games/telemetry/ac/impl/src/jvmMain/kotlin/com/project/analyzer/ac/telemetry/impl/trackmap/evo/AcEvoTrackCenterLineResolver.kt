@@ -52,11 +52,7 @@ internal class AcEvoTrackCenterLineResolver {
         return removeNearDuplicates(result)
     }
 
-    private fun tangentAt(
-        points: List<AcEvoTrackSample>,
-        index: Int,
-        scale: Float,
-    ): Pair<Float, Float> {
+    private fun tangentAt(points: List<AcEvoTrackSample>, index: Int, scale: Float): Pair<Float, Float> {
         val point = points[index]
         val explicitTangent = normalize(point.forwardX, point.forwardY)
         if (explicitTangent != null) {

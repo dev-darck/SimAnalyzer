@@ -200,7 +200,7 @@ internal class ComprehensiveSessionAnalysisSegmentBuilder {
 
         null,
         CornerIssue.NONE,
-            -> emptyList()
+        -> emptyList()
 
         else -> listOf(SegmentIssue.TIME_LOSS)
     }

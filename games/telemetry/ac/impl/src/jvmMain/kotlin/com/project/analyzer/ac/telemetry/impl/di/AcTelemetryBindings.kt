@@ -4,9 +4,9 @@ import com.project.analyzer.ac.telemetry.impl.AcTelemetryLifecycle
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.AcEvoFileInfoExtractor
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.EvoFileInfoSource
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.FileInfoExtractorStabilizer
-import com.project.analyzer.ac.telemetry.impl.internal.AcPollConfig
-import com.project.analyzer.ac.telemetry.impl.internal.pipeline.AcFallbackPollSnapshotAdapter
-import com.project.analyzer.ac.telemetry.impl.internal.pipeline.AcPollSnapshotAdapter
+import com.project.analyzer.ac.telemetry.impl.internal.poll.AcPollConfig
+import com.project.analyzer.ac.telemetry.impl.internal.poll.pipeline.AcFallbackPollSnapshotAdapter
+import com.project.analyzer.ac.telemetry.impl.internal.poll.pipeline.AcPollSnapshotAdapter
 import com.project.analyzer.ac.telemetry.impl.shm.AcShmNames
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.game.api.AC_KEY

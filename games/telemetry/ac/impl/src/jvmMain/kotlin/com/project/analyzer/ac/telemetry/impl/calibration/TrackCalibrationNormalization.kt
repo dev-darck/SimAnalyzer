@@ -32,8 +32,7 @@ internal fun TrackCalibration.withResolvedLayout(layoutId: String?): TrackCalibr
     }
 }
 
-internal fun normalizeCalibrationLayoutId(layoutId: String?): String? =
-    TrackIdNormalizer.normalizeLayoutId(layoutId)
+internal fun normalizeCalibrationLayoutId(layoutId: String?): String? = TrackIdNormalizer.normalizeLayoutId(layoutId)
 
 private fun canonicalCalibrationTrackId(trackId: String, layoutId: String?): String {
     val normalizedTrackId = trackId.trim()

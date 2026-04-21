@@ -6,14 +6,11 @@ import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetryPay
 import dev.zacsweers.metro.Inject
 
 @Inject
-internal class RecordedTelemetryPayloadDecoderRegistryImpl(
-    decoders: Set<RecordedTelemetryPayloadDecoder>,
-) : RecordedTelemetryPayloadDecoderRegistry {
+internal class RecordedTelemetryPayloadDecoderRegistryImpl(decoders: Set<RecordedTelemetryPayloadDecoder>) :
+    RecordedTelemetryPayloadDecoderRegistry {
 
     private val decodersByPayloadType = decoders.associateBy(RecordedTelemetryPayloadDecoder::payloadType)
 
-    override fun decode(
-        payloadType: String,
-        payload: ByteArray,
-    ): RecordedTelemetryPayload? = decodersByPayloadType[payloadType]?.decode(payload)
+    override fun decode(payloadType: String, payload: ByteArray): RecordedTelemetryPayload? =
+        decodersByPayloadType[payloadType]?.decode(payload)
 }

@@ -9,8 +9,5 @@ public interface NavigationHost {
     public fun rememberNavigationState(startTopLevel: Root = Root.Live): NavigationState<Route>
 
     @Composable
-    public fun Content(
-        navigationState: NavigationState<Route>,
-        modifier: Modifier = Modifier,
-    )
+    public fun Content(navigationState: NavigationState<Route>, modifier: Modifier = Modifier)
 }

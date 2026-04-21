@@ -9,9 +9,7 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @ContributesIntoSet(AppScope::class)
 @SingleIn(AppScope::class)
-class TrackCalibrationBootstrapTask(
-    private val bootstrapper: TrackCalibrationBootstrapper,
-) : AppLifecycleTask {
+class TrackCalibrationBootstrapTask(private val bootstrapper: TrackCalibrationBootstrapper) : AppLifecycleTask {
 
     override val startOrder: Int = 10
 

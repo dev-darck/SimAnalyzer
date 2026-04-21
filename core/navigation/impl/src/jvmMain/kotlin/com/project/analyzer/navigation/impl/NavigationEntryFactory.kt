@@ -8,9 +8,7 @@ import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(NavigationScope::class)
-class NavigationEntryFactory(
-    private val routeEntryRegistry: RouteEntryRegistry,
-) {
+class NavigationEntryFactory(private val routeEntryRegistry: RouteEntryRegistry) {
 
     internal fun toKey(route: com.project.analyzer.navigation.api.Route): NavRouteKey = routeEntryRegistry.keyOf(route)
 

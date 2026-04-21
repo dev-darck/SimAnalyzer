@@ -1,9 +1,15 @@
 package com.analyzer.settings.domain.usecase
 
+import com.analyzer.settings.api.AppCloseBehavior
 import com.analyzer.settings.data.telemetry.SettingsRepository
 import com.analyzer.settings.data.theme.ThemeRepository
+import com.analyzer.settings.domain.model.LmuPluginInstallResult
+import com.analyzer.settings.domain.model.LmuPluginInstallStep
+import com.analyzer.settings.domain.model.LmuPluginSetupCheckResult
+import com.analyzer.settings.domain.model.LmuPluginSetupDetails
 import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
+import com.analyzer.settings.domain.repository.LmuPluginSetupRepository
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
@@ -16,10 +22,14 @@ import java.nio.file.Path
 
 @Inject
 @SingleIn(ScreenScope::class)
-class SettingsUseCaseImpl(
+internal class SettingsUseCaseImpl(
     private val themeRepository: ThemeRepository,
     private val telemetrySettingsRepository: SettingsRepository,
+    private val lmuPluginSetupRepository: LmuPluginSetupRepository,
 ) : SettingsUseCase {
+
+    override fun observeAppCloseBehavior(): Flow<AppCloseBehavior> =
+        telemetrySettingsRepository.observeAppCloseBehavior()
 
     override fun observeThemeMode(): Flow<ThemeMode> = themeRepository.observeThemeMode()
 
@@ -39,6 +49,10 @@ class SettingsUseCaseImpl(
 
     override suspend fun setThemeMode(mode: ThemeMode) {
         themeRepository.setThemeMode(mode)
+    }
+
+    override suspend fun updateAppCloseBehavior(behavior: AppCloseBehavior) {
+        telemetrySettingsRepository.updateAppCloseBehavior(behavior)
     }
 
     override suspend fun updateSamplingRate(hz: Int) {
@@ -66,6 +80,13 @@ class SettingsUseCaseImpl(
         val variant = (selection as? GameSelection.Manual)?.game
         telemetrySettingsRepository.updateGameSelectionVariant(variant)
     }
+
+    override suspend fun inspectLmuPluginSetup(): LmuPluginSetupCheckResult = lmuPluginSetupRepository.inspectSetup()
+
+    override suspend fun installLmuPlugin(
+        details: LmuPluginSetupDetails,
+        onProgress: (LmuPluginInstallStep) -> Unit,
+    ): LmuPluginInstallResult = lmuPluginSetupRepository.installLatestPlugin(details, onProgress)
 
     override suspend fun updateStorageLocationIfValid(path: String): StorageValidationResult {
         if (path.isBlank()) return StorageValidationResult.Empty

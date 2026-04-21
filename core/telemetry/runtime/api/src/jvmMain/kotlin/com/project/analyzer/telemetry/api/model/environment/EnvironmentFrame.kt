@@ -4,6 +4,13 @@ public data class EnvironmentFrame(
     val airTempC: Float? = null,
     val roadTempC: Float? = null,
     val airDensity: Float? = null, // kg/m³
+    val isStaticWeather: Boolean? = null,
+    val nation: String? = null,
+    val longitude: Float? = null,
+    val latitude: Float? = null,
+    val startingAmbientTempC: Float? = null,
+    val startingRoadTempC: Float? = null,
+    val startingGripLabel: String? = null,
 
     val windSpeedMps: Float? = null, // m/s
     val windDirectionDeg: Float? = null, // degrees (0=North, 90=East)

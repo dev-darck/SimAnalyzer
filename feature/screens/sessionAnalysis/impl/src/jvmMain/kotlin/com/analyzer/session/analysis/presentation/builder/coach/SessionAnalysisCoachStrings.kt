@@ -184,9 +184,9 @@ internal data class SessionAnalysisCoachStrings(
             understeerBalanceTemplate = getString(Res.string.session_analysis_coach_balance_understeer),
             oversteerBalanceTemplate = getString(Res.string.session_analysis_coach_balance_oversteer),
             understeerBalanceDescriptionTemplate =
-                getString(Res.string.session_analysis_coach_balance_understeer_description),
+            getString(Res.string.session_analysis_coach_balance_understeer_description),
             oversteerBalanceDescriptionTemplate =
-                getString(Res.string.session_analysis_coach_balance_oversteer_description),
+            getString(Res.string.session_analysis_coach_balance_oversteer_description),
             cornerPrefixTemplate = getString(Res.string.session_analysis_coach_corner_prefix),
         )
     }

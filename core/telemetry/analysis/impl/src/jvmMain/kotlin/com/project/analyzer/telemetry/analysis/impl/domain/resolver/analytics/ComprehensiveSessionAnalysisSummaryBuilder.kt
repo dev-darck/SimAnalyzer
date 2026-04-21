@@ -265,7 +265,7 @@ internal class ComprehensiveSessionAnalysisSummaryBuilder {
 
             CornerIssue.LATE_THROTTLE,
             CornerIssue.WHEEL_SPIN_EXIT,
-                -> PatternType.SLOW_EXIT_SPEED
+            -> PatternType.SLOW_EXIT_SPEED
 
             CornerIssue.UNDERSTEER_ENTRY -> PatternType.UNDERSTEER_ON_ENTRY
 

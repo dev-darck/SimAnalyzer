@@ -8,6 +8,7 @@ import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.game.api.GameWindowDetector
 import com.project.analyzer.leak.api.LeakCanaryRuntime
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
+import com.project.analyzer.telemetry.api.contract.SessionInfo
 import com.project.analyzer.telemetry.api.contract.TelemetryGameSettings
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycle
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
@@ -35,6 +36,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -83,7 +86,14 @@ class TelemetryLifecycleRouter(
         replay = 1,
         extraBufferCapacity = 32,
     )
-    override val events: Flow<TelemetryLifecycleEvent> = _events.asSharedFlow()
+    override val events: Flow<TelemetryLifecycleEvent> = flow {
+        stateMutex.withLock {
+            bootstrapLifecycleEventsLocked()
+        }.forEach { event ->
+            emit(event)
+        }
+        emitAll(_events.asSharedFlow())
+    }
 
     private val _frames = MutableSharedFlow<TelemetryFrame>(
         replay = 1,
@@ -103,6 +113,10 @@ class TelemetryLifecycleRouter(
     private var activeLifecycle: TelemetryLifecycle? = null
     private var activeGameId: GameId? = null
     private var activeSessionId: Long? = null
+    private var activeSessionInfo: SessionInfo? = null
+    private var activeSessionPaused: Boolean = false
+    private var simConnected: Boolean = false
+    private var lastLifecycleEvent: TelemetryLifecycleEvent? = null
 
     override suspend fun launchTelemetry() {
         if (monitorJob != null) {
@@ -229,6 +243,10 @@ class TelemetryLifecycleRouter(
         activeLifecycle = null
         activeGameId = null
         activeSessionId = null
+        activeSessionInfo = null
+        activeSessionPaused = false
+        simConnected = false
+        lastLifecycleEvent = null
         forwardJob = null
 
         return Triple(lifecycle, forwarder, sessionId)
@@ -239,8 +257,8 @@ class TelemetryLifecycleRouter(
 
         logger.debug { "executeCleanup: finishing lifecycle, sessionId=$sessionId" }
 
-        lifecycle?.finishTelemetry()
         forwarder?.cancelAndJoin()
+        lifecycle?.finishTelemetry()
 
         if (sessionId != null) {
             logger.debug { "executeCleanup: emitting SessionEnded id=$sessionId reason=SIM_DISCONNECTED" }
@@ -302,30 +320,64 @@ class TelemetryLifecycleRouter(
     private suspend fun handleLifecycleEvent(event: TelemetryLifecycleEvent) {
         stateMutex.withLock {
             when (event) {
+                TelemetryLifecycleEvent.SimConnected -> {
+                    simConnected = true
+                    logger.debug { "event: SimConnected" }
+                }
+
                 is TelemetryLifecycleEvent.SessionStarted -> {
                     activeSessionId = event.session.sessionId
+                    activeSessionInfo = event.session
+                    activeSessionPaused = false
+                    simConnected = true
                     logger.info { "event: SessionStarted id=${event.session.sessionId}" }
+                }
+
+                is TelemetryLifecycleEvent.SessionUpdated -> {
+                    if (activeSessionId == null || activeSessionId == event.session.sessionId) {
+                        activeSessionId = event.session.sessionId
+                        activeSessionInfo = mergeStickySessionInfo(activeSessionInfo, event.session)
+                    }
+                    simConnected = true
+                    logger.debug { "event: SessionUpdated id=${event.session.sessionId}" }
+                }
+
+                is TelemetryLifecycleEvent.SessionPaused -> {
+                    if (activeSessionId == null || activeSessionId == event.sessionId) {
+                        activeSessionId = event.sessionId
+                    }
+                    activeSessionPaused = true
+                    simConnected = true
+                    logger.debug { "event: SessionPaused id=${event.sessionId}" }
                 }
 
                 is TelemetryLifecycleEvent.SessionResumed -> {
                     activeSessionId = event.sessionId
+                    activeSessionPaused = false
+                    simConnected = true
                     logger.debug { "event: SessionResumed id=${event.sessionId}" }
                 }
 
                 is SessionEnded -> {
                     logger.info { "event: SessionEnded id=${event.sessionId} reason=${event.reason}" }
                     activeSessionId = null
+                    activeSessionInfo = null
+                    activeSessionPaused = false
                 }
 
                 is TelemetryLifecycleEvent.SimDisconnected -> {
                     logger.info { "event: SimDisconnected (activeSession=$activeSessionId)" }
                     activeSessionId = null
+                    activeSessionInfo = null
+                    activeSessionPaused = false
+                    simConnected = false
                 }
 
                 else -> {
                     logger.debug { "event: ${event::class.simpleName}" }
                 }
             }
+            lastLifecycleEvent = event
         }
         try {
             emitEvent(event)
@@ -340,6 +392,43 @@ class TelemetryLifecycleRouter(
 
     private suspend fun emitEvent(event: TelemetryLifecycleEvent) {
         _events.emit(event)
+    }
+
+    private fun bootstrapLifecycleEventsLocked(): List<TelemetryLifecycleEvent> {
+        val session = activeSessionInfo
+        val lastEvent = lastLifecycleEvent
+        if (!simConnected || session == null) return emptyList()
+
+        val events = mutableListOf<TelemetryLifecycleEvent>()
+        val lastStartedSessionId = (lastEvent as? TelemetryLifecycleEvent.SessionStarted)?.session?.sessionId
+        if (lastStartedSessionId != session.sessionId) {
+            events += TelemetryLifecycleEvent.SessionStarted(session)
+        }
+
+        if (activeSessionPaused) {
+            val lastPausedSessionId = (lastEvent as? TelemetryLifecycleEvent.SessionPaused)?.sessionId
+            if (lastPausedSessionId != session.sessionId) {
+                events += TelemetryLifecycleEvent.SessionPaused(session.sessionId)
+            }
+        }
+
+        return events
+    }
+
+    private fun mergeStickySessionInfo(current: SessionInfo?, incoming: SessionInfo): SessionInfo {
+        if (current == null) return incoming
+
+        fun pick(currentValue: String, incomingValue: String): String = incomingValue.ifBlank { currentValue }
+
+        return current.copy(
+            sessionId = incoming.sessionId,
+            sessionType = incoming.sessionType.takeUnless { it == current.sessionType || it.name == "UNKNOWN" }
+                ?: current.sessionType,
+            carModel = pick(current.carModel, incoming.carModel),
+            trackId = pick(current.trackId, incoming.trackId),
+            carId = incoming.carId ?: current.carId,
+            layoutId = incoming.layoutId ?: current.layoutId,
+        )
     }
 
     private fun emitFrame(frame: TelemetryFrame): Boolean {

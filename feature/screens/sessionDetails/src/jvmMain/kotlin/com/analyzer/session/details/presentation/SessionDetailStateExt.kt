@@ -104,12 +104,13 @@ internal fun SessionDetailPage.toSessionDetailState(
     visibleLaps = laps.map(SessionLapDomainItem::toSessionLapRowUi).toImmutableList(),
 )
 
-private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> = buildList {
-    add(SessionDetailFilterOptionUi(id = SESSION_DETAIL_TYPE_ALL))
-    sessionTypeOptions.forEach { option ->
-        add(SessionDetailFilterOptionUi(id = option.id, label = option.label))
-    }
-}.toImmutableList()
+private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> =
+    buildList {
+        add(SessionDetailFilterOptionUi(id = SESSION_DETAIL_TYPE_ALL))
+        sessionTypeOptions.forEach { option ->
+            add(SessionDetailFilterOptionUi(id = option.id, label = option.label))
+        }
+    }.toImmutableList()
 
 private fun sessionDetailFilterUiModel(
     kind: SessionDetailFilterKind,

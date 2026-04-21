@@ -190,79 +190,75 @@ private fun sessionDetailsHeaderColumns(
     incidentsHeader: String,
     deltaHeader: String,
     statusHeader: String,
-): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> =
-    persistentListOf(
-        SortableTableColumn(
-            column = TableColumn(
-                title = lapHeader,
-                weight = 0.08f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.Lap,
+): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> = persistentListOf(
+    SortableTableColumn(
+        column = TableColumn(
+            title = lapHeader,
+            weight = 0.08f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = totalTimeHeader,
-                weight = 0.18f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.TotalTime,
+        sortKey = SessionDetailsSortColumn.Lap,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = totalTimeHeader,
+            weight = 0.18f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = s1Header,
-                weight = 0.1f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.S1,
+        sortKey = SessionDetailsSortColumn.TotalTime,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = s1Header,
+            weight = 0.1f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = s2Header,
-                weight = 0.1f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.S2,
+        sortKey = SessionDetailsSortColumn.S1,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = s2Header,
+            weight = 0.1f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = s3Header,
-                weight = 0.1f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.S3,
+        sortKey = SessionDetailsSortColumn.S2,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = s3Header,
+            weight = 0.1f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = incidentsHeader,
-                weight = 0.12f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.Incidents,
+        sortKey = SessionDetailsSortColumn.S3,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = incidentsHeader,
+            weight = 0.12f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = deltaHeader,
-                weight = 0.18f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.Delta,
+        sortKey = SessionDetailsSortColumn.Incidents,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = deltaHeader,
+            weight = 0.18f,
+            align = TableColumnAlign.Center,
         ),
-        SortableTableColumn(
-            column = TableColumn(
-                title = statusHeader,
-                weight = 0.14f,
-                align = TableColumnAlign.Center,
-            ),
-            sortKey = SessionDetailsSortColumn.Status,
+        sortKey = SessionDetailsSortColumn.Delta,
+    ),
+    SortableTableColumn(
+        column = TableColumn(
+            title = statusHeader,
+            weight = 0.14f,
+            align = TableColumnAlign.Center,
         ),
-    )
+        sortKey = SessionDetailsSortColumn.Status,
+    ),
+)
 
 @Composable
-private fun SessionDetailsTableRow(
-    rowIndex: Int,
-    lap: SessionLapRowUi
-) {
+private fun SessionDetailsTableRow(rowIndex: Int, lap: SessionLapRowUi) {
     val baseColor = if (rowIndex % 2 == 0) {
         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f)
     } else {

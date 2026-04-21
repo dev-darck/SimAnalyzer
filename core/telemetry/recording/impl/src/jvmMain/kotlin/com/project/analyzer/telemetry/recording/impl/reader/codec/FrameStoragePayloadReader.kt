@@ -15,13 +15,13 @@ internal class FrameStoragePayloadReader(storagePayloadType: String) {
         val current = ByteArray(storagePayload.size - 1)
 
         return when (frameKind) {
-            XorFrameKindKey -> {
+            XOR_FRAME_KIND_KEY -> {
                 storagePayload.copyInto(current, destinationOffset = 0, startIndex = 1)
                 previousSemanticPayload = current
                 current
             }
 
-            XorFrameKindDelta -> {
+            XOR_FRAME_KIND_DELTA -> {
                 val previous = previousSemanticPayload ?: return null
                 if (previous.size != current.size) return null
 
@@ -40,5 +40,5 @@ internal class FrameStoragePayloadReader(storagePayloadType: String) {
 }
 
 private const val XOR_SUFFIX: String = "#xor1"
-private const val XorFrameKindKey: Int = 0
-private const val XorFrameKindDelta: Int = 1
+private const val XOR_FRAME_KIND_KEY: Int = 0
+private const val XOR_FRAME_KIND_DELTA: Int = 1

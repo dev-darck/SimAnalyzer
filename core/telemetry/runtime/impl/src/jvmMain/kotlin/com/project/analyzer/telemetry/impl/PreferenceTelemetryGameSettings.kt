@@ -1,5 +1,6 @@
 package com.project.analyzer.telemetry.impl
 
+import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.preference.api.Preference
 import com.project.analyzer.preference.api.UserPref
@@ -11,8 +12,8 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.binding
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 
 @Inject
 @SingleIn(AppScope::class)
@@ -22,11 +23,15 @@ class PreferenceTelemetryGameSettings(
     private val preferences: Preference,
 ) : TelemetryGameSettings {
 
-    override fun observeSelection(): Flow<GameSelection> = preferences.observe(
-        TelemetryGameDefaults.KEY_GAME_SELECTION,
-        TelemetryGameDefaults.DEFAULT_GAME_SELECTION,
-    )
-        .map { GameSelection.fromPreference(it) }
+    override fun observeSelection(): Flow<GameSelection> = combine(
+        preferences.observe(
+            TelemetryGameDefaults.KEY_GAME_SELECTION,
+            TelemetryGameDefaults.DEFAULT_GAME_SELECTION,
+        ),
+        preferences.observe(TelemetryGameDefaults.KEY_GAME_VARIANT, ""),
+    ) { selectionRaw, variantRaw ->
+        GameSelection.fromPreference(selectionRaw, GameId.fromName(variantRaw))
+    }
         .distinctUntilChanged()
 
     override suspend fun currentSelection(): GameSelection {
@@ -34,6 +39,7 @@ class PreferenceTelemetryGameSettings(
             TelemetryGameDefaults.KEY_GAME_SELECTION,
             TelemetryGameDefaults.DEFAULT_GAME_SELECTION,
         )
-        return GameSelection.fromPreference(raw)
+        val variantRaw = preferences.get(TelemetryGameDefaults.KEY_GAME_VARIANT, "")
+        return GameSelection.fromPreference(raw, GameId.fromName(variantRaw))
     }
 }

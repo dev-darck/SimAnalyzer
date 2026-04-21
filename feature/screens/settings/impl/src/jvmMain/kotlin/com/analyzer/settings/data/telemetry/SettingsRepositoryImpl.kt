@@ -1,5 +1,7 @@
 package com.analyzer.settings.data.telemetry
 
+import com.analyzer.settings.api.AppCloseBehavior
+import com.analyzer.settings.api.AppCloseBehaviorRepository
 import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.model.TelemetrySettings
 import com.project.analyzer.api.di.IO
@@ -30,6 +32,7 @@ import java.io.File
 internal class SettingsRepositoryImpl(
     @param:UserPref
     private val userPreferences: Preference,
+    private val appCloseBehaviorRepository: AppCloseBehaviorRepository,
     private val appDirectories: AppDirectories,
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
@@ -75,6 +78,8 @@ internal class SettingsRepositoryImpl(
     }
 
     override fun observeHudEnabled(): Flow<Boolean> = userPreferences.observe(TELEMETRY_HUD_ENABLED.bool, true)
+
+    override fun observeAppCloseBehavior(): Flow<AppCloseBehavior> = appCloseBehaviorRepository.observeCloseBehavior()
 
     override fun observeRecordingNoticeShown(): Flow<Boolean> =
         userPreferences.observe(KEY_RECORDING_NOTICE_SHOWN.bool, false)
@@ -124,6 +129,10 @@ internal class SettingsRepositoryImpl(
             TelemetrySettings.MAX_SAMPLING_RATE_HZ,
         )
         userPreferences.put(TelemetryAcquisitionDefaults.KEY_SAMPLING_RATE to clamped)
+    }
+
+    override suspend fun updateAppCloseBehavior(behavior: AppCloseBehavior) {
+        appCloseBehaviorRepository.setCloseBehavior(behavior)
     }
 
     override suspend fun updateHudEnabled(enabled: Boolean) {
@@ -210,7 +219,7 @@ internal class SettingsRepositoryImpl(
         }
     }
 
-    private fun toGameId(raw: String): GameId? = runCatching { GameId.valueOf(raw) }.getOrNull()
+    private fun toGameId(raw: String): GameId? = GameId.fromName(raw)
 
     private companion object {
 

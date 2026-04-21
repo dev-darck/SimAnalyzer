@@ -76,11 +76,7 @@ internal fun Sidebar(
 }
 
 @Composable
-private fun SidebarPanel(
-    title: String,
-    modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
-) {
+private fun SidebarPanel(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(
         modifier = modifier
             .clip(SimAnalyzerTheme.shapes.large)
@@ -98,11 +94,7 @@ private fun SidebarPanel(
 }
 
 @Composable
-private fun PlacesList(
-    places: PersistentList<File>,
-    selectedPath: String,
-    onPlaceClick: (File) -> Unit
-) {
+private fun PlacesList(places: PersistentList<File>, selectedPath: String, onPlaceClick: (File) -> Unit) {
     val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -132,11 +124,7 @@ private fun PlacesList(
 }
 
 @Composable
-private fun DrivesList(
-    drives: PersistentList<File>,
-    selectedDrive: String,
-    onDriveClick: (File) -> Unit
-) {
+private fun DrivesList(drives: PersistentList<File>, selectedDrive: String, onDriveClick: (File) -> Unit) {
     val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -191,12 +179,7 @@ private fun DrivesList(
 }
 
 @Composable
-private fun SidebarItem(
-    text: String,
-    leadingIcon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+private fun SidebarItem(text: String, leadingIcon: ImageVector, isSelected: Boolean, onClick: () -> Unit) {
     val backgroundColor = if (isSelected) {
         SimAnalyzerTheme.material.primary.copy(alpha = 0.14f)
     } else {

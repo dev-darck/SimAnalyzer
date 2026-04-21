@@ -106,10 +106,7 @@ private val crashTabs = listOf(
 )
 
 @Composable
-internal fun CrashScreen(
-    crashReport: CrashReport,
-    onExit: () -> Unit
-) {
+internal fun CrashScreen(crashReport: CrashReport, onExit: () -> Unit) {
     val graph = remember { createGraph<CrashGraph>() }
     val viewModel = graph.crashViewModel
     val state by viewModel.state.collectAsState()
@@ -237,10 +234,7 @@ internal fun CrashScreenContent(
 }
 
 @Composable
-private fun OverviewPanel(
-    report: CrashReport,
-    onEvent: (CrashScreenUiEvent) -> Unit
-) {
+private fun OverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> Unit) {
     val scrollState = rememberScrollState()
 
     Box(
@@ -387,12 +381,7 @@ private fun CrashActions(onEvent: (CrashScreenUiEvent) -> Unit) {
 }
 
 @Composable
-private fun CrashActionButton(
-    text: String,
-    icon: ImageVector,
-    emphasized: Boolean = false,
-    onClick: () -> Unit
-) {
+private fun CrashActionButton(text: String, icon: ImageVector, emphasized: Boolean = false, onClick: () -> Unit) {
     if (emphasized) {
         Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
             Icon(icon, contentDescription = text, modifier = Modifier.size(18.dp))
@@ -474,7 +463,7 @@ private fun CodePanel(text: String, title: String) {
                             .fillMaxHeight()
                             .padding(vertical = 6.dp),
                         adapter = AppScrollbarAdapter(
-                            rememberScrollbarAdapter(vScroll)
+                            rememberScrollbarAdapter(vScroll),
                         ),
                     )
                     AppHorizontalScrollbar(
@@ -483,7 +472,7 @@ private fun CodePanel(text: String, title: String) {
                             .fillMaxWidth()
                             .padding(end = 12.dp, start = 6.dp),
                         adapter = AppScrollbarAdapter(
-                            rememberScrollbarAdapter(hScroll)
+                            rememberScrollbarAdapter(hScroll),
                         ),
                     )
                 }

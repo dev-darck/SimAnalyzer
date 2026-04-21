@@ -104,6 +104,8 @@ internal class InputsHudViewModel(private val useCase: InputsUseCase) :
             }
 
             is InputsResult.Sample -> {
+                if (!currentState.isSessionActive) return
+
                 val t = result.throttle.coerceIn(0f, 1f)
                 val b = result.brake.coerceIn(0f, 1f)
                 val c = result.clutch.coerceIn(0f, 1f)

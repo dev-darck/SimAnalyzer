@@ -9,50 +9,42 @@ import com.project.analyzer.ac.telemetry.impl.fallback.logfile.EvoFileInfoSource
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoFileInfo
 import com.project.analyzer.ac.telemetry.impl.fallback.logfile.model.EvoSessionType
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.PhysicsPoseExtractor
-import com.project.analyzer.ac.telemetry.impl.internal.AcSessionRestartHint
-import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
 import com.project.analyzer.ac.telemetry.impl.internal.TrackIdNormalizer
-import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
+import com.project.analyzer.ac.telemetry.impl.internal.poll.GameConnectionState
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcSessionRestartHint
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFileGraphics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFilePhysics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFileStatic
 import com.project.analyzer.api.di.IO
-import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import com.project.analyzer.utils.TelemetryIdentityIds
 import com.project.analyzer.utils.logger.logger
 import com.project.analyzer.utils.shm.writeWString
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-import kotlin.math.abs
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 @Inject
 class AcEvoFallbackShmPatcher(
-    @param:Stabilizer
-    private val fileInfoExtractor: EvoFileInfoSource,
+    @Stabilizer
+    fileInfoExtractor: EvoFileInfoSource,
     private val lapAnalyzer: FallbackLapAnalyzer,
     private val fuelAnalyzer: FallbackFuelAnalyzer,
-    @param:IO
-    private val ioDispatcher: CoroutineDispatcher,
-    private val useAsyncFilePolling: Boolean = true,
+    @IO
+    ioDispatcher: CoroutineDispatcher,
+    useAsyncFilePolling: Boolean = true,
 ) {
 
     private val logger = logger()
-    private val fileInfoScope = CoroutineScope(
-        SupervisorJob() + ioDispatcher.limitedParallelism(1, "AcEvoFileInfoPoller"),
+    private val fileInfoCache = AcEvoFallbackFileInfoCache(
+        fileInfoExtractor = fileInfoExtractor,
+        ioDispatcher = ioDispatcher,
+        useAsyncFilePolling = useAsyncFilePolling,
     )
-    private val fileInfoLock = Any()
 
     private var lastSessionEpoch: Long = -1L
     private val identityResetDetector = IdentityResetDetector()
-    private val seenPenaltyIds = ArrayDeque<String>(PENALTY_DEDUP_CAPACITY)
-    private val seenPenaltySet = HashSet<String>(PENALTY_DEDUP_CAPACITY * 2)
     private var lastPatchedTrackId: String = ""
     private var lastPatchedCarModel: String = ""
     private var lastPatchedIdentityLog: String = ""
@@ -61,17 +53,6 @@ class AcEvoFallbackShmPatcher(
     private var pendingSessionTypeOverrideFromShm: Int? = null
     private var pendingSessionTypeOverrideToShm: Int? = null
 
-    @Volatile
-    private var lastFilePollNs: Long = 0L
-
-    @Volatile
-    private var cachedInfo: EvoFileInfo = EvoFileInfo()
-
-    @Volatile
-    private var fileInfoPollScheduled: Boolean = false
-
-    @Volatile
-    private var fileInfoGeneration: Long = 0L
     private var syntheticSessionIndex: Int = 0
     private var pendingSessionRestartHint: AcSessionRestartHint = AcSessionRestartHint.NONE
     private var mainMenuRestartReadyForResume: Boolean = false
@@ -84,28 +65,12 @@ class AcEvoFallbackShmPatcher(
     private val respawnDetector = RespawnResetDetector()
 
     fun clear() {
-        fileInfoGeneration += 1L
-        fileInfoPollScheduled = false
-        lastFilePollNs = 0L
-        cachedInfo = EvoFileInfo()
-        if (useAsyncFilePolling) {
-            fileInfoScope.launch {
-                synchronized(fileInfoLock) {
-                    fileInfoExtractor.clear()
-                }
-            }
-        } else {
-            synchronized(fileInfoLock) {
-                fileInfoExtractor.clear()
-            }
-        }
+        fileInfoCache.clear()
         lapAnalyzer.reset()
         fuelAnalyzer.reset()
         lastSessionEpoch = -1L
 
         identityResetDetector.reset()
-
-        clearPenaltyDedup()
 
         lastPatchedTrackId = ""
         lastPatchedCarModel = ""
@@ -114,8 +79,6 @@ class AcEvoFallbackShmPatcher(
         lastPatchedSessionType = EvoSessionType.UNKNOWN
         pendingSessionTypeOverrideFromShm = null
         pendingSessionTypeOverrideToShm = null
-        lastFilePollNs = 0L
-        cachedInfo = EvoFileInfo()
         syntheticSessionIndex = 0
         pendingSessionRestartHint = AcSessionRestartHint.NONE
         mainMenuRestartReadyForResume = false
@@ -126,9 +89,10 @@ class AcEvoFallbackShmPatcher(
     }
 
     internal fun patchIfNeeded(
-        shm: AcSharedMemory,
+        shm: AcFallbackPatchMemory,
         loopStartNanos: Long,
         gameState: GameConnectionState,
+        applyShmPatch: Boolean = true,
     ): AcSessionRestartHint {
         val info = pollFileInfo(loopStartNanos)
         if (!hasSignal(info)) return AcSessionRestartHint.NONE
@@ -147,17 +111,25 @@ class AcEvoFallbackShmPatcher(
         handlePenalty(info)
 
         val calibration = lapAnalyzer.loadCalibration(trackId = normalizedTrackId(info))
-        patchStatics(shm.graphics, shm.statics, info, calibration)
+        if (applyShmPatch) {
+            patchStatics(shm.graphics, shm.statics, info, calibration)
+        }
 
         val sessionTypeBoundary = handleSessionTypeBoundary(info.sessionType)
-        patchGraphicsBase(shm.graphics, info, gameState)
-        if (sessionTypeBoundary) {
+        if (applyShmPatch) {
+            patchGraphicsBase(shm.graphics, info, gameState)
+        } else if (sessionTypeBoundary) {
+            clearPendingSessionTypeOverride()
+        }
+        if (applyShmPatch && sessionTypeBoundary) {
             bumpSyntheticSessionIndexForBoundary(shm.graphics)
         }
 
         if (gameState != GameConnectionState.IN_SESSION) return AcSessionRestartHint.NONE
 
-        applySessionToGraphics(shm.graphics, info.sessionType)
+        if (applyShmPatch) {
+            applySessionToGraphics(shm.graphics, info.sessionType)
+        }
 
         val restartHint = consumeRestartHintIfReady(gameState)
         val physicsPacketId = shm.physics.packetId
@@ -180,12 +152,14 @@ class AcEvoFallbackShmPatcher(
             lapSnapshot = lapSnapshot,
         )
 
-        patchGraphics(
-            graphics = shm.graphics,
-            snapshot = lapSnapshot,
-            fuelSnapshot = fuelSnapshot,
-            hasCalibration = calibration != null,
-        )
+        if (applyShmPatch) {
+            patchGraphics(
+                graphics = shm.graphics,
+                snapshot = lapSnapshot,
+                fuelSnapshot = fuelSnapshot,
+                hasCalibration = calibration != null,
+            )
+        }
         return restartHint
     }
 
@@ -235,12 +209,9 @@ class AcEvoFallbackShmPatcher(
     }
 
     private fun handlePenalty(info: EvoFileInfo) {
-        val penaltyId = info.penaltyId ?: return
-        if (!seenPenaltySet.contains(penaltyId)) {
+        if (fileInfoCache.consumePenalty(info)) {
             lapAnalyzer.onPenaltyDetected()
-            markPenaltySeen(penaltyId)
         }
-        clearPenaltyAsync()
     }
 
     private fun normalizedTrackId(info: EvoFileInfo): String? = TrackIdNormalizer
@@ -279,7 +250,7 @@ class AcEvoFallbackShmPatcher(
             startFinishSyncId = lapAnalyzer.getStartFinishSyncId(),
         )
         lapAnalyzer.softResetAfterRespawn(nowNs)
-        clearPenaltyDedup()
+        fileInfoCache.clearPenaltyDedup()
     }
 
     private fun processLapFrame(
@@ -341,86 +312,19 @@ class AcEvoFallbackShmPatcher(
     private fun resetRuntimeForBoundary() {
         lapAnalyzer.resetSession()
         fuelAnalyzer.reset()
-        clearPenaltyDedup()
+        fileInfoCache.clearPenaltyDedup()
         respawnDetector.reset()
         lastProcessedPhysicsPacketId = -1
     }
 
-    private fun pollFileInfo(nowNs: Long): EvoFileInfo {
-        if (!useAsyncFilePolling) {
-            if (lastFilePollNs == 0L || (nowNs - lastFilePollNs) >= FILE_POLL_INTERVAL_NS) {
-                refreshFileInfoNow(nowNs)
-            }
-            return cachedInfo
-        }
-        if (lastFilePollNs == 0L && !fileInfoPollScheduled) {
-            refreshFileInfoNow(nowNs)
-            return cachedInfo
-        }
-        if ((nowNs - lastFilePollNs) >= FILE_POLL_INTERVAL_NS) {
-            scheduleFileInfoRefresh(nowNs)
-        }
-        return cachedInfo
-    }
-
-    private fun refreshFileInfoNow(nowNs: Long) {
-        lastFilePollNs = nowNs
-        cachedInfo = synchronized(fileInfoLock) {
-            fileInfoExtractor.poll()
-        }
-    }
-
-    private fun scheduleFileInfoRefresh(nowNs: Long) {
-        if (fileInfoPollScheduled) return
-
-        fileInfoPollScheduled = true
-        lastFilePollNs = nowNs
-        val generation = fileInfoGeneration
-
-        fileInfoScope.launch {
-            val polled = runCatching {
-                synchronized(fileInfoLock) {
-                    fileInfoExtractor.poll()
-                }
-            }.onFailure { error ->
-                logger.warn(error) { "FallbackSHM file info poll failed" }
-            }.getOrNull()
-
-            if (polled != null && fileInfoGeneration == generation) {
-                cachedInfo = polled
-            }
-            fileInfoPollScheduled = false
-        }
-    }
-
-    private fun clearPenaltyAsync() {
-        cachedInfo = cachedInfo.copy(
-            hasPenalty = false,
-            penaltyId = null,
-            penaltyReason = null,
-            penaltyTimestamp = null,
-        )
-        if (!useAsyncFilePolling) {
-            synchronized(fileInfoLock) {
-                fileInfoExtractor.clearPenalty()
-            }
-            return
-        }
-        val generation = fileInfoGeneration
-        fileInfoScope.launch {
-            if (fileInfoGeneration != generation) return@launch
-            synchronized(fileInfoLock) {
-                fileInfoExtractor.clearPenalty()
-            }
-        }
-    }
+    private fun pollFileInfo(nowNs: Long): EvoFileInfo = fileInfoCache.poll(nowNs)
 
     private fun resetAll(reason: String, clearTrack: Boolean, clearCar: Boolean) {
         logger.debug { "FallbackSHM reset: $reason" }
 
         lapAnalyzer.resetSession()
         fuelAnalyzer.reset()
-        clearPenaltyDedup()
+        fileInfoCache.clearPenaltyDedup()
 
         if (clearTrack) lastPatchedTrackId = ""
         if (clearCar) lastPatchedCarModel = ""
@@ -450,21 +354,6 @@ class AcEvoFallbackShmPatcher(
                 AcSessionRestartHint.NEW_GROUP_AFTER_MAIN_MENU
             }
         }
-    }
-
-    private fun markPenaltySeen(id: String) {
-        if (seenPenaltySet.add(id)) {
-            seenPenaltyIds.addLast(id)
-            while (seenPenaltyIds.size > PENALTY_DEDUP_CAPACITY) {
-                val removed = seenPenaltyIds.removeFirst()
-                seenPenaltySet.remove(removed)
-            }
-        }
-    }
-
-    private fun clearPenaltyDedup() {
-        seenPenaltyIds.clear()
-        seenPenaltySet.clear()
     }
 
     private fun patchStatics(
@@ -674,8 +563,6 @@ class AcEvoFallbackShmPatcher(
 
     private companion object {
 
-        const val PENALTY_DEDUP_CAPACITY = 32
-        val FILE_POLL_INTERVAL_NS = 100.milliseconds.inWholeNanoseconds
         val IDENTITY_LOG_MIN_INTERVAL_MS = 500.milliseconds.inWholeMilliseconds
     }
 
@@ -720,175 +607,5 @@ class AcEvoFallbackShmPatcher(
             incoming == AcSessionRestartHint.PRESERVE_GROUP -> AcSessionRestartHint.PRESERVE_GROUP
 
         else -> AcSessionRestartHint.NONE
-    }
-}
-
-private enum class IdentityChange {
-    NONE,
-    TRACK,
-    CAR,
-    BOTH,
-}
-
-private class RespawnResetDetector {
-
-    private var hasPrev = false
-    private var prevX = 0f
-    private var prevZ = 0f
-
-    private var lastResetNs = 0L
-    private var lastResumeNs = 0L
-    private var lastSeenPacketId = -1
-
-    fun reset() {
-        hasPrev = false
-        prevX = 0f
-        prevZ = 0f
-        lastResetNs = 0L
-        lastResumeNs = 0L
-        lastSeenPacketId = -1
-    }
-
-    fun onResumed(nowNs: Long, physicsPacketId: Int) {
-        lastResumeNs = nowNs
-        lastSeenPacketId = physicsPacketId
-        hasPrev = false
-    }
-
-    fun update(
-        nowNs: Long,
-        physicsPacketId: Int,
-        speedKmh: Float,
-        tyreContactPoint: FloatArray,
-        position: Vec2,
-    ): Boolean {
-        if (physicsPacketId == lastSeenPacketId) return false
-        lastSeenPacketId = physicsPacketId
-
-        val hasContact =
-            tyreContactPoint.size >= 6 &&
-                (
-                    abs(
-                        tyreContactPoint[0],
-                    ) + abs(tyreContactPoint[2]) + abs(tyreContactPoint[3]) + abs(tyreContactPoint[5])
-                    ) > 0.001f
-        if (!hasContact) {
-            hasPrev = false
-            return false
-        }
-
-        if (!hasPrev) {
-            hasPrev = true
-            prevX = position.x
-            prevZ = position.y
-            return false
-        }
-
-        val dx = position.x - prevX
-        val dz = position.y - prevZ
-        val dist2 = dx * dx + dz * dz
-
-        prevX = position.x
-        prevZ = position.y
-
-        val teleported = dist2 > (80f * 80f) && speedKmh < 5f
-        val cooldownOk = (nowNs - lastResetNs) > 2.seconds.inWholeNanoseconds
-        val resumeOk = (nowNs - lastResumeNs) > 2.seconds.inWholeNanoseconds
-
-        if (teleported && cooldownOk && resumeOk) {
-            lastResetNs = nowNs
-            hasPrev = false
-            return true
-        }
-        return false
-    }
-}
-
-private class IdentityResetDetector {
-    private data class Identity(val trackId: String?, val carModel: String?)
-
-    private var stable: Identity = Identity(trackId = null, carModel = null)
-
-    private var pending: Identity = Identity(trackId = null, carModel = null)
-    private var pendingSinceNs: Long = 0L
-
-    fun reset() {
-        stable = Identity(null, null)
-        pending = Identity(null, null)
-        pendingSinceNs = 0L
-    }
-
-    fun observe(info: EvoFileInfo, nowNs: Long) {
-        val t = info.trackId?.trim().takeIf { !it.isNullOrBlank() }
-        val c = info.carModel?.trim().takeIf { !it.isNullOrBlank() }
-        stable = Identity(
-            trackId = t ?: stable.trackId,
-            carModel = c ?: stable.carModel,
-        )
-        pending = stable
-        pendingSinceNs = nowNs
-    }
-
-    fun update(info: EvoFileInfo, nowNs: Long): IdentityChange {
-        val candidate = buildCandidateIdentity(info) ?: return IdentityChange.NONE
-        if (candidate != pending) {
-            pending = candidate
-            pendingSinceNs = nowNs
-            return IdentityChange.NONE
-        }
-
-        if (!isIdentityDebounced(nowNs)) return IdentityChange.NONE
-
-        return resolveIdentityChange(candidate)
-    }
-
-    private fun buildCandidateIdentity(info: EvoFileInfo): Identity? {
-        val newTrack = info.trackId?.trim().takeIf { !it.isNullOrBlank() }
-        val newCar = info.carModel?.trim().takeIf { !it.isNullOrBlank() }
-        if (newTrack == null && newCar == null) return null
-        return Identity(
-            trackId = newTrack ?: stable.trackId,
-            carModel = newCar ?: stable.carModel,
-        )
-    }
-
-    private fun isIdentityDebounced(nowNs: Long): Boolean = (nowNs - pendingSinceNs) >= IDENTITY_DEBOUNCE_NS
-
-    private fun resolveIdentityChange(candidate: Identity): IdentityChange {
-        val trackChanged = candidate.trackId.hasChangedFrom(stable.trackId)
-        val carChanged = candidate.carModel.hasChangedFrom(stable.carModel)
-        adoptMissingStableIdentity(candidate)
-
-        if (!trackChanged && !carChanged) {
-            stable = Identity(
-                trackId = candidate.trackId ?: stable.trackId,
-                carModel = candidate.carModel ?: stable.carModel,
-            )
-            return IdentityChange.NONE
-        }
-
-        stable = Identity(candidate.trackId, candidate.carModel)
-        return when {
-            trackChanged && carChanged -> IdentityChange.BOTH
-            trackChanged -> IdentityChange.TRACK
-            else -> IdentityChange.CAR
-        }
-    }
-
-    private fun adoptMissingStableIdentity(candidate: Identity) {
-        if (stable.trackId == null && candidate.trackId != null) {
-            stable = stable.copy(trackId = candidate.trackId)
-        }
-        if (stable.carModel == null && candidate.carModel != null) {
-            stable = stable.copy(carModel = candidate.carModel)
-        }
-    }
-
-    private fun String?.hasChangedFrom(previous: String?): Boolean =
-        this != null && previous != null && this != previous
-
-    private companion object {
-
-        private val IDENTITY_DEBOUNCE_NS = 300.milliseconds.inWholeNanoseconds
     }
 }

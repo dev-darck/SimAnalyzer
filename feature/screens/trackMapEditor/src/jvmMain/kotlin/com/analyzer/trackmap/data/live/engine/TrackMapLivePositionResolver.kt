@@ -15,9 +15,7 @@ import com.project.analyzer.utils.TrackIdentityAliasMatcher
 import com.project.analyzer.utils.logger.RATE_LIMITED
 import com.project.analyzer.utils.logger.logger
 
-internal class TrackMapLivePositionResolver(
-    private val item: TrackMapLibraryItem,
-) {
+internal class TrackMapLivePositionResolver(private val item: TrackMapLibraryItem) {
 
     private val livePositionLogger = logger()
     private val projector = TrackMapLivePositionProjector(item)
@@ -166,10 +164,7 @@ internal class TrackMapLivePositionResolver(
         }
     }
 
-    private fun resolveMismatchState(
-        geometryFallbackPosition: Vec2?,
-        nowNs: Long,
-    ): TrackMapLivePositionState {
+    private fun resolveMismatchState(geometryFallbackPosition: Vec2?, nowNs: Long): TrackMapLivePositionState {
         if (geometryFallbackPosition != null) {
             return state.matched(
                 position = geometryFallbackPosition,
@@ -188,10 +183,7 @@ internal class TrackMapLivePositionResolver(
         }
     }
 
-    private fun shouldReanchor(
-        candidates: TrackMapLivePositionCandidates,
-        speedKmh: Float,
-    ): Boolean {
+    private fun shouldReanchor(candidates: TrackMapLivePositionCandidates, speedKmh: Float): Boolean {
         val projection = candidates.rawProjection ?: return false
         val previous = state.position ?: return false
         if (!projector.isNearTrack(projection)) return false
@@ -219,11 +211,7 @@ internal class TrackMapLivePositionResolver(
         }
     }
 
-    private fun logRejectedJump(
-        frame: TelemetryFrame,
-        speedKmh: Float,
-        candidates: TrackMapLivePositionCandidates,
-    ) {
+    private fun logRejectedJump(frame: TelemetryFrame, speedKmh: Float, candidates: TrackMapLivePositionCandidates) {
         livePositionLogger.atDebug(RATE_LIMITED) {
             message = buildString {
                 append("TrackMap live rejected jump ")

@@ -11,4 +11,10 @@ public data class PitState(
     // Pit window (for endurance races)
     val pitWindowStart: Int? = null,
     val pitWindowEnd: Int? = null,
+    val serviceDamage: Int? = null,
+    val serviceFuel: Int? = null,
+    val serviceTyreFl: Int? = null,
+    val serviceTyreFr: Int? = null,
+    val serviceTyreRl: Int? = null,
+    val serviceTyreRr: Int? = null,
 )

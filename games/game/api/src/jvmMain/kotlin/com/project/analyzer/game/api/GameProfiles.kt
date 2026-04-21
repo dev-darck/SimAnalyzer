@@ -24,6 +24,7 @@ public object GameProfiles {
                     "acevo",
                     "evo",
                 ),
+                windowClassNames = listOf("acevo"),
                 titlePatterns = listOf("Evo"),
             ),
         ),
@@ -46,19 +47,16 @@ public object GameProfiles {
     public fun detectorConfigs(): List<GameConfig> = buildList {
         profiles.forEach { profile ->
             val config = profile.config
-            when {
-                config.processNames.isNotEmpty() || config.windowClassNames.isNotEmpty() -> {
-                    add(
-                        GameConfig(
-                            processNames = config.processNames,
-                            windowClassNames = config.windowClassNames,
-                        ),
-                    )
-                }
-
-                config.titlePatterns.isNotEmpty() -> {
-                    add(GameConfig(titlePatterns = config.titlePatterns))
-                }
+            if (config.processNames.isNotEmpty() || config.windowClassNames.isNotEmpty()) {
+                add(
+                    GameConfig(
+                        processNames = config.processNames,
+                        windowClassNames = config.windowClassNames,
+                    ),
+                )
+            }
+            if (config.titlePatterns.isNotEmpty()) {
+                add(GameConfig(titlePatterns = config.titlePatterns))
             }
         }
     }

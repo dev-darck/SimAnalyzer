@@ -12,20 +12,20 @@ internal fun SessionAnalysisHighlightUi.setupSystem(): SessionAnalysisSetupSyste
     SessionAnalysisHighlightCategory.TyreTempImbalance,
     SessionAnalysisHighlightCategory.TyreOverheat,
     SessionAnalysisHighlightCategory.TyreCold,
-        -> SessionAnalysisSetupSystem.Tyres
+    -> SessionAnalysisSetupSystem.Tyres
 
     SessionAnalysisHighlightCategory.AeroBalance -> SessionAnalysisSetupSystem.Aero
 
     SessionAnalysisHighlightCategory.BrakeBalance,
     SessionAnalysisHighlightCategory.WheelLockup,
-        -> SessionAnalysisSetupSystem.Brakes
+    -> SessionAnalysisSetupSystem.Brakes
 
     SessionAnalysisHighlightCategory.DamperIssue,
-        -> SessionAnalysisSetupSystem.Suspension
+    -> SessionAnalysisSetupSystem.Suspension
 
     SessionAnalysisHighlightCategory.SetupUndersteer,
     SessionAnalysisHighlightCategory.SetupOversteer,
-        -> SessionAnalysisSetupSystem.Balance
+    -> SessionAnalysisSetupSystem.Balance
 
     else -> SessionAnalysisSetupSystem.Balance
 }
@@ -35,20 +35,20 @@ internal fun DiagnosticIssueUi.setupSystem(): SessionAnalysisSetupSystem = when 
     SessionAnalysisHighlightCategory.TyreTempImbalance,
     SessionAnalysisHighlightCategory.TyreOverheat,
     SessionAnalysisHighlightCategory.TyreCold,
-        -> SessionAnalysisSetupSystem.Tyres
+    -> SessionAnalysisSetupSystem.Tyres
 
     SessionAnalysisHighlightCategory.AeroBalance -> SessionAnalysisSetupSystem.Aero
 
     SessionAnalysisHighlightCategory.BrakeBalance,
     SessionAnalysisHighlightCategory.WheelLockup,
-        -> SessionAnalysisSetupSystem.Brakes
+    -> SessionAnalysisSetupSystem.Brakes
 
     SessionAnalysisHighlightCategory.DamperIssue,
-        -> SessionAnalysisSetupSystem.Suspension
+    -> SessionAnalysisSetupSystem.Suspension
 
     SessionAnalysisHighlightCategory.SetupUndersteer,
     SessionAnalysisHighlightCategory.SetupOversteer,
-        -> SessionAnalysisSetupSystem.Balance
+    -> SessionAnalysisSetupSystem.Balance
 
     else -> SessionAnalysisSetupSystem.Balance
 }

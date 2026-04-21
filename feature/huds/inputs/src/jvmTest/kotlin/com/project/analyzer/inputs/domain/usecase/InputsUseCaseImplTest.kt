@@ -20,6 +20,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlinx.coroutines.withTimeoutOrNull
 
 class InputsUseCaseImplTest {
 
@@ -33,6 +35,16 @@ class InputsUseCaseImplTest {
             useCase.results.filterIsInstance<InputsResult.Sample>().first()
         }
 
+        telemetry.events.emit(
+            TelemetryLifecycleEvent.SessionStarted(
+                session = SessionInfo(
+                    sessionId = 42L,
+                    sessionType = SessionType.PRACTICE,
+                    carModel = "car",
+                    trackId = "track"
+                )
+            )
+        )
         telemetry.frames.emit(
             TelemetryFrame(
                 timestampNs = 123_000_000L,
@@ -66,6 +78,16 @@ class InputsUseCaseImplTest {
             useCase.results.filterIsInstance<InputsResult.Sample>().first()
         }
 
+        telemetry.events.emit(
+            TelemetryLifecycleEvent.SessionStarted(
+                session = SessionInfo(
+                    sessionId = 42L,
+                    sessionType = SessionType.PRACTICE,
+                    carModel = "car",
+                    trackId = "track"
+                )
+            )
+        )
         telemetry.frames.emit(TelemetryFrame(timestampNs = 1L))
 
         val sample = deferred.await()
@@ -75,6 +97,47 @@ class InputsUseCaseImplTest {
         assertEquals(0f, sample.brake)
         assertEquals(0f, sample.clutch)
         assertEquals(0f, sample.steerRadians)
+    }
+
+    @Test
+    fun doesNotEmitSampleWhileSessionPaused() = runBlocking {
+        val telemetry = FakeTelemetry()
+        val repo = FakeSettingsRepo()
+        val useCase = InputsUseCaseImpl(telemetry = telemetry, settingsRepo = repo)
+
+        telemetry.events.emit(
+            TelemetryLifecycleEvent.SessionStarted(
+                session = SessionInfo(
+                    sessionId = 42L,
+                    sessionType = SessionType.PRACTICE,
+                    carModel = "car",
+                    trackId = "track"
+                )
+            )
+        )
+        telemetry.events.emit(TelemetryLifecycleEvent.SessionPaused(sessionId = 42L))
+
+        val deferred = async {
+            withTimeoutOrNull(150) {
+                useCase.results.filterIsInstance<InputsResult.Sample>().first()
+            }
+        }
+
+        telemetry.frames.emit(
+            TelemetryFrame(
+                timestampNs = 123_000_000L,
+                car = CarFrame(
+                    controls = ControlsFrame(
+                        throttle = 0.7f,
+                        brake = 0.2f,
+                        clutch = 0.1f,
+                        steerAngle = 0.3f
+                    )
+                )
+            )
+        )
+
+        assertNull(deferred.await())
     }
 
     @Test

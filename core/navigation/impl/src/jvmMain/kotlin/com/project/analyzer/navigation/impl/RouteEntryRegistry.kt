@@ -8,9 +8,7 @@ import dev.zacsweers.metro.SingleIn
 
 @Inject
 @SingleIn(NavigationScope::class)
-class RouteEntryRegistry(
-    private val builders: Set<@JvmSuppressWildcards RouteEntryBuilder>,
-) {
+class RouteEntryRegistry(private val builders: Set<@JvmSuppressWildcards RouteEntryBuilder>) {
 
     private val compiledRegistry: CompiledRouteRegistry by lazy(LazyThreadSafetyMode.NONE) {
         val recordedEntries = mutableListOf<RegisteredRouteEntry>()
@@ -29,15 +27,12 @@ class RouteEntryRegistry(
         )
     }
 
-    internal fun resolve(route: Route): RegisteredRouteEntry {
-        return compiledRegistry.exactEntries[route]
-            ?: compiledRegistry.classEntries[route::class]
-            ?: error("Unknown screen $route")
-    }
+    internal fun resolve(route: Route): RegisteredRouteEntry = compiledRegistry.exactEntries[route]
+        ?: compiledRegistry.classEntries[route::class]
+        ?: error("Unknown screen $route")
 
-    internal fun resolve(routeKey: NavRouteKey): RegisteredRouteEntry =
-        compiledRegistry.entriesById[routeKey.entryId]
-            ?: error("Unknown entry id ${routeKey.entryId} for route ${routeKey.route}")
+    internal fun resolve(routeKey: NavRouteKey): RegisteredRouteEntry = compiledRegistry.entriesById[routeKey.entryId]
+        ?: error("Unknown entry id ${routeKey.entryId} for route ${routeKey.route}")
 
     internal fun keyOf(route: Route): NavRouteKey {
         val entry = resolve(route)

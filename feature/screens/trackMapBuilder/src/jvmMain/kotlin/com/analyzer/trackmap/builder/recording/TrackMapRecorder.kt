@@ -22,8 +22,8 @@ import com.project.analyzer.telemetry.ac.api.calibration.ReferencePointPoseExtra
 import com.project.analyzer.telemetry.ac.api.calibration.TrackCalibrationRepository
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
-import com.project.analyzer.telemetry.api.contract.TelemetryGameSettings
 import com.project.analyzer.telemetry.api.contract.TelemetryFrameSource
+import com.project.analyzer.telemetry.api.contract.TelemetryGameSettings
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -298,12 +298,11 @@ class TrackMapRecorder(
         }
     }
 
-    private suspend fun <T> withRecorderLock(block: suspend () -> T): T =
-        withContext(defaultDispatcher) {
-            mutex.withLock {
-                block()
-            }
+    private suspend fun <T> withRecorderLock(block: suspend () -> T): T = withContext(defaultDispatcher) {
+        mutex.withLock {
+            block()
         }
+    }
 
     private companion object {
 

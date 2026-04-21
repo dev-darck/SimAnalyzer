@@ -54,6 +54,8 @@ internal object TelemetryInspectorMapper {
         out.enum("$p.status", s.status)
         out.enum("$p.sessionType", s.sessionType)
         out.enum("$p.phase", s.phase)
+        out.str("$p.phaseLabel", s.phaseLabel)
+        out.str("$p.sessionName", s.sessionName)
 
         s.track?.let { mapTrackInfo(it, "$p.track", out) }
         s.car?.let { mapCarInfo(it, "$p.car", out) }
@@ -61,6 +63,9 @@ internal object TelemetryInspectorMapper {
 
         out.float("$p.sessionTimeLeftSec", s.sessionTimeLeftSec)
         out.float("$p.sessionTimeElapsedSec", s.sessionTimeElapsedSec)
+        out.str("$p.sessionTimeLeftLabel", s.sessionTimeLeftLabel)
+        out.str("$p.sessionWaitTimeLabel", s.sessionWaitTimeLabel)
+        out.str("$p.sessionTimeToNextLabel", s.sessionTimeToNextLabel)
         out.int("$p.completedLaps", s.completedLaps)
         out.int("$p.plannedLaps", s.plannedLaps)
         out.int("$p.position", s.position)
@@ -81,8 +86,25 @@ internal object TelemetryInspectorMapper {
         out.int("$p.gapBehindMs", s.gapBehindMs)
         out.bool("$p.isSetupMenuVisible", s.isSetupMenuVisible)
         out.bool("$p.isPaused", s.isPaused)
+        out.bool("$p.uiEnableDrive", s.uiEnableDrive)
+        out.bool("$p.uiEnableSetup", s.uiEnableSetup)
+        out.bool("$p.isReadyToNextBlinking", s.isReadyToNextBlinking)
+        out.bool("$p.showWaitingForPlayers", s.showWaitingForPlayers)
+        out.bool("$p.isDisconnectedFromServer", s.isDisconnectedFromServer)
+        out.bool("$p.restartSeasonEnabled", s.restartSeasonEnabled)
+        out.int("$p.endSessionFlag", s.endSessionFlag)
         out.int("$p.mainDisplayIndex", s.mainDisplayIndex)
         out.int("$p.secondaryDisplayIndex", s.secondaryDisplayIndex)
+        out.int("$p.lightsOn", s.lightsOn)
+        out.int("$p.lightsMode", s.lightsMode)
+        out.int("$p.playerPingMs", s.playerPingMs)
+        out.int("$p.playerLatencyMs", s.playerLatencyMs)
+        out.int("$p.playerCpuUsage", s.playerCpuUsage)
+        out.int("$p.playerCpuUsageAvg", s.playerCpuUsageAvg)
+        out.int("$p.playerQos", s.playerQos)
+        out.int("$p.playerQosAvg", s.playerQosAvg)
+        out.int("$p.playerFps", s.playerFps)
+        out.int("$p.playerFpsAvg", s.playerFpsAvg)
     }
 
     private fun mapTrackInfo(t: TrackInfo, p: String, out: Entries) {
@@ -151,6 +173,12 @@ internal object TelemetryInspectorMapper {
         out.int("$p.missingMandatoryPits", pit.missingMandatoryPits)
         out.int("$p.pitWindowStart", pit.pitWindowStart)
         out.int("$p.pitWindowEnd", pit.pitWindowEnd)
+        out.int("$p.serviceDamage", pit.serviceDamage)
+        out.int("$p.serviceFuel", pit.serviceFuel)
+        out.int("$p.serviceTyreFl", pit.serviceTyreFl)
+        out.int("$p.serviceTyreFr", pit.serviceTyreFr)
+        out.int("$p.serviceTyreRl", pit.serviceTyreRl)
+        out.int("$p.serviceTyreRr", pit.serviceTyreRr)
     }
 
     private fun mapLap(l: LapFrame, p: String, out: Entries) {
@@ -160,6 +188,9 @@ internal object TelemetryInspectorMapper {
         out.int("$p.currentLapTimeMs", l.currentLapTimeMs)
         out.int("$p.lastLapTimeMs", l.lastLapTimeMs)
         out.int("$p.bestLapTimeMs", l.bestLapTimeMs)
+        out.str("$p.currentLapTimeLabel", l.currentLapTimeLabel)
+        out.str("$p.lastLapTimeLabel", l.lastLapTimeLabel)
+        out.str("$p.bestLapTimeLabel", l.bestLapTimeLabel)
 
         out.int("$p.sectorCount", l.sectorCount)
         out.int("$p.currentSectorIndex", l.currentSectorIndex)
@@ -168,6 +199,11 @@ internal object TelemetryInspectorMapper {
         out.int("$p.deltaLapTimeMs", l.deltaLapTimeMs)
         out.bool("$p.isDeltaPositive", l.isDeltaPositive)
         out.int("$p.estimatedLapTimeMs", l.estimatedLapTimeMs)
+        out.str("$p.deltaLapTimeLabel", l.deltaLapTimeLabel)
+        out.str("$p.deltaLastLapTimeLabel", l.deltaLastLapTimeLabel)
+        out.bool("$p.isDeltaLastPositive", l.isDeltaLastPositive)
+        out.str("$p.estimatedLapTimeLabel", l.estimatedLapTimeLabel)
+        out.str("$p.totalTimeLabel", l.totalTimeLabel)
         out.int("$p.splitTimeMs", l.splitTimeMs)
 
         out.enum("$p.validity", l.validity)
@@ -221,6 +257,24 @@ internal object TelemetryInspectorMapper {
         out.bool("$p.flashingLightsOn", c.flashingLightsOn)
         out.bool("$p.directionLightsLeft", c.directionLightsLeft)
         out.bool("$p.directionLightsRight", c.directionLightsRight)
+        out.int("$p.displaySpeedKmh", c.displaySpeedKmh)
+        out.int("$p.displaySpeedMph", c.displaySpeedMph)
+        out.int("$p.displaySpeedMs", c.displaySpeedMs)
+        out.int("$p.steeringDegrees", c.steeringDegrees)
+        out.long("$p.odometerKm", c.odometerKm)
+        out.long("$p.drivingTimeSec", c.drivingTimeSec)
+        out.float("$p.ffMultiplier", c.ffMultiplier)
+        out.str("$p.carLocation", c.carLocation)
+        out.bool("$p.isWrongWay", c.isWrongWay)
+        out.int("$p.specialLightsStage", c.specialLightsStage)
+        out.int("$p.cockpitLightStage", c.cockpitLightStage)
+        out.bool("$p.warningLightsOn", c.warningLightsOn)
+        out.bool("$p.areHeadlightsVisible", c.areHeadlightsVisible)
+        out.str(
+            "$p.displayPageIndices",
+            c.displayPageIndices.takeIf { it.isNotEmpty() }?.joinToString(prefix = "[", postfix = "]"),
+        )
+        out.float("$p.performanceMeter", c.performanceMeter)
     }
 
     private fun mapControls(c: ControlsFrame, p: String, out: Entries) {
@@ -233,6 +287,7 @@ internal object TelemetryInspectorMapper {
         out.float("$p.brakePressureFR", c.brakePressureFR)
         out.float("$p.brakePressureRL", c.brakePressureRL)
         out.float("$p.brakePressureRR", c.brakePressureRR)
+        out.float("$p.pitspeedingDelta", c.pitspeedingDelta)
     }
 
     private fun mapEngine(e: EngineFrame, p: String, out: Entries) {
@@ -240,17 +295,39 @@ internal object TelemetryInspectorMapper {
         out.int("$p.rpm", e.rpm)
         out.int("$p.maxRpm", e.maxRpm)
         out.float("$p.currentMaxRpm", e.currentMaxRpm)
+        out.int("$p.maxGears", e.maxGears)
+        out.str("$p.engineType", e.engineType)
         out.float("$p.turboBoost", e.turboBoost)
+        out.float("$p.turboBoostLevel", e.turboBoostLevel)
+        out.float("$p.turboBoostPercent", e.turboBoostPercent)
         out.float("$p.kersCharge", e.kersCharge)
         out.float("$p.kersInput", e.kersInput)
         out.float("$p.kersCurrentKJ", e.kersCurrentKJ)
         out.bool("$p.ignitionOn", e.ignitionOn)
         out.bool("$p.starterEngineOn", e.starterEngineOn)
         out.bool("$p.isEngineRunning", e.isEngineRunning)
+        out.bool("$p.isRpmLimiterOn", e.isRpmLimiterOn)
+        out.bool("$p.isChangeUpRpm", e.isChangeUpRpm)
+        out.bool("$p.isChangeDownRpm", e.isChangeDownRpm)
+        out.bool("$p.kersIsCharging", e.kersIsCharging)
+        out.bool("$p.batteryIsCharging", e.batteryIsCharging)
+        out.bool("$p.maxKjPerLapReached", e.maxKjPerLapReached)
+        out.bool("$p.maxChargeKjPerLapReached", e.maxChargeKjPerLapReached)
         out.float("$p.waterTempC", e.waterTempC)
+        out.float("$p.waterTempPercent", e.waterTempPercent)
         out.float("$p.exhaustTempC", e.exhaustTempC)
+        out.float("$p.oilTempC", e.oilTempC)
+        out.float("$p.waterPressureBar", e.waterPressureBar)
+        out.float("$p.oilPressureBar", e.oilPressureBar)
+        out.float("$p.fuelPressureBar", e.fuelPressureBar)
+        out.float("$p.currentTorqueNm", e.currentTorqueNm)
+        out.int("$p.currentPowerHp", e.currentPowerHp)
+        out.float("$p.batteryTempC", e.batteryTempC)
+        out.float("$p.batteryVoltage", e.batteryVoltage)
         out.int("$p.engineBrake", e.engineBrake)
         out.bool("$p.autoShifterOn", e.autoShifterOn)
+        out.float("$p.gearRpmWindow", e.gearRpmWindow)
+        out.str("$p.performanceModeName", e.performanceModeName)
     }
 
     private fun mapFuel(f: FuelFrame, p: String, out: Entries) {
@@ -270,7 +347,25 @@ internal object TelemetryInspectorMapper {
         out.int("$p.absLevel", a.absLevel)
         out.float("$p.absValue", a.absValue)
         out.bool("$p.absInAction", a.absInAction)
+        out.bool("$p.absActive", a.absActive)
+        out.bool("$p.escActive", a.escActive)
+        out.bool("$p.launchActive", a.launchActive)
         out.int("$p.engineMap", a.engineMap)
+        out.int("$p.ebbLevel", a.ebbLevel)
+        out.float("$p.turboLevel", a.turboLevel)
+        out.int("$p.ersDeploymentMap", a.ersDeploymentMap)
+        out.float("$p.ersRechargeMap", a.ersRechargeMap)
+        out.int("$p.diffPowerLevel", a.diffPowerLevel)
+        out.int("$p.diffCoastLevel", a.diffCoastLevel)
+        out.float("$p.diffPowerValue", a.diffPowerValue)
+        out.float("$p.diffCoastValue", a.diffCoastValue)
+        out.int("$p.frontBumpDamperLevel", a.frontBumpDamperLevel)
+        out.int("$p.frontReboundDamperLevel", a.frontReboundDamperLevel)
+        out.int("$p.rearBumpDamperLevel", a.rearBumpDamperLevel)
+        out.int("$p.rearReboundDamperLevel", a.rearReboundDamperLevel)
+        out.int("$p.activePerformanceMode", a.activePerformanceMode)
+        out.int("$p.p2pActivations", a.p2pActivations)
+        out.int("$p.p2pStatus", a.p2pStatus)
         out.bool("$p.drsAvailable", a.drsAvailable)
         out.bool("$p.drsEnabled", a.drsEnabled)
         out.bool("$p.pitLimiterOn", a.pitLimiterOn)
@@ -297,6 +392,7 @@ internal object TelemetryInspectorMapper {
 
         out.int("$p.frontBrakeCompound", w.frontBrakeCompound)
         out.int("$p.rearBrakeCompound", w.rearBrakeCompound)
+        out.bool("$p.useSingleCompound", w.useSingleCompound)
     }
 
     private fun mapWheel(w: WheelFrame, p: String, out: Entries) {
@@ -373,6 +469,13 @@ internal object TelemetryInspectorMapper {
         out.float("$p.airTempC", e.airTempC)
         out.float("$p.roadTempC", e.roadTempC)
         out.float("$p.airDensity", e.airDensity)
+        out.bool("$p.isStaticWeather", e.isStaticWeather)
+        out.str("$p.nation", e.nation)
+        out.float("$p.longitude", e.longitude)
+        out.float("$p.latitude", e.latitude)
+        out.float("$p.startingAmbientTempC", e.startingAmbientTempC)
+        out.float("$p.startingRoadTempC", e.startingRoadTempC)
+        out.str("$p.startingGripLabel", e.startingGripLabel)
         out.float("$p.windSpeedMps", e.windSpeedMps)
         out.float("$p.windDirectionDeg", e.windDirectionDeg)
         out.float("$p.rainIntensity", e.rainIntensity)

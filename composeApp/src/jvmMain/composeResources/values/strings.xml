@@ -8,4 +8,11 @@
     <string name="app_titlebar_close">Close</string>
     <string name="app_titlebar_back">Back</string>
     <string name="app_titlebar_forward">Forward</string>
+    <string name="app_close_behavior_title">When pressing the close button:</string>
+    <string name="app_close_behavior_remember">Remember my decision</string>
+    <string name="app_close_behavior_supporting">Use "Minimize to tray" so HUD overlays keep updating while the app is
+        in the background. You can change this later in Settings.
+    </string>
+    <string name="app_close_behavior_exit">Exit</string>
+    <string name="app_close_behavior_minimize_to_tray">Minimize to tray</string>
 </resources>

@@ -37,10 +37,7 @@ internal fun LiveScreen() {
 }
 
 @Composable
-internal fun Screen(
-    state: LiveScreenState = LiveScreenState(),
-    modifier: Modifier = Modifier
-) {
+internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifier = Modifier) {
     ResponsiveScreen(
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 16.dp),

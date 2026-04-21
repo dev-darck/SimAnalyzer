@@ -1,7 +1,9 @@
 package com.project.analyzer.ac.telemetry.impl.recording
 
-import com.project.analyzer.ac.telemetry.impl.internal.AcRawSnapshot
-import com.project.analyzer.ac.telemetry.impl.internal.DataSourceType
+import com.project.analyzer.ac.telemetry.impl.internal.poll.DataSourceType
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcLegacyRawSnapshot
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcPollSnapshot
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AceRawSnapshot
 import com.project.analyzer.ac.telemetry.impl.internal.recording.AcRawFrameEncoder
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.SessionScope
@@ -89,7 +91,7 @@ class AcTelemetryRecordingSource(
 
     override suspend fun emitSample(
         sessionId: Long,
-        snapshot: AcRawSnapshot,
+        snapshot: AcPollSnapshot,
         frame: TelemetryFrame,
         dataSource: DataSourceType,
     ) {
@@ -99,7 +101,7 @@ class AcTelemetryRecordingSource(
         if (!gate.shouldSample(snapshot.timestampNs)) return
 
         val encodeStartedNs = System.nanoTime()
-        val payload = encoder.encode(snapshot)
+        val encoded = encoder.encode(snapshot)
         val encodeElapsedNs = (System.nanoTime() - encodeStartedNs).coerceAtLeast(0L)
         encodedCount.incrementAndGet()
         encodeTotalNs.addAndGet(encodeElapsedNs)
@@ -108,11 +110,11 @@ class AcTelemetryRecordingSource(
             sessionId = sessionId,
             timestampNs = snapshot.timestampNs,
             frameId = snapshot.frameId,
-            gameId = gameIdForSource(dataSource),
+            gameId = gameIdForSnapshot(snapshot),
             dataSourceId = dataSourceId(dataSource),
             dataSource = dataSource.name,
-            payloadType = encoder.payloadType,
-            payload = payload,
+            payloadType = encoded.payloadType,
+            payload = encoded.payload,
             frame = frame,
         )
         sampleBuffer.tryOffer(sample)
@@ -129,7 +131,10 @@ class AcTelemetryRecordingSource(
 
     private fun dataSourceId(source: DataSourceType): Int = if (source == DataSourceType.FALLBACK) 1 else 0
 
-    private fun gameIdForSource(source: DataSourceType): String = if (source == DataSourceType.FALLBACK) "ace" else "ac"
+    private fun gameIdForSnapshot(snapshot: AcPollSnapshot): String = when (snapshot) {
+        is AcLegacyRawSnapshot -> "ac"
+        is AceRawSnapshot -> "ace"
+    }
 
     private fun maybeLogEmitterStats() {
         val now = System.nanoTime()

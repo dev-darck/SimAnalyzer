@@ -4,9 +4,7 @@ import com.project.analyzer.telemetry.recording.api.session.DecodedRecordedTelem
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionLocation
 import com.project.analyzer.telemetry.recording.impl.reader.model.RecordedTelemetrySegmentLayout
 
-internal fun buildSegmentLayout(
-    locations: List<RecordedTelemetrySessionLocation>,
-): RecordedTelemetrySegmentLayout {
+internal fun buildSegmentLayout(locations: List<RecordedTelemetrySessionLocation>): RecordedTelemetrySegmentLayout {
     if (locations.isEmpty()) {
         return RecordedTelemetrySegmentLayout(
             segments = emptyList(),

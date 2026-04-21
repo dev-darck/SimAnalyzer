@@ -16,9 +16,7 @@ import kotlinx.coroutines.flow.scan
 
 @Inject
 @SingleIn(ScreenScope::class)
-internal class LiveTelemetryUseCaseImpl(
-    private val telemetry: TelemetryReadSource,
-) : LiveTelemetryUseCase {
+internal class LiveTelemetryUseCaseImpl(private val telemetry: TelemetryReadSource) : LiveTelemetryUseCase {
 
     private var currentCarModel: String? = null
     private var currentTrackId: String? = null

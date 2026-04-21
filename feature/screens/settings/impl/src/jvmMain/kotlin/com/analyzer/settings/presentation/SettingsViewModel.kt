@@ -1,8 +1,13 @@
 package com.analyzer.settings.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.analyzer.settings.api.AppCloseBehavior
+import com.analyzer.settings.domain.model.LmuPluginInstallResult
+import com.analyzer.settings.domain.model.LmuPluginInstallStep
+import com.analyzer.settings.domain.model.LmuPluginSetupCheckResult
 import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.usecase.SettingsUseCase
+import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
@@ -22,6 +27,7 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
 
     init {
         observeTheme()
+        observeAppCloseBehavior()
         observeTelemetrySettings()
         observeHudEnabled()
         viewModelScope.launch {
@@ -32,6 +38,7 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
     override suspend fun handleIntent(intent: SettingsIntent) {
         when (intent) {
             is SettingsIntent.ChangeTheme -> handleChangeTheme(intent.mode)
+            is SettingsIntent.ChangeAppCloseBehavior -> handleChangeAppCloseBehavior(intent.behavior)
             is SettingsIntent.ChangeSamplingRate -> handleChangeSamplingRate(intent.hz)
             is SettingsIntent.ChangeStorageLocation -> handleChangeStorageLocation(intent.path)
             is SettingsIntent.ChangeStorageLocationInput -> handleChangeStorageLocationInput(intent.path)
@@ -41,6 +48,8 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
             SettingsIntent.DismissRecordingEnabledNotice -> handleDismissRecordingEnabledNotice()
             is SettingsIntent.ChangeMaxRecordedLaps -> handleChangeMaxRecordedLaps(intent.laps)
             is SettingsIntent.ChangeGameSelection -> handleChangeGameSelection(intent.selection)
+            SettingsIntent.ConfirmLmuPluginInstall -> handleConfirmLmuPluginInstall()
+            SettingsIntent.DismissLmuPluginDialog -> handleDismissLmuPluginDialog()
         }
     }
 
@@ -54,6 +63,14 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
         viewModelScope.launch {
             useCase.observeThemeMode().collect { mode ->
                 updateState { copy(themeMode = mode) }
+            }
+        }
+    }
+
+    private fun observeAppCloseBehavior() {
+        viewModelScope.launch {
+            useCase.observeAppCloseBehavior().collect { behavior ->
+                updateState { copy(appCloseBehavior = behavior) }
             }
         }
     }
@@ -111,6 +128,12 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
         }
     }
 
+    private fun handleChangeAppCloseBehavior(behavior: AppCloseBehavior) {
+        viewModelScope.launch {
+            useCase.updateAppCloseBehavior(behavior)
+        }
+    }
+
     private fun handleChangeSamplingRate(hz: Int) {
         viewModelScope.launch {
             useCase.updateSamplingRate(hz)
@@ -134,9 +157,124 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
     }
 
     private fun handleChangeGameSelection(selection: GameSelection) {
+        if (selection == state.value.gameSelection) return
+        if (selection is GameSelection.Manual && selection.game == GameId.LMU) {
+            handleLmuSelectionRequested()
+            return
+        }
         viewModelScope.launch {
             useCase.updateGameSelection(selection)
         }
+    }
+
+    private fun handleLmuSelectionRequested() {
+        viewModelScope.launch {
+            when (val result = useCase.inspectLmuPluginSetup()) {
+                is LmuPluginSetupCheckResult.Ready -> {
+                    useCase.updateGameSelection(GameSelection.Manual(GameId.LMU))
+                }
+
+                is LmuPluginSetupCheckResult.InstallRequired -> {
+                    updateState {
+                        copy(
+                            lmuPluginDialog = LmuPluginDialogState(
+                                phase = LmuPluginDialogPhase.Prompt,
+                                details = result.details,
+                            ),
+                        )
+                    }
+                }
+
+                is LmuPluginSetupCheckResult.GameNotFound -> {
+                    updateState {
+                        copy(
+                            lmuPluginDialog = LmuPluginDialogState(
+                                phase = LmuPluginDialogPhase.MissingGame,
+                                details = result.details,
+                                detailMessage = result.message,
+                            ),
+                        )
+                    }
+                }
+
+                is LmuPluginSetupCheckResult.Error -> {
+                    updateState {
+                        copy(
+                            lmuPluginDialog = LmuPluginDialogState(
+                                phase = LmuPluginDialogPhase.Failure,
+                                details = result.details,
+                                detailMessage = result.message,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleConfirmLmuPluginInstall() {
+        val dialogState = state.value.lmuPluginDialog ?: return
+        if (
+            dialogState.phase == LmuPluginDialogPhase.Installing ||
+            dialogState.phase == LmuPluginDialogPhase.MissingGame
+        ) {
+            return
+        }
+
+        viewModelScope.launch {
+            updateState {
+                copy(
+                    lmuPluginDialog = dialogState.copy(
+                        phase = LmuPluginDialogPhase.Installing,
+                        progressStep = LmuPluginInstallStep.ResolvingSource,
+                        detailMessage = null,
+                    ),
+                )
+            }
+
+            when (
+                val result = useCase.installLmuPlugin(dialogState.details) { step ->
+                    updateState {
+                        val currentDialog = lmuPluginDialog ?: return@updateState this
+                        copy(
+                            lmuPluginDialog = currentDialog.copy(
+                                phase = LmuPluginDialogPhase.Installing,
+                                progressStep = step,
+                                detailMessage = null,
+                            ),
+                        )
+                    }
+                }
+            ) {
+                is LmuPluginInstallResult.Success -> {
+                    useCase.updateGameSelection(GameSelection.Manual(GameId.LMU))
+                    updateState {
+                        copy(
+                            lmuPluginDialog = LmuPluginDialogState(
+                                phase = LmuPluginDialogPhase.Success,
+                                details = result.details,
+                            ),
+                        )
+                    }
+                }
+
+                is LmuPluginInstallResult.Failure -> {
+                    updateState {
+                        copy(
+                            lmuPluginDialog = LmuPluginDialogState(
+                                phase = LmuPluginDialogPhase.Failure,
+                                details = result.details,
+                                detailMessage = result.message,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleDismissLmuPluginDialog() {
+        updateState { copy(lmuPluginDialog = null) }
     }
 
     private fun handleChangeStorageLocation(path: String) {

@@ -11,10 +11,12 @@ internal fun RecordedTelemetrySessionMetadata.toSessionAnalysisHeader(
     firstPayload: RecordedTelemetryPayload?,
 ): SessionAnalysisHeader = SessionAnalysisHeader(
     gameId = gameId,
-    sessionTypeLabel = sessionType.orEmpty(),
+    sessionTypeLabel = sessionType?.takeIf { it.isNotBlank() } ?: firstPayload?.sessionTypeLabel.orEmpty(),
+    sessionPhaseLabel = firstPayload?.sessionPhaseLabel.orEmpty(),
     carLabel = carName ?: carModel ?: firstPayload?.carLabel.orEmpty(),
     trackLabel = trackName ?: trackId ?: firstPayload?.trackLabel.orEmpty(),
+    trackLayoutLabel = firstPayload?.trackLayoutLabel.orEmpty(),
     startedAtMs = startedAtMs,
-    airTempC = airTempC,
-    trackTempC = trackTempC,
+    airTempC = airTempC ?: firstPayload?.airTempC,
+    trackTempC = trackTempC ?: firstPayload?.roadTempC,
 )

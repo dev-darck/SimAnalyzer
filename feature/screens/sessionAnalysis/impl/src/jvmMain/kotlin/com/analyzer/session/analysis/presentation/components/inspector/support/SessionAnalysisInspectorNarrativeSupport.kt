@@ -73,7 +73,7 @@ private fun DiagnosticIssueUi.isLineRelevant(): Boolean = when (category) {
     SessionAnalysisHighlightCategory.TimeLoss,
     SessionAnalysisHighlightCategory.Understeer,
     SessionAnalysisHighlightCategory.Oversteer,
-        -> true
+    -> true
 
     else -> false
 }
@@ -91,7 +91,7 @@ private fun SessionAnalysisHighlightUi.isLineRelevant(): Boolean = when (categor
     SessionAnalysisHighlightCategory.TimeLoss,
     SessionAnalysisHighlightCategory.Understeer,
     SessionAnalysisHighlightCategory.Oversteer,
-        -> true
+    -> true
 
     else -> false
 }
@@ -113,21 +113,21 @@ private fun SessionAnalysisHighlightUi.lineNarrativeGroupKey(): String = when (c
     SessionAnalysisHighlightCategory.BrakePoint,
     SessionAnalysisHighlightCategory.TrailBrakingMissing,
     SessionAnalysisHighlightCategory.WheelLockup,
-        -> "entry"
+    -> "entry"
 
     SessionAnalysisHighlightCategory.EarlyApexEntry,
     SessionAnalysisHighlightCategory.LateApexEntry,
     SessionAnalysisHighlightCategory.InconsistentLine,
-        -> "apex"
+    -> "apex"
 
     SessionAnalysisHighlightCategory.CoastingZone,
     SessionAnalysisHighlightCategory.WheelSpin,
     SessionAnalysisHighlightCategory.ThrottleCommitment,
-        -> "exit"
+    -> "exit"
 
     SessionAnalysisHighlightCategory.Understeer,
     SessionAnalysisHighlightCategory.Oversteer,
-        -> "balance"
+    -> "balance"
 
     else -> "loss"
 }
@@ -173,21 +173,21 @@ private fun SessionAnalysisHighlightUi.lineNarrativeTitle(): String = when (cate
     SessionAnalysisHighlightCategory.BrakePoint,
     SessionAnalysisHighlightCategory.TrailBrakingMissing,
     SessionAnalysisHighlightCategory.WheelLockup,
-        -> cornerScopedTitle("Entry braking is costing time")
+    -> cornerScopedTitle("Entry braking is costing time")
 
     SessionAnalysisHighlightCategory.EarlyApexEntry,
     SessionAnalysisHighlightCategory.LateApexEntry,
     SessionAnalysisHighlightCategory.InconsistentLine,
-        -> cornerScopedTitle("Mid-corner line is costing time")
+    -> cornerScopedTitle("Mid-corner line is costing time")
 
     SessionAnalysisHighlightCategory.CoastingZone,
     SessionAnalysisHighlightCategory.WheelSpin,
     SessionAnalysisHighlightCategory.ThrottleCommitment,
-        -> cornerScopedTitle("Exit throttle timing is costing time")
+    -> cornerScopedTitle("Exit throttle timing is costing time")
 
     SessionAnalysisHighlightCategory.Understeer,
     SessionAnalysisHighlightCategory.Oversteer,
-        -> cornerScopedTitle("Balance is costing time")
+    -> cornerScopedTitle("Balance is costing time")
 
     else -> cornerScopedTitle("Primary loss zone")
 }

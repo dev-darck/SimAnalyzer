@@ -61,7 +61,7 @@ class FuelConsumptionUseCaseImpl(
                     Input.ManualReset -> "manualReset"
                 }
 
-                val out: FuelResult = runCatching {
+                val out: FuelResult? = runCatching {
                     when (input) {
                         is Input.Frame -> onFrame(input.frame)
 
@@ -78,9 +78,11 @@ class FuelConsumptionUseCaseImpl(
                     logger.error(error) {
                         "Fuel pipeline failed on input=$inputName. Keeping stream alive."
                     }
-                }.getOrNull() ?: FuelResult.NoData
+                }.getOrNull()
 
-                send(out)
+                if (out != null) {
+                    send(out)
+                }
             }
         }
 
@@ -191,8 +193,8 @@ class FuelConsumptionUseCaseImpl(
         }
     }
 
-    private fun onFrame(frame: TelemetryFrame): FuelResult {
-        if (mode != Mode.RUNNING || activeSessionId == 0L) return FuelResult.NoData
+    private fun onFrame(frame: TelemetryFrame): FuelResult? {
+        if (mode != Mode.RUNNING || activeSessionId == 0L) return null
 
         val estimate = engine.onFrame(frame, savedFuelData) ?: return FuelResult.NoData
 

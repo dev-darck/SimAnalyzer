@@ -237,7 +237,7 @@ private fun DevSettingsNavRow(
                 .fillMaxWidth()
                 .padding(end = 6.dp),
             adapter = AppScrollbarAdapter(
-                rememberScrollbarAdapter(horizontalScrollState)
+                rememberScrollbarAdapter(horizontalScrollState),
             ),
         )
     }
@@ -423,11 +423,7 @@ internal fun DevHudSettingsScreen(
 }
 
 @Composable
-private fun DevHudPanelRow(
-    panel: DevHudPanelUi,
-    onToggle: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
+private fun DevHudPanelRow(panel: DevHudPanelUi, onToggle: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -500,10 +496,7 @@ private fun SectionCard(
 }
 
 @Composable
-internal fun TelemetryInspectorScreen(
-    state: TelemetryInspectorState,
-    modifier: Modifier = Modifier
-) {
+internal fun TelemetryInspectorScreen(state: TelemetryInspectorState, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
 
     Column(modifier = modifier.fillMaxSize()) {

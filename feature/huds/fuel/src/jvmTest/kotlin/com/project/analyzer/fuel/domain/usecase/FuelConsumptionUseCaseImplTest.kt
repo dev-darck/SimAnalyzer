@@ -143,6 +143,33 @@ class FuelConsumptionUseCaseImplTest {
         assertEquals(1, results.filterIsInstance<FuelResult.SessionEnded>().size)
     }
 
+    @Test
+    fun `paused frames do not emit no data`() = runBlocking {
+        val telemetry = FakeTelemetry()
+        val useCase = FuelConsumptionUseCaseImpl(
+            telemetry = telemetry,
+            engine = FuelConsumptionEngine(),
+            repository = FakeFuelRepository(),
+        )
+        val results = mutableListOf<FuelResult>()
+
+        val job = launch(start = CoroutineStart.UNDISPATCHED) {
+            useCase.fuelEstimates.collect { results += it }
+        }
+
+        telemetry.emitEvent(TelemetryLifecycleEvent.SessionStarted(session(1L, SessionType.PRACTICE)))
+        delay(10)
+        telemetry.emitEvent(TelemetryLifecycleEvent.SessionPaused(sessionId = 1L))
+        delay(10)
+        telemetry.emitFrame(frame(timestampNs = 1_000_000_000L, fuelLiters = 50f, sessionType = SessionType.PRACTICE))
+
+        delay(50)
+        job.cancel()
+
+        assertEquals(1, results.filterIsInstance<FuelResult.SessionPaused>().size)
+        assertEquals(0, results.filterIsInstance<FuelResult.NoData>().size)
+    }
+
     private fun session(sessionId: Long, sessionType: SessionType): SessionInfo = SessionInfo(
         sessionId = sessionId,
         sessionType = sessionType,

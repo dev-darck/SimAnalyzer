@@ -1,62 +1,44 @@
 package com.project.analyzer.ac.telemetry.impl
 
-import com.project.analyzer.ac.telemetry.impl.internal.AcPollConfig
-import com.project.analyzer.ac.telemetry.impl.internal.AcPollLoop
-import com.project.analyzer.ac.telemetry.impl.internal.DataSourceType
-import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
-import com.project.analyzer.ac.telemetry.impl.internal.PollResult
+import com.project.analyzer.ac.telemetry.impl.internal.poll.AcPollConfig
+import com.project.analyzer.ac.telemetry.impl.internal.poll.AcPollLoop
+import com.project.analyzer.ac.telemetry.impl.internal.poll.DataSourceType
+import com.project.analyzer.ac.telemetry.impl.internal.poll.GameConnectionState
+import com.project.analyzer.ac.telemetry.impl.internal.poll.PollResult
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcLegacyRawSnapshot
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AceRawSnapshot
+import com.project.analyzer.ac.telemetry.impl.shm.ac.AcLegacySharedMemoryView
 import com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemory
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
+import com.project.analyzer.ac.telemetry.impl.shm.AcUnknownSharedMemoryView
+import com.project.analyzer.ac.telemetry.impl.shm.ace.AceSharedMemoryView
+import com.project.analyzer.ac.telemetry.impl.shm.ace.structure.AcEvoStatus
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFileGraphics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFilePhysics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFileStatic
 import com.project.analyzer.utils.shm.writeWString
-import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.channels.Channel
+import io.mockk.runs
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class AcPollLoopTest {
 
-    private fun invokeDetect(loop: AcPollLoop): Any {
-        val m = AcPollLoop::class.java.getDeclaredMethod("detectGameState")
-        m.isAccessible = true
-        return m.invoke(loop)
-    }
-
-    private fun invokeStabilize(loop: AcPollLoop, detection: Any): Any {
-        val m = AcPollLoop::class.java.declaredMethods.first { it.name == "stabilizeDetection" }
-        m.isAccessible = true
-        return m.invoke(loop, detection)
-    }
-
-    private fun getField(obj: Any, name: String): Any? {
-        val f = obj.javaClass.getDeclaredField(name)
-        f.isAccessible = true
-        return f.get(obj)
-    }
-
-    private fun setField(obj: Any, name: String, value: Any?) {
-        val f = obj.javaClass.getDeclaredField(name)
-        f.isAccessible = true
-        f.set(obj, value)
-    }
-
     @Test
-    fun `detectGameState returns DISCONNECTED when not attached`() {
+    fun `detectGameState returns DISCONNECTED when no active shared memory view exists`() {
         val shm = mockk<AcSharedMemory>()
         val cfg = mockk<AcPollConfig>(relaxed = true)
 
-        every { shm.isAnyAttached() } returns false
-
-        every { shm.physics } returns mockk(relaxed = true)
-        every { shm.graphics } returns mockk(relaxed = true)
-        every { shm.statics } returns mockk(relaxed = true)
+        every { shm.view } returns AcUnknownSharedMemoryView
+        every { shm.layout } returns AcUnknownSharedMemoryView.layout
+        every { shm.readAll() } just runs
+        every { shm.close() } just runs
 
         val loop = AcPollLoop(shm, cfg)
 
@@ -66,22 +48,15 @@ class AcPollLoopTest {
     }
 
     @Test
-    fun `detectGameState uses native graphics when status available`() {
+    fun `detectGameState uses legacy backend when legacy view is active`() {
         val shm = mockk<AcSharedMemory>()
         val cfg = mockk<AcPollConfig>(relaxed = true)
-
         val physics = SPageFilePhysics()
         val graphics = SPageFileGraphics()
         val statics = SPageFileStatic()
 
-        every { shm.isAnyAttached() } returns true
-        every { shm.physics } returns physics
-        every { shm.graphics } returns graphics
-        every { shm.statics } returns statics
-
         graphics.packetId = 10
         graphics.status = 0
-        graphics.completedLaps = 0
         graphics.iCurrentTime = 1
         statics.smVersion[0] = '1'
         statics.track.writeWString("monza")
@@ -89,6 +64,11 @@ class AcPollLoopTest {
         statics.numCars = 1
         statics.numberOfSessions = 1
         statics.sectorCount = 3
+
+        every { shm.view } returns AcLegacySharedMemoryView(physics, graphics, statics)
+        every { shm.layout } returns com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemoryLayout.LEGACY
+        every { shm.readAll() } just runs
+        every { shm.close() } just runs
 
         val loop = AcPollLoop(shm, cfg)
         val detection = invokeDetect(loop)
@@ -99,188 +79,67 @@ class AcPollLoopTest {
     }
 
     @Test
-    fun `detectGameState fallback session becomes menu after stale threshold`() {
+    fun `start emits ACE snapshot when ACE shared memory view is active`() = runTest {
         val shm = mockk<AcSharedMemory>()
-        val cfg = mockk<AcPollConfig>(relaxed = true)
-
+        val cfg = mockk<AcPollConfig>()
         val physics = SPageFilePhysics()
-        val graphics = SPageFileGraphics()
-        val statics = SPageFileStatic()
+        val graphics = com.project.analyzer.ac.telemetry.impl.shm.ace.structure.AcEvoGraphicsPageView()
+        val statics = com.project.analyzer.ac.telemetry.impl.shm.ace.structure.AcEvoStaticPageView()
 
-        every { shm.isAnyAttached() } returns true
-        every { shm.physics } returns physics
-        every { shm.graphics } returns graphics
-        every { shm.statics } returns statics
+        physics.packetId = 1
+        physics.rpm = 5000
+        physics.speedKmh = 200f
+        graphics.packetId = 1
+        graphics.statusRaw = AcEvoStatus.LIVE.rawValue
+        graphics.currentLapTimeMsRaw = 10
+        graphics.activeCarsRaw = 20
+        statics.smVersionRaw[0] = '1'.code.toByte()
+        statics.trackRaw[0] = 'm'.code.toByte()
+        statics.numberOfSessionsRaw = 1
 
-        // no native graphics
-        graphics.packetId = 0
-        graphics.status = 0
-        graphics.completedLaps = 0
-        graphics.iCurrentTime = 0
+        every { cfg.reconnectDelayMs } returns 1
+        every { cfg.menuPollMs } returns 1
+        every { cfg.pollIntervalNanos } returns 1_000_000L
+        every { cfg.maxDriftNanos } returns Long.MAX_VALUE
 
-        physics.rpm = 1000
+        every { shm.view } returns AceSharedMemoryView(physics, graphics, statics)
+        every { shm.layout } returns com.project.analyzer.ac.telemetry.impl.shm.AcSharedMemoryLayout.ACEVO
+        every { shm.readAll() } answers {
+            physics.packetId += 1
+            graphics.packetId += 1
+        }
+        every { shm.close() } just runs
 
         val loop = AcPollLoop(shm, cfg)
-
-        var last: Any? = null
-        var packetId = 100
-        repeat(6) {
-            physics.packetId = packetId++
-            val detection = invokeDetect(loop)
-            setField(loop, "currentState", getField(detection, "state"))
-            last = detection
-        }
-
-        repeat(31) {
-            val detection = invokeDetect(loop)
-            setField(loop, "currentState", getField(detection, "state"))
-            last = detection
-        }
-
-        val finalDetection = requireNotNull(last)
-        assertEquals(GameConnectionState.IN_MENU, getField(finalDetection, "state"))
-        assertEquals(DataSourceType.FALLBACK, getField(finalDetection, "dataSource"))
-        assertEquals(true, getField(finalDetection, "needsFallback"))
-    }
-
-    @Test
-    fun `start emits Frame in session only when packets change`() = runTest {
-        val shm = mockk<AcSharedMemory>()
-        val cfg = mockk<AcPollConfig>(relaxed = true)
-
-        val physics = SPageFilePhysics()
-        val graphics = SPageFileGraphics()
-        val statics = SPageFileStatic()
-
-        every { shm.isAnyAttached() } returns true
-        every { shm.physics } returns physics
-        every { shm.graphics } returns graphics
-        every { shm.statics } returns statics
-
-        graphics.packetId = 10
-        graphics.status = 2
-        graphics.completedLaps = 0
-        graphics.iCurrentTime = 1
-
-        var tick = 0
-        val pIds = intArrayOf(1, 1, 2)
-        val gIds = intArrayOf(1, 1, 1)
-
-        coEvery { shm.readAll() } answers {
-            val idx = tick.coerceAtMost(2)
-            physics.packetId = pIds[idx]
-            graphics.packetId = gIds[idx]
-            tick++
-        }
-
-        every { cfg.pollIntervalNanos } returns 10_000_000L
-        every { cfg.menuPollMs } returns 0L
-
-        val loop = AcPollLoop(shm, cfg)
-
-        val ch = Channel<PollResult>(capacity = Channel.UNLIMITED)
-        val job = launch { loop.start { ch.trySend(it) } }
-
         val results = mutableListOf<PollResult>()
-
-        withTimeout(1_000) {
-            while (results.count { it is PollResult.Frame } < 2) {
-                results += ch.receive()
+        val job: Job = backgroundScope.launch {
+            loop.start { result ->
+                results += result
+                if (results.count { it is PollResult.Frame } >= 1) {
+                    throw kotlinx.coroutines.CancellationException("done")
+                }
             }
         }
 
-        job.cancel()
-        job.join()
-
-        assertTrue(results.first() is PollResult.StateChanged)
-        val frames = results.filterIsInstance<PollResult.Frame>()
-        assertEquals(2, frames.size)
-    }
-
-    @Test
-    fun `menu exit debounce keeps state in menu until session resumes are confirmed`() {
-        val shm = mockk<AcSharedMemory>()
-        val cfg = mockk<AcPollConfig>(relaxed = true)
-
-        val physics = SPageFilePhysics()
-        val graphics = SPageFileGraphics()
-        val statics = SPageFileStatic()
-
-        every { shm.isAnyAttached() } returns true
-        every { shm.physics } returns physics
-        every { shm.graphics } returns graphics
-        every { shm.statics } returns statics
-
-        graphics.packetId = 100
-        graphics.status = 2
-        graphics.session = 0
-        graphics.iCurrentTime = 0
-        statics.smVersion[0] = '1'
-        statics.track.writeWString("imola")
-        statics.carModel.writeWString("car")
-        statics.numCars = 1
-        statics.numberOfSessions = 1
-        statics.sectorCount = 3
-
-        val loop = AcPollLoop(shm, cfg)
-        setField(loop, "currentState", GameConnectionState.IN_MENU)
-        setField(loop, "currentDataSource", DataSourceType.NATIVE)
-        setField(loop, "menuExitDebounceActive", true)
-
-        repeat(9) { index ->
-            physics.packetId = index + 1
-            graphics.packetId += 1
-
-            val rawDetection = invokeDetect(loop)
-            val stabilized = invokeStabilize(loop, rawDetection)
-
-            assertEquals(GameConnectionState.IN_MENU, getField(stabilized, "state"))
-            assertEquals(DataSourceType.NATIVE, getField(stabilized, "dataSource"))
+        try {
+            job.join()
+        } catch (_: Throwable) {
         }
+        delay(10)
 
-        physics.packetId += 1
-        graphics.packetId += 1
-
-        val rawDetection = invokeDetect(loop)
-        val stabilized = invokeStabilize(loop, rawDetection)
-
-        assertEquals(GameConnectionState.IN_SESSION, getField(stabilized, "state"))
-        assertEquals(DataSourceType.NATIVE, getField(stabilized, "dataSource"))
+        val frame = results.filterIsInstance<PollResult.Frame>().first()
+        assertIs<AceRawSnapshot>(frame.snapshot)
     }
 
-    @Test
-    fun `session detection is immediate when menu exit debounce is not active`() {
-        val shm = mockk<AcSharedMemory>()
-        val cfg = mockk<AcPollConfig>(relaxed = true)
+    private fun invokeDetect(loop: AcPollLoop): Any {
+        val method = AcPollLoop::class.java.getDeclaredMethod("detectGameState")
+        method.isAccessible = true
+        return method.invoke(loop)
+    }
 
-        val physics = SPageFilePhysics()
-        val graphics = SPageFileGraphics()
-        val statics = SPageFileStatic()
-
-        every { shm.isAnyAttached() } returns true
-        every { shm.physics } returns physics
-        every { shm.graphics } returns graphics
-        every { shm.statics } returns statics
-
-        graphics.packetId = 10
-        graphics.status = 2
-        graphics.session = 0
-        statics.smVersion[0] = '1'
-        statics.track.writeWString("imola")
-        statics.carModel.writeWString("car")
-        statics.numCars = 1
-        statics.numberOfSessions = 1
-        statics.sectorCount = 3
-
-        val loop = AcPollLoop(shm, cfg)
-        setField(loop, "currentState", GameConnectionState.IN_MENU)
-        setField(loop, "currentDataSource", DataSourceType.NATIVE)
-        setField(loop, "menuExitDebounceActive", false)
-
-        val rawDetection = invokeDetect(loop)
-        val stabilized = invokeStabilize(loop, rawDetection)
-
-        assertEquals(GameConnectionState.IN_SESSION, getField(stabilized, "state"))
-        assertEquals(DataSourceType.NATIVE, getField(stabilized, "dataSource"))
+    private fun getField(obj: Any, name: String): Any? {
+        val field = obj.javaClass.getDeclaredField(name)
+        field.isAccessible = true
+        return field.get(obj)
     }
 }

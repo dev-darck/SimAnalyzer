@@ -5,11 +5,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
-internal data class TrackMapLibraryHeaderUi(
-    val title: String,
-    val subtitle: String,
-    val layoutLabel: String? = null,
-)
+internal data class TrackMapLibraryHeaderUi(val title: String, val subtitle: String, val layoutLabel: String? = null)
 
 @Immutable
 internal data class TrackMapLibraryStatsUi(

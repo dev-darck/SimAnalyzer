@@ -23,8 +23,8 @@ public data class WheelFrame(
 
     // Dynamics
     val slip: Float? = null, // Wheel slip
-//    val slipRatio: Float? = null,
-//    val slipAngle: Float? = null, // radians
+    val slipRatio: Float? = null,
+    val slipAngle: Float? = null, // radians
     val load: Float? = null, // N (not used in ACC)
     val angularSpeed: Float? = null, // rad/s
 
@@ -44,4 +44,12 @@ public data class WheelFrame(
 
     // Tyre radius
     val tyreRadius: Float? = null, // meters
+    val normalizedPressure: Float? = null,
+    val normalizedTempLeft: Float? = null,
+    val normalizedTempMiddle: Float? = null,
+    val normalizedTempRight: Float? = null,
+    val normalizedBrakeTemp: Float? = null,
+    val normalizedCoreTemp: Float? = null,
+    val compoundFront: String? = null,
+    val compoundRear: String? = null,
 )

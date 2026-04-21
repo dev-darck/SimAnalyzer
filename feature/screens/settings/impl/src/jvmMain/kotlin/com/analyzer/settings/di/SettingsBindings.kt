@@ -1,8 +1,10 @@
 package com.analyzer.settings.di
 
 import androidx.lifecycle.ViewModel
+import com.analyzer.settings.data.lmu.DefaultLmuPluginSetupRepository
 import com.analyzer.settings.data.telemetry.SettingsRepository
 import com.analyzer.settings.data.telemetry.SettingsRepositoryImpl
+import com.analyzer.settings.domain.repository.LmuPluginSetupRepository
 import com.analyzer.settings.domain.usecase.SettingsUseCase
 import com.analyzer.settings.domain.usecase.SettingsUseCaseImpl
 import com.analyzer.settings.presentation.SettingsViewModel
@@ -20,6 +22,10 @@ interface SettingsBindings {
 
         @Provides
         private fun provideTelemetrySettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository = impl
+
+        @Provides
+        private fun provideLmuPluginSetupRepository(impl: DefaultLmuPluginSetupRepository): LmuPluginSetupRepository =
+            impl
 
         @Provides
         private fun provideSettingsUseCase(impl: SettingsUseCaseImpl): SettingsUseCase = impl

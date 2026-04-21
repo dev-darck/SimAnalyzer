@@ -35,35 +35,33 @@ internal class RecordedTelemetrySessionReaderImpl(
     private val ioDispatcher: CoroutineDispatcher,
 ) : RecordedTelemetrySessionReader {
 
-    override suspend fun readSession(
-        sessionId: Long,
-        forceRefresh: Boolean,
-    ): DecodedRecordedTelemetrySession? = withContext(ioDispatcher) {
-        val bundle = storage.findBundle(
-            sessionId = sessionId,
-            forceRefresh = forceRefresh,
-        ) ?: return@withContext null
-        val segmentLayout = buildSegmentLayout(bundle.locations)
-        val decodedFrames = mutableListOf<DecodedRecordedTelemetryFrame>()
+    override suspend fun readSession(sessionId: Long, forceRefresh: Boolean): DecodedRecordedTelemetrySession? =
+        withContext(ioDispatcher) {
+            val bundle = storage.findBundle(
+                sessionId = sessionId,
+                forceRefresh = forceRefresh,
+            ) ?: return@withContext null
+            val segmentLayout = buildSegmentLayout(bundle.locations)
+            val decodedFrames = mutableListOf<DecodedRecordedTelemetryFrame>()
 
-        bundle.locations.forEach { location ->
-            val segmentId = segmentLayout.segmentIdByLocationId[location.persistedSessionId]
-                ?: location.persistedSessionId
-            decodedFrames += readLocation(
-                location = location,
-                segmentId = segmentId,
+            bundle.locations.forEach { location ->
+                val segmentId = segmentLayout.segmentIdByLocationId[location.persistedSessionId]
+                    ?: location.persistedSessionId
+                decodedFrames += readLocation(
+                    location = location,
+                    segmentId = segmentId,
+                )
+            }
+
+            if (decodedFrames.isEmpty()) return@withContext null
+
+            DecodedRecordedTelemetrySession(
+                sessionId = sessionId,
+                metadata = bundle.metadata,
+                segments = segmentLayout.segments,
+                frames = decodedFrames.sortedBy(DecodedRecordedTelemetryFrame::timestampNs),
             )
         }
-
-        if (decodedFrames.isEmpty()) return@withContext null
-
-        DecodedRecordedTelemetrySession(
-            sessionId = sessionId,
-            metadata = bundle.metadata,
-            segments = segmentLayout.segments,
-            frames = decodedFrames.sortedBy(DecodedRecordedTelemetryFrame::timestampNs),
-        )
-    }
 
     private fun readLocation(
         location: RecordedTelemetrySessionLocation,
@@ -167,10 +165,7 @@ internal class RecordedTelemetrySessionReaderImpl(
         null
     }
 
-    private fun readIndexRecord(
-        input: DataInputStream,
-        recordSize: Int,
-    ): RecordedTelemetryIndexRecord? = try {
+    private fun readIndexRecord(input: DataInputStream, recordSize: Int): RecordedTelemetryIndexRecord? = try {
         val timestampNs = input.readLong()
         val frameId = input.readLong()
         val dataSourceId = input.readUnsignedByte()
@@ -213,4 +208,4 @@ internal class RecordedTelemetrySessionReaderImpl(
 
 private fun normalizeLapNumber(lapNumber: Int): Int = lapNumber.takeIf { it > 0 } ?: -1
 
-private fun normalizeSectorIndex(sectorIndex: Int): Int = sectorIndex.takeIf { it in 0..2 } ?: -1
+private fun normalizeSectorIndex(sectorIndex: Int): Int = sectorIndex.takeIf { it >= 0 } ?: -1

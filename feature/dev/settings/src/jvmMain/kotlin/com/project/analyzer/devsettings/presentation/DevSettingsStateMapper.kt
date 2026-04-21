@@ -17,16 +17,15 @@ internal class DevSettingsStateMapper {
         hud = mapHud(state.hud),
     )
 
-    private fun mapTelemetry(state: TelemetryInspectorDomainState): TelemetryInspectorState =
-        TelemetryInspectorState(
-            status = mapStatus(state.status),
-            sessionType = state.sessionType,
-            trackLabel = state.trackLabel,
-            carLabel = state.carLabel,
-            frameId = state.frameId,
-            lastUpdatedLabel = state.lastUpdatedLabel,
-            entries = state.entries.map(::mapEntry).toImmutableList(),
-        )
+    private fun mapTelemetry(state: TelemetryInspectorDomainState): TelemetryInspectorState = TelemetryInspectorState(
+        status = mapStatus(state.status),
+        sessionType = state.sessionType,
+        trackLabel = state.trackLabel,
+        carLabel = state.carLabel,
+        frameId = state.frameId,
+        lastUpdatedLabel = state.lastUpdatedLabel,
+        entries = state.entries.map(::mapEntry).toImmutableList(),
+    )
 
     private fun mapHud(state: DevHudDomainState): DevHudState = DevHudState(
         hudEnabled = state.hudEnabled,

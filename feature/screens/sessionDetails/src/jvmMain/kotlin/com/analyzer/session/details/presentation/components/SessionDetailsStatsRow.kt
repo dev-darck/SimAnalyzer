@@ -15,10 +15,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun SessionDetailsStatsRow(
-    stats: SessionDetailStatsUi,
-    modifier: Modifier = Modifier
-) {
+internal fun SessionDetailsStatsRow(stats: SessionDetailStatsUi, modifier: Modifier = Modifier) {
     StatsRow(
         stats = persistentListOf(
             StatItem(title = stringResource(Res.string.session_details_stats_best_lap), value = stats.bestLapLabel),

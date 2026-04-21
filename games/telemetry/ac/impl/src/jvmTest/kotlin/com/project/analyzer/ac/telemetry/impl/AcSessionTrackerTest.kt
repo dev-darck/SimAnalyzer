@@ -1,8 +1,8 @@
 package com.project.analyzer.ac.telemetry.impl
 
-import com.project.analyzer.ac.telemetry.impl.internal.AcSessionRestartHint
-import com.project.analyzer.ac.telemetry.impl.internal.DataSourceType
-import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
+import com.project.analyzer.ac.telemetry.impl.internal.poll.DataSourceType
+import com.project.analyzer.ac.telemetry.impl.internal.poll.GameConnectionState
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcSessionRestartHint
 import com.project.analyzer.telemetry.api.contract.LapValidity
 import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionType

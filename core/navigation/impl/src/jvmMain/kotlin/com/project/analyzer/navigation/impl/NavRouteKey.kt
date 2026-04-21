@@ -7,7 +7,4 @@ import kotlinx.serialization.Serializable
 
 @Immutable
 @Serializable
-internal data class NavRouteKey(
-    val route: Route,
-    val entryId: String,
-) : NavKey
+internal data class NavRouteKey(val route: Route, val entryId: String) : NavKey

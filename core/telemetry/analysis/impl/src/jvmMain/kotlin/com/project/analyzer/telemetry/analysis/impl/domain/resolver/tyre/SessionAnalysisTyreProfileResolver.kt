@@ -29,7 +29,7 @@ class SessionAnalysisTyreProfileResolver {
         return when (vehicleClass) {
             SessionAnalysisVehicleClass.F1,
             SessionAnalysisVehicleClass.Formula,
-                -> formulaProfile(compoundFamily, tyreCompoundLabel)
+            -> formulaProfile(compoundFamily, tyreCompoundLabel)
 
             SessionAnalysisVehicleClass.GT3 -> gt3Profile(compoundFamily, tyreCompoundLabel)
 
@@ -44,7 +44,7 @@ class SessionAnalysisTyreProfileResolver {
             SessionAnalysisVehicleClass.Prototype,
             SessionAnalysisVehicleClass.LMP2,
             SessionAnalysisVehicleClass.LMH,
-                -> prototypeProfile(compoundFamily, tyreCompoundLabel, vehicleClass)
+            -> prototypeProfile(compoundFamily, tyreCompoundLabel, vehicleClass)
 
             SessionAnalysisVehicleClass.Unknown -> genericProfile(compoundFamily, tyreCompoundLabel)
         }

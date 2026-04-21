@@ -1,8 +1,9 @@
 package com.project.analyzer.ac.telemetry.impl.recording.analysis
 
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileGraphics
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFileStatic
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFileGraphics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFilePhysics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFileStatic
+import com.project.analyzer.telemetry.api.contract.SessionType
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetryPayload
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetryPayloadDecoder
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetryTyreSnapshot
@@ -40,8 +41,19 @@ internal class AcRecordedPayloadDecoder : RecordedTelemetryPayloadDecoder {
             carModel = statics.carModel.toKString(),
             carLabel = statics.carModel.toKString(),
             trackLabel = statics.track.toKString(),
+            trackLayoutLabel = statics.trackConfiguration.toKString().ifBlank { null },
+            sessionTypeLabel = SessionType.fromAcValue(graphics.session).name.takeIf { it != SessionType.UNKNOWN.name },
             tyreCompoundLabel = graphics.tyreCompound.toKString().ifBlank { statics.dryTyresName.toKString() },
             isRainTyres = graphics.rainTyres.toBoolean(),
+            lapNumber = graphics.completedLaps.takeIf { it >= 0 }?.plus(1),
+            completedLaps = graphics.completedLaps.takeIf { it >= 0 },
+            currentLapTimeMs = graphics.iCurrentTime.takeIf { it >= 0 },
+            lastLapTimeMs = graphics.iLastTime.takeIf { it > 0 },
+            bestLapTimeMs = graphics.iBestTime.takeIf { it > 0 },
+            estimatedLapTimeMs = graphics.iEstimatedLapTime.takeIf { it > 0 },
+            currentSectorIndex = graphics.currentSectorIndex.takeIf { it >= 0 },
+            lastSectorTimeMs = graphics.lastSectorTime.takeIf { it > 0 },
+            isLapValid = graphics.isValidLap.toBoolean(),
             speedKmh = physics.speedKmh.takeIf(Float::isFinite),
             gear = physics.gear.takeIf { it >= -1 },
             rpm = physics.rpm.toFloat().takeIf(Float::isFinite)?.takeIf { it >= 0f },
@@ -52,6 +64,13 @@ internal class AcRecordedPayloadDecoder : RecordedTelemetryPayloadDecoder {
             yawRateRad = physics.localAngularVel.getOrNull(1)?.takeIf(Float::isFinite),
             fuelLiters = physics.fuel.takeIf(Float::isFinite)?.takeIf { it >= 0f },
             fuelCapacityLiters = statics.maxFuel.takeIf(Float::isFinite)?.takeIf { it > 0f },
+            fuelPerLapLiters = graphics.fuelXLap.takeIf { it.isFinite() && it > 0f },
+            airTempC = physics.airTemp.takeIf(Float::isFinite),
+            roadTempC = physics.roadTemp.takeIf(Float::isFinite),
+            brakeBias = physics.brakeBias.takeIf(Float::isFinite),
+            tcLevel = graphics.tc.takeIf { it >= 0 },
+            absLevel = graphics.abs.takeIf { it >= 0 },
+            pitLimiterOn = physics.pitLimiterOn.toBoolean(),
             tyreFl = physics.toTyreSnapshot(0),
             tyreFr = physics.toTyreSnapshot(1),
             tyreRl = physics.toTyreSnapshot(2),

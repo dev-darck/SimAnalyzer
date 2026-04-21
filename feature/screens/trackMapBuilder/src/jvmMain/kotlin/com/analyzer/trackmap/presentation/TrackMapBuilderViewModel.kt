@@ -11,11 +11,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 
 @Inject
-internal class TrackMapBuilderViewModel(
-    private val controller: TrackMapCaptureController,
-) : LeakAwareMviViewModel<TrackMapBuilderIntent, TrackMapBuilderUiState>(
-    controller.state.value.toTrackMapBuilderUiState(),
-) {
+internal class TrackMapBuilderViewModel(private val controller: TrackMapCaptureController) :
+    LeakAwareMviViewModel<TrackMapBuilderIntent, TrackMapBuilderUiState>(
+        controller.state.value.toTrackMapBuilderUiState(),
+    ) {
 
     init {
         controller.state

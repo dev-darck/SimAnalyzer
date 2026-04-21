@@ -42,6 +42,7 @@ import com.project.analyzer.feature.screens.settings.impl.Res.Res
 import com.project.analyzer.feature.screens.settings.impl.Res.game_assetto_corsa
 import com.project.analyzer.feature.screens.settings.impl.Res.game_assetto_corsa_competizione
 import com.project.analyzer.feature.screens.settings.impl.Res.game_assetto_corsa_evo
+import com.project.analyzer.feature.screens.settings.impl.Res.game_le_mans_ultimate
 import com.project.analyzer.feature.screens.settings.impl.Res.game_selection_auto_detect
 import com.project.analyzer.feature.screens.settings.impl.Res.game_selection_auto_subtitle
 import com.project.analyzer.feature.screens.settings.impl.Res.game_selection_description
@@ -258,6 +259,7 @@ private fun selectionPresentation(selection: GameSelection): GameSelectionPresen
             GameId.AC -> stringResource(Res.string.game_assetto_corsa)
             GameId.ACC -> stringResource(Res.string.game_assetto_corsa_competizione)
             GameId.ACE -> stringResource(Res.string.game_assetto_corsa_evo)
+            GameId.LMU -> stringResource(Res.string.game_le_mans_ultimate)
         },
         subtitle = stringResource(Res.string.game_selection_manual_subtitle),
         tag = stringResource(Res.string.game_selection_tag_manual),

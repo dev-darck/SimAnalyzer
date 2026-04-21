@@ -9,9 +9,7 @@ import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import kotlin.math.sqrt
 
-internal class TrackMapLivePositionProjector(
-    private val item: TrackMapLibraryItem,
-) {
+internal class TrackMapLivePositionProjector(private val item: TrackMapLibraryItem) {
 
     fun buildCandidates(
         frame: TelemetryFrame,
@@ -110,11 +108,7 @@ internal class TrackMapLivePositionProjector(
         return trackDistance + continuityPenalty
     }
 
-    private fun acceptProjectedPosition(
-        projectedPosition: Vec2,
-        lastVisiblePosition: Vec2?,
-        speedKmh: Float,
-    ): Vec2? {
+    private fun acceptProjectedPosition(projectedPosition: Vec2, lastVisiblePosition: Vec2?, speedKmh: Float): Vec2? {
         val previous = lastVisiblePosition ?: return projectedPosition
         val jumpDistance = projectedPosition.distanceTo(previous)
         val maxAllowedJump = ((speedKmh.coerceAtLeast(20f) / 3.6f) * 0.05f * 4f + 20f)
@@ -207,12 +201,7 @@ internal class TrackMapLivePositionProjector(
 
     private fun Vec3.toTrackMapVec2(): Vec2? = toVec2XZIfValid(maxAbsCoordinate = MAX_VALID_COORDINATE)
 
-    private data class WheelPositions(
-        val fl: Vec2?,
-        val fr: Vec2?,
-        val rl: Vec2?,
-        val rr: Vec2?,
-    ) {
+    private data class WheelPositions(val fl: Vec2?, val fr: Vec2?, val rl: Vec2?, val rr: Vec2?) {
 
         val frontAxleCenter: Vec2?
             get() = axleCenter(fl, fr)

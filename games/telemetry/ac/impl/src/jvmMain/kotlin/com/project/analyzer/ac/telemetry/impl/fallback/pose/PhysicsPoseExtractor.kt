@@ -1,7 +1,7 @@
 package com.project.analyzer.ac.telemetry.impl.fallback.pose
 
 import com.project.analyzer.ac.telemetry.impl.fallback.pose.model.CarPose
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFilePhysics
 import com.project.analyzer.math.MathEps
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint

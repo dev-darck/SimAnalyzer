@@ -10,9 +10,8 @@ import dev.zacsweers.metro.SingleIn
 @Inject
 @ContributesIntoSet(AppScope::class)
 @SingleIn(AppScope::class)
-class TelemetryRecordingLifecycleTask(
-    private val telemetryRecordingController: TelemetryRecordingController,
-) : AppLifecycleTask {
+class TelemetryRecordingLifecycleTask(private val telemetryRecordingController: TelemetryRecordingController) :
+    AppLifecycleTask {
 
     override val startOrder: Int = 30
     override val stopOrder: Int = 10

@@ -1,13 +1,16 @@
 package com.project.analyzer.ac.telemetry.impl
 
 import com.project.analyzer.ac.telemetry.impl.fallback.AcEvoFallbackShmPatcher
-import com.project.analyzer.ac.telemetry.impl.internal.AcPollLoop
-import com.project.analyzer.ac.telemetry.impl.internal.AcPollPipeline
-import com.project.analyzer.ac.telemetry.impl.internal.AcRawSnapshot
-import com.project.analyzer.ac.telemetry.impl.internal.DataSourceType
-import com.project.analyzer.ac.telemetry.impl.internal.GameConnectionState
-import com.project.analyzer.ac.telemetry.impl.internal.PollResult
-import com.project.analyzer.ac.telemetry.impl.internal.mapper.AcMapper
+import com.project.analyzer.ac.telemetry.impl.internal.mapper.ac.AcMapper
+import com.project.analyzer.ac.telemetry.impl.internal.mapper.ace.AceMapper
+import com.project.analyzer.ac.telemetry.impl.internal.poll.AcPollLoop
+import com.project.analyzer.ac.telemetry.impl.internal.poll.AcPollPipeline
+import com.project.analyzer.ac.telemetry.impl.internal.poll.DataSourceType
+import com.project.analyzer.ac.telemetry.impl.internal.poll.GameConnectionState
+import com.project.analyzer.ac.telemetry.impl.internal.poll.PollResult
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcLegacyRawSnapshot
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AcPollSnapshot
+import com.project.analyzer.ac.telemetry.impl.internal.poll.snapshot.AceRawSnapshot
 import com.project.analyzer.ac.telemetry.impl.recording.AcTelemetryRecordingEmitter
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.leak.api.LeakCanaryRuntime
@@ -42,7 +45,8 @@ import kotlinx.coroutines.launch
 class AcTelemetryLifecycle internal constructor(
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
-    private val mapper: AcMapper,
+    private val acMapper: AcMapper,
+    private val aceMapper: AceMapper,
     private val recordingEmitter: AcTelemetryRecordingEmitter,
     private val pollPipeline: AcPollPipeline,
 ) : TelemetryLifecycle {
@@ -72,11 +76,13 @@ class AcTelemetryLifecycle internal constructor(
     internal constructor(
         pollLoop: AcPollLoop,
         fallback: AcEvoFallbackShmPatcher,
-        mapper: AcMapper,
+        acMapper: AcMapper,
+        aceMapper: AceMapper,
         recordingEmitter: AcTelemetryRecordingEmitter,
         ioDispatcher: CoroutineDispatcher,
     ) : this(
-        mapper = mapper,
+        acMapper = acMapper,
+        aceMapper = aceMapper,
         recordingEmitter = recordingEmitter,
         ioDispatcher = ioDispatcher,
         pollPipeline = AcPollPipeline(
@@ -138,7 +144,7 @@ class AcTelemetryLifecycle internal constructor(
                     val snapshot = result.snapshot
                     runCatching {
                         if (connectionState == GameConnectionState.IN_SESSION) {
-                            val rawFrame = mapper.map(snapshot)
+                            val rawFrame = mapSnapshot(snapshot)
                             val frame = processFrame(snapshot, rawFrame, connectionState) ?: rawFrame
                             _frames.tryEmit(frame)
                         }
@@ -164,7 +170,7 @@ class AcTelemetryLifecycle internal constructor(
         if (useLimitedParallelism) ioDispatcher.limitedParallelism(1, "AcTelemetryLifecycle") else ioDispatcher
 
     private suspend fun processFrame(
-        snapshot: AcRawSnapshot,
+        snapshot: AcPollSnapshot,
         frame: TelemetryFrame,
         state: GameConnectionState,
     ): TelemetryFrame? {
@@ -177,7 +183,7 @@ class AcTelemetryLifecycle internal constructor(
         return result.frame
     }
 
-    private suspend fun emitSampleIfNeeded(snapshot: AcRawSnapshot, result: AcLifecycleFrameResult) {
+    private suspend fun emitSampleIfNeeded(snapshot: AcPollSnapshot, result: AcLifecycleFrameResult) {
         val sampleSessionId = result.sampleSessionId ?: return
         recordingEmitter.emitSample(
             sessionId = sampleSessionId,
@@ -190,5 +196,10 @@ class AcTelemetryLifecycle internal constructor(
     private fun resetState() {
         lastDataSource = DataSourceType.NATIVE
         sessionTracker.resetAll()
+    }
+
+    private suspend fun mapSnapshot(snapshot: AcPollSnapshot): TelemetryFrame = when (snapshot) {
+        is AcLegacyRawSnapshot -> acMapper.map(snapshot)
+        is AceRawSnapshot -> aceMapper.map(snapshot)
     }
 }

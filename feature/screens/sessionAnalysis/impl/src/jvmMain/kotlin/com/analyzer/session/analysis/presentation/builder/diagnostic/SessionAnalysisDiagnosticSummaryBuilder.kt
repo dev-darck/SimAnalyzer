@@ -244,12 +244,12 @@ private fun SessionAnalysisHighlightUi.isSetupRelevant(): Boolean = when (catego
     SessionAnalysisHighlightCategory.BrakeBalance,
     SessionAnalysisHighlightCategory.AeroBalance,
     SessionAnalysisHighlightCategory.DamperIssue,
-        -> diagnosisSource != SessionAnalysisDiagnosisSource.DrivingStyle
+    -> diagnosisSource != SessionAnalysisDiagnosisSource.DrivingStyle
 
     SessionAnalysisHighlightCategory.WheelLockup,
     SessionAnalysisHighlightCategory.Understeer,
     SessionAnalysisHighlightCategory.Oversteer,
-        -> diagnosisSource == SessionAnalysisDiagnosisSource.Mixed ||
+    -> diagnosisSource == SessionAnalysisDiagnosisSource.Mixed ||
         diagnosisSource == SessionAnalysisDiagnosisSource.CarSetup
 
     else -> diagnosisSource == SessionAnalysisDiagnosisSource.CarSetup
@@ -380,7 +380,7 @@ private fun SessionAnalysisHighlightUi.toSetupIssueTitle(affectedTurns: List<Int
     SessionAnalysisHighlightCategory.TyreTempImbalance,
     SessionAnalysisHighlightCategory.DamperIssue,
     SessionAnalysisHighlightCategory.WheelLockup,
-        -> title
+    -> title
 
     else -> title
 }
@@ -470,7 +470,7 @@ private fun SessionAnalysisHighlightCategory.rootCauseRank(): Int = when (this) 
     SessionAnalysisHighlightCategory.WheelLockup,
     SessionAnalysisHighlightCategory.WheelSpin,
     SessionAnalysisHighlightCategory.InconsistentLine,
-        -> 4
+    -> 4
 
     SessionAnalysisHighlightCategory.Understeer,
     SessionAnalysisHighlightCategory.Oversteer,
@@ -478,7 +478,7 @@ private fun SessionAnalysisHighlightCategory.rootCauseRank(): Int = when (this) 
     SessionAnalysisHighlightCategory.ThrottleCommitment,
     SessionAnalysisHighlightCategory.TyreOverheat,
     SessionAnalysisHighlightCategory.TyreCold,
-        -> 3
+    -> 3
 
     SessionAnalysisHighlightCategory.TimeLoss -> 1
 

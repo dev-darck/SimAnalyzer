@@ -80,15 +80,14 @@ internal fun sessionDetailFilterLabel(kind: SessionDetailFilterKind): String = w
 @Composable
 private fun sessionDetailFilterOptionLabel(
     kind: SessionDetailFilterKind,
-    option: SessionDetailFilterOptionUi
-): String =
-    when {
-        kind == SessionDetailFilterKind.Sort -> sessionDetailSortLabel(option.id)
-        kind == SessionDetailFilterKind.Show -> sessionDetailShowLabel(option.id)
-        option.id == SESSION_DETAIL_TYPE_ALL -> stringResource(Res.string.session_details_filter_all_session_types)
-        !option.label.isNullOrBlank() -> option.label
-        else -> option.id
-    }
+    option: SessionDetailFilterOptionUi,
+): String = when {
+    kind == SessionDetailFilterKind.Sort -> sessionDetailSortLabel(option.id)
+    kind == SessionDetailFilterKind.Show -> sessionDetailShowLabel(option.id)
+    option.id == SESSION_DETAIL_TYPE_ALL -> stringResource(Res.string.session_details_filter_all_session_types)
+    !option.label.isNullOrBlank() -> option.label
+    else -> option.id
+}
 
 @Composable
 internal fun sessionDetailSortLabel(sortId: String): String = when (sortId) {

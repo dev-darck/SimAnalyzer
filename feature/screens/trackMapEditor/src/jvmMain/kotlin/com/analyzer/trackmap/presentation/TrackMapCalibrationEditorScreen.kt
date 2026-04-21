@@ -43,12 +43,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 private val WideLayoutMinWidth = 1120.dp
 
 @Composable
-fun TrackMapCalibrationEditorScreen(
-    gameId: String,
-    trackId: String,
-    layoutId: String?,
-    onBack: () -> Unit
-) {
+fun TrackMapCalibrationEditorScreen(gameId: String, trackId: String, layoutId: String?, onBack: () -> Unit) {
     val material = SimAnalyzerTheme.material
     val mapKey = remember(gameId, trackId, layoutId) {
         buildTrackMapCalibrationEditorMapKey(

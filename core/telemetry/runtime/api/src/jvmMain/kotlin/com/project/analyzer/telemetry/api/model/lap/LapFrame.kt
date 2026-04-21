@@ -9,6 +9,9 @@ public data class LapFrame(
     val currentLapTimeMs: Int? = null,
     val lastLapTimeMs: Int? = null,
     val bestLapTimeMs: Int? = null,
+    val currentLapTimeLabel: String? = null,
+    val lastLapTimeLabel: String? = null,
+    val bestLapTimeLabel: String? = null,
 
     val sectorCount: Int? = null,
     val currentSectorIndex: Int? = null, // 0..sectorCount-1
@@ -18,6 +21,11 @@ public data class LapFrame(
     val deltaLapTimeMs: Int? = null,
     val isDeltaPositive: Boolean? = null,
     val estimatedLapTimeMs: Int? = null,
+    val deltaLapTimeLabel: String? = null,
+    val deltaLastLapTimeLabel: String? = null,
+    val isDeltaLastPositive: Boolean? = null,
+    val estimatedLapTimeLabel: String? = null,
+    val totalTimeLabel: String? = null,
 
     // Split
     val splitTimeMs: Int? = null,

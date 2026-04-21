@@ -17,6 +17,7 @@ public object TestTags {
     public val CrashScreen: UiTestTag = uiTestTagOf("crash-screen")
     public val DevHudSettings: UiTestTag = uiTestTagOf("dev-hud-settings")
     public val DevSettingsEntry: UiTestTag = uiTestTagOf("settings", "dev-entry")
+    public val CloseBehaviorSettings: UiTestTag = uiTestTagOf("settings", "close-behavior")
     public val Dropdown: UiTestTag = uiTestTagOf("dropdown")
     public val DraggableHud: UiTestTag = uiTestTagOf("draggable-hud")
     public val FileChooser: UiTestTag = uiTestTagOf("file-chooser")

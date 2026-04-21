@@ -257,13 +257,7 @@ private fun WheelWideTile(
 }
 
 @Composable
-private fun InfoBlock(
-    label: String,
-    value: String,
-    labelColor: Color,
-    valueColor: Color,
-    tooltip: String
-) {
+private fun InfoBlock(label: String, value: String, labelColor: Color, valueColor: Color, tooltip: String) {
     Tooltip(
         tooltip = tooltip,
     ) {

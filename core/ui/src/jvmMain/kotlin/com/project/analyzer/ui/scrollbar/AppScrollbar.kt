@@ -65,8 +65,7 @@ public class AppScrollbarAdapter(adapter: ScrollbarAdapter) {
 
     internal val delegate: ScrollbarAdapter = adapter
 
-    override fun equals(other: Any?): Boolean =
-        other is AppScrollbarAdapter && delegate === other.delegate
+    override fun equals(other: Any?): Boolean = other is AppScrollbarAdapter && delegate === other.delegate
 
     override fun hashCode(): Int = System.identityHashCode(delegate)
 }
@@ -93,10 +92,7 @@ public fun rememberAppScrollbarStyle(): ScrollbarStyle {
 }
 
 @Composable
-public fun AppVerticalScrollbar(
-    adapter: AppScrollbarAdapter,
-    modifier: Modifier = Modifier,
-) {
+public fun AppVerticalScrollbar(adapter: AppScrollbarAdapter, modifier: Modifier = Modifier) {
     val uiState = rememberAppScrollbarUiState(
         adapter = adapter,
         animationLabel = "appVerticalScrollbarAlpha",
@@ -117,10 +113,7 @@ public fun AppVerticalScrollbar(
 }
 
 @Composable
-public fun AppHorizontalScrollbar(
-    adapter: AppScrollbarAdapter,
-    modifier: Modifier = Modifier,
-) {
+public fun AppHorizontalScrollbar(adapter: AppScrollbarAdapter, modifier: Modifier = Modifier) {
     val uiState = rememberAppScrollbarUiState(
         adapter = adapter,
         animationLabel = "appHorizontalScrollbarAlpha",
@@ -141,10 +134,7 @@ public fun AppHorizontalScrollbar(
 }
 
 @Composable
-private fun rememberAppScrollbarUiState(
-    adapter: AppScrollbarAdapter,
-    animationLabel: String,
-): AppScrollbarUiState {
+private fun rememberAppScrollbarUiState(adapter: AppScrollbarAdapter, animationLabel: String): AppScrollbarUiState {
     val interactionSource = remember { MutableInteractionSource() }
     val isEdgeHovered by interactionSource.collectIsHoveredAsState()
     val isScrollRevealActive = rememberScrollRevealState(adapter)
@@ -175,9 +165,7 @@ private fun Modifier.appScrollbarChrome(interactionSource: MutableInteractionSou
         }
 
 @Composable
-private fun rememberScrollRevealState(
-    adapter: AppScrollbarAdapter,
-): Boolean {
+private fun rememberScrollRevealState(adapter: AppScrollbarAdapter): Boolean {
     var isVisible by remember(adapter) { mutableStateOf(false) }
 
     LaunchedEffect(adapter) {

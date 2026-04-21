@@ -4,7 +4,6 @@ package com.analyzer.settings.presentation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -22,8 +21,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.settings.presentation.components.AppearanceBlock
+import com.analyzer.settings.presentation.components.CloseBehaviorBlock
 import com.analyzer.settings.presentation.components.DevSettingsBlock
 import com.analyzer.settings.presentation.components.HudSetupBlock
+import com.analyzer.settings.presentation.components.LmuPluginSetupDialog
 import com.analyzer.settings.presentation.components.TelemetryAcquisitionBlock
 import com.analyzer.settings.presentation.components.TelemetryGameSelectionBlock
 import com.project.analyzer.chooser.FileChooserDialog
@@ -111,16 +112,22 @@ private fun Screen(
         ) {
             item("AppearanceBlock") {
                 AppearanceBlock(
-                    modifier = Modifier.fillMaxHeight(),
                     selectedTheme = state.themeMode,
                     onThemeSelected = { mode ->
                         dispatch(SettingsIntent.ChangeTheme(mode))
                     },
                 )
             }
+            item("CloseBehaviorBlock") {
+                CloseBehaviorBlock(
+                    selectedBehavior = state.appCloseBehavior,
+                    onBehaviorSelected = { behavior ->
+                        dispatch(SettingsIntent.ChangeAppCloseBehavior(behavior))
+                    },
+                )
+            }
             item("HudSetupBlock") {
                 HudSetupBlock(
-                    modifier = Modifier.fillMaxHeight(),
                     isHudEnabled = state.hudEnabled,
                     onHudEnabledChange = {
                         dispatch(SettingsIntent.ChangeHudEnabled(it))
@@ -130,9 +137,32 @@ private fun Screen(
                     },
                 )
             }
+            if (BuildConfig.IS_DEBUG) {
+                item("DevSettingsBlock") {
+                    DevSettingsBlock(
+                        onOpen = { navigateTo(Route.SettingsRoot.DevSettings) },
+                    )
+                }
+                item("TelemetryGameSelectionBlock") {
+                    TelemetryGameSelectionBlock(
+                        selectionUi = state.gameSelectionUi,
+                        onSelectionChange = { selection ->
+                            dispatch(SettingsIntent.ChangeGameSelection(selection))
+                        },
+                    )
+                }
+            } else {
+                item("TelemetryGameSelectionBlock") {
+                    TelemetryGameSelectionBlock(
+                        selectionUi = state.gameSelectionUi,
+                        onSelectionChange = { selection ->
+                            dispatch(SettingsIntent.ChangeGameSelection(selection))
+                        },
+                    )
+                }
+            }
             item("TelemetryAcquisitionBlock") {
                 TelemetryAcquisitionBlock(
-                    modifier = Modifier.fillMaxHeight(),
                     samplingRateHz = state.samplingRateHz,
                     storageLocation = state.storageLocation,
                     storageLocationError = state.storageLocationError,
@@ -160,23 +190,6 @@ private fun Screen(
                     },
                 )
             }
-            item("TelemetryGameSelectionBlock") {
-                TelemetryGameSelectionBlock(
-                    modifier = Modifier.fillMaxHeight(),
-                    selectionUi = state.gameSelectionUi,
-                    onSelectionChange = { selection ->
-                        dispatch(SettingsIntent.ChangeGameSelection(selection))
-                    },
-                )
-            }
-            if (BuildConfig.IS_DEBUG) {
-                item("DevSettingsBlock") {
-                    DevSettingsBlock(
-                        modifier = Modifier.fillMaxHeight(),
-                        onOpen = { navigateTo(Route.SettingsRoot.DevSettings) },
-                    )
-                }
-            }
         }
 
         InfoBarSnackbarHost(
@@ -189,6 +202,13 @@ private fun Screen(
     }
 
     FileChooserDialog(state = directoryChooserState)
+    state.lmuPluginDialog?.let { dialogState ->
+        LmuPluginSetupDialog(
+            state = dialogState,
+            onDismiss = { dispatch(SettingsIntent.DismissLmuPluginDialog) },
+            onConfirmInstall = { dispatch(SettingsIntent.ConfirmLmuPluginInstall) },
+        )
+    }
 }
 
 @Preview

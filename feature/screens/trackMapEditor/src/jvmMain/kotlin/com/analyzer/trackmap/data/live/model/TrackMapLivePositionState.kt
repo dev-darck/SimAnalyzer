@@ -9,11 +9,7 @@ internal data class TrackMapLivePositionState(
     val lastMismatchAtNs: Long = 0L,
 ) {
 
-    fun matched(
-        position: Vec2,
-        source: TrackMapLivePositionSource,
-        nowNs: Long,
-    ): TrackMapLivePositionState = copy(
+    fun matched(position: Vec2, source: TrackMapLivePositionSource, nowNs: Long): TrackMapLivePositionState = copy(
         position = position,
         source = source,
         lastMatchedAtNs = nowNs,

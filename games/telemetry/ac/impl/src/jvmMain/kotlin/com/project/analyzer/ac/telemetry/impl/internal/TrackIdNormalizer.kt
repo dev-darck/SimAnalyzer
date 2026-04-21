@@ -242,10 +242,7 @@ internal object TrackIdNormalizer {
         "main_menu",
     )
 
-    private data class NormalizedTrackIdentity(
-        val trackToken: String,
-        val layoutToken: String?,
-    )
+    private data class NormalizedTrackIdentity(val trackToken: String, val layoutToken: String?)
 
     private fun layoutSuffixVariants(layout: String): List<String> =
         LAYOUT_VARIANTS_BY_CANONICAL[layout].orEmpty().ifEmpty { listOf(layout) }

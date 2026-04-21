@@ -2,7 +2,6 @@ package com.project.analyzer.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Info
@@ -27,10 +28,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.project.analyzer.theme.SimAnalyzerTheme
+import com.project.analyzer.ui.modifier.onClick
 
 @Composable
 public fun InfoDialog(
@@ -49,6 +53,10 @@ public fun InfoDialog(
     onConfirmClick: (() -> Unit)? = null,
     dismissButtonVariant: SimAnalyzerButtonVariant = SimAnalyzerButtonVariant.Secondary,
     confirmButtonVariant: SimAnalyzerButtonVariant = SimAnalyzerButtonVariant.Primary,
+    dismissButtonWidth: Dp? = null,
+    confirmButtonWidth: Dp? = null,
+    buttonHeight: Dp = 62.dp,
+    buttonSize: SimAnalyzerButtonSize = SimAnalyzerButtonSize.Default,
     properties: DialogProperties = DialogProperties(
         dismissOnBackPress = true,
         dismissOnClickOutside = true,
@@ -65,8 +73,6 @@ public fun InfoDialog(
     ) {
         Column(
             modifier = modifier
-                .fillMaxWidth()
-                .widthIn(max = 780.dp)
                 .clip(SimAnalyzerTheme.corners.panel)
                 .background(containerColor)
                 .border(
@@ -123,9 +129,18 @@ public fun InfoDialog(
                             text = dismissButtonText,
                             onClick = { onDismissClick.invoke() },
                             modifier = Modifier
-                                .weight(1f)
-                                .height(62.dp),
+                                .then(
+                                    if (dismissButtonWidth != null) {
+                                        Modifier.width(
+                                            dismissButtonWidth,
+                                        )
+                                    } else {
+                                        Modifier.weight(1f)
+                                    },
+                                )
+                                .height(buttonHeight),
                             variant = dismissButtonVariant,
+                            size = buttonSize,
                         )
                     }
                     if (hasConfirmButton) {
@@ -133,9 +148,18 @@ public fun InfoDialog(
                             text = confirmButtonText,
                             onClick = { onConfirmClick.invoke() },
                             modifier = Modifier
-                                .weight(1f)
-                                .height(62.dp),
+                                .then(
+                                    if (confirmButtonWidth != null) {
+                                        Modifier.width(
+                                            confirmButtonWidth,
+                                        )
+                                    } else {
+                                        Modifier.weight(1f)
+                                    },
+                                )
+                                .height(buttonHeight),
                             variant = confirmButtonVariant,
+                            size = buttonSize,
                         )
                     }
                 }
@@ -145,35 +169,36 @@ public fun InfoDialog(
 }
 
 @Composable
-private fun InfoDialogCheckboxRow(
-    text: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-) {
+private fun InfoDialogCheckboxRow(text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    val checkboxTextStyle = SimAnalyzerTheme.typography.labelLarge.copy(
+        lineHeight = 16.sp,
+    )
+    val checkboxShape = RoundedCornerShape(4.dp)
+
     Row(
         modifier = Modifier
-            .fillMaxWidth()
+            .wrapContentWidth()
             .clip(SimAnalyzerTheme.corners.item)
-            .clickable { onCheckedChange(!checked) }
-            .padding(vertical = 2.dp),
+            .onClick { onCheckedChange(!checked) }
+            .padding(vertical = 1.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
-                .size(30.dp)
-                .clip(SimAnalyzerTheme.corners.control)
+                .size(16.dp)
+                .clip(checkboxShape)
                 .background(
                     if (checked) SimAnalyzerTheme.material.primary.copy(alpha = 0.16f) else Color.Transparent,
                 )
                 .border(
-                    width = 1.5.dp,
+                    width = 1.dp,
                     color = if (checked) {
                         SimAnalyzerTheme.material.primary
                     } else {
                         SimAnalyzerTheme.chrome.borderInteractive
                     },
-                    shape = SimAnalyzerTheme.corners.control,
+                    shape = checkboxShape,
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -182,7 +207,7 @@ private fun InfoDialogCheckboxRow(
                     imageVector = Icons.Filled.Check,
                     contentDescription = null,
                     tint = SimAnalyzerTheme.material.primary,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }
@@ -190,38 +215,27 @@ private fun InfoDialogCheckboxRow(
         Text(
             text = text,
             color = SimAnalyzerTheme.material.onSurface,
-            style = SimAnalyzerTheme.typography.titleMedium,
-            maxLines = 2,
+            style = checkboxTextStyle,
+            maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
 @Composable
-private fun InfoDialogSupportingRow(
-    text: String,
-    icon: ImageVector?,
-) {
+private fun InfoDialogSupportingRow(text: String, icon: ImageVector?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .clip(SimAnalyzerTheme.corners.badge)
-                .background(SimAnalyzerTheme.chrome.fillMuted),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.78f),
-                    modifier = Modifier.size(19.dp),
-                )
-            }
+        if (icon != null) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = SimAnalyzerTheme.material.onSurfaceVariant.copy(alpha = 0.78f),
+                modifier = Modifier.size(16.dp),
+            )
         }
 
         Text(

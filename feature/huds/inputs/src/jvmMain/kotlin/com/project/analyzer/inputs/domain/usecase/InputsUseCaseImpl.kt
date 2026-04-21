@@ -11,9 +11,9 @@ import com.project.analyzer.utils.ext.orZero
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlin.math.abs
 import kotlin.math.max
@@ -27,73 +27,115 @@ internal class InputsUseCaseImpl(
 ) : InputsUseCase {
     override val settings: Flow<InputHudSettings> = settingsRepo.data
 
-    private val lifecycleResults: Flow<InputsResult>
-        get() = telemetry.events
-            .mapNotNull { it.toInputsLifecycleResultOrNull() }
-            .distinctUntilChanged()
-
-    private val samples: Flow<InputsResult>
-        get() = flow {
+    override val results: Flow<InputsResult>
+        get() = channelFlow {
+            var mode = Mode.NONE
+            var activeSessionId = 0L
             var lastEmittedTsNs = 0L
             var lastThrottle = 0f
             var lastBrake = 0f
             var lastClutch = 0f
             var lastSteer = 0f
 
-            telemetry.frames.collect { frame ->
-                val controls = frame.car?.controls
-                val throttle = controls?.throttle.orZero()
-                val brake = controls?.brake.orZero()
-                val clutch = controls?.clutch.orZero()
-                val steer = controls?.steerAngle.orZero()
+            merge(
+                telemetry.events.distinctUntilChanged().map { Input.Event(it) },
+                telemetry.frames.map { Input.Frame(it) },
+            ).collect { input ->
+                when (input) {
+                    is Input.Event -> {
+                        when (val event = input.event) {
+                            is TelemetryLifecycleEvent.SessionStarted -> {
+                                activeSessionId = event.session.sessionId
+                                mode = Mode.RUNNING
+                                lastEmittedTsNs = 0L
+                                send(InputsResult.SessionStarted(activeSessionId))
+                            }
 
-                if (!shouldEmitSample(
-                        frame = frame,
-                        lastEmittedTsNs = lastEmittedTsNs,
-                        throttle = throttle,
-                        brake = brake,
-                        clutch = clutch,
-                        steer = steer,
-                        prevThrottle = lastThrottle,
-                        prevBrake = lastBrake,
-                        prevClutch = lastClutch,
-                        prevSteer = lastSteer,
-                    )
-                ) {
-                    return@collect
+                            is TelemetryLifecycleEvent.SessionResumed -> {
+                                if (activeSessionId != 0L && event.sessionId != activeSessionId) return@collect
+                                if (activeSessionId == 0L) activeSessionId = event.sessionId
+                                mode = Mode.RUNNING
+                                lastEmittedTsNs = 0L
+                                send(InputsResult.SessionResumed(event.sessionId))
+                            }
+
+                            is TelemetryLifecycleEvent.SessionPaused -> {
+                                if (activeSessionId != 0L && event.sessionId != activeSessionId) return@collect
+                                if (activeSessionId == 0L) activeSessionId = event.sessionId
+                                mode = Mode.PAUSED
+                                lastEmittedTsNs = 0L
+                                send(InputsResult.SessionPaused(event.sessionId))
+                            }
+
+                            is TelemetryLifecycleEvent.SessionEnded -> {
+                                if (activeSessionId != 0L && event.sessionId != activeSessionId) return@collect
+                                mode = Mode.NONE
+                                activeSessionId = 0L
+                                lastEmittedTsNs = 0L
+                                send(InputsResult.SessionEnded(event.sessionId))
+                            }
+
+                            is TelemetryLifecycleEvent.SimDisconnected -> {
+                                if (activeSessionId == 0L) return@collect
+                                val endedSessionId = activeSessionId
+                                mode = Mode.NONE
+                                activeSessionId = 0L
+                                lastEmittedTsNs = 0L
+                                send(InputsResult.SessionEnded(endedSessionId))
+                            }
+
+                            else -> Unit
+                        }
+                    }
+
+                    is Input.Frame -> {
+                        if (mode != Mode.RUNNING || activeSessionId == 0L) return@collect
+
+                        val frame = input.frame
+                        val controls = frame.car?.controls
+                        val throttle = controls?.throttle.orZero()
+                        val brake = controls?.brake.orZero()
+                        val clutch = controls?.clutch.orZero()
+                        val steer = controls?.steerAngle.orZero()
+
+                        if (!shouldEmitSample(
+                                frame = frame,
+                                lastEmittedTsNs = lastEmittedTsNs,
+                                throttle = throttle,
+                                brake = brake,
+                                clutch = clutch,
+                                steer = steer,
+                                prevThrottle = lastThrottle,
+                                prevBrake = lastBrake,
+                                prevClutch = lastClutch,
+                                prevSteer = lastSteer,
+                            )
+                        ) {
+                            return@collect
+                        }
+
+                        lastEmittedTsNs = frame.timestampNs.takeIf { it > 0L } ?: System.nanoTime()
+                        lastThrottle = throttle
+                        lastBrake = brake
+                        lastClutch = clutch
+                        lastSteer = steer
+
+                        send(
+                            InputsResult.Sample(
+                                throttle = throttle,
+                                brake = brake,
+                                clutch = clutch,
+                                steerRadians = steer,
+                                timestampNs = frame.timestampNs,
+                            ),
+                        )
+                    }
                 }
-
-                lastEmittedTsNs = frame.timestampNs.takeIf { it > 0L } ?: System.nanoTime()
-                lastThrottle = throttle
-                lastBrake = brake
-                lastClutch = clutch
-                lastSteer = steer
-
-                emit(
-                    InputsResult.Sample(
-                        throttle = throttle,
-                        brake = brake,
-                        clutch = clutch,
-                        steerRadians = steer,
-                        timestampNs = frame.timestampNs,
-                    ),
-                )
             }
         }
 
-    override val results: Flow<InputsResult>
-        get() = merge(lifecycleResults, samples)
-
     override suspend fun updateSettings(inputHudSettings: InputHudSettings) {
         settingsRepo.update(inputHudSettings)
-    }
-
-    private fun TelemetryLifecycleEvent.toInputsLifecycleResultOrNull(): InputsResult? = when (this) {
-        is TelemetryLifecycleEvent.SessionStarted -> InputsResult.SessionStarted(session.sessionId)
-        is TelemetryLifecycleEvent.SessionResumed -> InputsResult.SessionResumed(sessionId)
-        is TelemetryLifecycleEvent.SessionPaused -> InputsResult.SessionPaused(sessionId)
-        is TelemetryLifecycleEvent.SessionEnded -> InputsResult.SessionEnded(sessionId)
-        else -> null
     }
 
     private fun shouldEmitSample(
@@ -130,5 +172,16 @@ internal class InputsUseCaseImpl(
         val BASE_SAMPLE_WINDOW_NS: Long = 6.milliseconds.inWholeNanoseconds // ~166 Hz in stable phases
         val FAST_SAMPLE_WINDOW_NS: Long = 3.milliseconds.inWholeNanoseconds // up to source rate on sharp changes
         const val RAPID_CHANGE_THRESHOLD: Float = 0.06f
+    }
+
+    private sealed interface Input {
+        data class Event(val event: TelemetryLifecycleEvent) : Input
+        data class Frame(val frame: TelemetryFrame) : Input
+    }
+
+    private enum class Mode {
+        NONE,
+        RUNNING,
+        PAUSED,
     }
 }

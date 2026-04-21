@@ -5,9 +5,8 @@ import com.project.analyzer.navigation.api.NavigationEntryBuilder
 import com.project.analyzer.navigation.api.Route
 import kotlin.reflect.KClass
 
-internal class RecordingNavigationEntryBuilder(
-    private val entries: MutableList<RegisteredRouteEntry>,
-) : NavigationEntryBuilder {
+internal class RecordingNavigationEntryBuilder(private val entries: MutableList<RegisteredRouteEntry>) :
+    NavigationEntryBuilder {
 
     override fun <T : Route> entry(
         key: T,

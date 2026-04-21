@@ -12,15 +12,15 @@ import com.project.analyzer.telemetry.api.contract.TelemetryReadSource
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.Provider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.FlowPreview
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.collections.immutable.toImmutableList
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter

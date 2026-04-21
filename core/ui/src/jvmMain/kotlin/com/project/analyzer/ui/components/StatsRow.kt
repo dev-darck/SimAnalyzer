@@ -22,11 +22,7 @@ import org.jetbrains.compose.resources.stringResource
 public data class StatItem(val title: String, val value: String)
 
 @Composable
-public fun StatsRow(
-    stats: ImmutableList<StatItem>,
-    modifier: Modifier = Modifier,
-    horizontalSpacing: Int = 16
-) {
+public fun StatsRow(stats: ImmutableList<StatItem>, modifier: Modifier = Modifier, horizontalSpacing: Int = 16) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(horizontalSpacing.dp),

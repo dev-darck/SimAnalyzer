@@ -34,9 +34,6 @@ data class TelemetryInspectorState(
 
 data class TelemetryEntry(val path: String, val value: String)
 
-data class DevHudState(
-    val hudEnabled: Boolean = true,
-    val panels: ImmutableList<DevHudPanelUi> = persistentListOf(),
-)
+data class DevHudState(val hudEnabled: Boolean = true, val panels: ImmutableList<DevHudPanelUi> = persistentListOf())
 
 data class DevHudPanelUi(val id: String, val enabled: Boolean)

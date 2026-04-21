@@ -3,7 +3,7 @@ package com.project.analyzer.ac.telemetry.impl.fallback.analyzer
 import com.project.analyzer.ac.telemetry.impl.fallback.TrackCalibrationLoader
 import com.project.analyzer.ac.telemetry.impl.fallback.detector.GateCrossingDetector
 import com.project.analyzer.ac.telemetry.impl.fallback.detector.model.GateCrossing
-import com.project.analyzer.ac.telemetry.impl.shm.structure.SPageFilePhysics
+import com.project.analyzer.ac.telemetry.impl.shm.ac.structure.SPageFilePhysics
 import com.project.analyzer.math.Vec2
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint

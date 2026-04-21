@@ -7,6 +7,16 @@
     <string name="appearance_theme_dark">Dark</string>
     <string name="appearance_theme_system">System</string>
 
+    <string name="close_behavior_title">Window</string>
+    <string name="close_behavior_description">Choose what happens when you press the window close button. You can confirm each time, exit the app, or minimize it to tray.</string>
+    <string name="close_behavior_label">Close button</string>
+    <string name="close_behavior_ask_title">Ask every time</string>
+    <string name="close_behavior_ask_description">Show the close dialog and let me choose each time.</string>
+    <string name="close_behavior_exit_title">Exit app</string>
+    <string name="close_behavior_exit_description">Close the app completely when I press the close button.</string>
+    <string name="close_behavior_minimize_title">Minimize to tray</string>
+    <string name="close_behavior_minimize_description">Hide the app to tray so HUD overlays keep updating in the background.</string>
+
     <string name="hud_setup_title">HUDs</string>
     <string name="hud_setup_label">HUD setup</string>
     <string name="hud_setup_edit">Edit</string>
@@ -62,6 +72,45 @@
     <string name="game_assetto_corsa">Assetto Corsa</string>
     <string name="game_assetto_corsa_competizione">Assetto Corsa Competizione</string>
     <string name="game_assetto_corsa_evo">Assetto Corsa Evo</string>
+    <string name="game_le_mans_ultimate">Le Mans Ultimate</string>
+
+    <string name="lmu_plugin_dialog_title_prompt">Le Mans Ultimate shared memory plugin</string>
+    <string name="lmu_plugin_dialog_title_installing">Installing LMU shared memory plugin</string>
+    <string name="lmu_plugin_dialog_title_success">LMU shared memory plugin installed</string>
+    <string name="lmu_plugin_dialog_title_failure">LMU shared memory setup failed</string>
+    <string name="lmu_plugin_dialog_title_missing_game">Le Mans Ultimate was not found</string>
+    <string name="lmu_plugin_dialog_message_prompt">SimAnalyzer can use LMU&apos;s built-in shared memory when it is available. This setup installs the official rF2 shared memory compatibility plugin only for systems where that fallback is needed, validates the archive and DLL, and updates LMU&apos;s plugin configuration for you.</string>
+    <string name="lmu_plugin_dialog_message_installing">SimAnalyzer is downloading the official LMU shared memory plugin and updating the game configuration. Keep Le Mans Ultimate closed until setup finishes.</string>
+    <string name="lmu_plugin_dialog_message_success">The official shared memory plugin is installed and Le Mans Ultimate is now ready for SimAnalyzer telemetry.</string>
+    <string name="lmu_plugin_dialog_message_failure">SimAnalyzer could not finish the automatic setup. This flow does not patch game executables, install services, or add startup tasks. It only places the shared memory DLL and updates LMU&apos;s plugin configuration.</string>
+    <string name="lmu_plugin_dialog_message_missing_game">SimAnalyzer could not find Le Mans Ultimate in your Steam libraries, so it cannot place the official shared memory plugin automatically.</string>
+    <string name="lmu_plugin_dialog_section_source">Source</string>
+    <string name="lmu_plugin_dialog_section_destination">Destination</string>
+    <string name="lmu_plugin_dialog_section_actions">What SimAnalyzer changes</string>
+    <string name="lmu_plugin_dialog_section_status">Status</string>
+    <string name="lmu_plugin_dialog_source_version">Latest package</string>
+    <string name="lmu_plugin_dialog_source_repository">Official repository</string>
+    <string name="lmu_plugin_dialog_source_download_page">Official download page</string>
+    <string name="lmu_plugin_dialog_source_archive_sha256">Archive SHA-256</string>
+    <string name="lmu_plugin_dialog_source_plugin_sha256">DLL SHA-256</string>
+    <string name="lmu_plugin_dialog_destination_game">Game folder</string>
+    <string name="lmu_plugin_dialog_destination_plugin">Plugin DLL</string>
+    <string name="lmu_plugin_dialog_destination_config">LMU plugin config</string>
+    <string name="lmu_plugin_dialog_action_resolve">Read the official plugin README on GitHub to resolve the newest published package.</string>
+    <string name="lmu_plugin_dialog_action_download">Download the archive linked there, validate it as a 64-bit Windows DLL package, and extract only rFactor2SharedMemoryMapPlugin64.dll.</string>
+    <string name="lmu_plugin_dialog_action_configure">Write or update CustomPluginVariables.JSON so LMU exposes the shared memory blocks to SimAnalyzer.</string>
+    <string name="lmu_plugin_dialog_action_safe">No LMU executable files are patched by this setup.</string>
+    <string name="lmu_plugin_dialog_button_cancel">Cancel</string>
+    <string name="lmu_plugin_dialog_button_install">Download and install</string>
+    <string name="lmu_plugin_dialog_button_retry">Retry</string>
+    <string name="lmu_plugin_dialog_button_done">Done</string>
+    <string name="lmu_plugin_dialog_button_close">Close</string>
+    <string name="lmu_plugin_dialog_progress_resolving">Resolving the latest official plugin package...</string>
+    <string name="lmu_plugin_dialog_progress_downloading">Downloading the official plugin archive...</string>
+    <string name="lmu_plugin_dialog_progress_validating">Validating archive contents and DLL signature...</string>
+    <string name="lmu_plugin_dialog_progress_extracting">Extracting the shared memory DLL...</string>
+    <string name="lmu_plugin_dialog_progress_configuring">Updating LMU plugin configuration...</string>
+    <string name="lmu_plugin_dialog_progress_finalizing">Finalizing setup and saving the installed version...</string>
 
     <string name="telemetry_preview_storage_location">/sdcard/telemetry</string>
     <string name="telemetry_preview_storage_size">12.3 MB</string>

@@ -136,7 +136,7 @@ public fun FilterDropdown(
 private fun InlineDropdown(
     presentation: DropdownFilterPresentation,
     modifier: Modifier = Modifier,
-    onSelect: (String) -> Unit = {}
+    onSelect: (String) -> Unit = {},
 ) {
     Row(
         modifier = modifier,
@@ -156,7 +156,7 @@ private fun InlineDropdown(
 private fun StackedDropdown(
     presentation: DropdownFilterPresentation,
     modifier: Modifier = Modifier,
-    onSelect: (String) -> Unit = {}
+    onSelect: (String) -> Unit = {},
 ) {
     Column(modifier = modifier) {
         DropdownLabel(text = presentation.labelText)

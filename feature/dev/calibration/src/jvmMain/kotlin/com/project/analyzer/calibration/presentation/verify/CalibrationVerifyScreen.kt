@@ -204,8 +204,8 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                 )
             }
         }
-            state.debugTelemetry?.let { debugText ->
-                item(key = "calibration-verify-snapshot", isContentFull = true) {
+        state.debugTelemetry?.let { debugText ->
+            item(key = "calibration-verify-snapshot", isContentFull = true) {
                 CalibrationSectionCard(
                     title = stringResource(Res.string.calibration_verify_snapshot_title),
                     subtitle = stringResource(Res.string.calibration_verify_snapshot_subtitle),
@@ -231,7 +231,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     }
                 }
             }
-            }
+        }
         item(key = "calibration-verify-events", isContentFull = true) {
             CalibrationSectionCard(
                 title = stringResource(Res.string.calibration_verify_recent_events_title),
@@ -278,7 +278,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                                 .align(Alignment.CenterEnd)
                                 .fillMaxHeight(),
                             adapter = AppScrollbarAdapter(
-                                rememberScrollbarAdapter(eventsScrollState)
+                                rememberScrollbarAdapter(eventsScrollState),
                             ),
                         )
                     }
@@ -289,12 +289,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun TimingRow(
-    name: String,
-    current: Long?,
-    last: Long?,
-    best: Long?
-) {
+private fun TimingRow(name: String, current: Long?, last: Long?, best: Long?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
