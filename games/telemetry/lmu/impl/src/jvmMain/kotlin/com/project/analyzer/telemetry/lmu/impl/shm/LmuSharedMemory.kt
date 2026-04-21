@@ -13,6 +13,7 @@ internal interface LmuSharedMemory : Closeable {
     val telemetryVersion: Int
     val scoringVersion: Int
     val numVehicles: Int
+    val playerIndexHint: Int?
 
     fun getScoringInfo(): Rf2ScoringInfo?
     fun getVehicleTelemetry(index: Int): Rf2VehicleTelemetry?

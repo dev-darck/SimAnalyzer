@@ -6,6 +6,7 @@ import com.project.analyzer.telemetry.api.model.car.ControlsFrame
 import com.project.analyzer.telemetry.api.model.car.EngineFrame
 import com.project.analyzer.telemetry.api.model.car.FuelFrame
 import com.project.analyzer.telemetry.lmu.api.model.LmuVehicleTelemetry
+import com.project.analyzer.telemetry.lmu.impl.common.LmuTelemetryConversions
 import kotlin.math.sqrt
 
 internal fun mapCar(telemetry: LmuVehicleTelemetry): CarFrame {
@@ -18,14 +19,15 @@ internal fun mapCar(telemetry: LmuVehicleTelemetry): CarFrame {
 
     return CarFrame(
         controls = ControlsFrame(
-            throttle = telemetry.filteredThrottle.toFloat(),
-            brake = telemetry.filteredBrake.toFloat(),
-            clutch = telemetry.filteredClutch.toFloat(),
-            steerAngle = telemetry.filteredSteering.toFloat(),
-            brakeBias = telemetry.rearBrakeBias.toFloat(),
+            throttle = telemetry.unfilteredThrottle.toFloat(),
+            brake = telemetry.unfilteredBrake.toFloat(),
+            clutch = telemetry.unfilteredClutch.toFloat(),
+            steeringInput = telemetry.unfilteredSteering.toFloat(),
+            steerAngle = telemetry.unfilteredSteering.toFloat(),
+            brakeBias = LmuTelemetryConversions.frontBrakeBiasFromRearBias(telemetry.rearBrakeBias) ?: 0f,
         ),
         engine = EngineFrame(
-            gear = telemetry.gear,
+            gear = LmuTelemetryConversions.commonGear(telemetry.gear),
             rpm = telemetry.engineRpm.toInt(),
             maxRpm = telemetry.engineMaxRpm.toInt(),
             turboBoost = telemetry.turboBoostPressure.toFloat(),
@@ -57,4 +59,3 @@ private fun speedKmh(velocity: Vec3): Float {
 }
 
 private const val MS_TO_KMH = 3.6f
-private const val G_FORCE_MS2 = 9.80665

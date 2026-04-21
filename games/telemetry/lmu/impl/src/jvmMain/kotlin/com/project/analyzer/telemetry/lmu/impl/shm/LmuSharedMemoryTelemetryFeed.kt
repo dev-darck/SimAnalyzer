@@ -78,6 +78,12 @@ internal class LmuSharedMemoryTelemetryFeed(private val shm: LmuSharedMemory, pr
     }
 
     private fun resolvePlayerIndex(numVehicles: Int): Int {
+        shm.playerIndexHint?.takeIf { it in 0 until numVehicles }?.let { hinted ->
+            cachedPlayerIndex = hinted
+            cachedPlayerIndexNs = System.nanoTime()
+            return hinted
+        }
+
         val cached = cachedPlayerIndex
         val now = System.nanoTime()
         if (cached != null && now - cachedPlayerIndexNs < PLAYER_INDEX_TTL_NS) {

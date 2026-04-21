@@ -29,5 +29,8 @@ public data class LmuWheel(
     val toe: Double,
     val tireCarcassTemperature: Double,
     val tireInnerLayerTemperature: DoubleArray,
+    val optimalTemp: Float,
+    val compoundIndex: Int,
+    val compoundType: Int,
     val expansion: ByteArray,
 )

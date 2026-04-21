@@ -33,5 +33,8 @@ internal fun Rf2Wheel.toModel(): LmuWheel = LmuWheel(
     toe = toe,
     tireCarcassTemperature = tireCarcassTemperature,
     tireInnerLayerTemperature = tireInnerLayerTemperature.copyOf(),
+    optimalTemp = optimalTemp,
+    compoundIndex = compoundIndex.toUnsignedInt(),
+    compoundType = compoundType.toUnsignedInt(),
     expansion = expansion.copyOf(),
 )

@@ -15,10 +15,11 @@ internal class LmuTelemetryMapper {
         val scoring = snapshot.scoring
         return TelemetryFrame(
             frameId = snapshot.frameId,
-            session = mapSession(telemetry, scoring),
+            session = mapSession(telemetry, scoring, snapshot.scoringInfo),
             lap = mapLap(telemetry, scoring),
             car = mapCar(telemetry),
             wheels = mapWheels(telemetry),
+            environment = mapEnvironment(snapshot.scoringInfo),
             extras = mapExtras(telemetry, scoring),
             timestampNs = snapshot.timestampNs,
         )

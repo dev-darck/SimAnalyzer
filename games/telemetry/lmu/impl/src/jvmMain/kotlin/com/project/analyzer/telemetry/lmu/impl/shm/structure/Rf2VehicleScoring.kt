@@ -227,6 +227,6 @@ internal class Rf2VehicleScoring : Pack4Structure() {
     public companion object {
 
         public const val SIZE: Int = 584
-        public const val OFFSET: Int = 540
+        public const val OFFSET: Int = 560
     }
 }
