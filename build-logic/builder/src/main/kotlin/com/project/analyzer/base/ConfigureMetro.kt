@@ -23,7 +23,6 @@ internal fun Project.configureMetro(
         automaticallyAddRuntimeDependencies.convention(false)
         contributesAsInject.convention(true)
         block()
-        enableFullBindingGraphValidation.convention(true)
         nonPublicContributionSeverity.convention(DiagnosticSeverity.ERROR)
         publicScopedProviderSeverity.convention(DiagnosticSeverity.ERROR)
     }

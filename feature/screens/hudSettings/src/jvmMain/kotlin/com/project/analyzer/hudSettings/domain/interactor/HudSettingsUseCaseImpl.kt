@@ -2,17 +2,16 @@ package com.project.analyzer.hudSettings.domain.interactor
 
 import com.project.analyzer.hud.api.HudPanel
 import com.project.analyzer.hud.api.HudPreferencesStore
-import dev.zacsweers.metro.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 
 class HudSettingsUseCaseImpl(
     private val hudPreferencesStore: HudPreferencesStore,
-    private val panels: Provider<Set<HudPanel>>,
+    private val panels: () -> Set<HudPanel>,
 ) : HudSettingsUseCase {
 
-    override fun loadPanels(): ImmutableList<HudPanel> = panels.invoke()
+    override fun loadPanels(): ImmutableList<HudPanel> = panels()
         .filter { panel -> !panel.isDevOnly }
         .sortedBy { panel -> panel.id }
         .toImmutableList()

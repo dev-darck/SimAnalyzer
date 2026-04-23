@@ -10,7 +10,6 @@ import com.project.analyzer.hud.api.HudPreferencesStore
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.api.contract.TelemetryReadSource
 import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.Provider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +29,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class DevSettingsUseCaseImpl(
     private val telemetry: TelemetryReadSource,
     private val hudPreferencesStore: HudPreferencesStore,
-    private val panels: Provider<Set<HudPanel>>,
+    private val panels: () -> Set<HudPanel>,
 ) : DevSettingsUseCase {
 
     private val _state = MutableStateFlow(DevSettingsDomainState())
@@ -83,7 +82,7 @@ class DevSettingsUseCaseImpl(
 
     private fun observeDevHudPanels(scope: CoroutineScope) {
         scope.launch {
-            devPanels = panels.invoke()
+            devPanels = panels()
                 .filter { it.isDevOnly }
                 .sortedBy { it.id }
             updateDevHudPanels()
