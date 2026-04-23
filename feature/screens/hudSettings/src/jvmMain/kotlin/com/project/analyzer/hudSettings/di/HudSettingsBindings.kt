@@ -10,7 +10,6 @@ import com.project.analyzer.hudSettings.presentation.HudSettingsViewModel
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
-import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
@@ -23,7 +22,7 @@ interface HudSettingsBindings {
         @Provides
         private fun provideHudSettingsUseCase(
             hudPreferencesStore: HudPreferencesStore,
-            panels: Provider<Set<HudPanel>>,
+            panels: () -> Set<HudPanel>,
         ): HudSettingsUseCase = HudSettingsUseCaseImpl(
             hudPreferencesStore = hudPreferencesStore,
             panels = panels,
