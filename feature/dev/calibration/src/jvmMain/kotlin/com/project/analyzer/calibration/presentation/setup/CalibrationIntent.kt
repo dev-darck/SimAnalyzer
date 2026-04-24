@@ -1,10 +1,10 @@
 package com.project.analyzer.calibration.presentation.setup
 
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
+import com.project.analyzer.calibration.presentation.model.CalibrationReferencePointUi
 
-sealed interface CalibrationIntent {
+internal sealed interface CalibrationIntent {
     data class TrackNameChanged(val value: String) : CalibrationIntent
-    data class ReferencePointChanged(val value: ReferencePoint) : CalibrationIntent
+    data class ReferencePointChanged(val value: CalibrationReferencePointUi) : CalibrationIntent
     data class TriggerRadiusChanged(val meters: Float) : CalibrationIntent
     data object CaptureStartFinish : CalibrationIntent
     data object AddSector : CalibrationIntent

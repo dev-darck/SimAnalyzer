@@ -12,16 +12,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-fun MiniMap(
+internal fun MiniMap(
     carPos: Vec2,
     carDir: Vec2,
-    gates: List<Pair<String, Gate>>,
+    gates: List<Pair<String, CalibrationGateUi>>,
     lastCapturePoint: CapturePoint? = null,
     pendingCapturePosition: Vec2? = null,
     modifier: Modifier = Modifier,
@@ -110,7 +110,7 @@ fun MiniMap(
 
             val filtered = gates
                 .map { (key, g) ->
-                    val d = (g.centerV2() - carPos).len()
+                    val d = (g.center - carPos).len()
                     Triple(key, g, d)
                 }
                 .filter { (_, g, d) ->
@@ -120,10 +120,10 @@ fun MiniMap(
                 .take(4)
 
             filtered.forEach { (_, g) ->
-                val c = g.centerV2()
-                val f = g.forwardV2().safeNormalized(Vec2(0f, 1f))
+                val c = g.center
+                val f = g.forward.safeNormalized(Vec2(0f, 1f))
 
-                var n = g.normalV2()
+                var n = g.normal
                 n = (n - f * n.dot(f)).safeNormalized(f.perpLeft())
 
                 val a = c + n * g.halfWidthMeters

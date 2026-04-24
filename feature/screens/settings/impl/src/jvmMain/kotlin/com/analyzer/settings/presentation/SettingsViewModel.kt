@@ -2,10 +2,6 @@ package com.analyzer.settings.presentation
 
 import androidx.lifecycle.viewModelScope
 import com.analyzer.settings.api.AppCloseBehavior
-import com.analyzer.settings.domain.model.LmuPluginInstallResult
-import com.analyzer.settings.domain.model.LmuPluginInstallStep
-import com.analyzer.settings.domain.model.LmuPluginSetupCheckResult
-import com.analyzer.settings.domain.model.StorageValidationResult
 import com.analyzer.settings.domain.usecase.SettingsUseCase
 import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
@@ -169,44 +165,13 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
 
     private fun handleLmuSelectionRequested() {
         viewModelScope.launch {
-            when (val result = useCase.inspectLmuPluginSetup()) {
-                is LmuPluginSetupCheckResult.Ready -> {
+            when (val result = useCase.inspectLmuPluginSetup().toUiResult()) {
+                LmuPluginSetupCheckUiResult.Ready -> {
                     useCase.updateGameSelection(GameSelection.Manual(GameId.LMU))
                 }
 
-                is LmuPluginSetupCheckResult.InstallRequired -> {
-                    updateState {
-                        copy(
-                            lmuPluginDialog = LmuPluginDialogState(
-                                phase = LmuPluginDialogPhase.Prompt,
-                                details = result.details,
-                            ),
-                        )
-                    }
-                }
-
-                is LmuPluginSetupCheckResult.GameNotFound -> {
-                    updateState {
-                        copy(
-                            lmuPluginDialog = LmuPluginDialogState(
-                                phase = LmuPluginDialogPhase.MissingGame,
-                                details = result.details,
-                                detailMessage = result.message,
-                            ),
-                        )
-                    }
-                }
-
-                is LmuPluginSetupCheckResult.Error -> {
-                    updateState {
-                        copy(
-                            lmuPluginDialog = LmuPluginDialogState(
-                                phase = LmuPluginDialogPhase.Failure,
-                                details = result.details,
-                                detailMessage = result.message,
-                            ),
-                        )
-                    }
+                is LmuPluginSetupCheckUiResult.ShowDialog -> {
+                    updateState { copy(lmuPluginDialog = result.dialogState) }
                 }
             }
         }
@@ -226,48 +191,31 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
                 copy(
                     lmuPluginDialog = dialogState.copy(
                         phase = LmuPluginDialogPhase.Installing,
-                        progressStep = LmuPluginInstallStep.ResolvingSource,
+                        progressStep = LmuPluginInstallStepUi.ResolvingSource,
                         detailMessage = null,
                     ),
                 )
             }
 
-            when (
-                val result = useCase.installLmuPlugin(dialogState.details) { step ->
-                    updateState {
-                        val currentDialog = lmuPluginDialog ?: return@updateState this
-                        copy(
-                            lmuPluginDialog = currentDialog.copy(
-                                phase = LmuPluginDialogPhase.Installing,
-                                progressStep = step,
-                                detailMessage = null,
-                            ),
-                        )
-                    }
+            when (val result = useCase.installLmuPlugin(dialogState.details.toDomain()) { step ->
+                updateState {
+                    val currentDialog = lmuPluginDialog ?: return@updateState this
+                    copy(
+                        lmuPluginDialog = currentDialog.copy(
+                            phase = LmuPluginDialogPhase.Installing,
+                            progressStep = step.toUi(),
+                            detailMessage = null,
+                        ),
+                    )
                 }
-            ) {
-                is LmuPluginInstallResult.Success -> {
+            }.toUiResult()) {
+                is LmuPluginInstallUiResult.Success -> {
                     useCase.updateGameSelection(GameSelection.Manual(GameId.LMU))
-                    updateState {
-                        copy(
-                            lmuPluginDialog = LmuPluginDialogState(
-                                phase = LmuPluginDialogPhase.Success,
-                                details = result.details,
-                            ),
-                        )
-                    }
+                    updateState { copy(lmuPluginDialog = result.dialogState) }
                 }
 
-                is LmuPluginInstallResult.Failure -> {
-                    updateState {
-                        copy(
-                            lmuPluginDialog = LmuPluginDialogState(
-                                phase = LmuPluginDialogPhase.Failure,
-                                details = result.details,
-                                detailMessage = result.message,
-                            ),
-                        )
-                    }
+                is LmuPluginInstallUiResult.Failure -> {
+                    updateState { copy(lmuPluginDialog = result.dialogState) }
                 }
             }
         }
@@ -311,30 +259,26 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
         val normalizedPath = path.trim()
         val requestId = ++storageLocationValidationRequestId
         viewModelScope.launch {
-            val result = useCase.updateStorageLocationIfValid(normalizedPath)
+            val result = useCase.updateStorageLocationIfValid(normalizedPath).toUi()
             if (requestId != storageLocationValidationRequestId) return@launch
 
-            when (result) {
-                StorageValidationResult.Valid -> {
-                    val resolvedPath = resolveTelemetryStoragePath(normalizedPath)
-                    storageLocationInputDirty = false
-                    updateState {
-                        copy(
-                            storageLocation = resolvedPath,
-                            isStorageLocationValid = true,
-                            storageLocationError = null,
-                        )
-                    }
-                    updateStorageSize(resolvedPath)
+            if (result == null) {
+                val resolvedPath = resolveTelemetryStoragePath(normalizedPath)
+                storageLocationInputDirty = false
+                updateState {
+                    copy(
+                        storageLocation = resolvedPath,
+                        isStorageLocationValid = true,
+                        storageLocationError = null,
+                    )
                 }
-
-                else -> {
-                    updateState {
-                        copy(
-                            isStorageLocationValid = false,
-                            storageLocationError = result,
-                        )
-                    }
+                updateStorageSize(resolvedPath)
+            } else {
+                updateState {
+                    copy(
+                        isStorageLocationValid = false,
+                        storageLocationError = result,
+                    )
                 }
             }
         }

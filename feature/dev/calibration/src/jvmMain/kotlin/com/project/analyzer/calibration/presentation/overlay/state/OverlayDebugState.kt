@@ -1,8 +1,8 @@
 package com.project.analyzer.calibration.presentation.overlay.state
 
+import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 
 data class CapturePoint(val position: Vec2, val forward: Vec2, val label: String)
 
@@ -11,7 +11,7 @@ data class OverlayDebugState(
     val speedKmh: Float? = null,
     val carPos: Vec2? = null,
     val carDir: Vec2? = null,
-    val gates: List<Pair<String, Gate>> = emptyList(),
+    val gates: List<Pair<String, CalibrationGateUi>> = emptyList(),
     val gateInfo: List<GateDebugInfo> = emptyList(),
 
     val lastCapturePoint: CapturePoint? = null,

@@ -29,7 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.chooser.domain.model.File
+import com.project.analyzer.chooser.presentation.FileChooserLocationUi
 import com.project.analyzer.chooser.presentation.FileChooserIntent
 import com.project.analyzer.feature.screens.chooser.Res.Res
 import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_quick_access
@@ -43,8 +43,8 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun Sidebar(
-    places: PersistentList<File>,
-    drives: PersistentList<File>,
+    places: PersistentList<FileChooserLocationUi>,
+    drives: PersistentList<FileChooserLocationUi>,
     currentDir: String,
     selectedDrive: String,
     dispatch: (FileChooserIntent) -> Unit,
@@ -94,7 +94,11 @@ private fun SidebarPanel(title: String, modifier: Modifier = Modifier, content: 
 }
 
 @Composable
-private fun PlacesList(places: PersistentList<File>, selectedPath: String, onPlaceClick: (File) -> Unit) {
+private fun PlacesList(
+    places: PersistentList<FileChooserLocationUi>,
+    selectedPath: String,
+    onPlaceClick: (FileChooserLocationUi) -> Unit,
+) {
     val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -124,7 +128,11 @@ private fun PlacesList(places: PersistentList<File>, selectedPath: String, onPla
 }
 
 @Composable
-private fun DrivesList(drives: PersistentList<File>, selectedDrive: String, onDriveClick: (File) -> Unit) {
+private fun DrivesList(
+    drives: PersistentList<FileChooserLocationUi>,
+    selectedDrive: String,
+    onDriveClick: (FileChooserLocationUi) -> Unit,
+) {
     val listState = rememberLazyListState()
 
     Box(modifier = Modifier.fillMaxSize()) {

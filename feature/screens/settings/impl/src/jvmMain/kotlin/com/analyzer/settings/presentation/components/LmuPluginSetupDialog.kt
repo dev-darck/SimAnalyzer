@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.analyzer.settings.presentation.LmuPluginInstallStepUi
 import com.analyzer.settings.presentation.LmuPluginDialogPhase
 import com.analyzer.settings.presentation.LmuPluginDialogState
 import com.project.analyzer.feature.screens.settings.impl.Res.*
@@ -225,21 +226,21 @@ private fun LmuPluginDialogState.message(): String = when (phase) {
 private fun LmuPluginDialogState.progressLabel(): String = when (progressStep) {
     null -> stringResource(Res.string.lmu_plugin_dialog_progress_resolving)
 
-    com.analyzer.settings.domain.model.LmuPluginInstallStep.ResolvingSource ->
+    LmuPluginInstallStepUi.ResolvingSource ->
         stringResource(Res.string.lmu_plugin_dialog_progress_resolving)
 
-    com.analyzer.settings.domain.model.LmuPluginInstallStep.DownloadingPackage ->
+    LmuPluginInstallStepUi.DownloadingPackage ->
         stringResource(Res.string.lmu_plugin_dialog_progress_downloading)
 
-    com.analyzer.settings.domain.model.LmuPluginInstallStep.ValidatingPackage ->
+    LmuPluginInstallStepUi.ValidatingPackage ->
         stringResource(Res.string.lmu_plugin_dialog_progress_validating)
 
-    com.analyzer.settings.domain.model.LmuPluginInstallStep.ExtractingPlugin ->
+    LmuPluginInstallStepUi.ExtractingPlugin ->
         stringResource(Res.string.lmu_plugin_dialog_progress_extracting)
 
-    com.analyzer.settings.domain.model.LmuPluginInstallStep.WritingConfiguration ->
+    LmuPluginInstallStepUi.WritingConfiguration ->
         stringResource(Res.string.lmu_plugin_dialog_progress_configuring)
 
-    com.analyzer.settings.domain.model.LmuPluginInstallStep.Finalizing ->
+    LmuPluginInstallStepUi.Finalizing ->
         stringResource(Res.string.lmu_plugin_dialog_progress_finalizing)
 }

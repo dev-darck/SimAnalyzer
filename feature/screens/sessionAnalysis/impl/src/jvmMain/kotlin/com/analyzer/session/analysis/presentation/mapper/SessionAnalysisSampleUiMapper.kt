@@ -2,6 +2,7 @@ package com.analyzer.session.analysis.presentation.mapper
 
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTyreUi
+import com.analyzer.session.analysis.presentation.model.toUi
 import com.project.analyzer.telemetry.analysis.api.model.sample.SessionAnalysisSample
 import com.project.analyzer.telemetry.analysis.api.model.tyre.SessionAnalysisTyreState
 
@@ -37,7 +38,7 @@ internal fun SessionAnalysisSample.toUi(elapsedMs: Int?): SessionAnalysisSampleU
     deltaToBestMs = deltaToBestMs,
     fuelLiters = fuelLiters,
     fuelCapacityLiters = fuelCapacityLiters,
-    handlingState = handlingState,
+    handlingState = handlingState.toUi(),
     tyreFl = tyreFl?.toUi(),
     tyreFr = tyreFr?.toUi(),
     tyreRl = tyreRl?.toUi(),
@@ -54,5 +55,5 @@ internal fun SessionAnalysisTyreState.toUi(): SessionAnalysisTyreUi = SessionAna
     brakeTempC = brakeTempC,
     slip = slip,
     load = load,
-    tempBand = tempBand,
+    tempBand = tempBand?.toUi(),
 )

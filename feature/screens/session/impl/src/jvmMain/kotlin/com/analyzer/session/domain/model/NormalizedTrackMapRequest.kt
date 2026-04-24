@@ -5,4 +5,5 @@ internal data class NormalizedTrackMapRequest(
     val gameId: String,
     val trackId: String,
     val layoutId: String?,
+    val sessionIds: List<Long>,
 )

@@ -33,7 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.chooser.domain.model.TreeNode
+import com.project.analyzer.chooser.presentation.FileChooserTreeNodeUi
 import com.project.analyzer.feature.screens.chooser.Res.Res
 import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_collapse
 import com.project.analyzer.feature.screens.chooser.Res.chooser_tree_expand
@@ -49,8 +49,8 @@ import kotlin.time.Duration.Companion.milliseconds
 private val CHEVRON_ANIM_DURATION_MS = 150.milliseconds.inWholeMilliseconds.toInt()
 
 @Composable
-fun FileTree(
-    nodes: PersistentList<TreeNode>,
+internal fun FileTree(
+    nodes: PersistentList<FileChooserTreeNodeUi>,
     currentDir: String,
     scrollToIndex: Int,
     onToggle: (path: String) -> Unit,
@@ -101,7 +101,12 @@ fun FileTree(
 }
 
 @Composable
-private fun TreeRow(node: TreeNode, isSelected: Boolean, onToggle: () -> Unit, onSelect: () -> Unit) {
+private fun TreeRow(
+    node: FileChooserTreeNodeUi,
+    isSelected: Boolean,
+    onToggle: () -> Unit,
+    onSelect: () -> Unit,
+) {
     val chevronAngle by animateFloatAsState(
         targetValue = if (node.expanded) 90f else 0f,
         animationSpec = tween(durationMillis = CHEVRON_ANIM_DURATION_MS),

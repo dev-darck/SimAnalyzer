@@ -2,6 +2,7 @@ package com.analyzer.settings.presentation
 
 import com.project.analyzer.game.api.GameId
 import com.project.analyzer.game.api.GameSelection
+import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionDefaults
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
@@ -73,4 +74,41 @@ internal fun buildRecordingWarning(
         manyLaps -> RecordingWarningKind.ManyLaps
         else -> null
     }
+}
+
+internal data class LmuPluginDialogDetailsUi(
+    val latestVersion: String? = null,
+    val repositoryUrl: String = "",
+    val downloadPageUrl: String? = null,
+    val archiveSha256: String? = null,
+    val pluginSha256: String? = null,
+    val gameInstallDir: String? = null,
+    val pluginTargetPath: String? = null,
+    val configTargetPath: String? = null,
+)
+
+internal enum class LmuPluginInstallStepUi {
+    ResolvingSource,
+    DownloadingPackage,
+    ValidatingPackage,
+    ExtractingPlugin,
+    WritingConfiguration,
+    Finalizing,
+}
+
+internal enum class StorageValidationUi {
+    Empty,
+    NotAbsolutePath,
+    NotADirectory,
+    NotWritable,
+    CannotCreate,
+}
+
+internal object TelemetryAcquisitionUiLimits {
+    const val MIN_RATE = TelemetryAcquisitionDefaults.MIN_SAMPLING_RATE_HZ
+    const val MAX_RATE = TelemetryAcquisitionDefaults.MAX_SAMPLING_RATE_HZ
+    const val MIN_LAPS = TelemetryAcquisitionDefaults.MIN_MAX_RECORDED_LAPS
+    const val MAX_LAPS = TelemetryAcquisitionDefaults.MAX_MAX_RECORDED_LAPS
+    const val MID_RATE = (MIN_RATE + MAX_RATE) / 2
+    const val MID_LAPS = (MIN_LAPS + MAX_LAPS) / 2
 }

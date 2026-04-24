@@ -1,7 +1,6 @@
 package com.project.analyzer.utils
 
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.URI
@@ -28,7 +27,7 @@ public class AppDirectoriesImpl internal constructor(override val dataDir: File)
     }
 }
 
-public suspend fun resolveAppDirectories(dispatcher: CoroutineDispatcher = Dispatchers.IO): AppDirectoriesImpl =
+public suspend fun resolveAppDirectories(dispatcher: CoroutineDispatcher): AppDirectoriesImpl =
     withContext(dispatcher) {
         val codeSourceRootDir = detectCodeSourceRootDirWindows()
         val installationRootDir = detectInstallationRootDirWindows(codeSourceRootDir)

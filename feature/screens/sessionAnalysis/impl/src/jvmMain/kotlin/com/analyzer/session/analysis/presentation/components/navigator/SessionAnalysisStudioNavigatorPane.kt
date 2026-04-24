@@ -31,6 +31,7 @@ import com.analyzer.session.analysis.presentation.components.navigator.preview.s
 import com.analyzer.session.analysis.presentation.components.navigator.preview.sessionAnalysisNavigatorPreviewSessions
 import com.analyzer.session.analysis.presentation.formatter.formatDelta
 import com.analyzer.session.analysis.presentation.formatter.formatLapTime
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapSummaryUi
@@ -58,7 +59,6 @@ import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_ana
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_navigator_subtitle
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_navigator_title
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_no_selection_placeholder
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import kotlinx.collections.immutable.ImmutableList
@@ -619,18 +619,18 @@ private fun SessionAnalysisNavigatorRowDivider() {
 private fun sessionAnalysisNavigatorFocusAccent(highlight: SessionAnalysisHighlightUi) = when (
     highlight.diagnosisSource
 ) {
-    SessionAnalysisDiagnosisSource.CarSetup -> SimAnalyzerTheme.extended.red
-    SessionAnalysisDiagnosisSource.Mixed -> SimAnalyzerTheme.extended.amber
-    SessionAnalysisDiagnosisSource.DrivingStyle -> SimAnalyzerTheme.extended.teal
+    SessionAnalysisDiagnosisSourceUi.CarSetup -> SimAnalyzerTheme.extended.red
+    SessionAnalysisDiagnosisSourceUi.Mixed -> SimAnalyzerTheme.extended.amber
+    SessionAnalysisDiagnosisSourceUi.DrivingStyle -> SimAnalyzerTheme.extended.teal
 }
 
 @Composable
 private fun sessionAnalysisNavigatorFocusSourceLabel(highlight: SessionAnalysisHighlightUi) = when (
     highlight.diagnosisSource
 ) {
-    SessionAnalysisDiagnosisSource.CarSetup -> stringResource(Res.string.session_analysis_diagnosis_setup)
-    SessionAnalysisDiagnosisSource.Mixed -> stringResource(Res.string.session_analysis_diagnosis_mixed)
-    SessionAnalysisDiagnosisSource.DrivingStyle -> stringResource(Res.string.session_analysis_diagnosis_driving)
+    SessionAnalysisDiagnosisSourceUi.CarSetup -> stringResource(Res.string.session_analysis_diagnosis_setup)
+    SessionAnalysisDiagnosisSourceUi.Mixed -> stringResource(Res.string.session_analysis_diagnosis_mixed)
+    SessionAnalysisDiagnosisSourceUi.DrivingStyle -> stringResource(Res.string.session_analysis_diagnosis_driving)
 }
 
 @Preview

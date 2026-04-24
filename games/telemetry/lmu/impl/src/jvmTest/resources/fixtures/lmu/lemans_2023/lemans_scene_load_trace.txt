@@ -1,0 +1,5 @@
+50.75s vidman.cpp   1775: Loading Scene File: D:\steam\steamapps\common\Le Mans Ultimate\Installed\Locations\LeMans_2023\1.27\LEMANSWEC.scn
+50.75s vidman.cpp   1782: Component: LeMans_2023
+50.75s vidman.cpp   1783: Version: 1.27
+50.75s vidman.cpp   1785: Layout: D:\steam\steamapps\common\Le Mans Ultimate\Installed\Locations\LeMans_2023\1.27\layoutLeMans.mas
+62.51s Upgrades.cpp  333: Appling Config for Track: Circuit de la Sarthe

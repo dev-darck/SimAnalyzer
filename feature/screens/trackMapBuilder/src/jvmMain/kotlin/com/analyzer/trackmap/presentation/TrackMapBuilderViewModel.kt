@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.analyzer.trackmap.domain.TrackMapCaptureController
 import com.analyzer.trackmap.presentation.model.TrackMapBuilderIntent
 import com.analyzer.trackmap.presentation.model.TrackMapBuilderUiState
+import com.analyzer.trackmap.presentation.model.toDomain
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.launchIn
@@ -31,7 +32,7 @@ internal class TrackMapBuilderViewModel(private val controller: TrackMapCaptureC
             TrackMapBuilderIntent.Save -> controller.save()
             TrackMapBuilderIntent.MarkPitEntry -> controller.markPitEntry()
             TrackMapBuilderIntent.MarkPitExit -> controller.markPitExit()
-            is TrackMapBuilderIntent.SetReferencePoint -> controller.setReferencePoint(intent.point)
+            is TrackMapBuilderIntent.SetReferencePoint -> controller.setReferencePoint(intent.point.toDomain())
             is TrackMapBuilderIntent.SetFallbackHalfWidthMeters -> controller.setFallbackHalfWidthMeters(intent.value)
         }
     }

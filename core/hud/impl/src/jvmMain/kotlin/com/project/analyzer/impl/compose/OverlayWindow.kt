@@ -13,7 +13,9 @@ import androidx.compose.ui.window.rememberWindowState
 import com.project.analyzer.impl.setup.game.OverlayController
 import com.project.analyzer.impl.setup.region.HitRegions
 import com.project.analyzer.impl.setup.region.internal.InMemoryHitRegions
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.swing.Swing
 import java.util.concurrent.Executors
 
 @Composable
@@ -49,6 +51,7 @@ fun OverlayWindow(
             gameDetector = gameDetector,
             hitRegions = hitRegions,
             coroutineDispatcher = winApiDispatcher,
+            swingDispatcher = Dispatchers.Swing,
         )
     }
 

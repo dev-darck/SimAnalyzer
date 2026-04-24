@@ -1,13 +1,15 @@
 package com.analyzer.session.presentation
 
 import androidx.lifecycle.viewModelScope
-import com.analyzer.session.domain.model.SessionListQuery
 import com.analyzer.session.domain.usecase.SessionListDataUseCase
 import com.analyzer.session.domain.usecase.SessionTrackMapIdentity
 import com.analyzer.session.domain.usecase.SessionTrackMapUseCase
 import com.analyzer.session.presentation.model.SessionListIntent
+import com.analyzer.session.presentation.model.SessionListQueryUi
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
+import com.analyzer.session.presentation.model.toDomain
+import com.analyzer.session.presentation.model.toUi
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import com.project.analyzer.ui.components.TrackMapData
 import dev.zacsweers.metro.Inject
@@ -22,7 +24,7 @@ internal class SessionListViewModel(
     private val sessionTrackMapUseCase: SessionTrackMapUseCase,
 ) : LeakAwareMviViewModel<SessionListIntent, SessionListState>(SessionListState()) {
 
-    private var query = SessionListQuery()
+    private var query = SessionListQueryUi()
     private var trackMapsByKey: Map<String, TrackMapData> = emptyMap()
     private var hasLoadedOnce = false
     private var trackMapLoadJob: Job? = null
@@ -63,7 +65,7 @@ internal class SessionListViewModel(
         )
     }
 
-    private suspend fun updateQuery(mutator: SessionListQuery.() -> SessionListQuery) {
+    private suspend fun updateQuery(mutator: SessionListQueryUi.() -> SessionListQueryUi) {
         cancelPendingSearch()
         loadPage(mutator(query))
     }
@@ -105,15 +107,15 @@ internal class SessionListViewModel(
         }
     }
 
-    private suspend fun loadPage(nextQuery: SessionListQuery, forceRefresh: Boolean = false) {
+    private suspend fun loadPage(nextQuery: SessionListQueryUi, forceRefresh: Boolean = false) {
         val result = dataUseCase.loadPage(
-            query = nextQuery,
+            query = nextQuery.toDomain(),
             forceRefresh = forceRefresh,
         )
-        query = result.query
+        query = result.query.toUi()
         hasLoadedOnce = true
         val mapped = result.page.toSessionListState(
-            query = result.query,
+            query = query,
         )
         setState(mapped.applyTrackMaps(trackMapsByKey))
         enqueueTrackMapLoad(mapped.visibleSessions)
@@ -142,6 +144,7 @@ internal class SessionListViewModel(
     ) != null
 
     private fun SessionRowUi.toTrackMapIdentity() = SessionTrackMapIdentity(
+        sessionId = sessionId,
         gameId = gameId,
         trackId = trackId,
         layoutId = layoutId,

@@ -1,8 +1,8 @@
 package com.project.analyzer.crash.domain
 
-internal interface CreateCrashReportUseCase {
+public interface CreateCrashReportUseCase {
 
-    fun createReport(
+    public fun createReport(
         throwable: Throwable,
         thread: Thread,
         title: String = "Application crash",

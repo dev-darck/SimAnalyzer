@@ -2,7 +2,9 @@ package com.analyzer.session.analysis.presentation.pipeline
 
 import com.analyzer.session.analysis.presentation.formatter.formatDelta
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_biggest_loss_description
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_biggest_loss_recommendation
@@ -16,8 +18,6 @@ import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_ana
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_late_throttle_description
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_late_throttle_recommendation
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_late_throttle_title
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
 import org.jetbrains.compose.resources.getString
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -49,8 +49,8 @@ internal suspend fun buildHighlights(
         biggestLoss?.deltaMs?.takeIf { it > 80 }?.let { delta ->
             add(
                 SessionAnalysisHighlightUi(
-                    category = SessionAnalysisHighlightCategory.TimeLoss,
-                    severity = SessionAnalysisHighlightSeverity.Critical,
+                    category = SessionAnalysisHighlightCategoryUi.TimeLoss,
+                    severity = SessionAnalysisHighlightSeverityUi.Critical,
                     lapNumber = lapNumber,
                     title = getString(Res.string.session_analysis_generated_highlight_biggest_loss_title),
                     description = getString(
@@ -71,8 +71,8 @@ internal suspend fun buildHighlights(
             if (delta >= 5) {
                 add(
                     SessionAnalysisHighlightUi(
-                        category = SessionAnalysisHighlightCategory.BrakePoint,
-                        severity = SessionAnalysisHighlightSeverity.Warning,
+                        category = SessionAnalysisHighlightCategoryUi.BrakePoint,
+                        severity = SessionAnalysisHighlightSeverityUi.Warning,
                         lapNumber = lapNumber,
                         title = getString(Res.string.session_analysis_generated_highlight_entry_overslowing_title),
                         description = getString(
@@ -94,8 +94,8 @@ internal suspend fun buildHighlights(
             if (delta >= 18f) {
                 add(
                     SessionAnalysisHighlightUi(
-                        category = SessionAnalysisHighlightCategory.ThrottleCommitment,
-                        severity = SessionAnalysisHighlightSeverity.Warning,
+                        category = SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
+                        severity = SessionAnalysisHighlightSeverityUi.Warning,
                         lapNumber = lapNumber,
                         title = getString(Res.string.session_analysis_generated_highlight_late_throttle_title),
                         description = getString(
@@ -118,8 +118,8 @@ internal suspend fun buildHighlights(
             if (abs(selectedBrake - referenceBrake) >= 0.22f) {
                 add(
                     SessionAnalysisHighlightUi(
-                        category = SessionAnalysisHighlightCategory.BrakePoint,
-                        severity = SessionAnalysisHighlightSeverity.Warning,
+                        category = SessionAnalysisHighlightCategoryUi.BrakePoint,
+                        severity = SessionAnalysisHighlightSeverityUi.Warning,
                         lapNumber = lapNumber,
                         title = getString(Res.string.session_analysis_generated_highlight_brake_mismatch_title),
                         description = getString(
@@ -137,9 +137,9 @@ internal suspend fun buildHighlights(
         }
     }.sortedByDescending { highlight ->
         when (highlight.severity) {
-            SessionAnalysisHighlightSeverity.Critical -> 3
-            SessionAnalysisHighlightSeverity.Warning -> 2
-            SessionAnalysisHighlightSeverity.Positive -> 1
+            SessionAnalysisHighlightSeverityUi.Critical -> 3
+            SessionAnalysisHighlightSeverityUi.Warning -> 2
+            SessionAnalysisHighlightSeverityUi.Positive -> 1
         }
     }
 }

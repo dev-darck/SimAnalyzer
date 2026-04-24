@@ -16,7 +16,7 @@ import com.project.analyzer.math.Vec2
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
+internal fun DebugInfoPanel(state: OverlayDebugState, modifier: Modifier = Modifier) {
     val material = SimAnalyzerTheme.material
     val chrome = SimAnalyzerTheme.chrome
     val extended = SimAnalyzerTheme.extended

@@ -6,11 +6,11 @@ import com.analyzer.session.analysis.presentation.builder.lap.resolveLapFraction
 import com.analyzer.session.analysis.presentation.builder.track.line.SessionAnalysisTrackLinePreparer
 import com.analyzer.session.analysis.presentation.builder.track.trace.SessionAnalysisTrackCanvasTraceBuilder
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTrackPointUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisFractionPointUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisTrackCanvasBounds
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisTrackCanvasState
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 import com.project.analyzer.telemetry.analysis.api.model.report.session.SessionAnalysisCornerZone
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -21,16 +21,16 @@ internal object SessionAnalysisTrackCanvasStateFactory {
     private val linePreparer: SessionAnalysisTrackLinePreparer = SessionAnalysisTrackLinePreparer()
     private val traceBuilder: SessionAnalysisTrackCanvasTraceBuilder = SessionAnalysisTrackCanvasTraceBuilder()
     private val trackDiagnosticCategories = setOf(
-        SessionAnalysisHighlightCategory.TimeLoss,
-        SessionAnalysisHighlightCategory.TrailBrakingMissing,
-        SessionAnalysisHighlightCategory.EarlyApexEntry,
-        SessionAnalysisHighlightCategory.LateApexEntry,
-        SessionAnalysisHighlightCategory.CoastingZone,
-        SessionAnalysisHighlightCategory.Understeer,
-        SessionAnalysisHighlightCategory.Oversteer,
-        SessionAnalysisHighlightCategory.WheelLockup,
-        SessionAnalysisHighlightCategory.WheelSpin,
-        SessionAnalysisHighlightCategory.InconsistentLine,
+        SessionAnalysisHighlightCategoryUi.TimeLoss,
+        SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+        SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+        SessionAnalysisHighlightCategoryUi.LateApexEntry,
+        SessionAnalysisHighlightCategoryUi.CoastingZone,
+        SessionAnalysisHighlightCategoryUi.Understeer,
+        SessionAnalysisHighlightCategoryUi.Oversteer,
+        SessionAnalysisHighlightCategoryUi.WheelLockup,
+        SessionAnalysisHighlightCategoryUi.WheelSpin,
+        SessionAnalysisHighlightCategoryUi.InconsistentLine,
     )
 
     /**

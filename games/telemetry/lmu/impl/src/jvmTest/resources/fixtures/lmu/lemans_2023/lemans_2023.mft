@@ -1,0 +1,19 @@
+[Component]
+Name=LeMans_2023
+Version=1.27
+Type=1
+Author=Studio 397
+Origin=0
+Category=0
+ID=AAA9999
+URL=https://lemansultimate.com
+Desc=
+Date=134187450222260000
+Flags=2134017
+RefCount=1
+Signature=e0a65b10fafb6d7aca665742d37ed4cf72cd02815c6f70f9cb17a049bfb0a538
+BaseSignature=6837fec58c80141a29acaf1d7444cba092146205b77192f8f54ba8f85bbf9cd1
+MASFile=layoutLeMans.mas 90f691dfc9997341d8852947c29f20e035126b2003ec5e357da33931ce3a7c3e
+MASFile=layoutMulsanne.mas 356424c98b453dd070bc5da039610186b216b85855894b8fcccb33fd14babede
+MASFile=shared.mas d7320bed41758e323cdb1575260951468d6251e650a5cd6b6b2945441b613b9d
+

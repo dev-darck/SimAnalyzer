@@ -1,35 +1,15 @@
 package com.analyzer.session.details.presentation
 
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_ALL
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_INVALID
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_PIT
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_VALID
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_BEST
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_TOTAL_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_TYPE_ALL
 import com.analyzer.session.details.domain.model.SessionDetailPage
-import com.analyzer.session.details.domain.model.SessionDetailQuery
 import com.analyzer.session.details.domain.model.SessionLapDomainItem
 import com.analyzer.session.details.domain.model.SessionLapDomainStatus
 import com.analyzer.session.details.presentation.model.LapStatus
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
+import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
+import com.analyzer.session.details.presentation.model.SessionDetailQueryUi
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
@@ -38,33 +18,33 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 private val SESSION_DETAIL_SORT_OPTIONS = persistentListOf(
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_LAP_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_BEST),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_TOTAL_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S1),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S1_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S2),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S2_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S3),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_S3_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_INCIDENTS),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_INCIDENTS_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_DELTA),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_DELTA_DESC),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SORT_STATUS_DESC),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortLap),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortLapDesc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortBest),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortTotalDesc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortS1),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortS1Desc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortS2),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortS2Desc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortS3),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortS3Desc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortIncidents),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortIncidentsDesc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortDelta),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortDeltaDesc),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortStatus),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SortStatusDesc),
 )
 
 private val SESSION_DETAIL_SHOW_OPTIONS = persistentListOf(
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_ALL),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_VALID),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_INVALID),
-    SessionDetailFilterOptionUi(id = SESSION_DETAIL_SHOW_PIT),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.ShowAll),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.ShowValid),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.ShowInvalid),
+    SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.ShowPit),
 )
 
 internal fun SessionDetailPage.toSessionDetailState(
-    query: SessionDetailQuery,
+    query: SessionDetailQueryUi,
     isLoading: Boolean = false,
 ): SessionDetailState = SessionDetailState(
     isLoading = isLoading,
@@ -106,7 +86,7 @@ internal fun SessionDetailPage.toSessionDetailState(
 
 private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> =
     buildList {
-        add(SessionDetailFilterOptionUi(id = SESSION_DETAIL_TYPE_ALL))
+        add(SessionDetailFilterOptionUi(id = SessionDetailFilterIdsUi.SessionTypeAll))
         sessionTypeOptions.forEach { option ->
             add(SessionDetailFilterOptionUi(id = option.id, label = option.label))
         }

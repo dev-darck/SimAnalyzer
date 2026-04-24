@@ -27,6 +27,7 @@ import com.analyzer.session.analysis.presentation.formatter.formatRpm
 import com.analyzer.session.analysis.presentation.formatter.formatSpeed
 import com.analyzer.session.analysis.presentation.formatter.formatTrackPosition
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
@@ -50,7 +51,6 @@ import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_ana
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_metric_steer
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_metric_throttle
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_metric_track_position
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.theme.SimAnalyzerTheme
 import org.jetbrains.compose.resources.stringResource
 
@@ -79,7 +79,7 @@ internal fun SessionAnalysisInspectorNarrativeCard(
     description: String,
     recommendation: String = "",
     lookAt: String = "",
-    source: SessionAnalysisDiagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
+    source: SessionAnalysisDiagnosisSourceUi = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
 ) {
     SessionAnalysisInspectorCard(title = title) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {

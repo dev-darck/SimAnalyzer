@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -38,6 +39,7 @@ import com.project.analyzer.calibration.presentation.components.copyToClipboard
 import com.project.analyzer.calibration.presentation.components.formatMs
 import com.project.analyzer.calibration.presentation.verify.components.DirectionInfoCard
 import com.project.analyzer.calibration.presentation.verify.components.GateDebugSection
+import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.feature.dev.calibration.Res.Res
 import com.project.analyzer.feature.dev.calibration.Res.calibration_header_track_id
 import com.project.analyzer.feature.dev.calibration.Res.calibration_verify_back
@@ -82,6 +84,34 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
         viewModel.start(trackId)
     }
 
+    CalibrationVerifyContent(
+        trackId = trackId,
+        state = state,
+        onBack = onBack,
+        onToggleRunning = { if (state.isRunning) viewModel.stop() else viewModel.start(trackId) },
+        onResetSession = viewModel::resetSession,
+        onEditGate = viewModel::startEditingGate,
+        onCaptureGate = viewModel::captureCurrentGate,
+        onCancelEdit = viewModel::cancelEditing,
+        onFlipGate = viewModel::flipGateDirection,
+        onRadiusChange = viewModel::onRadiusChanged,
+    )
+}
+
+@Composable
+private fun CalibrationVerifyContent(
+    trackId: String,
+    state: CalibrationVerifyState,
+    onBack: () -> Unit,
+    onToggleRunning: () -> Unit,
+    onResetSession: () -> Unit,
+    onEditGate: (com.project.analyzer.calibration.presentation.verify.state.EditingGate) -> Unit,
+    onCaptureGate: () -> Unit,
+    onCancelEdit: () -> Unit,
+    onFlipGate: (com.project.analyzer.calibration.presentation.verify.state.EditingGate) -> Unit,
+    onRadiusChange: (Float) -> Unit,
+) {
+
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
         verticalSpacing = 12.dp,
@@ -102,7 +132,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                             style = SimAnalyzerTheme.typography.labelMedium,
                         )
                     }
-                    Button(onClick = { if (state.isRunning) viewModel.stop() else viewModel.start(trackId) }) {
+                    Button(onClick = onToggleRunning) {
                         Text(
                             text = stringResource(
                                 if (state.isRunning) Res.string.calibration_verify_stop else Res.string.calibration_verify_start,
@@ -110,7 +140,7 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                             style = SimAnalyzerTheme.typography.labelMedium,
                         )
                     }
-                    OutlinedButton(onClick = { viewModel.resetSession() }) {
+                    OutlinedButton(onClick = onResetSession) {
                         Text(
                             text = stringResource(Res.string.calibration_verify_reset_session),
                             style = SimAnalyzerTheme.typography.labelMedium,
@@ -196,11 +226,11 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                     editingGate = state.editingGate,
                     isCapturing = state.isCapturing,
                     halfWidthMeters = state.halfWidthMeters,
-                    onEditGate = viewModel::startEditingGate,
-                    onCaptureGate = viewModel::captureCurrentGate,
-                    onCancelEdit = viewModel::cancelEditing,
-                    onFlipGate = viewModel::flipGateDirection,
-                    onRadius = viewModel::onRadiusChanged,
+                    onEditGate = onEditGate,
+                    onCaptureGate = onCaptureGate,
+                    onCancelEdit = onCancelEdit,
+                    onFlipGate = onFlipGate,
+                    onRadius = onRadiusChange,
                 )
             }
         }
@@ -285,6 +315,38 @@ fun CalibrationVerifyScreen(trackId: String, onBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun CalibrationVerifyScreenPreview() {
+    SimAnalyzerTheme {
+        CalibrationVerifyContent(
+            trackId = "sebring",
+            state = CalibrationVerifyState(
+                isRunning = true,
+                message = "Loaded. Drive and cross SF/sectors to verify.",
+                lapIndex = 3,
+                currentSectorIndex = 2,
+                currentLapMs = 92_345L,
+                currentSectorMs = 31_240L,
+                speedKmh = 182.4f,
+                lastLapMs = 91_998L,
+                bestLapMs = 91_221L,
+                lastEvent = "Crossed S1",
+                events = listOf("Lap started", "Crossed S1", "Crossed S2"),
+                debugTelemetry = "Waiting for telemetry...",
+            ),
+            onBack = {},
+            onToggleRunning = {},
+            onResetSession = {},
+            onEditGate = {},
+            onCaptureGate = {},
+            onCancelEdit = {},
+            onFlipGate = {},
+            onRadiusChange = {},
+        )
     }
 }
 

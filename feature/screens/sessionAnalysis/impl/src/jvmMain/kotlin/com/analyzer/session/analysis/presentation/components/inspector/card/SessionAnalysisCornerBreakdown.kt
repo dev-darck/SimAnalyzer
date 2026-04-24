@@ -24,6 +24,7 @@ import com.analyzer.session.analysis.presentation.components.inspector.support.f
 import com.analyzer.session.analysis.presentation.components.inspector.support.lookAtLabel
 import com.analyzer.session.analysis.presentation.formatter.formatDelta
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnosis_driving
@@ -38,7 +39,6 @@ import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_ana
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_inspector_label_why
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_inspector_score
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_inspector_turn
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import org.jetbrains.compose.resources.stringResource
@@ -120,13 +120,15 @@ private fun SessionAnalysisCornerBreakdownRow(corner: CornerScoreUi, onClick: ()
         ) {
             SessionAnalysisCornerBadge(
                 text = when (corner.source) {
-                    SessionAnalysisDiagnosisSource.CarSetup -> stringResource(
+                    SessionAnalysisDiagnosisSourceUi.CarSetup -> stringResource(
                         Res.string.session_analysis_diagnosis_setup,
                     )
 
-                    SessionAnalysisDiagnosisSource.Mixed -> stringResource(Res.string.session_analysis_diagnosis_mixed)
+                    SessionAnalysisDiagnosisSourceUi.Mixed -> stringResource(
+                        Res.string.session_analysis_diagnosis_mixed,
+                    )
 
-                    SessionAnalysisDiagnosisSource.DrivingStyle -> stringResource(
+                    SessionAnalysisDiagnosisSourceUi.DrivingStyle -> stringResource(
                         Res.string.session_analysis_diagnosis_driving,
                     )
                 },

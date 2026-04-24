@@ -22,12 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.trackmap.presentation.components.TrackMapReferencePointDropdown
 import com.analyzer.trackmap.presentation.components.TrackMapSectionCard
 import com.analyzer.trackmap.presentation.model.TrackMapBuilderIntent
 import com.analyzer.trackmap.presentation.model.TrackMapBuilderUiState
+import com.analyzer.trackmap.presentation.model.TrackMapReferencePointUi
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.Res
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.calibration_capture_settings_subtitle
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.calibration_capture_settings_title
@@ -75,7 +77,6 @@ import com.project.analyzer.feature.screens.trackMapBuilder.Res.track_map_width_
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.track_map_width_minus
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.track_map_width_plus
 import com.project.analyzer.feature.screens.trackMapBuilder.Res.track_map_yes
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.adaptive.ResponsiveGridMode
 import com.project.analyzer.ui.adaptive.ResponsiveScreen
@@ -113,7 +114,7 @@ internal fun TrackMapBuilderContent(
     onStop: () -> Unit = {},
     onReset: () -> Unit = {},
     onSave: () -> Unit = {},
-    onReferencePoint: (ReferencePoint) -> Unit = {},
+    onReferencePoint: (TrackMapReferencePointUi) -> Unit = {},
     onFallbackHalfWidth: (Float) -> Unit = {},
     onPitEntry: () -> Unit = {},
     onPitExit: () -> Unit = {},
@@ -236,7 +237,7 @@ private fun TrackMapBuilderOverviewSection(state: TrackMapBuilderUiState) {
 @Composable
 private fun TrackMapBuilderCaptureSettingsSection(
     state: TrackMapBuilderUiState,
-    onReferencePoint: (ReferencePoint) -> Unit,
+    onReferencePoint: (TrackMapReferencePointUi) -> Unit,
     onFallbackHalfWidth: (Float) -> Unit,
 ) {
     TrackMapSectionCard(
@@ -473,3 +474,38 @@ private fun TrackMapBuilderUiState.widthCoverageLabel(): String =
     "L ${formatPercent((leftCoverageRatio * 100f).toInt())} / R ${formatPercent((rightCoverageRatio * 100f).toInt())}"
 
 private fun TrackMapBuilderUiState.canSave(): Boolean = !recording && !isSaving && pointCount >= MIN_POINTS_TO_SAVE_UI
+
+@Preview
+@Composable
+private fun TrackMapBuilderScreenPreview() {
+    SimAnalyzerTheme {
+        TrackMapBuilderContent(
+            state = TrackMapBuilderUiState(
+                gameId = "ace",
+                gameLabel = "Assetto Corsa EVO",
+                trackId = "sebring",
+                trackName = "Sebring International Raceway",
+                referencePoint = TrackMapReferencePointUi.FrontAxle,
+                pointCount = 128,
+                totalDistanceMeters = 6020f,
+                averageTrackWidthMeters = 11.6f,
+                leftCoverageRatio = 0.84f,
+                rightCoverageRatio = 0.79f,
+                minSpacingMeters = 0.5f,
+                maxSpacingMeters = 6f,
+                minAngleDeg = 3f,
+                minSpeedKmh = 5f,
+                fallbackHalfWidthMeters = 5.5f,
+                lapIndex = 4,
+                lapsRecorded = 3,
+                sectorCount = 3,
+                capturedSectorCount = 3,
+                pitEntryPointSet = true,
+                pitExitPointSet = true,
+                pitPointCount = 24,
+                guidanceText = "Keep one clean lap on racing line before saving.",
+                message = "Preview build is ready.",
+            ),
+        )
+    }
+}

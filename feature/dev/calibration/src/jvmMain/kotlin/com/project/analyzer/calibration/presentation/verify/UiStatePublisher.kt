@@ -1,6 +1,7 @@
 package com.project.analyzer.calibration.presentation.verify
 
 import com.project.analyzer.calibration.di.OverlayDebugBus
+import com.project.analyzer.calibration.presentation.model.toUi
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
@@ -60,7 +61,7 @@ internal class UiStatePublisher(
                 speedKmh = speedKmh,
                 carPos = carPose.position,
                 carDir = carPose.headingDir,
-                gates = calibration.gates.toList(),
+                gates = calibration.gates.mapValues { (_, gate) -> gate.toUi() }.toList(),
                 gateInfo = gateInfoList,
                 currentLapMs = snapshot.currentLapTimeMs.toLong(),
                 currentSectorIndex = snapshot.currentSectorIndex + 1,
@@ -148,7 +149,6 @@ internal class UiStatePublisher(
             isInside = metrics.isInside,
             margin = metrics.margin,
             dParallel = metrics.dParallel,
-            gate = gate,
         )
     }
 

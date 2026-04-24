@@ -17,11 +17,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
+import com.analyzer.trackmap.presentation.model.TrackMapReferencePointUi
 import com.project.analyzer.theme.SimAnalyzerTheme
 
 @Composable
-fun TrackMapReferencePointDropdown(selected: ReferencePoint, onSelected: (ReferencePoint) -> Unit) {
+internal fun TrackMapReferencePointDropdown(
+    selected: TrackMapReferencePointUi,
+    onSelected: (TrackMapReferencePointUi) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }) {
@@ -36,7 +39,7 @@ fun TrackMapReferencePointDropdown(selected: ReferencePoint, onSelected: (Refere
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            ReferencePoint.entries.forEach { point ->
+            TrackMapReferencePointUi.entries.forEach { point ->
                 DropdownMenuItem(
                     text = {
                         Text(
@@ -55,8 +58,8 @@ fun TrackMapReferencePointDropdown(selected: ReferencePoint, onSelected: (Refere
 }
 
 @Composable
-private fun ReferencePoint.displayName(): String = when (this) {
-    ReferencePoint.CAR_CENTER -> "Car center"
-    ReferencePoint.FRONT_AXLE -> "Front axle"
-    ReferencePoint.REAR_AXLE -> "Rear axle"
+private fun TrackMapReferencePointUi.displayName(): String = when (this) {
+    TrackMapReferencePointUi.CarCenter -> "Car center"
+    TrackMapReferencePointUi.FrontAxle -> "Front axle"
+    TrackMapReferencePointUi.RearAxle -> "Rear axle"
 }

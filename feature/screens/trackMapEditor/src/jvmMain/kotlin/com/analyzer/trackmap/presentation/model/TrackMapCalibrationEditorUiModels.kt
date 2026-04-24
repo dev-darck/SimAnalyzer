@@ -3,6 +3,7 @@ package com.analyzer.trackmap.presentation.model
 import androidx.compose.runtime.Immutable
 import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorGate
 import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorMarker
+import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorSnapshot
 import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorSector
 import com.analyzer.trackmap.domain.model.TrackMapLibraryItem
 import com.analyzer.trackmap.presentation.format.formatMeters
@@ -13,6 +14,18 @@ import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMapBounds
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+
+@Immutable
+internal data class TrackMapLibraryItemUi(
+    val gameId: String,
+    val trackName: String,
+    val trackId: String,
+    val layoutId: String?,
+    val points: ImmutableList<TrackMapEditorPointUi>,
+    val leftWidthsMeters: ImmutableList<Float>,
+    val rightWidthsMeters: ImmutableList<Float>,
+    val bounds: TrackMapEditorBoundsUi?,
+)
 
 @Immutable
 internal data class TrackMapMarkerRowUi(
@@ -109,13 +122,13 @@ internal data class TrackMapCalibrationSidebarUiState(
 )
 
 internal fun TrackMapCalibrationEditorState.toWorkspaceUiState(
-    item: TrackMapLibraryItem,
+    item: TrackMapLibraryItemUi,
     editMode: TrackMapCalibrationEditorMode,
     isAddPointMode: Boolean,
 ): TrackMapCalibrationWorkspaceUiState = TrackMapCalibrationWorkspaceUiState(
-    title = item.map.trackName,
+    title = item.trackName,
     subtitle = item.toWorkspaceSubtitle(),
-    sourceLabel = source?.name ?: "NEW",
+    sourceLabel = sourceLabel,
     markerCount = markers.size,
     canReset = canReset,
     addPointHint = if (isAddPointMode) {
@@ -168,25 +181,25 @@ internal fun TrackMapCalibrationEditorState.toSidebarUiState(
 }
 
 internal fun TrackMapCalibrationEditorState.toCanvasUiState(
-    item: TrackMapLibraryItem,
+    item: TrackMapLibraryItemUi,
     editMode: TrackMapCalibrationEditorMode,
     isAddPointMode: Boolean,
 ): TrackMapCalibrationCanvasUiState = TrackMapCalibrationCanvasUiState(
-    points = item.points.map(Vec2::toTrackMapEditorPointUi).toImmutableList(),
-    leftWidthsMeters = item.leftWidthsMeters.toImmutableList(),
-    rightWidthsMeters = item.rightWidthsMeters.toImmutableList(),
-    bounds = item.bounds?.toTrackMapEditorBoundsUi(),
-    markers = markers.map(TrackMapCalibrationEditorMarker::toTrackMapEditorMarkerUi).toImmutableList(),
-    sectors = sectors.map(TrackMapCalibrationEditorSector::toTrackMapEditorSectorUi).toImmutableList(),
-    gates = gates.map(TrackMapCalibrationEditorGate::toTrackMapEditorGateUi).toImmutableList(),
+    points = item.points,
+    leftWidthsMeters = item.leftWidthsMeters,
+    rightWidthsMeters = item.rightWidthsMeters,
+    bounds = item.bounds,
+    markers = markers,
+    sectors = sectors,
+    gates = gates,
     selectedMarkerId = selectedMarkerId,
-    livePosition = livePosition?.toTrackMapEditorPointUi(),
+    livePosition = livePosition,
     editMode = editMode,
     isAddPointMode = isAddPointMode,
 )
 
 internal fun buildTrackMapMarkerRows(
-    markers: List<TrackMapCalibrationEditorMarker>,
+    markers: List<TrackMapEditorMarkerUi>,
 ): ImmutableList<TrackMapMarkerRowUi> = markers.mapIndexed { index, marker ->
     val previousMarker = if (markers.isEmpty()) {
         null
@@ -242,7 +255,7 @@ internal fun TrackMapEditorGateUi.toGate(): Gate = Gate.create(
     halfWidthMeters = halfWidthMeters,
 )
 
-private fun TrackMapCalibrationEditorMarker.toTrackMapEditorMarkerUi(): TrackMapEditorMarkerUi = TrackMapEditorMarkerUi(
+internal fun TrackMapCalibrationEditorMarker.toTrackMapEditorMarkerUi(): TrackMapEditorMarkerUi = TrackMapEditorMarkerUi(
     gateId = gateId,
     title = title,
     colorHex = colorHex,
@@ -250,7 +263,7 @@ private fun TrackMapCalibrationEditorMarker.toTrackMapEditorMarkerUi(): TrackMap
     pointIndex = pointIndex,
 )
 
-private fun TrackMapCalibrationEditorSector.toTrackMapEditorSectorUi(): TrackMapEditorSectorUi = TrackMapEditorSectorUi(
+internal fun TrackMapCalibrationEditorSector.toTrackMapEditorSectorUi(): TrackMapEditorSectorUi = TrackMapEditorSectorUi(
     name = name,
     colorHex = colorHex,
     startGateId = startGateId,
@@ -259,11 +272,24 @@ private fun TrackMapCalibrationEditorSector.toTrackMapEditorSectorUi(): TrackMap
     endPointIndex = endPointIndex,
 )
 
-private fun TrackMapLibraryItem.toWorkspaceSubtitle(): String {
-    val layout = map.layoutId?.takeIf(String::isNotBlank)
+internal fun TrackMapLibraryItem.toUi(): TrackMapLibraryItemUi = TrackMapLibraryItemUi(
+    gameId = map.gameId,
+    trackName = map.trackName,
+    trackId = map.trackId,
+    layoutId = map.layoutId,
+    points = points.map(Vec2::toTrackMapEditorPointUi).toImmutableList(),
+    leftWidthsMeters = leftWidthsMeters.toImmutableList(),
+    rightWidthsMeters = rightWidthsMeters.toImmutableList(),
+    bounds = bounds?.toTrackMapEditorBoundsUi(),
+)
+
+internal fun TrackMapCalibrationEditorSnapshot.toSourceLabel(): String = source?.name ?: "NEW"
+
+private fun TrackMapLibraryItemUi.toWorkspaceSubtitle(): String {
+    val layout = layoutId?.takeIf(String::isNotBlank)
     return buildList {
-        add(map.gameId.ifBlank { "unknown" })
-        add(map.trackId)
+        add(gameId.ifBlank { "unknown" })
+        add(trackId)
         layout?.let(::add)
     }.joinToString(" / ")
 }

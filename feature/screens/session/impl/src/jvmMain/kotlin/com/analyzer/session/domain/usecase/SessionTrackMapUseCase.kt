@@ -13,4 +13,9 @@ internal interface SessionTrackMapUseCase {
     ): TrackMapData?
 }
 
-internal data class SessionTrackMapIdentity(val gameId: String, val trackId: String, val layoutId: String? = null)
+internal data class SessionTrackMapIdentity(
+    val sessionId: Long,
+    val gameId: String,
+    val trackId: String,
+    val layoutId: String? = null,
+)

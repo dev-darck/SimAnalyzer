@@ -11,24 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_BEST
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_TOTAL_DESC
 import com.analyzer.session.details.presentation.model.LapStatus
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
+import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
@@ -130,43 +115,43 @@ internal fun SessionDetailsLapTable(
 private val SESSION_DETAILS_TABLE_SORTS = tableSortMappings(
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.Lap,
-        ascSortId = SESSION_DETAIL_SORT_LAP,
-        descSortId = SESSION_DETAIL_SORT_LAP_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortLap,
+        descSortId = SessionDetailFilterIdsUi.SortLapDesc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.TotalTime,
-        ascSortId = SESSION_DETAIL_SORT_BEST,
-        descSortId = SESSION_DETAIL_SORT_TOTAL_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortBest,
+        descSortId = SessionDetailFilterIdsUi.SortTotalDesc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.S1,
-        ascSortId = SESSION_DETAIL_SORT_S1,
-        descSortId = SESSION_DETAIL_SORT_S1_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortS1,
+        descSortId = SessionDetailFilterIdsUi.SortS1Desc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.S2,
-        ascSortId = SESSION_DETAIL_SORT_S2,
-        descSortId = SESSION_DETAIL_SORT_S2_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortS2,
+        descSortId = SessionDetailFilterIdsUi.SortS2Desc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.S3,
-        ascSortId = SESSION_DETAIL_SORT_S3,
-        descSortId = SESSION_DETAIL_SORT_S3_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortS3,
+        descSortId = SessionDetailFilterIdsUi.SortS3Desc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.Incidents,
-        ascSortId = SESSION_DETAIL_SORT_INCIDENTS,
-        descSortId = SESSION_DETAIL_SORT_INCIDENTS_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortIncidents,
+        descSortId = SessionDetailFilterIdsUi.SortIncidentsDesc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.Delta,
-        ascSortId = SESSION_DETAIL_SORT_DELTA,
-        descSortId = SESSION_DETAIL_SORT_DELTA_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortDelta,
+        descSortId = SessionDetailFilterIdsUi.SortDeltaDesc,
     ),
     TableSortMapping(
         sortKey = SessionDetailsSortColumn.Status,
-        ascSortId = SESSION_DETAIL_SORT_STATUS,
-        descSortId = SESSION_DETAIL_SORT_STATUS_DESC,
+        ascSortId = SessionDetailFilterIdsUi.SortStatus,
+        descSortId = SessionDetailFilterIdsUi.SortStatusDesc,
     ),
 )
 

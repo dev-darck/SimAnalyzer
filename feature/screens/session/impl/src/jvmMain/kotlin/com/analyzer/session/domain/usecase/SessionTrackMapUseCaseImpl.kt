@@ -5,6 +5,7 @@ import com.analyzer.session.domain.model.NormalizedTrackMapRequest
 import com.project.analyzer.api.di.IO
 import com.project.analyzer.api.di.ScreenScope
 import com.project.analyzer.telemetry.ac.api.trackmap.TrackMapRepository
+import com.project.analyzer.telemetry.analysis.api.service.RecordedTelemetryAnalysisService
 import com.project.analyzer.ui.components.TrackMapData
 import com.project.analyzer.utils.trackmap.TrackMapPreparationUtil
 import dev.zacsweers.metro.Inject
@@ -20,6 +21,7 @@ import java.util.Locale
 @SingleIn(ScreenScope::class)
 internal class SessionTrackMapUseCaseImpl(
     private val trackMapRepository: TrackMapRepository,
+    private val analysisService: RecordedTelemetryAnalysisService,
     private val trackMapPreparationUtil: TrackMapPreparationUtil,
     @param:IO
     private val ioDispatcher: CoroutineDispatcher,
@@ -78,14 +80,21 @@ internal class SessionTrackMapUseCaseImpl(
                     gameId = normalizedGameId,
                     trackId = normalizedTrackId,
                     layoutId = normalizedLayoutId,
+                    sessionIds = emptyList(),
                 ),
             )
+            val existing = requestsByKey.getValue(requestedKey)
+            if (item.sessionId > 0L && item.sessionId !in existing.sessionIds) {
+                requestsByKey[requestedKey] = existing.copy(
+                    sessionIds = existing.sessionIds + item.sessionId,
+                )
+            }
         }
         return requestsByKey.values.toList()
     }
 
     private suspend fun loadTrackMap(request: NormalizedTrackMapRequest): TrackMapData? =
-        loadRepositoryTrackMap(request)
+        loadRepositoryTrackMap(request) ?: loadRecordedSessionTrackMap(request)
 
     private suspend fun loadRepositoryTrackMap(request: NormalizedTrackMapRequest): TrackMapData? = runCatching {
         trackMapRepository.load(
@@ -94,6 +103,17 @@ internal class SessionTrackMapUseCaseImpl(
             layoutId = request.layoutId,
         )
     }.getOrNull()?.toTrackMapData(trackMapPreparationUtil)
+
+    private suspend fun loadRecordedSessionTrackMap(request: NormalizedTrackMapRequest): TrackMapData? =
+        request.sessionIds.firstNotNullOfOrNull { sessionId ->
+            runCatching {
+                analysisService.loadSessionReportShell(
+                    sessionId = sessionId,
+                    includeTrackMap = true,
+                    forceRefresh = false,
+                )?.trackMap?.toTrackMapData(trackMapPreparationUtil)
+            }.getOrNull()
+        }
 
     private fun String.normalizedGameId(): String? = trim().lowercase(Locale.US).takeIf { it.isNotBlank() }
 

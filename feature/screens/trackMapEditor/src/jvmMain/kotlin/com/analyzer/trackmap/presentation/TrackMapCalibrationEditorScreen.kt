@@ -25,13 +25,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.trackmap.presentation.components.TrackMapCalibrationEditorSidebar
 import com.analyzer.trackmap.presentation.components.TrackMapCalibrationEditorWorkspace
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationEditorMode
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationMarkerPanelUiState
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationInspectorUiState
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationCanvasUiState
+import com.analyzer.trackmap.presentation.model.TrackMapMarkerRowUi
 import com.analyzer.trackmap.presentation.model.toSidebarUiState
 import com.analyzer.trackmap.presentation.model.toWorkspaceUiState
 import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
@@ -39,6 +44,7 @@ import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import dev.zacsweers.metrox.viewmodel.metroViewModel
+import kotlinx.collections.immutable.persistentListOf
 
 private val WideLayoutMinWidth = 1120.dp
 
@@ -109,6 +115,61 @@ fun TrackMapCalibrationEditorScreen(gameId: String, trackId: String, layoutId: S
             onSave = viewModel::save,
             onSelectMarker = viewModel::selectMarker,
             onUpdateGate = viewModel::updateGate,
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TrackMapCalibrationEditorScreenPreview() {
+    SimAnalyzerTheme {
+        TrackMapCalibrationEditorLoadedContent(
+            isWideLayout = true,
+            workspaceUiState = TrackMapCalibrationWorkspaceUiState(
+                title = "Sebring International Raceway",
+                subtitle = "ace / sebring / gp",
+                sourceLabel = "USER",
+                markerCount = 3,
+                canReset = true,
+                canvas = TrackMapCalibrationCanvasUiState(
+                    selectedMarkerId = "sf",
+                    editMode = TrackMapCalibrationEditorMode.Move,
+                ),
+            ),
+            sidebarUiState = TrackMapCalibrationSidebarUiState(
+                markerPanel = TrackMapCalibrationMarkerPanelUiState(
+                    markerRows = persistentListOf(
+                        TrackMapMarkerRowUi(
+                            gateId = "sf",
+                            title = "Start / Finish",
+                            startLabel = "0 m",
+                            endLabel = "0 m",
+                            colorHex = 0xFF4CAF50,
+                        ),
+                    ),
+                    selectedMarkerId = "sf",
+                ),
+                inspector = TrackMapCalibrationInspectorUiState(
+                    selectedRow = TrackMapMarkerRowUi(
+                        gateId = "sf",
+                        title = "Start / Finish",
+                        startLabel = "0 m",
+                        endLabel = "0 m",
+                        colorHex = 0xFF4CAF50,
+                    ),
+                    message = "Preview mode",
+                    canSave = true,
+                ),
+            ),
+            onAddPointModeChange = {},
+            onAddPoint = {},
+            onBack = {},
+            onDeletePoint = {},
+            onEditModeChange = {},
+            onReset = {},
+            onSave = {},
+            onSelectMarker = {},
+            onUpdateGate = { _, _ -> },
         )
     }
 }

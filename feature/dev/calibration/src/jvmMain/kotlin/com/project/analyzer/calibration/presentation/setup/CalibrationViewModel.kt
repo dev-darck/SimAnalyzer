@@ -7,18 +7,19 @@ import com.project.analyzer.calibration.domain.model.CalibrationSample
 import com.project.analyzer.calibration.domain.usecase.CaptureGateOnStandstillUseCase
 import com.project.analyzer.calibration.domain.usecase.GateCaptureException
 import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCase
+import com.project.analyzer.calibration.domain.usecase.TrackCalibrationDraft
 import com.project.analyzer.calibration.domain.usecase.flipDirection
+import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
+import com.project.analyzer.calibration.presentation.model.toDomain
+import com.project.analyzer.calibration.presentation.model.toUi
 import com.project.analyzer.calibration.presentation.formatDebugString
+import com.project.analyzer.calibration.presentation.model.CalibrationReferencePointUi
 import com.project.analyzer.calibration.presentation.overlay.OverlayPublisher
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
+import com.project.analyzer.calibration.presentation.setup.state.isReadyToSave
 import com.project.analyzer.calibration.presentation.toDebugSnapshot
 import com.project.analyzer.leak.api.LeakAwareViewModel
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
-import com.project.analyzer.telemetry.ac.api.model.calibration.SectorCalibration
-import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
-import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibrationSource
 import com.project.analyzer.utils.logger.logger
 import com.project.analyzer.utils.toSlugId
 import dev.zacsweers.metro.Inject
@@ -45,7 +46,7 @@ internal class CalibrationViewModel(
     private var lastCapturePoint: CapturePoint? = null
 
     init {
-        sampleProvider.setReferencePoint(_state.value.referencePoint)
+        sampleProvider.setReferencePoint(_state.value.referencePoint.toDomain())
         viewModelScope.launch {
             sampleProvider.sample.collect { sample ->
                 val debugText = buildDebugString(sample)
@@ -126,8 +127,8 @@ internal class CalibrationViewModel(
         _state.update { it.copy(trackName = name, trackId = id) }
     }
 
-    private fun onReferencePoint(rp: ReferencePoint) {
-        sampleProvider.setReferencePoint(rp)
+    private fun onReferencePoint(rp: CalibrationReferencePointUi) {
+        sampleProvider.setReferencePoint(rp.toDomain())
         _state.update { it.copy(referencePoint = rp) }
     }
 
@@ -182,7 +183,7 @@ internal class CalibrationViewModel(
 
     private fun onFlipStartFinishDirection() {
         _state.update { s ->
-            s.startFinish?.flipDirection()?.let {
+            s.startFinish?.toDomain()?.flipDirection()?.toUi()?.let {
                 s.copy(startFinish = it, message = "✓ Start/Finish direction flipped")
             } ?: s
         }
@@ -193,17 +194,22 @@ internal class CalibrationViewModel(
             if (index < 2 || index > s.sectorCount) return@update s
             val listIndex = index - 2
             val current = s.sectorStartMarks[listIndex]
-            val flipped = current.flipDirection()
+            val flipped = current.toDomain().flipDirection().toUi()
             val updated = s.sectorStartMarks.toMutableList().apply { this[listIndex] = flipped }
             s.copy(sectorStartMarks = updated.toPersistentList(), message = "✓ Sector S$index START direction flipped")
         }
     }
 
     private fun onReset() {
-        _state.value = CalibrationState()
+        val resetState = CalibrationState()
+        sampleProvider.setReferencePoint(resetState.referencePoint.toDomain())
+        _state.value = resetState
     }
 
-    private fun capture(label: String, onCaptured: (Gate) -> Unit) {
+    private fun capture(
+        label: String,
+        onCaptured: (CalibrationGateUi) -> Unit,
+    ) {
         val s = _state.value
         viewModelScope.launch {
             _state.update {
@@ -227,7 +233,7 @@ internal class CalibrationViewModel(
                 val fwdInfo = "fwd=(%.2f, %.2f)".format(result.capturedForward.x, result.capturedForward.y)
                 val qualityInfo = "std=%.3fm, %d samples".format(result.positionStdMeters, result.sampleCount)
 
-                onCaptured(result.gate)
+                onCaptured(result.gate.toUi())
 
                 _state.update {
                     it.copy(
@@ -255,26 +261,15 @@ internal class CalibrationViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isBusy = true, message = "⏳ Saving calibration…") }
             try {
-                val sectors = (1..s.sectorCount).map { i ->
-                    SectorCalibration(
-                        index = i,
-                        start = requireNotNull(s.sectorStart(i)) { "Sector S$i start missing" },
-                        finish = requireNotNull(s.sectorFinish(i)) { "Sector S$i finish missing" },
-                    )
-                }
-
-                val calibration = TrackCalibration(
-                    trackId = s.trackId,
-                    trackName = s.trackName,
-                    layoutId = null,
-                    createdAtEpochMs = System.currentTimeMillis(),
-                    source = TrackCalibrationSource.USER,
-                    referencePoint = s.referencePoint,
-                    startFinish = requireNotNull(s.startFinish),
-                    sectors = sectors,
+                saveUseCase.save(
+                    TrackCalibrationDraft(
+                        trackId = s.trackId,
+                        trackName = s.trackName,
+                        referencePoint = s.referencePoint.toDomain(),
+                        startFinish = requireNotNull(s.startFinish).toDomain(),
+                        sectorStartMarks = s.sectorStartMarks.map { it.toDomain() },
+                    ),
                 )
-
-                saveUseCase.save(calibration)
 
                 _state.update { current ->
                     current.copy(

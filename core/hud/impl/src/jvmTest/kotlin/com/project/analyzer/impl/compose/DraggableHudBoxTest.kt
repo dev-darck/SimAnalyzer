@@ -39,6 +39,7 @@ class DraggableHudBoxTest {
             gameDetector = FakeGameWindowDetector(),
             hitRegions = hitRegions,
             coroutineDispatcher = Dispatchers.Unconfined,
+            swingDispatcher = Dispatchers.Unconfined,
         )
         var savedPosition: HudStoredPosition? = null
 

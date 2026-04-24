@@ -2,9 +2,6 @@ package com.analyzer.settings.presentation
 
 import androidx.compose.runtime.Stable
 import com.analyzer.settings.api.AppCloseBehavior
-import com.analyzer.settings.domain.model.LmuPluginInstallStep
-import com.analyzer.settings.domain.model.LmuPluginSetupDetails
-import com.analyzer.settings.domain.model.StorageValidationResult
 import com.project.analyzer.game.api.GameSelection
 import com.project.analyzer.theme.ThemeMode
 
@@ -34,8 +31,8 @@ internal enum class LmuPluginDialogPhase {
 @Stable
 internal data class LmuPluginDialogState(
     val phase: LmuPluginDialogPhase,
-    val details: LmuPluginSetupDetails,
-    val progressStep: LmuPluginInstallStep? = null,
+    val details: LmuPluginDialogDetailsUi,
+    val progressStep: LmuPluginInstallStepUi? = null,
     val detailMessage: String? = null,
 )
 
@@ -45,7 +42,7 @@ internal data class SettingsState(
     val samplingRateHz: Int = 70,
     val storageLocation: String = "",
     val isStorageLocationValid: Boolean = true,
-    val storageLocationError: StorageValidationResult? = null,
+    val storageLocationError: StorageValidationUi? = null,
     val storageSizeInfo: StorageSizeInfo = StorageSizeInfo.Unknown,
     val recordingEnabled: Boolean = false,
     val recordingWarning: RecordingWarningKind? = null,

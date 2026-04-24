@@ -9,7 +9,6 @@ import com.project.analyzer.chooser.presentation.FileChooserIntent.ClickPlace
 import com.project.analyzer.chooser.presentation.FileChooserIntent.Init
 import com.project.analyzer.chooser.presentation.FileChooserIntent.OpenDirectory
 import com.project.analyzer.chooser.presentation.FileChooserIntent.Refresh
-import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectEntry
 import com.project.analyzer.chooser.presentation.FileChooserIntent.SelectPath
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleExpand
 import com.project.analyzer.chooser.presentation.FileChooserIntent.ToggleHidden
@@ -34,7 +33,6 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
             is OpenDirectory -> handleOpenDrive(intent.drive)
             is ClickPlace -> handleOpenPath(intent.place.path)
             is ToggleExpand -> handleToggleExpand(intent.dir)
-            is SelectEntry -> handleSelectEntry(intent)
             is SelectPath -> updateState { copy(selected = intent.path) }
             is ToggleHidden -> handleToggleHidden()
             is Refresh -> handleRefresh()
@@ -45,8 +43,8 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
         val data = useCase.loadSidebar()
         updateState {
             copy(
-                drives = data.drives.toPersistentList(),
-                places = data.places.toPersistentList(),
+                drives = data.drives.map(File::toUi).toPersistentList(),
+                places = data.places.map(File::toUi).toPersistentList(),
                 error = null,
             )
         }
@@ -62,7 +60,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
         intent.startPath?.let { handleOpenPath(it) }
     }
 
-    private suspend fun handleOpenDrive(drive: File) {
+    private suspend fun handleOpenDrive(drive: FileChooserLocationUi) {
         val result = useCase.openDrive(drive.path, drive.label, currentShowHidden)
         applyTreeResult(result, currentDir = drive.path, selectedDrive = drive.path)
     }
@@ -71,14 +69,6 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
         val result = useCase.toggleExpand(dirPath, currentShowHidden)
         val drive = resolveDrive(dirPath)
         applyTreeResult(result, currentDir = dirPath, selectedDrive = drive)
-    }
-
-    private fun handleSelectEntry(intent: SelectEntry) {
-        if (intent.entry.isDirectory) {
-            dispatch(ToggleExpand(intent.entry.path))
-        } else {
-            updateState { copy(selected = intent.entry.path) }
-        }
     }
 
     private suspend fun handleOpenPath(targetPath: String) {
@@ -103,7 +93,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
         val result = useCase.refreshTree(currentShowHidden)
         updateState {
             copy(
-                treeNodes = result.nodes.toPersistentList(),
+                treeNodes = result.nodes.map { it.toUi() }.toPersistentList(),
                 error = null,
             )
         }
@@ -112,7 +102,7 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
     private fun applyTreeResult(result: TreeResult, currentDir: String, selectedDrive: String) {
         updateState {
             copy(
-                treeNodes = result.nodes.toPersistentList(),
+                treeNodes = result.nodes.map { it.toUi() }.toPersistentList(),
                 scrollToIndex = result.scrollToIndex,
                 currentDir = currentDir,
                 selectedDrive = selectedDrive,
@@ -144,13 +134,13 @@ internal class FileChooserViewModel(private val useCase: FileChooserUseCase) :
         }
     }
 
-    private fun findDriveFor(path: String, drives: List<File>): File? {
+    private fun findDriveFor(path: String, drives: List<FileChooserLocationUi>): FileChooserLocationUi? {
         return drives
             .filter { path.startsWith(it.path) }
             .maxByOrNull { it.path.length }
             ?: run {
                 val root = Path.of(path).root?.toString() ?: return@run null
-                File(label = root, path = root)
+                FileChooserLocationUi(label = root, path = root)
             }
     }
 }

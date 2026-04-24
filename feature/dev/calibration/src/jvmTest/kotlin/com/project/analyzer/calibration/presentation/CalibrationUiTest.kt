@@ -13,6 +13,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
 import com.project.analyzer.calibration.presentation.setup.CalibrationContent
 import com.project.analyzer.calibration.presentation.setup.CalibrationIntent
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
@@ -21,7 +22,6 @@ import com.project.analyzer.calibration.presentation.verify.components.GateDebug
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.TestTags
 import com.project.analyzer.ui.modifier.trackRecompositions
@@ -162,7 +162,7 @@ private class GateDebugState {
     var halfWidthMeters by mutableFloatStateOf(6f)
 }
 
-private fun sampleGate(): Gate = Gate.create(
+private fun sampleGate(): CalibrationGateUi = CalibrationGateUi(
     center = Vec2(0f, 0f),
     forward = Vec2(0f, 1f),
     normal = Vec2(1f, 0f),
@@ -179,5 +179,4 @@ private fun sampleGateDebugInfo(): GateDebugInfo = GateDebugInfo(
     isInside = true,
     margin = 0.4f,
     dParallel = 0.8f,
-    gate = sampleGate(),
 )

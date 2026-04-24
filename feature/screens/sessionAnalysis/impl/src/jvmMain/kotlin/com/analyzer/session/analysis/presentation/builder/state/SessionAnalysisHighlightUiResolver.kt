@@ -2,10 +2,10 @@ package com.analyzer.session.analysis.presentation.builder.state
 
 import com.analyzer.session.analysis.presentation.builder.diagnostic.buildDiagnosticSummary
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
 import kotlin.math.abs
 
 /**
@@ -50,7 +50,7 @@ internal fun Iterable<SessionAnalysisComparisonPointUi>.nearestToTrackPosition(
 
 private fun SessionAnalysisHighlightUi.isRelevantToLap(selectedLapNumber: Int?): Boolean {
     if (selectedLapNumber == null) return true
-    if (diagnosisSource != SessionAnalysisDiagnosisSource.DrivingStyle) return true
+    if (diagnosisSource != SessionAnalysisDiagnosisSourceUi.DrivingStyle) return true
     return lapNumber == selectedLapNumber || selectedLapNumber in affectedLaps
 }
 
@@ -60,8 +60,8 @@ private fun SessionAnalysisHighlightUi.stableHighlightKey(): String = buildStrin
     append(trackPosition?.let { trackPosition -> (trackPosition * 1000f).toInt() } ?: -1)
 }
 
-private fun SessionAnalysisHighlightSeverity.rank(): Int = when (this) {
-    SessionAnalysisHighlightSeverity.Positive -> 1
-    SessionAnalysisHighlightSeverity.Warning -> 2
-    SessionAnalysisHighlightSeverity.Critical -> 3
+private fun SessionAnalysisHighlightSeverityUi.rank(): Int = when (this) {
+    SessionAnalysisHighlightSeverityUi.Positive -> 1
+    SessionAnalysisHighlightSeverityUi.Warning -> 2
+    SessionAnalysisHighlightSeverityUi.Critical -> 3
 }

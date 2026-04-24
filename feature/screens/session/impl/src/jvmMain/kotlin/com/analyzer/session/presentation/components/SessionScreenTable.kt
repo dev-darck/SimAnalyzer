@@ -32,23 +32,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_CAR_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_CAR_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_GAME_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_GAME_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_LAPS_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_LAPS_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_NEWEST
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_OLDEST
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_DESC
 import com.analyzer.session.presentation.model.FILTER_ALL_ID
 import com.analyzer.session.presentation.model.SessionFilterKind
 import com.analyzer.session.presentation.model.SessionFilterOptionUi
 import com.analyzer.session.presentation.model.SessionFilterUiModel
 import com.analyzer.session.presentation.model.SessionListIntent
+import com.analyzer.session.presentation.model.SessionListSortIdsUi
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
 import com.project.analyzer.feature.screens.session.impl.Res.Res
@@ -162,34 +151,34 @@ internal fun SessionScreenTable(
 private val SESSION_TABLE_SORTS = tableSortMappings(
     TableSortMapping(
         sortKey = SessionTableSortColumn.Date,
-        ascSortId = SESSION_LIST_SORT_OLDEST,
-        descSortId = SESSION_LIST_SORT_NEWEST,
+        ascSortId = SessionListSortIdsUi.Oldest,
+        descSortId = SessionListSortIdsUi.Newest,
         defaultOrder = TableHeaderSortOrder.Desc,
     ),
     TableSortMapping(
         sortKey = SessionTableSortColumn.Game,
-        ascSortId = SESSION_LIST_SORT_GAME_ASC,
-        descSortId = SESSION_LIST_SORT_GAME_DESC,
+        ascSortId = SessionListSortIdsUi.GameAsc,
+        descSortId = SessionListSortIdsUi.GameDesc,
     ),
     TableSortMapping(
         sortKey = SessionTableSortColumn.Track,
-        ascSortId = SESSION_LIST_SORT_TRACK_ASC,
-        descSortId = SESSION_LIST_SORT_TRACK_DESC,
+        ascSortId = SessionListSortIdsUi.TrackAsc,
+        descSortId = SessionListSortIdsUi.TrackDesc,
     ),
     TableSortMapping(
         sortKey = SessionTableSortColumn.Car,
-        ascSortId = SESSION_LIST_SORT_CAR_ASC,
-        descSortId = SESSION_LIST_SORT_CAR_DESC,
+        ascSortId = SessionListSortIdsUi.CarAsc,
+        descSortId = SessionListSortIdsUi.CarDesc,
     ),
     TableSortMapping(
         sortKey = SessionTableSortColumn.Laps,
-        ascSortId = SESSION_LIST_SORT_LAPS_ASC,
-        descSortId = SESSION_LIST_SORT_LAPS_DESC,
+        ascSortId = SessionListSortIdsUi.LapsAsc,
+        descSortId = SessionListSortIdsUi.LapsDesc,
     ),
     TableSortMapping(
         sortKey = SessionTableSortColumn.BestLap,
-        ascSortId = SESSION_LIST_SORT_BEST,
-        descSortId = SESSION_LIST_SORT_BEST_DESC,
+        ascSortId = SessionListSortIdsUi.Best,
+        descSortId = SessionListSortIdsUi.BestDesc,
     ),
 )
 

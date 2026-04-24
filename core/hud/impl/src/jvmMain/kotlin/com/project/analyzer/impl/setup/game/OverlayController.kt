@@ -22,7 +22,6 @@ import com.sun.jna.platform.win32.WinUser
 import com.sun.jna.ptr.IntByReference
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +48,7 @@ class OverlayController(
     private val gameDetector: GameWindowDetector,
     private val hitRegions: HitRegions,
     private val coroutineDispatcher: CoroutineDispatcher,
+    private val swingDispatcher: CoroutineDispatcher,
 ) {
 
     private val logger = logger()
@@ -225,7 +225,7 @@ class OverlayController(
     }
 
     private suspend fun handleGameWindowChange(generation: Long, gameInfo: GameWindowInfo?) =
-        withContext(Dispatchers.Swing) {
+        withContext(swingDispatcher) {
             if (!isCurrentGeneration(generation)) return@withContext
             val window = overlayWindow ?: return@withContext
 
@@ -299,7 +299,7 @@ class OverlayController(
                 if (!window.isVisible) return@collect
                 if (_state.value.isDragging) return@collect
 
-                withContext(Dispatchers.Swing) {
+                withContext(swingDispatcher) {
                     if (!isCurrentGeneration(generation)) return@withContext
                     WindowsOverlayRegion.apply(window, regions)
                 }
@@ -387,7 +387,7 @@ class OverlayController(
         val actual = window.bounds
         if (actual == expected) return
 
-        withContext(Dispatchers.Swing) {
+        withContext(swingDispatcher) {
             if (!isCurrentGeneration(generation)) return@withContext
             applyBoundsIfNeeded(window, expected)
         }
@@ -430,7 +430,7 @@ class OverlayController(
     private suspend fun applyClickThroughIfNeeded(generation: Long, hwnd: HWND, enabled: Boolean) {
         if (lastClickThrough == enabled) return
         lastClickThrough = enabled
-        withContext(Dispatchers.Swing) {
+        withContext(swingDispatcher) {
             if (!isCurrentGeneration(generation)) return@withContext
             setMouseTransparent(hwnd, enabled = enabled)
         }

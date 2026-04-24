@@ -206,6 +206,7 @@ internal object TrackIdNormalizer {
         "donington" to "donington_park",
         "fuji_speedway" to "fuji",
         "red_bull_ring" to "redbull_ring",
+        "sebring_international_raceway" to "sebring",
         "watkins_glen_international" to "watkins_glen",
         "paul_ricard_layout" to "paul_ricard",
     )
