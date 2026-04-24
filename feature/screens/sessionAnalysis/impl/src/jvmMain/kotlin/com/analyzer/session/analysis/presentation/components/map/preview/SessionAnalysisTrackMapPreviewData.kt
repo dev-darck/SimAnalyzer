@@ -6,14 +6,14 @@ import com.analyzer.session.analysis.presentation.components.map.model.SessionAn
 import com.analyzer.session.analysis.presentation.components.map.model.SessionAnalysisTrackSectorMarker
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSectorUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisFractionPointUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisTrackCanvasState
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
@@ -78,14 +78,14 @@ internal fun sessionAnalysisTrackMapPreviewCanvasState(): SessionAnalysisTrackCa
         issueMarkers = persistentListOf(
             SessionAnalysisHighlightUi(
                 id = "issue-1",
-                category = SessionAnalysisHighlightCategory.TimeLoss,
-                severity = SessionAnalysisHighlightSeverity.Warning,
+                category = SessionAnalysisHighlightCategoryUi.TimeLoss,
+                severity = SessionAnalysisHighlightSeverityUi.Warning,
                 lapNumber = 7,
                 title = "Late release",
                 description = "Brake release is late into corner.",
                 trackPosition = 0.34f,
                 cornerNumber = 3,
-                diagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
+                diagnosisSource = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
             ),
         ),
         selectedTrailStartFraction = 0.18f,

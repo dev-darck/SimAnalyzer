@@ -1,8 +1,6 @@
 package com.analyzer.session.analysis.presentation.model
 
 import androidx.compose.runtime.Immutable
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 
 @Immutable
 internal data class CornerScoreUi(
@@ -14,6 +12,6 @@ internal data class CornerScoreUi(
     val detail: String = "",
     val timeVsReferenceMs: Int = 0,
     val recommendation: String = "",
-    val source: SessionAnalysisDiagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
-    val category: SessionAnalysisHighlightCategory? = null,
+    val source: SessionAnalysisDiagnosisSourceUi = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
+    val category: SessionAnalysisHighlightCategoryUi? = null,
 )

@@ -25,6 +25,7 @@ moduleImpl {
         projects.core.leak.api.jvmImpl
         projects.core.leak.impl.jvmImpl
         projects.feature.huds.fuel.jvmImpl
+        projects.feature.crash.jvmImpl
         projects.feature.screens.setup.jvmImpl
         projects.feature.screens.settings.api.jvmImpl
         projects.feature.screens.settings.impl.jvmImpl

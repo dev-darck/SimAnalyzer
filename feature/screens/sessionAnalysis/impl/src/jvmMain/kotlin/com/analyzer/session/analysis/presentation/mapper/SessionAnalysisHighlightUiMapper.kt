@@ -1,6 +1,7 @@
 package com.analyzer.session.analysis.presentation.mapper
 
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.toUi
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlight
 import kotlinx.collections.immutable.toImmutableList
 
@@ -9,14 +10,14 @@ import kotlinx.collections.immutable.toImmutableList
  */
 internal fun SessionAnalysisHighlight.toUi(): SessionAnalysisHighlightUi = SessionAnalysisHighlightUi(
     id = id,
-    category = category,
-    severity = severity,
+    category = category.toUi(),
+    severity = severity.toUi(),
     lapNumber = lapNumber,
     title = title,
     description = description,
     trackPosition = trackPosition,
     deltaMs = deltaMs,
-    diagnosisSource = diagnosisSource,
+    diagnosisSource = diagnosisSource.toUi(),
     recommendation = recommendation,
     cornerNumber = cornerNumber,
     score = score,

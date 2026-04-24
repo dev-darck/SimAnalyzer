@@ -1,6 +1,4 @@
 package com.analyzer.session.presentation.model
-
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_NEWEST
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -30,8 +28,8 @@ data class SessionListState(
     ),
     val sortFilter: SessionFilterUiModel = SessionFilterUiModel(
         kind = SessionFilterKind.Sort,
-        selectedId = SESSION_LIST_SORT_NEWEST,
-        options = persistentListOf(SessionFilterOptionUi(SESSION_LIST_SORT_NEWEST)),
+        selectedId = SessionListSortIdsUi.Newest,
+        options = persistentListOf(SessionFilterOptionUi(SessionListSortIdsUi.Newest)),
     ),
     val searchQuery: String = "",
     val page: Int = 1,

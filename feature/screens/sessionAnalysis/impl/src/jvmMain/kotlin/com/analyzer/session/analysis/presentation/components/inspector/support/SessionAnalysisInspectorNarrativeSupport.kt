@@ -2,9 +2,9 @@ package com.analyzer.session.analysis.presentation.components.inspector.support
 
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 
 internal fun resolveLineNarratives(
     diagnosticSummary: SessionAnalysisDiagnosticSummaryUi?,
@@ -61,36 +61,36 @@ internal fun resolveLineNarratives(
 }
 
 private fun DiagnosticIssueUi.isLineRelevant(): Boolean = when (category) {
-    SessionAnalysisHighlightCategory.BrakePoint,
-    SessionAnalysisHighlightCategory.TrailBrakingMissing,
-    SessionAnalysisHighlightCategory.EarlyApexEntry,
-    SessionAnalysisHighlightCategory.LateApexEntry,
-    SessionAnalysisHighlightCategory.CoastingZone,
-    SessionAnalysisHighlightCategory.InconsistentLine,
-    SessionAnalysisHighlightCategory.WheelLockup,
-    SessionAnalysisHighlightCategory.WheelSpin,
-    SessionAnalysisHighlightCategory.ThrottleCommitment,
-    SessionAnalysisHighlightCategory.TimeLoss,
-    SessionAnalysisHighlightCategory.Understeer,
-    SessionAnalysisHighlightCategory.Oversteer,
+    SessionAnalysisHighlightCategoryUi.BrakePoint,
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+    SessionAnalysisHighlightCategoryUi.LateApexEntry,
+    SessionAnalysisHighlightCategoryUi.CoastingZone,
+    SessionAnalysisHighlightCategoryUi.InconsistentLine,
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.WheelSpin,
+    SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
+    SessionAnalysisHighlightCategoryUi.TimeLoss,
+    SessionAnalysisHighlightCategoryUi.Understeer,
+    SessionAnalysisHighlightCategoryUi.Oversteer,
     -> true
 
     else -> false
 }
 
 private fun SessionAnalysisHighlightUi.isLineRelevant(): Boolean = when (category) {
-    SessionAnalysisHighlightCategory.BrakePoint,
-    SessionAnalysisHighlightCategory.TrailBrakingMissing,
-    SessionAnalysisHighlightCategory.EarlyApexEntry,
-    SessionAnalysisHighlightCategory.LateApexEntry,
-    SessionAnalysisHighlightCategory.CoastingZone,
-    SessionAnalysisHighlightCategory.InconsistentLine,
-    SessionAnalysisHighlightCategory.WheelLockup,
-    SessionAnalysisHighlightCategory.WheelSpin,
-    SessionAnalysisHighlightCategory.ThrottleCommitment,
-    SessionAnalysisHighlightCategory.TimeLoss,
-    SessionAnalysisHighlightCategory.Understeer,
-    SessionAnalysisHighlightCategory.Oversteer,
+    SessionAnalysisHighlightCategoryUi.BrakePoint,
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+    SessionAnalysisHighlightCategoryUi.LateApexEntry,
+    SessionAnalysisHighlightCategoryUi.CoastingZone,
+    SessionAnalysisHighlightCategoryUi.InconsistentLine,
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.WheelSpin,
+    SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
+    SessionAnalysisHighlightCategoryUi.TimeLoss,
+    SessionAnalysisHighlightCategoryUi.Understeer,
+    SessionAnalysisHighlightCategoryUi.Oversteer,
     -> true
 
     else -> false
@@ -99,34 +99,34 @@ private fun SessionAnalysisHighlightUi.isLineRelevant(): Boolean = when (categor
 private fun SessionAnalysisHighlightUi.isFallbackTimeLossForSameCorner(
     lineHighlights: List<SessionAnalysisHighlightUi>,
 ): Boolean {
-    if (category != SessionAnalysisHighlightCategory.TimeLoss || cornerNumber == null) {
+    if (category != SessionAnalysisHighlightCategoryUi.TimeLoss || cornerNumber == null) {
         return false
     }
     return lineHighlights.any { other ->
         other !== this &&
             other.cornerNumber == cornerNumber &&
-            other.category != SessionAnalysisHighlightCategory.TimeLoss
+            other.category != SessionAnalysisHighlightCategoryUi.TimeLoss
     }
 }
 
 private fun SessionAnalysisHighlightUi.lineNarrativeGroupKey(): String = when (category) {
-    SessionAnalysisHighlightCategory.BrakePoint,
-    SessionAnalysisHighlightCategory.TrailBrakingMissing,
-    SessionAnalysisHighlightCategory.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.BrakePoint,
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
     -> "entry"
 
-    SessionAnalysisHighlightCategory.EarlyApexEntry,
-    SessionAnalysisHighlightCategory.LateApexEntry,
-    SessionAnalysisHighlightCategory.InconsistentLine,
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+    SessionAnalysisHighlightCategoryUi.LateApexEntry,
+    SessionAnalysisHighlightCategoryUi.InconsistentLine,
     -> "apex"
 
-    SessionAnalysisHighlightCategory.CoastingZone,
-    SessionAnalysisHighlightCategory.WheelSpin,
-    SessionAnalysisHighlightCategory.ThrottleCommitment,
+    SessionAnalysisHighlightCategoryUi.CoastingZone,
+    SessionAnalysisHighlightCategoryUi.WheelSpin,
+    SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
     -> "exit"
 
-    SessionAnalysisHighlightCategory.Understeer,
-    SessionAnalysisHighlightCategory.Oversteer,
+    SessionAnalysisHighlightCategoryUi.Understeer,
+    SessionAnalysisHighlightCategoryUi.Oversteer,
     -> "balance"
 
     else -> "loss"
@@ -170,23 +170,23 @@ private fun DiagnosticIssueUi.toLineNarrative(): SessionAnalysisInspectorNarrati
     )
 
 private fun SessionAnalysisHighlightUi.lineNarrativeTitle(): String = when (category) {
-    SessionAnalysisHighlightCategory.BrakePoint,
-    SessionAnalysisHighlightCategory.TrailBrakingMissing,
-    SessionAnalysisHighlightCategory.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.BrakePoint,
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
     -> cornerScopedTitle("Entry braking is costing time")
 
-    SessionAnalysisHighlightCategory.EarlyApexEntry,
-    SessionAnalysisHighlightCategory.LateApexEntry,
-    SessionAnalysisHighlightCategory.InconsistentLine,
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+    SessionAnalysisHighlightCategoryUi.LateApexEntry,
+    SessionAnalysisHighlightCategoryUi.InconsistentLine,
     -> cornerScopedTitle("Mid-corner line is costing time")
 
-    SessionAnalysisHighlightCategory.CoastingZone,
-    SessionAnalysisHighlightCategory.WheelSpin,
-    SessionAnalysisHighlightCategory.ThrottleCommitment,
+    SessionAnalysisHighlightCategoryUi.CoastingZone,
+    SessionAnalysisHighlightCategoryUi.WheelSpin,
+    SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
     -> cornerScopedTitle("Exit throttle timing is costing time")
 
-    SessionAnalysisHighlightCategory.Understeer,
-    SessionAnalysisHighlightCategory.Oversteer,
+    SessionAnalysisHighlightCategoryUi.Understeer,
+    SessionAnalysisHighlightCategoryUi.Oversteer,
     -> cornerScopedTitle("Balance is costing time")
 
     else -> cornerScopedTitle("Primary loss zone")

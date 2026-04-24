@@ -1,9 +1,14 @@
 package com.analyzer.trackmap.presentation
 
 import androidx.lifecycle.viewModelScope
+import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorSnapshot
+import com.analyzer.trackmap.domain.model.TrackMapLibraryItem
 import com.analyzer.trackmap.domain.usecase.editor.TrackMapCalibrationEditorReducer
 import com.analyzer.trackmap.domain.usecase.editor.TrackMapCalibrationEditorUseCase
 import com.analyzer.trackmap.domain.usecase.live.ObserveTrackMapLivePositionUseCase
+import com.analyzer.trackmap.presentation.model.TrackMapLibraryItemUi
+import com.analyzer.trackmap.presentation.model.toTrackMapEditorPointUi
+import com.analyzer.trackmap.presentation.model.toUi
 import com.analyzer.trackmap.presentation.state.TrackMapCalibrationEditorState
 import com.analyzer.trackmap.presentation.state.toSaveFailureTrackMapCalibrationEditorState
 import com.analyzer.trackmap.presentation.state.toSavedTrackMapCalibrationEditorState
@@ -39,6 +44,10 @@ internal class TrackMapCalibrationEditorViewModel(
     private var loadedMapKey: String? = null
     private var loadJob: Job? = null
     private var livePositionJob: Job? = null
+    private var loadedItem: TrackMapLibraryItem? = null
+    private var loadedItemUi: TrackMapLibraryItemUi? = null
+    private var currentSnapshot: TrackMapCalibrationEditorSnapshot? = null
+    private var originalSnapshot: TrackMapCalibrationEditorSnapshot? = null
 
     init {
         logger.info { "TrackMapEditor.vm init instance=${System.identityHashCode(this)}" }
@@ -53,6 +62,7 @@ internal class TrackMapCalibrationEditorViewModel(
         if (mapKey == loadedMapKey && (_state.value.item != null || _state.value.isLoading)) return
 
         loadedMapKey = mapKey
+        clearLoadedContent()
         loadJob?.cancel()
         livePositionJob?.cancel()
         _state.value = trackMapCalibrationEditorLoadingState()
@@ -73,6 +83,10 @@ internal class TrackMapCalibrationEditorViewModel(
                     return@onSuccess
                 }
 
+                loadedItem = content.item
+                loadedItemUi = content.item.toUi()
+                currentSnapshot = content.snapshot
+                originalSnapshot = content.snapshot
                 _state.value = content.toTrackMapCalibrationEditorState()
                 logger.info {
                     buildString {
@@ -84,6 +98,7 @@ internal class TrackMapCalibrationEditorViewModel(
                 observeLivePosition(mapKey = mapKey, item = content.item)
             }.onFailure { error ->
                 if (!isActive || loadedMapKey != mapKey) return@onFailure
+                clearLoadedContent()
                 logger.error(error) { "TrackMapEditor.load failure mapKey=$mapKey" }
                 _state.value = trackMapCalibrationEditorLoadFailureState(
                     error.message ?: "Failed to load track map",
@@ -93,74 +108,69 @@ internal class TrackMapCalibrationEditorViewModel(
     }
 
     fun selectMarker(gateId: String) {
-        _state.update { state ->
-            state.copy(
-                current = reducer.selectMarker(
-                    snapshot = state.current,
-                    gateId = gateId,
-                ),
-            )
-        }
+        val snapshot = currentSnapshot ?: return
+        publishSnapshot(
+            snapshot = reducer.selectMarker(
+                snapshot = snapshot,
+                gateId = gateId,
+            ),
+        )
     }
 
     fun updateGate(gateId: String, gate: Gate) {
-        val item = _state.value.item ?: return
-        _state.update { state ->
-            state.copy(
-                current = reducer.updateGate(
-                    item = item,
-                    snapshot = state.current,
-                    gateId = gateId,
-                    gate = gate,
-                ),
-                message = null,
-            )
-        }
+        val item = loadedItem ?: return
+        val snapshot = currentSnapshot ?: return
+        publishSnapshot(
+            snapshot = reducer.updateGate(
+                item = item,
+                snapshot = snapshot,
+                gateId = gateId,
+                gate = gate,
+            ),
+            message = null,
+        )
     }
 
     fun addGateAfterSelected(gate: Gate) {
-        val item = _state.value.item ?: return
-        _state.update { state ->
-            val hadNoGates = state.gates.isEmpty()
-            state.copy(
-                current = reducer.addGateAfterSelected(
-                    item = item,
-                    snapshot = state.current,
-                    gate = gate,
-                ),
-                message = if (hadNoGates) "Start / Finish created" else "Point added",
-            )
-        }
+        val item = loadedItem ?: return
+        val snapshot = currentSnapshot ?: return
+        val hadNoGates = _state.value.gates.isEmpty()
+        publishSnapshot(
+            snapshot = reducer.addGateAfterSelected(
+                item = item,
+                snapshot = snapshot,
+                gate = gate,
+            ),
+            message = if (hadNoGates) "Start / Finish created" else "Point added",
+        )
     }
 
     fun deleteGate(gateId: String) {
-        val item = _state.value.item ?: return
-        _state.update { state ->
-            state.copy(
-                current = reducer.deleteGate(
-                    item = item,
-                    snapshot = state.current,
-                    gateId = gateId,
-                ),
-                message = "Point removed",
-            )
-        }
+        val item = loadedItem ?: return
+        val snapshot = currentSnapshot ?: return
+        publishSnapshot(
+            snapshot = reducer.deleteGate(
+                item = item,
+                snapshot = snapshot,
+                gateId = gateId,
+            ),
+            message = "Point removed",
+        )
     }
 
     fun reset() {
-        _state.update { state ->
-            state.copy(
-                current = state.original,
-                message = "Changes reset",
-            )
-        }
+        publishSnapshot(
+            snapshot = originalSnapshot ?: return,
+            message = "Changes reset",
+        )
     }
 
     fun save() {
         val state = _state.value
-        val item = state.item ?: return
+        val item = loadedItem ?: return
+        val itemUi = loadedItemUi ?: return
         if (!state.canSave) return
-        val snapshotToSave = state.current
+        val snapshotToSave = currentSnapshot ?: return
 
         viewModelScope.launch {
             _state.update(TrackMapCalibrationEditorState::toSavingTrackMapCalibrationEditorState)
@@ -171,10 +181,12 @@ internal class TrackMapCalibrationEditorViewModel(
                     snapshot = snapshotToSave,
                 )
             }.onSuccess { savedSnapshot ->
+                originalSnapshot = savedSnapshot
+                currentSnapshot = savedSnapshot
                 _state.update { currentState ->
                     currentState.toSavedTrackMapCalibrationEditorState(
                         snapshot = savedSnapshot,
-                        trackId = item.map.trackId,
+                        trackId = itemUi.trackId,
                     )
                 }
             }.onFailure { error ->
@@ -187,15 +199,33 @@ internal class TrackMapCalibrationEditorViewModel(
         }
     }
 
-    private fun observeLivePosition(mapKey: String, item: com.analyzer.trackmap.domain.model.TrackMapLibraryItem) {
+    private fun observeLivePosition(mapKey: String, item: TrackMapLibraryItem) {
         livePositionJob?.cancel()
         livePositionJob = viewModelScope.launch {
             observeLivePositionUseCase.observe(item).collect { position ->
                 if (!isActive || loadedMapKey != mapKey) return@collect
                 _state.update { currentState ->
-                    currentState.copy(livePosition = position)
+                    currentState.copy(livePosition = position?.toTrackMapEditorPointUi())
                 }
             }
         }
+    }
+
+    private fun publishSnapshot(snapshot: TrackMapCalibrationEditorSnapshot, message: String? = _state.value.message) {
+        val item = loadedItemUi ?: return
+        currentSnapshot = snapshot
+        _state.value = snapshot.toTrackMapCalibrationEditorState(
+            item = item,
+            livePosition = _state.value.livePosition,
+            message = message,
+            canReset = snapshot != originalSnapshot,
+        )
+    }
+
+    private fun clearLoadedContent() {
+        loadedItem = null
+        loadedItemUi = null
+        currentSnapshot = null
+        originalSnapshot = null
     }
 }

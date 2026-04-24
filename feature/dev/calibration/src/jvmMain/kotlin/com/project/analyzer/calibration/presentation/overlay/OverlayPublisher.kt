@@ -1,13 +1,13 @@
 package com.project.analyzer.calibration.presentation.overlay
 
 import com.project.analyzer.calibration.di.OverlayDebugBus
+import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.calibration.presentation.verify.state.GateDebugInfo
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
 import kotlin.math.abs
 
-class OverlayPublisher(private val overlayDebugBus: OverlayDebugBus) {
+internal class OverlayPublisher(private val overlayDebugBus: OverlayDebugBus) {
 
     data class Timing(
         val currentLapMs: Long? = null,
@@ -30,7 +30,7 @@ class OverlayPublisher(private val overlayDebugBus: OverlayDebugBus) {
         speedKmh: Float?,
         carPos: Vec2?,
         carDir: Vec2?,
-        gates: Map<String, Gate>,
+        gates: Map<String, CalibrationGateUi>,
         gateInfoOverride: List<GateDebugInfo>? = null,
         timing: Timing? = null,
         lastCapturePoint: CapturePoint? = null,
@@ -65,15 +65,19 @@ class OverlayPublisher(private val overlayDebugBus: OverlayDebugBus) {
         }
     }
 
-    private fun buildGateInfo(carPos: Vec2?, carDir: Vec2?, gates: Map<String, Gate>): List<GateDebugInfo> {
+    private fun buildGateInfo(
+        carPos: Vec2?,
+        carDir: Vec2?,
+        gates: Map<String, CalibrationGateUi>,
+    ): List<GateDebugInfo> {
         if (carPos == null || carDir == null) return emptyList()
 
         val carDirN = carDir.safeNormalized(Vec2(0f, 1f))
 
         return gates.map { (key, gate) ->
-            val delta = carPos - gate.centerV2()
-            val f = gate.forwardV2().safeNormalized(Vec2(0f, 1f))
-            val n = gate.normalV2().safeNormalized(f.perpLeft())
+            val delta = carPos - gate.center
+            val f = gate.forward.safeNormalized(Vec2(0f, 1f))
+            val n = gate.normal.safeNormalized(f.perpLeft())
 
             val dParallel = delta.dot(f)
             val dLateral = delta.dot(n)
@@ -92,7 +96,6 @@ class OverlayPublisher(private val overlayDebugBus: OverlayDebugBus) {
                 isInside = inside,
                 margin = margin,
                 dParallel = dParallel,
-                gate = gate,
             )
         }
     }

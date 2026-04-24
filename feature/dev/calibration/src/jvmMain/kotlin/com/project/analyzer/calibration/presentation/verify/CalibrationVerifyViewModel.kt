@@ -10,6 +10,7 @@ import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCa
 import com.project.analyzer.calibration.domain.usecase.flipDirection
 import com.project.analyzer.calibration.presentation.formatDebugString
 import com.project.analyzer.calibration.presentation.toDebugSnapshot
+import com.project.analyzer.calibration.presentation.verify.state.CalibrationTrackUi
 import com.project.analyzer.calibration.presentation.verify.state.CalibrationVerifyState
 import com.project.analyzer.calibration.presentation.verify.state.EditingGate
 import com.project.analyzer.leak.api.LeakAwareViewModel
@@ -110,7 +111,7 @@ internal class CalibrationVerifyViewModel(
         _state.update {
             it.copy(
                 trackId = trackId,
-                calibration = loadedCalibration,
+                calibration = loadedCalibration.toUi(),
                 isRunning = true,
                 message = "Loaded. Drive and cross SF/sectors to verify.",
             )
@@ -232,7 +233,7 @@ internal class CalibrationVerifyViewModel(
 
             _state.update {
                 it.copy(
-                    calibration = updatedCalibration,
+                    calibration = updatedCalibration.toUi(),
                     message = "✓ ${gate.name} direction flipped and saved",
                 )
             }
@@ -258,7 +259,7 @@ internal class CalibrationVerifyViewModel(
 
                 _state.update {
                     it.copy(
-                        calibration = updatedCalibration,
+                        calibration = updatedCalibration.toUi(),
                         editingGate = null,
                         isCapturing = false,
                         message = "✓ ${editingGate.name} updated: $posInfo",
@@ -350,4 +351,9 @@ internal class CalibrationVerifyViewModel(
         EditingGate.SECTOR_1_FINISH -> sectors.find { it.index == 1 }?.finish
         EditingGate.SECTOR_2_FINISH -> sectors.find { it.index == 2 }?.finish
     }
+
+    private fun TrackCalibration.toUi(): CalibrationTrackUi = CalibrationTrackUi(
+        trackId = trackId,
+        trackName = trackName,
+    )
 }

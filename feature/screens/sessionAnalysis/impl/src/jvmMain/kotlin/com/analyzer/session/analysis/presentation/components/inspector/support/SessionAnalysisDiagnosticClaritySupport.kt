@@ -2,8 +2,8 @@ package com.analyzer.session.analysis.presentation.components.inspector.support
 
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 
 internal fun DiagnosticIssueUi.lineLookAtLabel(): String = category.toDrivingLookAtLabel(cornerNumber)
 
@@ -14,34 +14,34 @@ internal fun DiagnosticIssueUi.setupLookAtLabel(): String = category.toSetupLook
 
 internal fun CornerScoreUi.lookAtLabel(): String = category.toDrivingLookAtLabel(cornerNumber)
 
-internal fun SessionAnalysisDiagnosisSource.fixInLabel(): String = when (this) {
-    SessionAnalysisDiagnosisSource.DrivingStyle -> "Driver"
-    SessionAnalysisDiagnosisSource.CarSetup -> "Car"
-    SessionAnalysisDiagnosisSource.Mixed -> "Driver first. If it repeats, then car"
+internal fun SessionAnalysisDiagnosisSourceUi.fixInLabel(): String = when (this) {
+    SessionAnalysisDiagnosisSourceUi.DrivingStyle -> "Driver"
+    SessionAnalysisDiagnosisSourceUi.CarSetup -> "Car"
+    SessionAnalysisDiagnosisSourceUi.Mixed -> "Driver first. If it repeats, then car"
 }
 
-internal fun SessionAnalysisHighlightCategory?.toSetupLookAtLabel(
+internal fun SessionAnalysisHighlightCategoryUi?.toSetupLookAtLabel(
     cornerNumber: Int?,
     system: SessionAnalysisSetupSystem,
 ): String = when (this) {
-    SessionAnalysisHighlightCategory.TyrePressureImbalance ->
+    SessionAnalysisHighlightCategoryUi.TyrePressureImbalance ->
         "all four hot pressures after one clean push lap"
 
-    SessionAnalysisHighlightCategory.TyreTempImbalance,
-    SessionAnalysisHighlightCategory.TyreOverheat,
-    SessionAnalysisHighlightCategory.TyreCold,
+    SessionAnalysisHighlightCategoryUi.TyreTempImbalance,
+    SessionAnalysisHighlightCategoryUi.TyreOverheat,
+    SessionAnalysisHighlightCategoryUi.TyreCold,
     -> "inside, middle and outside tyre temps after the loaded corners"
 
-    SessionAnalysisHighlightCategory.BrakeBalance ->
+    SessionAnalysisHighlightCategoryUi.BrakeBalance ->
         "heavy braking zones with near-straight steering"
 
-    SessionAnalysisHighlightCategory.AeroBalance,
-    SessionAnalysisHighlightCategory.SetupUndersteer,
-    SessionAnalysisHighlightCategory.SetupOversteer,
+    SessionAnalysisHighlightCategoryUi.AeroBalance,
+    SessionAnalysisHighlightCategoryUi.SetupUndersteer,
+    SessionAnalysisHighlightCategoryUi.SetupOversteer,
     -> cornerNumber?.let { corner -> "Turn $corner balance from entry to apex and minimum speed" }
         ?: "the repeated corners where the car keeps pushing wide or rotating too much"
 
-    SessionAnalysisHighlightCategory.DamperIssue ->
+    SessionAnalysisHighlightCategoryUi.DamperIssue ->
         "kerbs, bumps and the first car movement after load transfer"
 
     else -> when (system) {
@@ -53,26 +53,26 @@ internal fun SessionAnalysisHighlightCategory?.toSetupLookAtLabel(
     }
 }
 
-internal fun SessionAnalysisHighlightCategory?.toDrivingLookAtLabel(cornerNumber: Int?): String {
+internal fun SessionAnalysisHighlightCategoryUi?.toDrivingLookAtLabel(cornerNumber: Int?): String {
     val zonePrefix = cornerNumber?.let { corner -> "Turn $corner: " }.orEmpty()
     return when (this) {
-        SessionAnalysisHighlightCategory.BrakePoint,
-        SessionAnalysisHighlightCategory.TrailBrakingMissing,
-        SessionAnalysisHighlightCategory.WheelLockup,
+        SessionAnalysisHighlightCategoryUi.BrakePoint,
+        SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+        SessionAnalysisHighlightCategoryUi.WheelLockup,
         -> zonePrefix + "entry brake trace, release timing and minimum speed"
 
-        SessionAnalysisHighlightCategory.EarlyApexEntry,
-        SessionAnalysisHighlightCategory.LateApexEntry,
-        SessionAnalysisHighlightCategory.InconsistentLine,
+        SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+        SessionAnalysisHighlightCategoryUi.LateApexEntry,
+        SessionAnalysisHighlightCategoryUi.InconsistentLine,
         -> zonePrefix + "turn-in point, apex location and steering trace"
 
-        SessionAnalysisHighlightCategory.CoastingZone,
-        SessionAnalysisHighlightCategory.WheelSpin,
-        SessionAnalysisHighlightCategory.ThrottleCommitment,
+        SessionAnalysisHighlightCategoryUi.CoastingZone,
+        SessionAnalysisHighlightCategoryUi.WheelSpin,
+        SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
         -> zonePrefix + "first throttle pickup, steering unwind and exit speed"
 
-        SessionAnalysisHighlightCategory.Understeer,
-        SessionAnalysisHighlightCategory.Oversteer,
+        SessionAnalysisHighlightCategoryUi.Understeer,
+        SessionAnalysisHighlightCategoryUi.Oversteer,
         -> zonePrefix + "steering angle versus car rotation through the loaded phase"
 
         else -> if (cornerNumber != null) {

@@ -1,6 +1,6 @@
 package com.project.analyzer.utils
 
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.nio.channels.FileChannel
@@ -18,7 +18,7 @@ public object SingleInstanceGuard {
     private var lock: FileLock? = null
     private var lockPath: Path? = null
 
-    public suspend fun acquireOrExit(lockFile: File): Unit = withContext(Dispatchers.IO) {
+    public suspend fun acquireOrExit(lockFile: File, dispatcher: CoroutineDispatcher): Unit = withContext(dispatcher) {
         val path = lockFile.toPath()
         Files.createDirectories(path.parent)
 
@@ -44,7 +44,7 @@ public object SingleInstanceGuard {
         }
     }
 
-    public suspend fun release(): Unit = withContext(Dispatchers.IO) {
+    public suspend fun release(dispatcher: CoroutineDispatcher): Unit = withContext(dispatcher) {
         val currentLockPath = lockPath
         try {
             lock?.release()

@@ -36,8 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
+import com.project.analyzer.calibration.presentation.model.CalibrationReferencePointUi
 import com.project.analyzer.calibration.presentation.setup.CalibrationIntent
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
+import com.project.analyzer.calibration.presentation.setup.state.isReadyToSave
+import com.project.analyzer.calibration.presentation.setup.state.sectorStart
 import com.project.analyzer.feature.dev.calibration.Res.Res
 import com.project.analyzer.feature.dev.calibration.Res.calibration_add_sector
 import com.project.analyzer.feature.dev.calibration.Res.calibration_capture
@@ -66,8 +70,6 @@ import com.project.analyzer.feature.dev.calibration.Res.calibration_sector_title
 import com.project.analyzer.feature.dev.calibration.Res.calibration_select_reference_point
 import com.project.analyzer.feature.dev.calibration.Res.calibration_start_finish
 import com.project.analyzer.feature.dev.calibration.Res.calibration_track_name
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.format.formatDecimal
 import org.jetbrains.compose.resources.stringResource
@@ -107,7 +109,7 @@ fun CalibrationSectionCard(
 }
 
 @Composable
-fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit) {
+internal fun SectorsBlock(state: CalibrationState, dispatch: (CalibrationIntent) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -246,7 +248,11 @@ internal fun TrackNameBlock(state: CalibrationState, onName: (String) -> Unit) {
 }
 
 @Composable
-internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Unit, onRadius: (Float) -> Unit) {
+internal fun SettingsBlock(
+    state: CalibrationState,
+    onRp: (CalibrationReferencePointUi) -> Unit,
+    onRadius: (Float) -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
@@ -282,7 +288,10 @@ internal fun SettingsBlock(state: CalibrationState, onRp: (ReferencePoint) -> Un
 }
 
 @Composable
-fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (ReferencePoint) -> Unit) {
+internal fun ReferencePointDropdown(
+    selected: CalibrationReferencePointUi,
+    onSelected: (CalibrationReferencePointUi) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }) {
@@ -297,7 +306,7 @@ fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (ReferencePoint
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            ReferencePoint.entries.forEach { rp ->
+            CalibrationReferencePointUi.entries.forEach { rp ->
                 DropdownMenuItem(
                     text = {
                         Text(
@@ -316,9 +325,9 @@ fun ReferencePointDropdown(selected: ReferencePoint, onSelected: (ReferencePoint
 }
 
 @Composable
-fun GateRow(
+internal fun GateRow(
     title: String,
-    gate: Gate?,
+    gate: CalibrationGateUi?,
     enabled: Boolean,
     onClick: () -> Unit,
     showFlipAction: Boolean = false,
@@ -341,7 +350,7 @@ fun GateRow(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = SimAnalyzerTheme.typography.bodyLarge)
             if (gate != null) {
-                val fwd = gate.forwardV2()
+                val fwd = gate.forward
                 val angle = Math.toDegrees(kotlin.math.atan2(fwd.x.toDouble(), fwd.y.toDouble()))
                 Text(
                     stringResource(
@@ -410,8 +419,8 @@ internal fun copyToClipboard(text: String) {
 }
 
 @Composable
-private fun ReferencePoint.displayName(): String = when (this) {
-    ReferencePoint.CAR_CENTER -> stringResource(Res.string.calibration_reference_point_car_center)
-    ReferencePoint.FRONT_AXLE -> stringResource(Res.string.calibration_reference_point_front_axle)
-    ReferencePoint.REAR_AXLE -> stringResource(Res.string.calibration_reference_point_rear_axle)
+private fun CalibrationReferencePointUi.displayName(): String = when (this) {
+    CalibrationReferencePointUi.CarCenter -> stringResource(Res.string.calibration_reference_point_car_center)
+    CalibrationReferencePointUi.FrontAxle -> stringResource(Res.string.calibration_reference_point_front_axle)
+    CalibrationReferencePointUi.RearAxle -> stringResource(Res.string.calibration_reference_point_rear_axle)
 }

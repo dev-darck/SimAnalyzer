@@ -1,8 +1,6 @@
 package com.analyzer.trackmap.presentation.model
 
-import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
-
-data class TrackMapBuilderUiState(
+internal data class TrackMapBuilderUiState(
     val recording: Boolean = false,
     val isSaving: Boolean = false,
     val gameId: String = "",
@@ -10,7 +8,7 @@ data class TrackMapBuilderUiState(
     val trackId: String = "",
     val trackName: String = "",
     val layoutId: String? = null,
-    val referencePoint: ReferencePoint = ReferencePoint.FRONT_AXLE,
+    val referencePoint: TrackMapReferencePointUi = TrackMapReferencePointUi.FrontAxle,
     val pointCount: Int = 0,
     val totalDistanceMeters: Float = 0f,
     val averageTrackWidthMeters: Float = 0f,

@@ -3,6 +3,7 @@ package com.project.analyzer.impl.di
 import com.analyzer.settings.api.AppCloseBehaviorRepository
 import com.analyzer.settings.api.ThemeRepository
 import com.project.analyzer.api.di.AppLifecycle
+import com.project.analyzer.crash.domain.CreateCrashReportUseCase
 import com.project.analyzer.game.api.GameDetectorGraph
 import com.project.analyzer.game.impl.createGameDetectorComponent
 import com.project.analyzer.hud.api.HudGraph
@@ -20,6 +21,7 @@ interface AppComponent :
 
     val appLifecycle: AppLifecycle
     val appCloseBehaviorRepository: AppCloseBehaviorRepository
+    val createCrashReportUseCase: CreateCrashReportUseCase
     val themeRepository: ThemeRepository
     val hudPreferences: HudPreferencesStore
 }

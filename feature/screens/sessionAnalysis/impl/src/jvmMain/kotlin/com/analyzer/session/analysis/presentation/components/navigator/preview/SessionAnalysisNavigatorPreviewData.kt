@@ -1,12 +1,12 @@
 package com.analyzer.session.analysis.presentation.components.navigator.preview
 
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSessionOptionUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -82,14 +82,14 @@ internal fun sessionAnalysisNavigatorPreviewLaps(): ImmutableList<SessionAnalysi
 internal fun sessionAnalysisNavigatorPreviewHighlights(): ImmutableList<SessionAnalysisHighlightUi> = persistentListOf(
     SessionAnalysisHighlightUi(
         id = "hl-1",
-        category = SessionAnalysisHighlightCategory.TimeLoss,
-        severity = SessionAnalysisHighlightSeverity.Warning,
+        category = SessionAnalysisHighlightCategoryUi.TimeLoss,
+        severity = SessionAnalysisHighlightSeverityUi.Warning,
         lapNumber = 7,
         title = "Late brake release into Turn 7",
         description = "The cursor drifts deep into entry and costs rotation speed.",
         trackPosition = 0.42f,
         deltaMs = 92,
-        diagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
+        diagnosisSource = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
         recommendation = "Release pressure earlier before the apex.",
         cornerNumber = 7,
         score = 72,
@@ -97,14 +97,14 @@ internal fun sessionAnalysisNavigatorPreviewHighlights(): ImmutableList<SessionA
     ),
     SessionAnalysisHighlightUi(
         id = "hl-2",
-        category = SessionAnalysisHighlightCategory.Oversteer,
-        severity = SessionAnalysisHighlightSeverity.Warning,
+        category = SessionAnalysisHighlightCategoryUi.Oversteer,
+        severity = SessionAnalysisHighlightSeverityUi.Warning,
         lapNumber = 7,
         title = "Rear instability on exit",
         description = "Throttle pickup unsettles the rear axle at Turn 9.",
         trackPosition = 0.61f,
         deltaMs = 57,
-        diagnosisSource = SessionAnalysisDiagnosisSource.Mixed,
+        diagnosisSource = SessionAnalysisDiagnosisSourceUi.Mixed,
         recommendation = "Smooth the throttle ramp or calm rear damping.",
         cornerNumber = 9,
         score = 68,

@@ -14,6 +14,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
+import com.project.analyzer.devsettings.presentation.components.DevHudSettingsScreen
+import com.project.analyzer.devsettings.presentation.components.TelemetryInspectorScreen
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.TestTags
 import com.project.analyzer.ui.modifier.trackRecompositions

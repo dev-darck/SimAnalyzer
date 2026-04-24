@@ -1,22 +1,11 @@
 package com.analyzer.session.presentation.components
 
 import androidx.compose.runtime.Composable
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_BEST_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_CAR_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_CAR_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_GAME_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_GAME_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_LAPS_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_LAPS_DESC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_NEWEST
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_OLDEST
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_ASC
-import com.analyzer.session.domain.model.SESSION_LIST_SORT_TRACK_DESC
 import com.analyzer.session.presentation.model.FILTER_ALL_ID
 import com.analyzer.session.presentation.model.SessionFilterKind
 import com.analyzer.session.presentation.model.SessionFilterOptionUi
 import com.analyzer.session.presentation.model.SessionFilterUiModel
+import com.analyzer.session.presentation.model.SessionListSortIdsUi
 import com.project.analyzer.feature.screens.session.impl.Res.Res
 import com.project.analyzer.feature.screens.session.impl.Res.session_filter_all
 import com.project.analyzer.feature.screens.session.impl.Res.session_filter_car
@@ -75,17 +64,17 @@ private fun sessionFilterOptionLabel(kind: SessionFilterKind, option: SessionFil
 
 @Composable
 internal fun sessionSortLabel(sortId: String): String = when (sortId) {
-    SESSION_LIST_SORT_NEWEST -> stringResource(Res.string.session_sort_newest)
-    SESSION_LIST_SORT_OLDEST -> stringResource(Res.string.session_sort_oldest)
-    SESSION_LIST_SORT_GAME_ASC -> stringResource(Res.string.session_sort_game_asc)
-    SESSION_LIST_SORT_GAME_DESC -> stringResource(Res.string.session_sort_game_desc)
-    SESSION_LIST_SORT_TRACK_ASC -> stringResource(Res.string.session_sort_track_asc)
-    SESSION_LIST_SORT_TRACK_DESC -> stringResource(Res.string.session_sort_track_desc)
-    SESSION_LIST_SORT_CAR_ASC -> stringResource(Res.string.session_sort_car_asc)
-    SESSION_LIST_SORT_CAR_DESC -> stringResource(Res.string.session_sort_car_desc)
-    SESSION_LIST_SORT_LAPS_ASC -> stringResource(Res.string.session_sort_laps_asc)
-    SESSION_LIST_SORT_LAPS_DESC -> stringResource(Res.string.session_sort_laps_desc)
-    SESSION_LIST_SORT_BEST -> stringResource(Res.string.session_sort_best_asc)
-    SESSION_LIST_SORT_BEST_DESC -> stringResource(Res.string.session_sort_best_desc)
+    SessionListSortIdsUi.Newest -> stringResource(Res.string.session_sort_newest)
+    SessionListSortIdsUi.Oldest -> stringResource(Res.string.session_sort_oldest)
+    SessionListSortIdsUi.GameAsc -> stringResource(Res.string.session_sort_game_asc)
+    SessionListSortIdsUi.GameDesc -> stringResource(Res.string.session_sort_game_desc)
+    SessionListSortIdsUi.TrackAsc -> stringResource(Res.string.session_sort_track_asc)
+    SessionListSortIdsUi.TrackDesc -> stringResource(Res.string.session_sort_track_desc)
+    SessionListSortIdsUi.CarAsc -> stringResource(Res.string.session_sort_car_asc)
+    SessionListSortIdsUi.CarDesc -> stringResource(Res.string.session_sort_car_desc)
+    SessionListSortIdsUi.LapsAsc -> stringResource(Res.string.session_sort_laps_asc)
+    SessionListSortIdsUi.LapsDesc -> stringResource(Res.string.session_sort_laps_desc)
+    SessionListSortIdsUi.Best -> stringResource(Res.string.session_sort_best_asc)
+    SessionListSortIdsUi.BestDesc -> stringResource(Res.string.session_sort_best_desc)
     else -> sortId
 }

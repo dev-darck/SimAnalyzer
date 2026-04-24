@@ -5,19 +5,19 @@ import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisCoachInsightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisCoachMetricUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSectorUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTyreUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisTyreTemperatureBandUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisInspectorState
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisTyreAnalyticsUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
-import com.project.analyzer.telemetry.analysis.api.model.tyre.SessionAnalysisTyreTemperatureBand
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -56,9 +56,9 @@ internal fun sessionAnalysisInspectorPreviewDiagnosticSummary(): SessionAnalysis
                 description = "The car stays loaded too deep into the corner.",
                 recommendation = "Release pressure earlier before turn-in.",
                 priority = 1,
-                source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                source = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
                 potentialTimeGainMs = 182,
-                category = SessionAnalysisHighlightCategory.TimeLoss,
+                category = SessionAnalysisHighlightCategoryUi.TimeLoss,
                 cornerNumber = 7,
                 trackPosition = 0.42f,
             ),
@@ -69,9 +69,9 @@ internal fun sessionAnalysisInspectorPreviewDiagnosticSummary(): SessionAnalysis
                 description = "Power application unloads the rear axle too abruptly.",
                 recommendation = "Rebalance rear damping and diff preload.",
                 priority = 2,
-                source = SessionAnalysisDiagnosisSource.CarSetup,
+                source = SessionAnalysisDiagnosisSourceUi.CarSetup,
                 potentialTimeGainMs = 96,
-                category = SessionAnalysisHighlightCategory.Oversteer,
+                category = SessionAnalysisHighlightCategoryUi.Oversteer,
                 cornerNumber = 9,
                 trackPosition = 0.61f,
             ),
@@ -84,8 +84,8 @@ internal fun sessionAnalysisInspectorPreviewDiagnosticSummary(): SessionAnalysis
                 mainIssue = "Late release into apex",
                 timeVsReferenceMs = 92,
                 recommendation = "Release brake earlier and rotate sooner.",
-                source = SessionAnalysisDiagnosisSource.DrivingStyle,
-                category = SessionAnalysisHighlightCategory.TrailBrakingMissing,
+                source = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
+                category = SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
             ),
             CornerScoreUi(
                 cornerNumber = 9,
@@ -94,8 +94,8 @@ internal fun sessionAnalysisInspectorPreviewDiagnosticSummary(): SessionAnalysis
                 mainIssue = "Rear instability on throttle",
                 timeVsReferenceMs = 57,
                 recommendation = "Soften throttle ramp or calm rear damping.",
-                source = SessionAnalysisDiagnosisSource.Mixed,
-                category = SessionAnalysisHighlightCategory.WheelSpin,
+                source = SessionAnalysisDiagnosisSourceUi.Mixed,
+                category = SessionAnalysisHighlightCategoryUi.WheelSpin,
             ),
         ),
     )
@@ -103,14 +103,14 @@ internal fun sessionAnalysisInspectorPreviewDiagnosticSummary(): SessionAnalysis
 internal fun sessionAnalysisInspectorPreviewHighlights(): ImmutableList<SessionAnalysisHighlightUi> = persistentListOf(
     SessionAnalysisHighlightUi(
         id = "setup-1",
-        category = SessionAnalysisHighlightCategory.DamperIssue,
-        severity = SessionAnalysisHighlightSeverity.Warning,
+        category = SessionAnalysisHighlightCategoryUi.DamperIssue,
+        severity = SessionAnalysisHighlightSeverityUi.Warning,
         lapNumber = 7,
         title = "Rear damper rebound is too aggressive",
         description = "The rear unloads too quickly at exit over curb compression.",
         trackPosition = 0.61f,
         deltaMs = 57,
-        diagnosisSource = SessionAnalysisDiagnosisSource.CarSetup,
+        diagnosisSource = SessionAnalysisDiagnosisSourceUi.CarSetup,
         recommendation = "Reduce rear rebound or soften throttle pickup.",
         cornerNumber = 9,
         score = 68,
@@ -118,14 +118,14 @@ internal fun sessionAnalysisInspectorPreviewHighlights(): ImmutableList<SessionA
     ),
     SessionAnalysisHighlightUi(
         id = "drive-1",
-        category = SessionAnalysisHighlightCategory.TimeLoss,
-        severity = SessionAnalysisHighlightSeverity.Warning,
+        category = SessionAnalysisHighlightCategoryUi.TimeLoss,
+        severity = SessionAnalysisHighlightSeverityUi.Warning,
         lapNumber = 7,
         title = "Brake release is late",
         description = "The car is held too long on the brake before apex.",
         trackPosition = 0.42f,
         deltaMs = 92,
-        diagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
+        diagnosisSource = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
         recommendation = "Release pressure earlier and rotate sooner.",
         cornerNumber = 7,
         score = 72,
@@ -223,5 +223,5 @@ private fun tyre(pressurePsi: Float, coreTempC: Float, brakeTempC: Float): Sessi
         avgTempC = coreTempC - 2f,
         brakeTempC = brakeTempC,
         slip = 0.08f,
-        tempBand = SessionAnalysisTyreTemperatureBand.Optimal,
+        tempBand = SessionAnalysisTyreTemperatureBandUi.Optimal,
     )

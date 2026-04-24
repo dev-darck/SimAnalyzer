@@ -3,11 +3,11 @@ package com.analyzer.session.presentation
 import com.analyzer.session.domain.model.SessionFilterOption
 import com.analyzer.session.domain.model.SessionListDomainItem
 import com.analyzer.session.domain.model.SessionListPage
-import com.analyzer.session.domain.model.SessionListQuery
 import com.analyzer.session.presentation.model.FILTER_ALL_ID
 import com.analyzer.session.presentation.model.SessionFilterKind
 import com.analyzer.session.presentation.model.SessionFilterOptionUi
 import com.analyzer.session.presentation.model.SessionFilterUiModel
+import com.analyzer.session.presentation.model.SessionListQueryUi
 import com.analyzer.session.presentation.model.SessionListState
 import com.analyzer.session.presentation.model.SessionRowUi
 import com.analyzer.session.presentation.model.SessionStatsUi
@@ -16,7 +16,7 @@ import kotlinx.collections.immutable.toPersistentList
 import java.util.Locale
 
 internal fun SessionListPage.toSessionListState(
-    query: SessionListQuery,
+    query: SessionListQueryUi,
     isLoading: Boolean = false,
 ): SessionListState = SessionListState(
     isLoading = isLoading,

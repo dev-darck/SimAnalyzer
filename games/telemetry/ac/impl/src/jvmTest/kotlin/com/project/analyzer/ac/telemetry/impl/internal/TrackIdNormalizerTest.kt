@@ -23,6 +23,10 @@ class TrackIdNormalizerTest {
             "redbull_ring_gp",
             TrackIdNormalizer.normalize(track = "red_bull_ring_gp", layout = null),
         )
+        assertEquals(
+            "sebring_gp",
+            TrackIdNormalizer.normalize(track = "sebring_international_raceway_gp", layout = null),
+        )
     }
 
     @Test
@@ -38,6 +42,10 @@ class TrackIdNormalizerTest {
         assertEquals(
             "circuit_of_the_americas_gp",
             TrackIdNormalizer.normalize(track = "cota", layout = "gp"),
+        )
+        assertEquals(
+            "sebring_gp",
+            TrackIdNormalizer.normalize(track = "sebring_international_raceway", layout = "gp"),
         )
     }
 

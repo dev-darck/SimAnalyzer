@@ -1,28 +1,8 @@
 package com.analyzer.session.details.presentation.components
 
 import androidx.compose.runtime.Composable
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_ALL
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_INVALID
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_PIT
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SHOW_VALID
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_BEST
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_DELTA_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_INCIDENTS_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_LAP_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S1_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S2_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_S3_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_STATUS_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_SORT_TOTAL_DESC
-import com.analyzer.session.details.domain.model.SESSION_DETAIL_TYPE_ALL
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
+import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.project.analyzer.feature.screens.sessionDetails.Res.Res
@@ -84,37 +64,37 @@ private fun sessionDetailFilterOptionLabel(
 ): String = when {
     kind == SessionDetailFilterKind.Sort -> sessionDetailSortLabel(option.id)
     kind == SessionDetailFilterKind.Show -> sessionDetailShowLabel(option.id)
-    option.id == SESSION_DETAIL_TYPE_ALL -> stringResource(Res.string.session_details_filter_all_session_types)
+    option.id == SessionDetailFilterIdsUi.SessionTypeAll -> stringResource(Res.string.session_details_filter_all_session_types)
     !option.label.isNullOrBlank() -> option.label
     else -> option.id
 }
 
 @Composable
 internal fun sessionDetailSortLabel(sortId: String): String = when (sortId) {
-    SESSION_DETAIL_SORT_LAP -> stringResource(Res.string.session_details_sort_lap_asc)
-    SESSION_DETAIL_SORT_LAP_DESC -> stringResource(Res.string.session_details_sort_lap_desc)
-    SESSION_DETAIL_SORT_BEST -> stringResource(Res.string.session_details_sort_total_asc)
-    SESSION_DETAIL_SORT_TOTAL_DESC -> stringResource(Res.string.session_details_sort_total_desc)
-    SESSION_DETAIL_SORT_S1 -> stringResource(Res.string.session_details_sort_s1_asc)
-    SESSION_DETAIL_SORT_S1_DESC -> stringResource(Res.string.session_details_sort_s1_desc)
-    SESSION_DETAIL_SORT_S2 -> stringResource(Res.string.session_details_sort_s2_asc)
-    SESSION_DETAIL_SORT_S2_DESC -> stringResource(Res.string.session_details_sort_s2_desc)
-    SESSION_DETAIL_SORT_S3 -> stringResource(Res.string.session_details_sort_s3_asc)
-    SESSION_DETAIL_SORT_S3_DESC -> stringResource(Res.string.session_details_sort_s3_desc)
-    SESSION_DETAIL_SORT_INCIDENTS -> stringResource(Res.string.session_details_sort_incidents_asc)
-    SESSION_DETAIL_SORT_INCIDENTS_DESC -> stringResource(Res.string.session_details_sort_incidents_desc)
-    SESSION_DETAIL_SORT_DELTA -> stringResource(Res.string.session_details_sort_delta_asc)
-    SESSION_DETAIL_SORT_DELTA_DESC -> stringResource(Res.string.session_details_sort_delta_desc)
-    SESSION_DETAIL_SORT_STATUS -> stringResource(Res.string.session_details_sort_status_asc)
-    SESSION_DETAIL_SORT_STATUS_DESC -> stringResource(Res.string.session_details_sort_status_desc)
+    SessionDetailFilterIdsUi.SortLap -> stringResource(Res.string.session_details_sort_lap_asc)
+    SessionDetailFilterIdsUi.SortLapDesc -> stringResource(Res.string.session_details_sort_lap_desc)
+    SessionDetailFilterIdsUi.SortBest -> stringResource(Res.string.session_details_sort_total_asc)
+    SessionDetailFilterIdsUi.SortTotalDesc -> stringResource(Res.string.session_details_sort_total_desc)
+    SessionDetailFilterIdsUi.SortS1 -> stringResource(Res.string.session_details_sort_s1_asc)
+    SessionDetailFilterIdsUi.SortS1Desc -> stringResource(Res.string.session_details_sort_s1_desc)
+    SessionDetailFilterIdsUi.SortS2 -> stringResource(Res.string.session_details_sort_s2_asc)
+    SessionDetailFilterIdsUi.SortS2Desc -> stringResource(Res.string.session_details_sort_s2_desc)
+    SessionDetailFilterIdsUi.SortS3 -> stringResource(Res.string.session_details_sort_s3_asc)
+    SessionDetailFilterIdsUi.SortS3Desc -> stringResource(Res.string.session_details_sort_s3_desc)
+    SessionDetailFilterIdsUi.SortIncidents -> stringResource(Res.string.session_details_sort_incidents_asc)
+    SessionDetailFilterIdsUi.SortIncidentsDesc -> stringResource(Res.string.session_details_sort_incidents_desc)
+    SessionDetailFilterIdsUi.SortDelta -> stringResource(Res.string.session_details_sort_delta_asc)
+    SessionDetailFilterIdsUi.SortDeltaDesc -> stringResource(Res.string.session_details_sort_delta_desc)
+    SessionDetailFilterIdsUi.SortStatus -> stringResource(Res.string.session_details_sort_status_asc)
+    SessionDetailFilterIdsUi.SortStatusDesc -> stringResource(Res.string.session_details_sort_status_desc)
     else -> sortId
 }
 
 @Composable
 internal fun sessionDetailShowLabel(showId: String): String = when (showId) {
-    SESSION_DETAIL_SHOW_ALL -> stringResource(Res.string.session_details_filter_all_laps)
-    SESSION_DETAIL_SHOW_VALID -> stringResource(Res.string.session_details_filter_valid_laps)
-    SESSION_DETAIL_SHOW_INVALID -> stringResource(Res.string.session_details_filter_invalid_laps)
-    SESSION_DETAIL_SHOW_PIT -> stringResource(Res.string.session_details_filter_pit_laps)
+    SessionDetailFilterIdsUi.ShowAll -> stringResource(Res.string.session_details_filter_all_laps)
+    SessionDetailFilterIdsUi.ShowValid -> stringResource(Res.string.session_details_filter_valid_laps)
+    SessionDetailFilterIdsUi.ShowInvalid -> stringResource(Res.string.session_details_filter_invalid_laps)
+    SessionDetailFilterIdsUi.ShowPit -> stringResource(Res.string.session_details_filter_pit_laps)
     else -> showId
 }

@@ -6,6 +6,7 @@ import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySes
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionStorage
 import com.project.analyzer.utils.resolveAppDirectories
 import dev.zacsweers.metro.createGraphFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
@@ -22,7 +23,7 @@ class SampleTelemetryAnalysisInspectionTest {
             return@runBlocking
         }
 
-        val appDirectories = resolveAppDirectories()
+        val appDirectories = resolveAppDirectories(Dispatchers.IO)
         val graph = createGraphFactory<AppGraph.Factory>().create(
             object : AppGraph.Dependencies {
                 override val appDirectories = appDirectories

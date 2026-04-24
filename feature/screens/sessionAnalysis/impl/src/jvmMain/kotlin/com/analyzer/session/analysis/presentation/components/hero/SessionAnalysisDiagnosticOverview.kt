@@ -19,7 +19,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnostic_corner_chip
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnostic_cues
@@ -40,8 +42,6 @@ import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_ana
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnostic_score_overall
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnostic_score_setup
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnostic_turns
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlinx.collections.immutable.persistentListOf
 import org.jetbrains.compose.resources.stringResource
@@ -334,9 +334,9 @@ internal fun SessionAnalysisDiagnosticOverviewPreview() {
                         description = "You keep pressure too long into the apex.",
                         recommendation = "Bleed pressure earlier before rotation.",
                         priority = 1,
-                        source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                        source = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
                         potentialTimeGainMs = 182,
-                        category = SessionAnalysisHighlightCategory.TimeLoss,
+                        category = SessionAnalysisHighlightCategoryUi.TimeLoss,
                         cornerNumber = 7,
                         trackPosition = 0.42f,
                     ),
@@ -347,9 +347,9 @@ internal fun SessionAnalysisDiagnosticOverviewPreview() {
                         description = "The rear axle unloads too quickly on throttle.",
                         recommendation = "Stabilize rear damping or diff preload.",
                         priority = 2,
-                        source = SessionAnalysisDiagnosisSource.CarSetup,
+                        source = SessionAnalysisDiagnosisSourceUi.CarSetup,
                         potentialTimeGainMs = 96,
-                        category = SessionAnalysisHighlightCategory.Oversteer,
+                        category = SessionAnalysisHighlightCategoryUi.Oversteer,
                         cornerNumber = 9,
                         trackPosition = 0.61f,
                     ),

@@ -10,9 +10,9 @@ import com.analyzer.session.analysis.presentation.components.map.support.circula
 import com.analyzer.session.analysis.presentation.components.map.support.sampleDirectionAtFraction
 import com.analyzer.session.analysis.presentation.components.map.support.samplePointAtFraction
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisFractionPointUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -181,17 +181,17 @@ internal fun List<SessionAnalysisHighlightUi>.overlaySignature(): String = joinT
     issue.stableOverlayKey()
 }
 
-internal fun SessionAnalysisHighlightCategory.shortLabel(): String = when (this) {
-    SessionAnalysisHighlightCategory.TimeLoss -> "Δ"
-    SessionAnalysisHighlightCategory.TrailBrakingMissing -> "TR"
-    SessionAnalysisHighlightCategory.EarlyApexEntry -> "EA"
-    SessionAnalysisHighlightCategory.LateApexEntry -> "LA"
-    SessionAnalysisHighlightCategory.CoastingZone -> "CO"
-    SessionAnalysisHighlightCategory.Understeer -> "U"
-    SessionAnalysisHighlightCategory.Oversteer -> "O"
-    SessionAnalysisHighlightCategory.WheelLockup -> "LK"
-    SessionAnalysisHighlightCategory.WheelSpin -> "SP"
-    SessionAnalysisHighlightCategory.InconsistentLine -> "LN"
+internal fun SessionAnalysisHighlightCategoryUi.shortLabel(): String = when (this) {
+    SessionAnalysisHighlightCategoryUi.TimeLoss -> "Δ"
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing -> "TR"
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry -> "EA"
+    SessionAnalysisHighlightCategoryUi.LateApexEntry -> "LA"
+    SessionAnalysisHighlightCategoryUi.CoastingZone -> "CO"
+    SessionAnalysisHighlightCategoryUi.Understeer -> "U"
+    SessionAnalysisHighlightCategoryUi.Oversteer -> "O"
+    SessionAnalysisHighlightCategoryUi.WheelLockup -> "LK"
+    SessionAnalysisHighlightCategoryUi.WheelSpin -> "SP"
+    SessionAnalysisHighlightCategoryUi.InconsistentLine -> "LN"
     else -> "!"
 }
 
@@ -202,23 +202,23 @@ private fun SessionAnalysisHighlightUi.isAttachedToFocusCorner(focusCorner: Corn
     return circularFractionDistance(issueTrackPosition, focusCorner.trackPosition) <= focusIssueWindowFraction * 0.7f
 }
 
-private fun SessionAnalysisHighlightCategory.accent(palette: TrackDiagnosticPalette): Color = when (this) {
-    SessionAnalysisHighlightCategory.TimeLoss -> palette.critical
+private fun SessionAnalysisHighlightCategoryUi.accent(palette: TrackDiagnosticPalette): Color = when (this) {
+    SessionAnalysisHighlightCategoryUi.TimeLoss -> palette.critical
 
-    SessionAnalysisHighlightCategory.TrailBrakingMissing,
-    SessionAnalysisHighlightCategory.EarlyApexEntry,
-    SessionAnalysisHighlightCategory.LateApexEntry,
-    SessionAnalysisHighlightCategory.CoastingZone,
-    SessionAnalysisHighlightCategory.InconsistentLine,
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+    SessionAnalysisHighlightCategoryUi.LateApexEntry,
+    SessionAnalysisHighlightCategoryUi.CoastingZone,
+    SessionAnalysisHighlightCategoryUi.InconsistentLine,
     -> palette.warning
 
-    SessionAnalysisHighlightCategory.Understeer -> palette.warning
+    SessionAnalysisHighlightCategoryUi.Understeer -> palette.warning
 
-    SessionAnalysisHighlightCategory.Oversteer -> palette.oversteer
+    SessionAnalysisHighlightCategoryUi.Oversteer -> palette.oversteer
 
-    SessionAnalysisHighlightCategory.WheelLockup -> palette.lockup
+    SessionAnalysisHighlightCategoryUi.WheelLockup -> palette.lockup
 
-    SessionAnalysisHighlightCategory.WheelSpin -> palette.wheelSpin
+    SessionAnalysisHighlightCategoryUi.WheelSpin -> palette.wheelSpin
 
     else -> palette.neutral
 }

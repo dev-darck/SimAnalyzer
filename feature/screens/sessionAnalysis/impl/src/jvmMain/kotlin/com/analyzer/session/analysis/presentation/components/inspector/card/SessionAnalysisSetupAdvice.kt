@@ -25,6 +25,7 @@ import com.analyzer.session.analysis.presentation.components.inspector.support.S
 import com.analyzer.session.analysis.presentation.components.inspector.support.fixInLabel
 import com.analyzer.session.analysis.presentation.components.inspector.support.setupSystem
 import com.analyzer.session.analysis.presentation.components.inspector.support.toSetupAdviceItem
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
@@ -45,7 +46,6 @@ import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_ana
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_setup_system_brakes
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_setup_system_suspension
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_setup_system_tyres
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.onClick
 import kotlinx.collections.immutable.ImmutableList
@@ -78,7 +78,7 @@ internal fun SessionAnalysisSetupAdvice(
         } else {
             highlights
                 .filter { highlight ->
-                    highlight.diagnosisSource != SessionAnalysisDiagnosisSource.DrivingStyle &&
+                    highlight.diagnosisSource != SessionAnalysisDiagnosisSourceUi.DrivingStyle &&
                         highlight.recommendation.isNotBlank()
                 }
                 .sortedWith(
@@ -169,9 +169,9 @@ internal fun SessionAnalysisSetupAdvice(
 @Composable
 private fun SessionAnalysisSetupAdviceRow(issue: SessionAnalysisSetupAdviceItem, onClick: (() -> Unit)?) {
     val accent = when (issue.source) {
-        SessionAnalysisDiagnosisSource.CarSetup -> SimAnalyzerTheme.extended.red
-        SessionAnalysisDiagnosisSource.Mixed -> SimAnalyzerTheme.extended.amber
-        SessionAnalysisDiagnosisSource.DrivingStyle -> SimAnalyzerTheme.extended.teal
+        SessionAnalysisDiagnosisSourceUi.CarSetup -> SimAnalyzerTheme.extended.red
+        SessionAnalysisDiagnosisSourceUi.Mixed -> SimAnalyzerTheme.extended.amber
+        SessionAnalysisDiagnosisSourceUi.DrivingStyle -> SimAnalyzerTheme.extended.teal
     }
 
     Column(
@@ -199,13 +199,15 @@ private fun SessionAnalysisSetupAdviceRow(issue: SessionAnalysisSetupAdviceItem,
             )
             SessionAnalysisCornerBadge(
                 text = when (issue.source) {
-                    SessionAnalysisDiagnosisSource.CarSetup -> stringResource(
+                    SessionAnalysisDiagnosisSourceUi.CarSetup -> stringResource(
                         Res.string.session_analysis_diagnosis_setup,
                     )
 
-                    SessionAnalysisDiagnosisSource.Mixed -> stringResource(Res.string.session_analysis_diagnosis_mixed)
+                    SessionAnalysisDiagnosisSourceUi.Mixed -> stringResource(
+                        Res.string.session_analysis_diagnosis_mixed,
+                    )
 
-                    SessionAnalysisDiagnosisSource.DrivingStyle -> stringResource(
+                    SessionAnalysisDiagnosisSourceUi.DrivingStyle -> stringResource(
                         Res.string.session_analysis_diagnosis_driving,
                     )
                 },

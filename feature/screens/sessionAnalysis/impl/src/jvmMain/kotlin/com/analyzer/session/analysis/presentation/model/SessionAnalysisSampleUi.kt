@@ -1,7 +1,6 @@
 package com.analyzer.session.analysis.presentation.model
 
 import androidx.compose.runtime.Immutable
-import com.project.analyzer.telemetry.analysis.api.model.handling.SessionAnalysisHandlingState
 
 @Immutable
 internal data class SessionAnalysisSampleUi(
@@ -24,7 +23,7 @@ internal data class SessionAnalysisSampleUi(
     val deltaToBestMs: Int? = null,
     val fuelLiters: Float? = null,
     val fuelCapacityLiters: Float? = null,
-    val handlingState: SessionAnalysisHandlingState = SessionAnalysisHandlingState.Neutral,
+    val handlingState: SessionAnalysisHandlingStateUi = SessionAnalysisHandlingStateUi.Neutral,
     val tyreFl: SessionAnalysisTyreUi? = null,
     val tyreFr: SessionAnalysisTyreUi? = null,
     val tyreRl: SessionAnalysisTyreUi? = null,

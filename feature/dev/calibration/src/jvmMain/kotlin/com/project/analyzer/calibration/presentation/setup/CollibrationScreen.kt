@@ -33,6 +33,7 @@ import com.project.analyzer.calibration.presentation.components.SectorsBlock
 import com.project.analyzer.calibration.presentation.components.SettingsBlock
 import com.project.analyzer.calibration.presentation.components.TrackNameBlock
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
+import com.project.analyzer.calibration.presentation.setup.state.isReadyToSave
 import com.project.analyzer.feature.dev.calibration.Res.Res
 import com.project.analyzer.feature.dev.calibration.Res.calibration_actions_subtitle
 import com.project.analyzer.feature.dev.calibration.Res.calibration_actions_title

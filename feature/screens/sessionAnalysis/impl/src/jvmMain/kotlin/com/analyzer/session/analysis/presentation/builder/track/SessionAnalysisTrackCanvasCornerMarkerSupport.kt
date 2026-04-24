@@ -1,7 +1,7 @@
 package com.analyzer.session.analysis.presentation.builder.track
 
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.project.analyzer.telemetry.analysis.api.model.report.session.SessionAnalysisCornerZone
 
 /**
@@ -28,7 +28,7 @@ internal fun SessionAnalysisCornerZone.toCornerScore(
         mainIssue = representativeDiagnostic?.mainIssue,
         timeVsReferenceMs = representativeDiagnostic?.timeVsReferenceMs ?: 0,
         recommendation = representativeDiagnostic?.recommendation.orEmpty(),
-        source = representativeDiagnostic?.source ?: SessionAnalysisDiagnosisSource.DrivingStyle,
+        source = representativeDiagnostic?.source ?: SessionAnalysisDiagnosisSourceUi.DrivingStyle,
     )
 }
 

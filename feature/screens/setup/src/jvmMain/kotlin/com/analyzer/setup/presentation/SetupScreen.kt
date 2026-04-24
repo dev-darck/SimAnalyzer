@@ -3,6 +3,7 @@ package com.analyzer.setup.presentation
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.adaptive.ResponsiveScreen
@@ -14,5 +15,13 @@ internal fun SetupScreen(modifier: Modifier = Modifier) {
         contentPadding = PaddingValues(horizontal = 16.dp),
         backgroundColor = SimAnalyzerTheme.material.background,
     ) {
+    }
+}
+
+@Preview
+@Composable
+private fun SetupScreenPreview() {
+    SimAnalyzerTheme {
+        SetupScreen()
     }
 }

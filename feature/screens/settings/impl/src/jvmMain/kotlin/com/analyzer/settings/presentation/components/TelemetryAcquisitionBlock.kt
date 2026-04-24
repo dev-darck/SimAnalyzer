@@ -31,11 +31,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.analyzer.settings.domain.model.StorageValidationResult
-import com.analyzer.settings.domain.model.TelemetrySettings
 import com.analyzer.settings.presentation.RecordingWarningKind
+import com.analyzer.settings.presentation.StorageValidationUi
 import com.analyzer.settings.presentation.StorageSizeInfo
 import com.analyzer.settings.presentation.StorageSizeUnit
+import com.analyzer.settings.presentation.TelemetryAcquisitionUiLimits
 import com.project.analyzer.feature.screens.settings.impl.Res.Res
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_acquisition_title
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_browse
@@ -82,13 +82,13 @@ import org.jetbrains.compose.resources.stringResource
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private const val MIN_RATE = TelemetrySettings.MIN_SAMPLING_RATE_HZ
-private const val MAX_RATE = TelemetrySettings.MAX_SAMPLING_RATE_HZ
-private const val MID_RATE = (MIN_RATE + MAX_RATE) / 2
+private const val MIN_RATE = TelemetryAcquisitionUiLimits.MIN_RATE
+private const val MAX_RATE = TelemetryAcquisitionUiLimits.MAX_RATE
+private const val MID_RATE = TelemetryAcquisitionUiLimits.MID_RATE
 
-private const val MIN_LAPS = TelemetrySettings.MIN_MAX_RECORDED_LAPS
-private const val MAX_LAPS = TelemetrySettings.MAX_MAX_RECORDED_LAPS
-private const val MID_LAPS = (MIN_LAPS + MAX_LAPS) / 2
+private const val MIN_LAPS = TelemetryAcquisitionUiLimits.MIN_LAPS
+private const val MAX_LAPS = TelemetryAcquisitionUiLimits.MAX_LAPS
+private const val MID_LAPS = TelemetryAcquisitionUiLimits.MID_LAPS
 
 private val STORAGE_FIELD_HEIGHT = 36.dp
 
@@ -96,7 +96,7 @@ private val STORAGE_FIELD_HEIGHT = 36.dp
 internal fun TelemetryAcquisitionBlock(
     samplingRateHz: Int,
     storageLocation: String,
-    storageLocationError: StorageValidationResult?,
+    storageLocationError: StorageValidationUi?,
     storageSizeInfo: StorageSizeInfo,
     recordingEnabled: Boolean,
     recordingWarning: RecordingWarningKind?,
@@ -498,13 +498,12 @@ private fun storageSizeText(info: StorageSizeInfo): String {
 }
 
 @Composable
-private fun StorageValidationResult.toDisplayMessage(): String = when (this) {
-    StorageValidationResult.Valid -> ""
-    StorageValidationResult.Empty -> stringResource(Res.string.telemetry_storage_error_empty)
-    StorageValidationResult.NotAbsolutePath -> stringResource(Res.string.telemetry_storage_error_not_absolute)
-    StorageValidationResult.NotADirectory -> stringResource(Res.string.telemetry_storage_error_not_directory)
-    StorageValidationResult.NotWritable -> stringResource(Res.string.telemetry_storage_error_not_writable)
-    StorageValidationResult.CannotCreate -> stringResource(Res.string.telemetry_storage_error_cannot_create)
+private fun StorageValidationUi.toDisplayMessage(): String = when (this) {
+    StorageValidationUi.Empty -> stringResource(Res.string.telemetry_storage_error_empty)
+    StorageValidationUi.NotAbsolutePath -> stringResource(Res.string.telemetry_storage_error_not_absolute)
+    StorageValidationUi.NotADirectory -> stringResource(Res.string.telemetry_storage_error_not_directory)
+    StorageValidationUi.NotWritable -> stringResource(Res.string.telemetry_storage_error_not_writable)
+    StorageValidationUi.CannotCreate -> stringResource(Res.string.telemetry_storage_error_cannot_create)
 }
 
 @Preview

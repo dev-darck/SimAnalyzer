@@ -7,12 +7,12 @@ package com.analyzer.session.analysis.presentation.builder.diagnostic
 
 import com.analyzer.session.analysis.presentation.model.CornerScoreUi
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapSummaryUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
 import com.project.analyzer.utils.ext.averageOrNull
 import kotlinx.collections.immutable.toImmutableList
 import kotlin.math.abs
@@ -42,19 +42,19 @@ internal fun buildDiagnosticSummary(
     if (rankedHighlights.isEmpty()) return null
 
     val drivingHighlights = rankedHighlights.filter { highlight ->
-        highlight.diagnosisSource != SessionAnalysisDiagnosisSource.CarSetup
+        highlight.diagnosisSource != SessionAnalysisDiagnosisSourceUi.CarSetup
     }
     val setupHighlights = rankedHighlights.filter(SessionAnalysisHighlightUi::isSetupRelevant)
     val drivingScore = resolveDiagnosticScore(
         highlights = drivingHighlights,
         contribution = { highlight ->
-            if (highlight.diagnosisSource == SessionAnalysisDiagnosisSource.Mixed) 0.55f else 1f
+            if (highlight.diagnosisSource == SessionAnalysisDiagnosisSourceUi.Mixed) 0.55f else 1f
         },
     )
     val setupScore = resolveDiagnosticScore(
         highlights = setupHighlights,
         contribution = { highlight ->
-            if (highlight.diagnosisSource == SessionAnalysisDiagnosisSource.Mixed) 0.55f else 1f
+            if (highlight.diagnosisSource == SessionAnalysisDiagnosisSourceUi.Mixed) 0.55f else 1f
         },
     )
     val overallScore = ((drivingScore * 0.6f) + (setupScore * 0.4f)).roundToInt().coerceIn(0, 100)
@@ -235,24 +235,24 @@ private fun SessionAnalysisHighlightUi.setupDiagnosticGroupKey(): String = build
 }
 
 private fun SessionAnalysisHighlightUi.isSetupRelevant(): Boolean = when (category) {
-    SessionAnalysisHighlightCategory.SetupUndersteer,
-    SessionAnalysisHighlightCategory.SetupOversteer,
-    SessionAnalysisHighlightCategory.TyrePressureImbalance,
-    SessionAnalysisHighlightCategory.TyreTempImbalance,
-    SessionAnalysisHighlightCategory.TyreOverheat,
-    SessionAnalysisHighlightCategory.TyreCold,
-    SessionAnalysisHighlightCategory.BrakeBalance,
-    SessionAnalysisHighlightCategory.AeroBalance,
-    SessionAnalysisHighlightCategory.DamperIssue,
-    -> diagnosisSource != SessionAnalysisDiagnosisSource.DrivingStyle
+    SessionAnalysisHighlightCategoryUi.SetupUndersteer,
+    SessionAnalysisHighlightCategoryUi.SetupOversteer,
+    SessionAnalysisHighlightCategoryUi.TyrePressureImbalance,
+    SessionAnalysisHighlightCategoryUi.TyreTempImbalance,
+    SessionAnalysisHighlightCategoryUi.TyreOverheat,
+    SessionAnalysisHighlightCategoryUi.TyreCold,
+    SessionAnalysisHighlightCategoryUi.BrakeBalance,
+    SessionAnalysisHighlightCategoryUi.AeroBalance,
+    SessionAnalysisHighlightCategoryUi.DamperIssue,
+    -> diagnosisSource != SessionAnalysisDiagnosisSourceUi.DrivingStyle
 
-    SessionAnalysisHighlightCategory.WheelLockup,
-    SessionAnalysisHighlightCategory.Understeer,
-    SessionAnalysisHighlightCategory.Oversteer,
-    -> diagnosisSource == SessionAnalysisDiagnosisSource.Mixed ||
-        diagnosisSource == SessionAnalysisDiagnosisSource.CarSetup
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.Understeer,
+    SessionAnalysisHighlightCategoryUi.Oversteer,
+    -> diagnosisSource == SessionAnalysisDiagnosisSourceUi.Mixed ||
+        diagnosisSource == SessionAnalysisDiagnosisSourceUi.CarSetup
 
-    else -> diagnosisSource == SessionAnalysisDiagnosisSource.CarSetup
+    else -> diagnosisSource == SessionAnalysisDiagnosisSourceUi.CarSetup
 }
 
 private fun SessionAnalysisHighlightUi.toDrivingDiagnosticDescription(
@@ -276,40 +276,40 @@ private fun SessionAnalysisHighlightUi.toDrivingDiagnosticDescription(
 private fun SessionAnalysisHighlightUi.drivingIssueTitle(): String {
     val turnLabel = cornerNumber?.let { corner -> "Turn $corner: " }.orEmpty()
     return when {
-        category == SessionAnalysisHighlightCategory.TrailBrakingMissing ->
+        category == SessionAnalysisHighlightCategoryUi.TrailBrakingMissing ->
             "${turnLabel}brake release ends too early".trim()
 
-        category == SessionAnalysisHighlightCategory.BrakePoint ->
+        category == SessionAnalysisHighlightCategoryUi.BrakePoint ->
             "${turnLabel}braking point is inconsistent".trim()
 
-        category == SessionAnalysisHighlightCategory.WheelLockup ->
+        category == SessionAnalysisHighlightCategoryUi.WheelLockup ->
             "${turnLabel}front tyre locks on entry".trim()
 
-        category == SessionAnalysisHighlightCategory.EarlyApexEntry ->
+        category == SessionAnalysisHighlightCategoryUi.EarlyApexEntry ->
             "${turnLabel}apex comes too early".trim()
 
-        category == SessionAnalysisHighlightCategory.LateApexEntry ->
+        category == SessionAnalysisHighlightCategoryUi.LateApexEntry ->
             "${turnLabel}apex comes too late".trim()
 
-        category == SessionAnalysisHighlightCategory.InconsistentLine ->
+        category == SessionAnalysisHighlightCategoryUi.InconsistentLine ->
             "${turnLabel}line is not repeatable".trim()
 
-        category == SessionAnalysisHighlightCategory.CoastingZone ->
+        category == SessionAnalysisHighlightCategoryUi.CoastingZone ->
             "${turnLabel}there is a coasting phase before throttle".trim()
 
-        category == SessionAnalysisHighlightCategory.WheelSpin ->
+        category == SessionAnalysisHighlightCategoryUi.WheelSpin ->
             "${turnLabel}rear tyres spin on exit".trim()
 
-        category == SessionAnalysisHighlightCategory.ThrottleCommitment ->
+        category == SessionAnalysisHighlightCategoryUi.ThrottleCommitment ->
             "${turnLabel}throttle comes in too late".trim()
 
-        category == SessionAnalysisHighlightCategory.Understeer ->
+        category == SessionAnalysisHighlightCategoryUi.Understeer ->
             "${turnLabel}front pushes wide".trim()
 
-        category == SessionAnalysisHighlightCategory.Oversteer ->
+        category == SessionAnalysisHighlightCategoryUi.Oversteer ->
             "${turnLabel}rear gets unstable".trim()
 
-        category != SessionAnalysisHighlightCategory.TimeLoss ->
+        category != SessionAnalysisHighlightCategoryUi.TimeLoss ->
             title
 
         recommendation.contains("brake", ignoreCase = true) ||
@@ -362,33 +362,33 @@ private fun StringBuilder.appendDiagnosticEvidence(impactGainMs: Int?, affectedL
 }
 
 private fun SessionAnalysisHighlightUi.toSetupIssueTitle(affectedTurns: List<Int>): String = when (category) {
-    SessionAnalysisHighlightCategory.SetupUndersteer ->
+    SessionAnalysisHighlightCategoryUi.SetupUndersteer ->
         affectedTurns.toTurnScopedTitle(base = "Car pushes wide") ?: "Car pushes wide"
 
-    SessionAnalysisHighlightCategory.SetupOversteer ->
+    SessionAnalysisHighlightCategoryUi.SetupOversteer ->
         affectedTurns.toTurnScopedTitle(base = "Rear is unstable") ?: "Rear is unstable"
 
-    SessionAnalysisHighlightCategory.Understeer ->
+    SessionAnalysisHighlightCategoryUi.Understeer ->
         affectedTurns.toTurnScopedTitle(base = "Car still pushes wide") ?: "Car still pushes wide"
 
-    SessionAnalysisHighlightCategory.Oversteer ->
+    SessionAnalysisHighlightCategoryUi.Oversteer ->
         affectedTurns.toTurnScopedTitle(base = "Rear is still unstable") ?: "Rear is still unstable"
 
-    SessionAnalysisHighlightCategory.AeroBalance,
-    SessionAnalysisHighlightCategory.BrakeBalance,
-    SessionAnalysisHighlightCategory.TyrePressureImbalance,
-    SessionAnalysisHighlightCategory.TyreTempImbalance,
-    SessionAnalysisHighlightCategory.DamperIssue,
-    SessionAnalysisHighlightCategory.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.AeroBalance,
+    SessionAnalysisHighlightCategoryUi.BrakeBalance,
+    SessionAnalysisHighlightCategoryUi.TyrePressureImbalance,
+    SessionAnalysisHighlightCategoryUi.TyreTempImbalance,
+    SessionAnalysisHighlightCategoryUi.DamperIssue,
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
     -> title
 
     else -> title
 }
 
-private fun SessionAnalysisDiagnosisSource.setupPriorityRank(): Int = when (this) {
-    SessionAnalysisDiagnosisSource.CarSetup -> 3
-    SessionAnalysisDiagnosisSource.Mixed -> 2
-    SessionAnalysisDiagnosisSource.DrivingStyle -> 1
+private fun SessionAnalysisDiagnosisSourceUi.setupPriorityRank(): Int = when (this) {
+    SessionAnalysisDiagnosisSourceUi.CarSetup -> 3
+    SessionAnalysisDiagnosisSourceUi.Mixed -> 2
+    SessionAnalysisDiagnosisSourceUi.DrivingStyle -> 1
 }
 
 private fun List<SessionAnalysisHighlightUi>.distinctAffectedLapCount(): Int = flatMap { highlight ->
@@ -455,34 +455,34 @@ private fun List<Int>.toTurnScopedTitle(base: String): String? {
 
 private fun SessionAnalysisHighlightUi.potentialTimeGainMs(): Int = abs(deltaMs ?: (priority * 22))
 
-private fun SessionAnalysisHighlightCategory.rootCauseRank(): Int = when (this) {
-    SessionAnalysisHighlightCategory.SetupUndersteer,
-    SessionAnalysisHighlightCategory.SetupOversteer,
-    SessionAnalysisHighlightCategory.TyrePressureImbalance,
-    SessionAnalysisHighlightCategory.TyreTempImbalance,
-    SessionAnalysisHighlightCategory.BrakeBalance,
-    SessionAnalysisHighlightCategory.AeroBalance,
-    SessionAnalysisHighlightCategory.DamperIssue,
-    SessionAnalysisHighlightCategory.TrailBrakingMissing,
-    SessionAnalysisHighlightCategory.EarlyApexEntry,
-    SessionAnalysisHighlightCategory.LateApexEntry,
-    SessionAnalysisHighlightCategory.CoastingZone,
-    SessionAnalysisHighlightCategory.WheelLockup,
-    SessionAnalysisHighlightCategory.WheelSpin,
-    SessionAnalysisHighlightCategory.InconsistentLine,
+private fun SessionAnalysisHighlightCategoryUi.rootCauseRank(): Int = when (this) {
+    SessionAnalysisHighlightCategoryUi.SetupUndersteer,
+    SessionAnalysisHighlightCategoryUi.SetupOversteer,
+    SessionAnalysisHighlightCategoryUi.TyrePressureImbalance,
+    SessionAnalysisHighlightCategoryUi.TyreTempImbalance,
+    SessionAnalysisHighlightCategoryUi.BrakeBalance,
+    SessionAnalysisHighlightCategoryUi.AeroBalance,
+    SessionAnalysisHighlightCategoryUi.DamperIssue,
+    SessionAnalysisHighlightCategoryUi.TrailBrakingMissing,
+    SessionAnalysisHighlightCategoryUi.EarlyApexEntry,
+    SessionAnalysisHighlightCategoryUi.LateApexEntry,
+    SessionAnalysisHighlightCategoryUi.CoastingZone,
+    SessionAnalysisHighlightCategoryUi.WheelLockup,
+    SessionAnalysisHighlightCategoryUi.WheelSpin,
+    SessionAnalysisHighlightCategoryUi.InconsistentLine,
     -> 4
 
-    SessionAnalysisHighlightCategory.Understeer,
-    SessionAnalysisHighlightCategory.Oversteer,
-    SessionAnalysisHighlightCategory.BrakePoint,
-    SessionAnalysisHighlightCategory.ThrottleCommitment,
-    SessionAnalysisHighlightCategory.TyreOverheat,
-    SessionAnalysisHighlightCategory.TyreCold,
+    SessionAnalysisHighlightCategoryUi.Understeer,
+    SessionAnalysisHighlightCategoryUi.Oversteer,
+    SessionAnalysisHighlightCategoryUi.BrakePoint,
+    SessionAnalysisHighlightCategoryUi.ThrottleCommitment,
+    SessionAnalysisHighlightCategoryUi.TyreOverheat,
+    SessionAnalysisHighlightCategoryUi.TyreCold,
     -> 3
 
-    SessionAnalysisHighlightCategory.TimeLoss -> 1
+    SessionAnalysisHighlightCategoryUi.TimeLoss -> 1
 
-    SessionAnalysisHighlightCategory.TopSpeed -> 0
+    SessionAnalysisHighlightCategoryUi.TopSpeed -> 0
 }
 
 private fun resolveDiagnosticScore(
@@ -519,15 +519,15 @@ private fun SessionAnalysisHighlightUi.penaltyWeight(): Float {
     val deltaWeight = ((deltaMs ?: 0).coerceAtLeast(0) / 32f).coerceAtMost(28f)
     val priorityWeight = priority * 4.8f
     val severityWeight = when (severity) {
-        SessionAnalysisHighlightSeverity.Positive -> 0f
-        SessionAnalysisHighlightSeverity.Warning -> 1f
-        SessionAnalysisHighlightSeverity.Critical -> 1.25f
+        SessionAnalysisHighlightSeverityUi.Positive -> 0f
+        SessionAnalysisHighlightSeverityUi.Warning -> 1f
+        SessionAnalysisHighlightSeverityUi.Critical -> 1.25f
     }
     return (priorityWeight + deltaWeight) * severityWeight
 }
 
 private fun SessionAnalysisHighlightUi.isPositiveSignal(): Boolean =
-    severity == SessionAnalysisHighlightSeverity.Positive && priority <= 2
+    severity == SessionAnalysisHighlightSeverityUi.Positive && priority <= 2
 
 private fun aggregatePenalty(
     highlights: List<SessionAnalysisHighlightUi>,
@@ -555,8 +555,8 @@ private fun penaltyToScore(penalty: Float, scale: Float): Int {
         .coerceIn(0, 100)
 }
 
-private fun SessionAnalysisHighlightSeverity.rank(): Int = when (this) {
-    SessionAnalysisHighlightSeverity.Positive -> 1
-    SessionAnalysisHighlightSeverity.Warning -> 2
-    SessionAnalysisHighlightSeverity.Critical -> 3
+private fun SessionAnalysisHighlightSeverityUi.rank(): Int = when (this) {
+    SessionAnalysisHighlightSeverityUi.Positive -> 1
+    SessionAnalysisHighlightSeverityUi.Warning -> 2
+    SessionAnalysisHighlightSeverityUi.Critical -> 3
 }

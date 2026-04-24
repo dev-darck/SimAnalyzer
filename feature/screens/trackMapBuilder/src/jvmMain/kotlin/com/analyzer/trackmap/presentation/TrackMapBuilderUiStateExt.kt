@@ -5,6 +5,7 @@ import com.analyzer.trackmap.presentation.model.TrackMapBuilderUiState
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewUi
 import com.analyzer.trackmap.presentation.model.toTrackMapPreviewBoundsUi
 import com.analyzer.trackmap.presentation.model.toTrackMapPreviewPointUi
+import com.analyzer.trackmap.presentation.model.toUi
 import kotlinx.collections.immutable.toImmutableList
 
 internal fun TrackMapBuilderState.toTrackMapBuilderUiState(): TrackMapBuilderUiState = TrackMapBuilderUiState(
@@ -15,7 +16,7 @@ internal fun TrackMapBuilderState.toTrackMapBuilderUiState(): TrackMapBuilderUiS
     trackId = trackId,
     trackName = trackName,
     layoutId = layoutId,
-    referencePoint = referencePoint,
+    referencePoint = referencePoint.toUi(),
     pointCount = pointCount,
     totalDistanceMeters = totalDistanceMeters,
     averageTrackWidthMeters = averageTrackWidthMeters,

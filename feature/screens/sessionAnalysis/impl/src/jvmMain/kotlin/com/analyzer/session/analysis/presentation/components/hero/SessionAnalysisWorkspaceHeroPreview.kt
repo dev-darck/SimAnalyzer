@@ -8,10 +8,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
-import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
 import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlinx.collections.immutable.persistentListOf
 
@@ -67,9 +67,9 @@ internal fun SessionAnalysisWorkspaceHeroPreview() {
                         description = "Release pressure earlier into the apex.",
                         recommendation = "Blend brake release before initial rotation.",
                         priority = 1,
-                        source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                        source = SessionAnalysisDiagnosisSourceUi.DrivingStyle,
                         potentialTimeGainMs = 182,
-                        category = SessionAnalysisHighlightCategory.TimeLoss,
+                        category = SessionAnalysisHighlightCategoryUi.TimeLoss,
                         cornerNumber = 7,
                         trackPosition = 0.42f,
                     ),
@@ -80,9 +80,9 @@ internal fun SessionAnalysisWorkspaceHeroPreview() {
                         description = "Rear axle unloads too abruptly on power.",
                         recommendation = "Rebalance rear damping and diff preload.",
                         priority = 2,
-                        source = SessionAnalysisDiagnosisSource.CarSetup,
+                        source = SessionAnalysisDiagnosisSourceUi.CarSetup,
                         potentialTimeGainMs = 96,
-                        category = SessionAnalysisHighlightCategory.Oversteer,
+                        category = SessionAnalysisHighlightCategoryUi.Oversteer,
                         cornerNumber = 9,
                         trackPosition = 0.61f,
                     ),

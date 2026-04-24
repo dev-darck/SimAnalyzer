@@ -1,7 +1,6 @@
 package com.analyzer.session.analysis.presentation.model
 
 import androidx.compose.runtime.Immutable
-import com.project.analyzer.telemetry.analysis.api.model.tyre.SessionAnalysisTyreTemperatureBand
 
 @Immutable
 internal data class SessionAnalysisTyreUi(
@@ -14,5 +13,5 @@ internal data class SessionAnalysisTyreUi(
     val brakeTempC: Float? = null,
     val slip: Float? = null,
     val load: Float? = null,
-    val tempBand: SessionAnalysisTyreTemperatureBand? = null,
+    val tempBand: SessionAnalysisTyreTemperatureBandUi? = null,
 )

@@ -1,10 +1,13 @@
 package com.project.analyzer.calibration.presentation.verify.state
 
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.telemetry.ac.api.model.calibration.Gate
-import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+
+data class CalibrationTrackUi(
+    val trackId: String,
+    val trackName: String,
+)
 
 data class GateDebugInfo(
     val name: String,
@@ -17,7 +20,6 @@ data class GateDebugInfo(
     val isInside: Boolean,
     val margin: Float,
     val dParallel: Float,
-    val gate: Gate,
 )
 
 enum class EditingGate {
@@ -28,7 +30,7 @@ enum class EditingGate {
 
 data class CalibrationVerifyState(
     val trackId: String = "",
-    val calibration: TrackCalibration? = null,
+    val calibration: CalibrationTrackUi? = null,
 
     val isRunning: Boolean = false,
     val message: String? = null,

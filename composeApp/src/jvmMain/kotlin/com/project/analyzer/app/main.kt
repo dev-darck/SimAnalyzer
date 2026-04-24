@@ -33,14 +33,15 @@ import com.project.analyzer.utils.SingleInstanceGuard
 import com.project.analyzer.utils.logger.LogbackConfigurator
 import com.project.analyzer.utils.resolveAppDirectories
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
 import java.awt.SystemTray
 
 suspend fun main() {
-    val appDirectories = resolveAppDirectories()
-    SingleInstanceGuard.acquireOrExit(appDirectories.lockFile)
+    val appDirectories = resolveAppDirectories(Dispatchers.IO)
+    SingleInstanceGuard.acquireOrExit(appDirectories.lockFile, Dispatchers.IO)
     LogbackConfigurator.configure(appDirectories.logsDir)
     val appGraph = createAppComponent(appDirectories)
     val mainViewModel = MainViewModel(
@@ -53,7 +54,10 @@ suspend fun main() {
                 val themeMode by appGraph.themeRepository.observeThemeMode().collectAsState(ThemeMode.System)
 
                 SimAnalyzerTheme(themeMode = themeMode) {
-                    CrashBoundary(appVersion = BuildConfig.VERSION_NAME) {
+                    CrashBoundary(
+                        createCrashReportUseCase = appGraph.createCrashReportUseCase,
+                        appVersion = BuildConfig.VERSION_NAME,
+                    ) {
                         App(
                             appGraph = appGraph,
                             mainViewModel = mainViewModel,
@@ -64,7 +68,7 @@ suspend fun main() {
         }
     } finally {
         runCatching { appGraph.appLifecycle.stop() }
-        SingleInstanceGuard.release()
+        SingleInstanceGuard.release(Dispatchers.IO)
     }
 }
 
