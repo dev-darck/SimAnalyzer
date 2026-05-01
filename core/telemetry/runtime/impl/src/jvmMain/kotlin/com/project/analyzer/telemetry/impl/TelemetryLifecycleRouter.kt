@@ -25,6 +25,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -97,7 +98,7 @@ class TelemetryLifecycleRouter(
 
     private val _frames = MutableSharedFlow<TelemetryFrame>(
         replay = 1,
-        extraBufferCapacity = 16,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
@@ -270,14 +271,14 @@ class TelemetryLifecycleRouter(
 
     private fun attachForwarders(source: TelemetryLifecycle) {
         forwardJob?.cancel()
-        forwardJob = scope.launch {
+        forwardJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             logger.debug {
                 "forwarders: started for source=$source " +
                     "framesPolicy=TRY_DROP " +
                     "eventsPolicy=SUSPEND"
             }
 
-            launch(forwardDispatcher) {
+            launch(forwardDispatcher, start = CoroutineStart.UNDISPATCHED) {
                 var frameCount = 0L
                 source.frames.collect { frame ->
                     val emitted = try {
@@ -299,7 +300,7 @@ class TelemetryLifecycleRouter(
                     if (!emitted) Unit
                 }
             }
-            launch(forwardDispatcher) {
+            launch(forwardDispatcher, start = CoroutineStart.UNDISPATCHED) {
                 source.events.collect { event ->
                     logger.debug { "forwarders: received event=${event::class.simpleName}" }
                     handleLifecycleEvent(event)

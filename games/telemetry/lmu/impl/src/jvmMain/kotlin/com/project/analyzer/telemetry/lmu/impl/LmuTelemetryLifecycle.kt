@@ -50,15 +50,15 @@ internal class LmuTelemetryLifecycle(
     private var loopJob: Job? = null
 
     private val _events = MutableSharedFlow<TelemetryLifecycleEvent>(
-        replay = 1,
-        extraBufferCapacity = 32,
+        replay = 0,
+        extraBufferCapacity = 16,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val events = _events.asSharedFlow()
 
     private val _frames = MutableSharedFlow<TelemetryFrame>(
-        replay = 1,
-        extraBufferCapacity = 16,
+        replay = 0,
+        extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
     override val frames: SharedFlow<TelemetryFrame> = _frames.asSharedFlow()
