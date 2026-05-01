@@ -2,21 +2,20 @@ package com.project.analyzer.telemetry.recording.impl.index
 
 import com.project.analyzer.api.di.SessionScope
 import com.project.analyzer.math.Vec2
-import com.project.analyzer.math.toVec2XZIfValid
 import com.project.analyzer.telemetry.api.contract.LapValidity
-import com.project.analyzer.telemetry.api.model.TelemetryFrame
-import com.project.analyzer.telemetry.api.model.session.PitState
 import com.project.analyzer.telemetry.recording.api.index.TelemetryFrameIndex
 import com.project.analyzer.telemetry.recording.api.index.TelemetryFrameIndexFlags
+import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingFrameSnapshot
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlin.math.atan2
+import kotlin.math.sqrt
 
 @Inject
 @SingleIn(SessionScope::class)
 class TelemetryFrameIndexBuilder {
 
-    fun build(frame: TelemetryFrame): TelemetryFrameIndex {
+    fun build(frame: TelemetryRecordingFrameSnapshot): TelemetryFrameIndex {
         val position = extractPosition(frame)
         val heading = resolveHeading(frame)
         val speed = resolveSpeedKmh(frame)
@@ -37,16 +36,14 @@ class TelemetryFrameIndexBuilder {
         )
     }
 
-    private fun extractPosition(frame: TelemetryFrame): Vec2? {
-        frame.car?.worldPosition
-            ?.toVec2XZIfValid(MAX_VALID_COORDINATE)
-            ?.let { return it }
+    private fun extractPosition(frame: TelemetryRecordingFrameSnapshot): Vec2? {
+        coordinate(frame.car?.worldPositionX, frame.car?.worldPositionZ)?.let { return it }
 
         val wheels = frame.wheels ?: return null
-        val fl = wheels.fl?.contactPoint?.toVec2XZIfValid(MAX_VALID_COORDINATE)
-        val fr = wheels.fr?.contactPoint?.toVec2XZIfValid(MAX_VALID_COORDINATE)
-        val rl = wheels.rl?.contactPoint?.toVec2XZIfValid(MAX_VALID_COORDINATE)
-        val rr = wheels.rr?.contactPoint?.toVec2XZIfValid(MAX_VALID_COORDINATE)
+        val fl = coordinate(wheels.fl?.contactPointX, wheels.fl?.contactPointZ)
+        val fr = coordinate(wheels.fr?.contactPointX, wheels.fr?.contactPointZ)
+        val rl = coordinate(wheels.rl?.contactPointX, wheels.rl?.contactPointZ)
+        val rr = coordinate(wheels.rr?.contactPointX, wheels.rr?.contactPointZ)
 
         if (fl == null && fr == null && rl == null && rr == null) return null
 
@@ -61,6 +58,14 @@ class TelemetryFrameIndexBuilder {
         }
     }
 
+    private fun coordinate(x: Float?, z: Float?): Vec2? {
+        if (x == null || z == null) return null
+        if (!x.isFinite() || !z.isFinite()) return null
+        if (x !in -MAX_VALID_COORDINATE..MAX_VALID_COORDINATE) return null
+        if (z !in -MAX_VALID_COORDINATE..MAX_VALID_COORDINATE) return null
+        return Vec2(x, z)
+    }
+
     private fun axleCenter(a: Vec2?, b: Vec2?): Vec2? = when {
         a != null && b != null -> a.midpoint(b)
         a != null -> a
@@ -68,25 +73,28 @@ class TelemetryFrameIndexBuilder {
         else -> null
     }
 
-    private fun resolveSpeedKmh(frame: TelemetryFrame): Float? {
+    private fun resolveSpeedKmh(frame: TelemetryRecordingFrameSnapshot): Float? {
         val speed = frame.car?.speedKmh
         if (speed != null) return speed
 
-        val velocity = frame.car?.velocity ?: return null
-        val metersPerSecond = velocity.lengthXZ()
+        val velocityX = frame.car?.velocityX ?: return null
+        val velocityZ = frame.car?.velocityZ ?: return null
+        val metersPerSecond = sqrt(velocityX * velocityX + velocityZ * velocityZ)
         return if (metersPerSecond > 0f) metersPerSecond * MPS_TO_KMH else null
     }
 
-    private fun resolveHeading(frame: TelemetryFrame): Float? {
+    private fun resolveHeading(frame: TelemetryRecordingFrameSnapshot): Float? {
         val heading = frame.car?.heading
         if (heading != null) return heading
 
-        val v = frame.car?.velocity ?: return null
-        if (v.lengthXZ() < MIN_VELOCITY_FOR_HEADING) return null
-        return atan2(v.z, v.x)
+        val velocityX = frame.car?.velocityX ?: return null
+        val velocityZ = frame.car?.velocityZ ?: return null
+        val velocityMagnitude = sqrt(velocityX * velocityX + velocityZ * velocityZ)
+        if (velocityMagnitude < MIN_VELOCITY_FOR_HEADING) return null
+        return atan2(velocityZ, velocityX)
     }
 
-    private fun resolveLap(frame: TelemetryFrame): Int? {
+    private fun resolveLap(frame: TelemetryRecordingFrameSnapshot): Int? {
         val lap = frame.lap?.currentLapIndex
         if (lap != null && lap > 0) return lap
 
@@ -94,7 +102,7 @@ class TelemetryFrameIndexBuilder {
         return if (completed >= 0) completed + 1 else null
     }
 
-    private fun buildFlags(frame: TelemetryFrame): Int {
+    private fun buildFlags(frame: TelemetryRecordingFrameSnapshot): Int {
         var flags = 0
 
         val pit = frame.session?.pit
@@ -107,7 +115,7 @@ class TelemetryFrameIndexBuilder {
         return flags
     }
 
-    private fun applyPitFlags(base: Int, pit: PitState?): Int {
+    private fun applyPitFlags(base: Int, pit: TelemetryRecordingFrameSnapshot.PitSnapshot?): Int {
         var flags = base
 
         if (pit?.isInPit == true) {

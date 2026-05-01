@@ -6,6 +6,7 @@ import com.project.analyzer.telemetry.api.contract.SessionType
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
 import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.recording.api.payload.TelemetryFramePayload
+import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingFrameSnapshot
 import com.project.analyzer.telemetry.recording.api.recorder.TelemetryRecorder
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSample
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionDescriptor
@@ -204,7 +205,7 @@ class TelemetryRecordingSessionCoordinatorTest {
         dataSource = "NATIVE",
         payloadType = "ac_shm_v1",
         payload = byteArrayOf(1, 2, 3),
-        frame = TelemetryFrame(),
+        frame = TelemetryRecordingFrameSnapshot.from(TelemetryFrame()),
     )
 
     private class FakeTelemetryRecorder : TelemetryRecorder {

@@ -4,10 +4,10 @@ import com.project.analyzer.telemetry.api.contract.SessionEndReason
 import com.project.analyzer.telemetry.api.contract.SessionInfo
 import com.project.analyzer.telemetry.api.contract.SessionType
 import com.project.analyzer.telemetry.api.contract.TelemetryLifecycleEvent
-import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionConfig
 import com.project.analyzer.telemetry.recording.api.payload.TelemetryFramePayload
 import com.project.analyzer.telemetry.recording.api.recorder.TelemetryRecorder
+import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingFrameSnapshot
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSample
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionDescriptor
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionUpdate
@@ -261,8 +261,10 @@ internal class TelemetryRecordingSessionCoordinator(
         )
     }
 
-    private fun buildSessionStartSnapshot(session: SessionInfo, frame: TelemetryFrame): SessionStartSnapshot =
-        SessionStartSnapshot(
+    private fun buildSessionStartSnapshot(
+        session: SessionInfo,
+        frame: TelemetryRecordingFrameSnapshot,
+    ): SessionStartSnapshot = SessionStartSnapshot(
             baseCompletedLaps = completedLaps(frame),
             sessionType = session.sessionType,
             carModel = session.carModel
@@ -312,7 +314,7 @@ internal class TelemetryRecordingSessionCoordinator(
             normalizeCarIdentity(current.carId, current.carModel)
     }
 
-    private suspend fun maybeUpdateIdentityLabels(frame: TelemetryFrame) {
+    private suspend fun maybeUpdateIdentityLabels(frame: TelemetryRecordingFrameSnapshot) {
         val sessionId = state.startedSessionId ?: return
         val gameId = state.currentGameId ?: return
 
@@ -377,7 +379,7 @@ internal class TelemetryRecordingSessionCoordinator(
         )
     }
 
-    private fun shouldStopOnLapLimit(frame: TelemetryFrame): Boolean {
+    private fun shouldStopOnLapLimit(frame: TelemetryRecordingFrameSnapshot): Boolean {
         val limit = state.maxRecordedLaps
         if (limit <= 0) return false
 
@@ -388,7 +390,8 @@ internal class TelemetryRecordingSessionCoordinator(
         return currentCompleted - baseline >= limit
     }
 
-    private fun completedLaps(frame: TelemetryFrame): Int? = frame.session?.completedLaps ?: frame.lap?.completedLaps
+    private fun completedLaps(frame: TelemetryRecordingFrameSnapshot): Int? =
+        frame.session?.completedLaps ?: frame.lap?.completedLaps
 
     private fun SessionType.asSessionTypeString(): String? = if (this == SessionType.UNKNOWN) null else name
 

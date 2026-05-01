@@ -7,6 +7,7 @@ import com.project.analyzer.telemetry.api.model.TelemetryFrame
 import com.project.analyzer.telemetry.lmu.api.model.LmuTelemetrySnapshot
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionDefaults
 import com.project.analyzer.telemetry.recording.api.acquisition.TelemetryAcquisitionSettings
+import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingFrameSnapshot
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSample
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSampleBuffer
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSource
@@ -96,7 +97,7 @@ internal class LmuTelemetryRecordingSource(
             dataSource = DATA_SOURCE,
             payloadType = encoder.payloadType,
             payload = payload,
-            frame = frame,
+            frame = TelemetryRecordingFrameSnapshot.from(frame),
         )
         sampleBuffer.tryOffer(sample)
         maybeLogEmitterStats()

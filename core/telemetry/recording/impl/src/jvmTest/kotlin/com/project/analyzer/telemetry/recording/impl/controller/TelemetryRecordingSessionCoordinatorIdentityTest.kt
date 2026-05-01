@@ -8,6 +8,7 @@ import com.project.analyzer.telemetry.api.model.session.CarInfo
 import com.project.analyzer.telemetry.api.model.session.SessionFrame
 import com.project.analyzer.telemetry.api.model.session.TrackInfo
 import com.project.analyzer.telemetry.recording.api.payload.TelemetryFramePayload
+import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingFrameSnapshot
 import com.project.analyzer.telemetry.recording.api.recorder.TelemetryRecorder
 import com.project.analyzer.telemetry.recording.api.recording.TelemetryRecordingSample
 import com.project.analyzer.telemetry.recording.api.session.TelemetrySessionDescriptor
@@ -140,7 +141,7 @@ class TelemetryRecordingSessionCoordinatorIdentityTest {
         dataSource = "NATIVE",
         payloadType = "ac_shm_v1",
         payload = byteArrayOf(1, 2, 3),
-        frame = frame,
+        frame = TelemetryRecordingFrameSnapshot.from(frame),
     )
 
     private class FakeTelemetryRecorder : TelemetryRecorder {
