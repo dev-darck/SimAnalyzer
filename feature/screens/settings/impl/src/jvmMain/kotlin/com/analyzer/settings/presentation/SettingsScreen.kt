@@ -163,7 +163,7 @@ private fun Screen(
                     )
                 }
             }
-            item(key = "TelemetryAcquisitionBlock", isContentFull = true, contentType = "settings:form") {
+            item(key = "TelemetryAcquisitionBlock", contentType = "settings:form") {
                 TelemetryAcquisitionBlock(
                     samplingRateHz = state.samplingRateHz,
                     storageLocation = state.storageLocation,
