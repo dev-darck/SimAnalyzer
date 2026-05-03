@@ -3,8 +3,8 @@ package com.analyzer.trackmap.presentation.model
 import androidx.compose.runtime.Immutable
 import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorGate
 import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorMarker
-import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorSnapshot
 import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorSector
+import com.analyzer.trackmap.domain.model.TrackMapCalibrationEditorSnapshot
 import com.analyzer.trackmap.domain.model.TrackMapLibraryItem
 import com.analyzer.trackmap.presentation.format.formatMeters
 import com.analyzer.trackmap.presentation.state.TrackMapCalibrationEditorState
@@ -198,22 +198,21 @@ internal fun TrackMapCalibrationEditorState.toCanvasUiState(
     isAddPointMode = isAddPointMode,
 )
 
-internal fun buildTrackMapMarkerRows(
-    markers: List<TrackMapEditorMarkerUi>,
-): ImmutableList<TrackMapMarkerRowUi> = markers.mapIndexed { index, marker ->
-    val previousMarker = if (markers.isEmpty()) {
-        null
-    } else {
-        markers.getOrNull(if (index == 0) markers.lastIndex else index - 1)
-    }
-    TrackMapMarkerRowUi(
-        gateId = marker.gateId,
-        title = marker.title,
-        startLabel = formatMeters(previousMarker?.meters ?: marker.meters),
-        endLabel = formatMeters(marker.meters),
-        colorHex = marker.colorHex,
-    )
-}.toImmutableList()
+internal fun buildTrackMapMarkerRows(markers: List<TrackMapEditorMarkerUi>): ImmutableList<TrackMapMarkerRowUi> =
+    markers.mapIndexed { index, marker ->
+        val previousMarker = if (markers.isEmpty()) {
+            null
+        } else {
+            markers.getOrNull(if (index == 0) markers.lastIndex else index - 1)
+        }
+        TrackMapMarkerRowUi(
+            gateId = marker.gateId,
+            title = marker.title,
+            startLabel = formatMeters(previousMarker?.meters ?: marker.meters),
+            endLabel = formatMeters(marker.meters),
+            colorHex = marker.colorHex,
+        )
+    }.toImmutableList()
 
 internal fun TrackMapMarkerRowUi.color(): androidx.compose.ui.graphics.Color =
     androidx.compose.ui.graphics.Color(colorHex)
@@ -255,22 +254,24 @@ internal fun TrackMapEditorGateUi.toGate(): Gate = Gate.create(
     halfWidthMeters = halfWidthMeters,
 )
 
-internal fun TrackMapCalibrationEditorMarker.toTrackMapEditorMarkerUi(): TrackMapEditorMarkerUi = TrackMapEditorMarkerUi(
-    gateId = gateId,
-    title = title,
-    colorHex = colorHex,
-    meters = meters,
-    pointIndex = pointIndex,
-)
+internal fun TrackMapCalibrationEditorMarker.toTrackMapEditorMarkerUi(): TrackMapEditorMarkerUi =
+    TrackMapEditorMarkerUi(
+        gateId = gateId,
+        title = title,
+        colorHex = colorHex,
+        meters = meters,
+        pointIndex = pointIndex,
+    )
 
-internal fun TrackMapCalibrationEditorSector.toTrackMapEditorSectorUi(): TrackMapEditorSectorUi = TrackMapEditorSectorUi(
-    name = name,
-    colorHex = colorHex,
-    startGateId = startGateId,
-    endGateId = endGateId,
-    startPointIndex = startPointIndex,
-    endPointIndex = endPointIndex,
-)
+internal fun TrackMapCalibrationEditorSector.toTrackMapEditorSectorUi(): TrackMapEditorSectorUi =
+    TrackMapEditorSectorUi(
+        name = name,
+        colorHex = colorHex,
+        startGateId = startGateId,
+        endGateId = endGateId,
+        startPointIndex = startPointIndex,
+        endPointIndex = endPointIndex,
+    )
 
 internal fun TrackMapLibraryItem.toUi(): TrackMapLibraryItemUi = TrackMapLibraryItemUi(
     gameId = map.gameId,

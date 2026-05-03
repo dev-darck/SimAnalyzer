@@ -2,6 +2,8 @@ package com.analyzer.session.details.presentation
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -9,10 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.analyzer.session.details.presentation.components.SessionDetailsCompareFabBar
 import com.analyzer.session.details.presentation.components.SessionDetailsHeader
 import com.analyzer.session.details.presentation.components.SessionDetailsLapTable
 import com.analyzer.session.details.presentation.components.SessionDetailsStatsRow
 import com.analyzer.session.details.presentation.model.LapStatus
+import com.analyzer.session.details.presentation.model.SessionDetailCompareLapUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
@@ -43,7 +47,24 @@ internal fun SessionDetailsScreen(sessionId: Long) {
     SessionDetailsContent(
         state = state,
         onAnalysisClick = {
-            navigator.navigate(Route.SessionRoot.SessionAnalysis(sessionId))
+            navigator.navigate(Route.SessionRoot.SessionAnalysis(sessionId = sessionId))
+        },
+        onCompareConfirm = {
+            val selection = state.selectedCompareLaps.toComparisonSelection()
+            if (selection.size == 2) {
+                val baseLap = selection[0]
+                val referenceLap = selection[1]
+                viewModel.dispatch(SessionDetailIntent.CancelCompareSelection)
+                navigator.navigate(
+                    Route.SessionRoot.SessionAnalysis(
+                        sessionId = sessionId,
+                        segmentId = baseLap.segmentId,
+                        lapNumber = baseLap.lapNumber,
+                        referenceSegmentId = referenceLap.segmentId,
+                        referenceLapNumber = referenceLap.lapNumber,
+                    ),
+                )
+            }
         },
         onIntent = viewModel::dispatch,
     )
@@ -54,47 +75,81 @@ internal fun SessionDetailsContent(
     state: SessionDetailState,
     modifier: Modifier = Modifier,
     onAnalysisClick: () -> Unit = {},
+    onCompareConfirm: () -> Unit = {},
     onIntent: (SessionDetailIntent) -> Unit = {},
 ) {
-    ResponsiveScreen(
+    Scaffold(
         modifier = modifier,
-        contentPadding = PaddingValues(horizontal = 12.dp),
-        verticalSpacing = 10.dp,
-        gridMode = ResponsiveGridMode.Grid,
-        mediumColumns = 1,
-        expandedColumns = 1,
-        backgroundColor = SimAnalyzerTheme.material.background,
-    ) {
-        item(key = "session-details-stats", isContentFull = true) {
-            SessionDetailsStatsRow(
-                stats = state.stats,
-                modifier = Modifier.fillMaxWidth(),
+        containerColor = SimAnalyzerTheme.material.background,
+        floatingActionButton = {
+            SessionDetailsCompareFabBar(
+                isCompareSelectionMode = state.isCompareSelectionMode,
+                selectedCompareLaps = state.selectedCompareLaps,
+                compareConfirmEnabled = state.compareConfirmEnabled,
+                onStartCompare = {
+                    onIntent(SessionDetailIntent.StartCompareSelection)
+                },
+                onCancelCompare = {
+                    onIntent(SessionDetailIntent.CancelCompareSelection)
+                },
+                onConfirmCompare = onCompareConfirm,
             )
-        }
-        item(key = "session-details-header", isContentFull = true) {
-            SessionDetailsHeader(
-                header = state.header,
-                sortFilter = state.sortFilter,
-                showFilter = state.showFilter,
-                sessionTypeFilter = state.sessionTypeFilter,
-                modifier = Modifier.fillMaxWidth(),
-                onSortSelect = { onIntent(SessionDetailIntent.ChangeSort(it)) },
-                onShowSelect = { onIntent(SessionDetailIntent.ChangeFilter(it)) },
-                onSessionTypeSelect = { onIntent(SessionDetailIntent.ChangeSessionTypeFilter(it)) },
-                onAnalysisClick = onAnalysisClick,
-            )
-        }
-        item(key = "session-details-table", isContentFull = true) {
-            SessionDetailsLapTable(
-                state = state,
-                modifier = Modifier.fillMaxWidth(),
-                onPageChange = { onIntent(SessionDetailIntent.ChangePage(it)) },
-                onSortChange = { onIntent(SessionDetailIntent.ChangeSort(it)) },
-            )
+        },
+    ) { innerPadding ->
+        ResponsiveScreen(
+            modifier = Modifier.padding(innerPadding),
+            contentPadding = PaddingValues(
+                start = 12.dp,
+                top = 0.dp,
+                end = 12.dp,
+                bottom = 104.dp,
+            ),
+            verticalSpacing = 10.dp,
+            gridMode = ResponsiveGridMode.Grid,
+            mediumColumns = 1,
+            expandedColumns = 1,
+            backgroundColor = SimAnalyzerTheme.material.background,
+        ) {
+            item(key = "session-details-stats", isContentFull = true) {
+                SessionDetailsStatsRow(
+                    stats = state.stats,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            item(key = "session-details-header", isContentFull = true) {
+                SessionDetailsHeader(
+                    header = state.header,
+                    sortFilter = state.sortFilter,
+                    showFilter = state.showFilter,
+                    sessionTypeFilter = state.sessionTypeFilter,
+                    modifier = Modifier.fillMaxWidth(),
+                    onSortSelect = { onIntent(SessionDetailIntent.ChangeSort(it)) },
+                    onShowSelect = { onIntent(SessionDetailIntent.ChangeFilter(it)) },
+                    onSessionTypeSelect = { onIntent(SessionDetailIntent.ChangeSessionTypeFilter(it)) },
+                    onAnalysisClick = onAnalysisClick,
+                )
+            }
+            item(key = "session-details-table", isContentFull = true) {
+                SessionDetailsLapTable(
+                    state = state,
+                    modifier = Modifier.fillMaxWidth(),
+                    onPageChange = { onIntent(SessionDetailIntent.ChangePage(it)) },
+                    onSortChange = { onIntent(SessionDetailIntent.ChangeSort(it)) },
+                    onCompareToggle = { segmentId, lapNumber ->
+                        onIntent(
+                            SessionDetailIntent.ToggleCompareLap(
+                                segmentId = segmentId,
+                                lapNumber = lapNumber,
+                            ),
+                        )
+                    },
+                )
+            }
         }
     }
 }
 
+@Suppress("UnusedPrivateMember")
 @Preview
 @Composable
 private fun SessionDetailsContentPreview() {
@@ -102,11 +157,13 @@ private fun SessionDetailsContentPreview() {
         SessionDetailsContent(
             state = previewState(),
             onAnalysisClick = {},
+            onCompareConfirm = {},
             onIntent = {},
         )
     }
 }
 
+@Suppress("LongMethod")
 private fun previewState(): SessionDetailState {
     val sortOptions = persistentListOf(
         SessionDetailFilterOptionUi(id = "lap"),
@@ -157,92 +214,55 @@ private fun previewState(): SessionDetailState {
         page = 1,
         pageCount = 4,
         visibleLaps = previewLaps(),
+        isCompareSelectionMode = true,
+        selectedCompareLaps = persistentListOf(
+            SessionDetailCompareLapUi(
+                segmentId = 1L,
+                lapNumber = 2,
+                lapLabel = "2",
+                sessionTypeLabel = "Qualifying",
+                totalTimeMs = 101_450,
+            ),
+        ),
     )
 }
 
 private fun previewLaps(): ImmutableList<SessionLapRowUi> = persistentListOf(
-    lap(
-        number = 1,
-        total = "0:00.000",
-        s1 = "00.000",
-        s2 = "00.000",
-        s3 = "00.000",
-        incidents = "0",
-        delta = "-0.000",
-        status = LapStatus.Clean,
-    ),
-    lap(
-        number = 2,
-        total = "0:00.000",
-        s1 = "00.000",
-        s2 = "00.000",
-        s3 = "00.000",
-        incidents = "0",
-        delta = "-0.000",
-        status = LapStatus.OutLap,
-    ),
-    lap(
-        number = 5,
-        total = "0:00.000",
-        s1 = "00.000",
-        s2 = "00.000",
-        s3 = "00.000",
-        incidents = "0",
-        delta = "-0.000",
-        status = LapStatus.BestLap,
-    ),
-    lap(
-        number = 7,
-        total = "0:00.000",
-        s1 = "00.000",
-        s2 = "00.000",
-        s3 = "00.000",
-        incidents = "0",
-        delta = "+0.000",
-        status = LapStatus.Dirty,
-    ),
-    lap(
-        number = 8,
-        total = "0:00.000",
-        s1 = "00.000",
-        s2 = "00.000",
-        s3 = "00.000",
-        incidents = "1",
-        delta = "--",
-        status = LapStatus.Invalid,
-    ),
-    lap(
-        number = 9,
-        total = "0:00.000",
-        s1 = "00.000",
-        s2 = "00.000",
-        s3 = "00.000",
-        incidents = "0",
-        delta = "-0.000",
-        status = LapStatus.PitIn,
-    ),
+    previewLap(number = 1, delta = "-0.000", status = LapStatus.Clean),
+    previewLap(number = 2, delta = "-0.000", status = LapStatus.OutLap, compareSelected = true),
+    previewLap(number = 5, delta = "-0.000", status = LapStatus.BestLap),
+    previewLap(number = 7, delta = "+0.000", status = LapStatus.Dirty),
+    previewLap(number = 8, incidents = "1", delta = "--", status = LapStatus.Invalid),
+    previewLap(number = 9, delta = "-0.000", status = LapStatus.PitIn),
 )
 
-private fun lap(
+private fun previewLap(
     number: Int,
-    total: String,
-    s1: String,
-    s2: String,
-    s3: String,
-    incidents: String,
+    incidents: String = "0",
     delta: String,
     status: LapStatus,
+    compareSelected: Boolean = false,
 ): SessionLapRowUi = SessionLapRowUi(
+    segmentId = 1L,
     lapNumber = number,
     lapLabel = number.toString(),
     sessionTypeLabel = "Qualifying",
     totalTimeMs = null,
-    totalTime = total,
-    s1 = s1,
-    s2 = s2,
-    s3 = s3,
+    totalTime = "0:00.000",
+    s1 = "00.000",
+    s2 = "00.000",
+    s3 = "00.000",
     incidents = incidents,
     delta = delta,
     deltaIsPositive = delta.startsWith("+"),
     status = status,
+    compareAvailable = true,
+    compareSelected = compareSelected,
+    compareSelectionOrdinal = if (compareSelected) 1 else null,
 )
+
+private fun ImmutableList<SessionDetailCompareLapUi>.toComparisonSelection(): List<SessionDetailCompareLapUi> =
+    sortedWith(
+        compareByDescending<SessionDetailCompareLapUi> { it.totalTimeMs ?: Int.MIN_VALUE }
+            .thenBy(SessionDetailCompareLapUi::lapNumber),
+    )

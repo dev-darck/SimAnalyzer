@@ -33,6 +33,7 @@ internal class LapBuilder(
             invalid = invalid,
             inPit = inPit,
             complete = complete,
+            segmentId = 0L,
         )
     }
 }

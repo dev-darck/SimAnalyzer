@@ -3,8 +3,8 @@ package com.analyzer.session.analysis.presentation.components.navigator.preview
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSessionOptionUi
 import kotlinx.collections.immutable.ImmutableList

@@ -1,7 +1,7 @@
 package com.analyzer.session.domain.mapper
 
-import com.project.analyzer.telemetry.analysis.api.model.track.SessionAnalysisTrackMap
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMap
+import com.project.analyzer.telemetry.analysis.api.model.track.SessionAnalysisTrackMap
 import com.project.analyzer.ui.components.TrackMapBounds
 import com.project.analyzer.ui.components.TrackMapData
 import com.project.analyzer.ui.components.TrackMapPoint
@@ -9,8 +9,8 @@ import com.project.analyzer.utils.trackmap.TrackMapPreparationUtil
 import com.project.analyzer.utils.trackmap.TrackMapPreparedBounds
 import com.project.analyzer.utils.trackmap.TrackMapPreparedPoint
 import kotlinx.collections.immutable.toImmutableList
-import com.project.analyzer.telemetry.analysis.api.model.track.SessionAnalysisTrackMapPoint as SourceSessionTrackMapPoint
 import com.project.analyzer.telemetry.ac.api.model.trackmap.TrackMapPoint as SourceTrackMapPoint
+import com.project.analyzer.telemetry.analysis.api.model.track.SessionAnalysisTrackMapPoint as SourceSessionTrackMapPoint
 
 internal fun TrackMap.toTrackMapData(trackMapPreparationUtil: TrackMapPreparationUtil): TrackMapData? {
     val minimapPoints = idealLinePoints.takeIf { points -> points.hasRenderableSourcePoints() } ?: points

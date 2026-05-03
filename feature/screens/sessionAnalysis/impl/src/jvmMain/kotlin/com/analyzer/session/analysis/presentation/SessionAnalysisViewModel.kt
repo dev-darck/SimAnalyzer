@@ -1,6 +1,7 @@
 package com.analyzer.session.analysis.presentation
 
 import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceData
+import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceRequest
 import com.analyzer.session.analysis.domain.usecase.SessionAnalysisUseCase
 import com.analyzer.session.analysis.presentation.builder.state.toShellState
 import com.analyzer.session.analysis.presentation.builder.state.toState
@@ -21,6 +22,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
+@Suppress("TooManyFunctions")
 @Inject
 internal class SessionAnalysisViewModel(
     private val useCase: SessionAnalysisUseCase,
@@ -42,7 +44,7 @@ internal class SessionAnalysisViewModel(
 
     override suspend fun handleIntent(intent: SessionAnalysisIntent) {
         when (intent) {
-            is SessionAnalysisBindSessionIntent -> bindSession(intent.sessionId)
+            is SessionAnalysisBindSessionIntent -> bindSession(intent.toBindingRequest())
             SessionAnalysisRefreshIntent -> reload(forceRefresh = true)
             is SessionAnalysisSelectSessionIntent -> selectSession(intent.segmentId)
             is SessionAnalysisSelectLapIntent -> selectLap(intent.lapNumber)
@@ -50,32 +52,50 @@ internal class SessionAnalysisViewModel(
         }
     }
 
-    private suspend fun bindSession(sessionId: Long) {
-        if (binding.requestedSessionId == sessionId && binding.loadedSessionId == sessionId &&
-            binding.data != null
-        ) {
+    private suspend fun bindSession(request: SessionAnalysisBindingRequest) {
+        if (binding.matches(request) && binding.data != null) {
             return
         }
-        binding = binding.copy(requestedSessionId = sessionId)
-        load(sessionId)
+        updateBinding(request)
+        binding.data?.takeIf { binding.loadedSessionId == request.sessionId }?.let { workspaceData ->
+            publish(workspaceData = workspaceData, selection = request.selection)
+            return
+        }
+        load(request = request, forceRefresh = false)
     }
 
     @Suppress("UNUSED_PARAMETER")
     private suspend fun reload(forceRefresh: Boolean) {
-        val sessionId = binding.requestedSessionId ?: return
+        val request = currentBindingRequest() ?: return
+        val currentState = state.value
         load(
-            sessionId = sessionId,
+            request = request.copy(
+                selection = request.selection.copy(
+                    segmentId = currentState.selectedSegmentId,
+                    lapNumber = currentState.selectedLapNumber,
+                    referenceLapNumber = currentState.referenceLapNumber.takeIf {
+                        currentState.referenceLapIsCustom
+                    },
+                ),
+            ),
             forceRefresh = forceRefresh,
         )
     }
 
-    private suspend fun load(sessionId: Long, forceRefresh: Boolean = false) {
+    @Suppress("LongMethod")
+    private suspend fun load(request: SessionAnalysisBindingRequest, forceRefresh: Boolean = false) {
+        val sessionId = request.sessionId
+        val selection = request.selection
         val shouldPreserveSelection = binding.loadedSessionId == sessionId
+        val hasExplicitSelection = selection.hasExplicitSelection()
         val currentSelection = state.value
         updateState { copy(isLoading = true, error = null) }
         val shellWorkspaceData = try {
             useCase.loadWorkspaceShell(
-                sessionId = sessionId,
+                request = SessionAnalysisWorkspaceRequest(
+                    sessionId = sessionId,
+                    referenceSessionId = selection.referenceSessionId,
+                ),
                 forceRefresh = forceRefresh,
             )
         } catch (error: Throwable) {
@@ -101,41 +121,44 @@ internal class SessionAnalysisViewModel(
 
         binding = binding.copy(
             loadedSessionId = sessionId,
+            referenceSessionId = selection.referenceSessionId,
+            referenceSegmentId = selection.referenceSegmentId,
+            selectedSegmentId = selection.segmentId,
+            selectedLapNumber = selection.lapNumber,
+            referenceLapNumber = selection.referenceLapNumber,
             data = shellWorkspaceData,
         )
         selectionStateCache.clear()
 
-        val selectedSegmentId = if (shouldPreserveSelection) {
-            currentSelection.selectedSegmentId
-        } else {
-            null
-        }
-        val selectedLapNumber = if (shouldPreserveSelection) {
-            currentSelection.selectedLapNumber
-        } else {
-            null
-        }
-        val selectedReferenceLapNumber = if (shouldPreserveSelection && currentSelection.referenceLapIsCustom) {
-            currentSelection.referenceLapNumber
-        } else {
-            null
-        }
+        val resolvedSelection = selection.resolveAgainst(
+            currentState = currentSelection,
+            preserveSelection = shouldPreserveSelection && !hasExplicitSelection,
+        )
+        binding = binding.copy(
+            selectedSegmentId = resolvedSelection.segmentId,
+            selectedLapNumber = resolvedSelection.lapNumber,
+            referenceSegmentId = resolvedSelection.referenceSegmentId,
+            referenceLapNumber = resolvedSelection.referenceLapNumber,
+        )
 
         val shellState = withContext(defaultDispatcher) {
             shellWorkspaceData.report.toShellState(
+                referenceReport = shellWorkspaceData.referenceReport,
                 authoredTrackMap = shellWorkspaceData.authoredTrackMap,
                 sourceTrackMap = shellWorkspaceData.sourceTrackMap,
                 displayTrackMap = shellWorkspaceData.displayTrackMap,
-                selectedSegmentId = selectedSegmentId,
-                selectedLapNumber = selectedLapNumber,
-                selectedReferenceLapNumber = selectedReferenceLapNumber,
+                selectedSegmentId = resolvedSelection.segmentId,
+                selectedLapNumber = resolvedSelection.lapNumber,
+                selectedReferenceSegmentId = resolvedSelection.referenceSegmentId,
+                selectedReferenceLapNumber = resolvedSelection.referenceLapNumber,
             )
         }
         setState(shellState)
         val workspaceData = try {
             useCase.enrichWorkspace(shellWorkspaceData)
-        } catch (error: Throwable) {
-            if (error is CancellationException) throw error
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Throwable) {
             binding = binding.copy(
                 loadedSessionId = sessionId,
                 data = shellWorkspaceData,
@@ -151,9 +174,7 @@ internal class SessionAnalysisViewModel(
 
         val nextState = resolveState(
             workspaceData = workspaceData,
-            segmentId = selectedSegmentId,
-            lapNumber = selectedLapNumber,
-            referenceLapNumber = selectedReferenceLapNumber,
+            selection = resolvedSelection,
         )
         setState(nextState)
     }
@@ -162,9 +183,12 @@ internal class SessionAnalysisViewModel(
         val workspaceData = binding.data ?: return
         publish(
             workspaceData = workspaceData,
-            segmentId = state.value.selectedSegmentId,
-            lapNumber = lapNumber,
-            referenceLapNumber = state.value.referenceLapNumber.takeIf { state.value.referenceLapIsCustom },
+            selection = currentSelection()
+                .copy(
+                    segmentId = state.value.selectedSegmentId,
+                    lapNumber = lapNumber,
+                    referenceLapNumber = state.value.referenceLapNumber.takeIf { state.value.referenceLapIsCustom },
+                ),
         )
     }
 
@@ -172,9 +196,12 @@ internal class SessionAnalysisViewModel(
         val workspaceData = binding.data ?: return
         publish(
             workspaceData = workspaceData,
-            segmentId = segmentId,
-            lapNumber = null,
-            referenceLapNumber = null,
+            selection = currentSelection()
+                .copy(
+                    segmentId = segmentId,
+                    lapNumber = null,
+                    referenceLapNumber = null,
+                ),
         )
     }
 
@@ -182,23 +209,24 @@ internal class SessionAnalysisViewModel(
         val workspaceData = binding.data ?: return
         publish(
             workspaceData = workspaceData,
-            segmentId = state.value.selectedSegmentId,
-            lapNumber = state.value.selectedLapNumber,
-            referenceLapNumber = lapNumber,
+            selection = currentSelection()
+                .copy(
+                    segmentId = state.value.selectedSegmentId,
+                    lapNumber = state.value.selectedLapNumber,
+                    referenceLapNumber = lapNumber,
+                ),
         )
     }
 
-    private suspend fun publish(
-        workspaceData: SessionAnalysisWorkspaceData,
-        segmentId: Long?,
-        lapNumber: Int?,
-        referenceLapNumber: Int?,
-    ) {
-        val cacheKey = SelectionStateKey(
-            segmentId = segmentId,
-            lapNumber = lapNumber,
-            referenceLapNumber = referenceLapNumber,
+    private suspend fun publish(workspaceData: SessionAnalysisWorkspaceData, selection: SessionAnalysisSelection) {
+        binding = binding.copy(
+            selectedSegmentId = selection.segmentId,
+            selectedLapNumber = selection.lapNumber,
+            referenceSessionId = selection.referenceSessionId,
+            referenceSegmentId = selection.referenceSegmentId,
+            referenceLapNumber = selection.referenceLapNumber,
         )
+        val cacheKey = selection.toCacheKey()
         selectionStateCache[cacheKey]?.let { cachedState ->
             publishStateIfChanged(cachedState)
             return
@@ -211,36 +239,30 @@ internal class SessionAnalysisViewModel(
         )
         val nextState = resolveState(
             workspaceData = workspaceData,
-            segmentId = segmentId,
-            lapNumber = lapNumber,
-            referenceLapNumber = referenceLapNumber,
+            selection = selection,
         )
         publishStateIfChanged(nextState)
     }
 
     private suspend fun resolveState(
         workspaceData: SessionAnalysisWorkspaceData,
-        segmentId: Long?,
-        lapNumber: Int?,
-        referenceLapNumber: Int?,
+        selection: SessionAnalysisSelection,
     ): SessionAnalysisState {
-        val cacheKey = SelectionStateKey(
-            segmentId = segmentId,
-            lapNumber = lapNumber,
-            referenceLapNumber = referenceLapNumber,
-        )
+        val cacheKey = selection.toCacheKey()
         selectionStateCache[cacheKey]?.let { cachedState ->
             return cachedState
         }
         val nextState = withContext(defaultDispatcher) {
             workspaceData.report.toState(
+                referenceReport = workspaceData.referenceReport,
                 calibration = workspaceData.calibration,
                 authoredTrackMap = workspaceData.authoredTrackMap,
                 sourceTrackMap = workspaceData.sourceTrackMap,
                 displayTrackMap = workspaceData.displayTrackMap,
-                selectedSegmentId = segmentId,
-                selectedLapNumber = lapNumber,
-                selectedReferenceLapNumber = referenceLapNumber,
+                selectedSegmentId = selection.segmentId,
+                selectedLapNumber = selection.lapNumber,
+                selectedReferenceSegmentId = selection.referenceSegmentId,
+                selectedReferenceLapNumber = selection.referenceLapNumber,
                 selectedFrameId = null,
             )
         }
@@ -271,4 +293,85 @@ internal class SessionAnalysisViewModel(
             setState(nextState)
         }
     }
+
+    private fun updateBinding(request: SessionAnalysisBindingRequest) {
+        binding = binding.copy(
+            requestedSessionId = request.sessionId,
+            referenceSessionId = request.selection.referenceSessionId,
+            referenceSegmentId = request.selection.referenceSegmentId,
+            selectedSegmentId = request.selection.segmentId,
+            selectedLapNumber = request.selection.lapNumber,
+            referenceLapNumber = request.selection.referenceLapNumber,
+        )
+    }
+
+    private fun currentBindingRequest(): SessionAnalysisBindingRequest? {
+        val sessionId = binding.requestedSessionId ?: return null
+        return SessionAnalysisBindingRequest(
+            sessionId = sessionId,
+            selection = currentSelection(),
+        )
+    }
+
+    private fun currentSelection(): SessionAnalysisSelection = SessionAnalysisSelection(
+        segmentId = binding.selectedSegmentId,
+        lapNumber = binding.selectedLapNumber,
+        referenceSessionId = binding.referenceSessionId,
+        referenceSegmentId = binding.referenceSegmentId,
+        referenceLapNumber = binding.referenceLapNumber,
+    )
+
+    private fun SessionBinding.matches(request: SessionAnalysisBindingRequest): Boolean =
+        requestedSessionId == request.sessionId &&
+            loadedSessionId == request.sessionId &&
+            referenceSessionId == request.selection.referenceSessionId &&
+            referenceSegmentId == request.selection.referenceSegmentId &&
+            selectedSegmentId == request.selection.segmentId &&
+            selectedLapNumber == request.selection.lapNumber &&
+            referenceLapNumber == request.selection.referenceLapNumber
+
+    private fun SessionAnalysisBindSessionIntent.toBindingRequest(): SessionAnalysisBindingRequest =
+        SessionAnalysisBindingRequest(
+            sessionId = sessionId,
+            selection = SessionAnalysisSelection(
+                segmentId = segmentId,
+                lapNumber = lapNumber,
+                referenceSessionId = referenceSessionId,
+                referenceSegmentId = referenceSegmentId,
+                referenceLapNumber = referenceLapNumber,
+            ),
+        )
+
+    private fun SessionAnalysisSelection.hasExplicitSelection(): Boolean =
+        segmentId != null || lapNumber != null || referenceLapNumber != null
+
+    private fun SessionAnalysisSelection.resolveAgainst(
+        currentState: SessionAnalysisState,
+        preserveSelection: Boolean,
+    ): SessionAnalysisSelection {
+        if (!preserveSelection) return this
+        return copy(
+            segmentId = currentState.selectedSegmentId,
+            lapNumber = currentState.selectedLapNumber,
+            referenceLapNumber = currentState.referenceLapNumber.takeIf { currentState.referenceLapIsCustom },
+        )
+    }
+
+    private fun SessionAnalysisSelection.toCacheKey(): SelectionStateKey = SelectionStateKey(
+        segmentId = segmentId,
+        lapNumber = lapNumber,
+        referenceSessionId = referenceSessionId,
+        referenceSegmentId = referenceSegmentId,
+        referenceLapNumber = referenceLapNumber,
+    )
 }
+
+private data class SessionAnalysisBindingRequest(val sessionId: Long, val selection: SessionAnalysisSelection)
+
+private data class SessionAnalysisSelection(
+    val segmentId: Long? = null,
+    val lapNumber: Int? = null,
+    val referenceSessionId: Long? = null,
+    val referenceSegmentId: Long? = null,
+    val referenceLapNumber: Int? = null,
+)

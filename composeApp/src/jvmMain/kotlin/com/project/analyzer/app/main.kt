@@ -56,6 +56,7 @@ suspend fun main() {
                 SimAnalyzerTheme(themeMode = themeMode) {
                     CrashBoundary(
                         createCrashReportUseCase = appGraph.createCrashReportUseCase,
+                        metroViewModelFactory = appGraph.metroViewModelFactory,
                         appVersion = BuildConfig.VERSION_NAME,
                     ) {
                         App(

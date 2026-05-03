@@ -19,7 +19,14 @@ class SessionAnalysisEntry : RouteEntryBuilder {
 
     override fun NavigationEntryBuilder.build() {
         entry(Route.SessionRoot.SessionAnalysis::class) {
-            SessionAnalysisScreen(sessionId = sessionId)
+            SessionAnalysisScreen(
+                sessionId = sessionId,
+                initialSegmentId = segmentId,
+                initialLapNumber = lapNumber,
+                initialReferenceSessionId = referenceSessionId,
+                initialReferenceSegmentId = referenceSegmentId,
+                initialReferenceLapNumber = referenceLapNumber,
+            )
         }
     }
 }

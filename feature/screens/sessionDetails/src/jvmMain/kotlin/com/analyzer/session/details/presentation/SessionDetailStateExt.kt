@@ -4,9 +4,10 @@ import com.analyzer.session.details.domain.model.SessionDetailPage
 import com.analyzer.session.details.domain.model.SessionLapDomainItem
 import com.analyzer.session.details.domain.model.SessionLapDomainStatus
 import com.analyzer.session.details.presentation.model.LapStatus
+import com.analyzer.session.details.presentation.model.SessionDetailCompareLapUi
+import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
-import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
 import com.analyzer.session.details.presentation.model.SessionDetailQueryUi
@@ -46,6 +47,8 @@ private val SESSION_DETAIL_SHOW_OPTIONS = persistentListOf(
 internal fun SessionDetailPage.toSessionDetailState(
     query: SessionDetailQueryUi,
     isLoading: Boolean = false,
+    isCompareSelectionMode: Boolean = false,
+    selectedCompareLaps: ImmutableList<SessionDetailCompareLapUi> = persistentListOf(),
 ): SessionDetailState = SessionDetailState(
     isLoading = isLoading,
     error = error,
@@ -81,7 +84,15 @@ internal fun SessionDetailPage.toSessionDetailState(
     ),
     page = page,
     pageCount = pageCount,
-    visibleLaps = laps.map(SessionLapDomainItem::toSessionLapRowUi).toImmutableList(),
+    visibleLaps = laps.map {
+        it.toSessionLapRowUi(
+            isCompareSelectionMode = isCompareSelectionMode,
+            selectedCompareLaps = selectedCompareLaps,
+        )
+    }.toImmutableList(),
+    isCompareSelectionMode = isCompareSelectionMode,
+    selectedCompareLaps = selectedCompareLaps,
+    compareConfirmEnabled = selectedCompareLaps.size == 2,
 )
 
 private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> =
@@ -105,20 +116,38 @@ private fun sessionDetailFilterUiModel(
     )
 }
 
-private fun SessionLapDomainItem.toSessionLapRowUi(): SessionLapRowUi = SessionLapRowUi(
-    lapNumber = lapNumber,
-    lapLabel = lapLabel,
-    sessionTypeLabel = sessionTypeLabel,
-    totalTimeMs = totalTimeMs,
-    totalTime = totalTime,
-    s1 = s1,
-    s2 = s2,
-    s3 = s3,
-    incidents = incidents,
-    delta = delta,
-    deltaIsPositive = deltaIsPositive,
-    status = status.toLapStatus(),
-)
+private fun SessionLapDomainItem.toSessionLapRowUi(
+    isCompareSelectionMode: Boolean,
+    selectedCompareLaps: ImmutableList<SessionDetailCompareLapUi>,
+): SessionLapRowUi {
+    val compareSelectionOrdinal = selectedCompareLaps.indexOfFirst {
+        it.segmentId == segmentId && it.lapNumber == lapNumber
+    }.takeIf { it >= 0 }?.plus(1)
+    val selectedSegmentId = selectedCompareLaps.firstOrNull()?.segmentId
+    val compareSelected = compareSelectionOrdinal != null
+    val canSelectMore = selectedCompareLaps.size < 2 &&
+        (selectedSegmentId == null || selectedSegmentId == segmentId)
+    val compareAvailable = isCompareSelectionMode && (compareSelected || canSelectMore)
+
+    return SessionLapRowUi(
+        segmentId = segmentId,
+        lapNumber = lapNumber,
+        lapLabel = lapLabel,
+        sessionTypeLabel = sessionTypeLabel,
+        totalTimeMs = totalTimeMs,
+        totalTime = totalTime,
+        s1 = s1,
+        s2 = s2,
+        s3 = s3,
+        incidents = incidents,
+        delta = delta,
+        deltaIsPositive = deltaIsPositive,
+        status = status.toLapStatus(),
+        compareAvailable = compareAvailable,
+        compareSelected = compareSelected,
+        compareSelectionOrdinal = compareSelectionOrdinal,
+    )
+}
 
 private fun SessionLapDomainStatus.toLapStatus(): LapStatus = when (this) {
     SessionLapDomainStatus.Clean -> LapStatus.Clean

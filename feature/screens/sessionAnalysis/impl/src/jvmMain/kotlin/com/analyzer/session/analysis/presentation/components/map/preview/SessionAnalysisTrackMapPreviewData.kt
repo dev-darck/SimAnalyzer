@@ -8,8 +8,8 @@ import com.analyzer.session.analysis.presentation.model.CornerScoreUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSectorUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisFractionPointUi

@@ -17,6 +17,7 @@ import androidx.compose.ui.test.runDesktopComposeUiTest
 import com.project.analyzer.chooser.SelectionMode
 import com.project.analyzer.chooser.domain.model.File
 import com.project.analyzer.chooser.domain.model.TreeNode
+import com.project.analyzer.chooser.presentation.toUi
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.TestTags
 import com.project.analyzer.ui.modifier.trackRecompositions
@@ -36,10 +37,10 @@ class FileChooserContentTest {
                 selected = "C:\\report.txt",
                 selectedDrive = "C:\\",
                 selectionMode = SelectionMode.FILE,
-                drives = persistentListOf(File(label = "Local Disk (C:)", path = "C:\\")),
-                places = persistentListOf(File(label = "Downloads", path = "C:\\Users\\Oleg\\Downloads")),
+                drives = persistentListOf(File(label = "Local Disk (C:)", path = "C:\\").toUi()),
+                places = persistentListOf(File(label = "Downloads", path = "C:\\Users\\Oleg\\Downloads").toUi()),
                 treeNodes = persistentListOf(
-                    TreeNode(path = "C:\\Users\\Oleg\\Downloads", name = "Downloads", depth = 0),
+                    TreeNode(path = "C:\\Users\\Oleg\\Downloads", name = "Downloads", depth = 0).toUi(),
                 ),
             ),
         )

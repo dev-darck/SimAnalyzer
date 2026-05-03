@@ -17,6 +17,14 @@ data class SessionDetailFilterUiModel(
     val options: ImmutableList<SessionDetailFilterOptionUi> = persistentListOf(),
 )
 
+data class SessionDetailCompareLapUi(
+    val segmentId: Long,
+    val lapNumber: Int,
+    val lapLabel: String,
+    val sessionTypeLabel: String,
+    val totalTimeMs: Int?,
+)
+
 data class SessionDetailState(
     val isLoading: Boolean = true,
     val error: String? = null,
@@ -40,4 +48,7 @@ data class SessionDetailState(
     val page: Int = 1,
     val pageCount: Int = 1,
     val visibleLaps: ImmutableList<SessionLapRowUi> = persistentListOf(),
+    val isCompareSelectionMode: Boolean = false,
+    val selectedCompareLaps: ImmutableList<SessionDetailCompareLapUi> = persistentListOf(),
+    val compareConfirmEnabled: Boolean = false,
 )

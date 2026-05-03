@@ -18,6 +18,7 @@ internal sealed interface LmuPluginInstallUiResult {
 
 internal fun LmuPluginSetupCheckResult.toUiResult(): LmuPluginSetupCheckUiResult = when (this) {
     is LmuPluginSetupCheckResult.Ready -> LmuPluginSetupCheckUiResult.Ready
+
     is LmuPluginSetupCheckResult.InstallRequired -> LmuPluginSetupCheckUiResult.ShowDialog(
         LmuPluginDialogState(
             phase = LmuPluginDialogPhase.Prompt,

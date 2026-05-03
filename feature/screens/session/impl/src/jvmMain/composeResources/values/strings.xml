@@ -33,6 +33,7 @@
     <string name="session_table_header_best_lap">Best Lap</string>
     <string name="session_table_header_actions">Actions</string>
     <string name="session_action_saved">Saved</string>
+    <string name="session_action_compare">Compare</string>
     <string name="session_action_save">Save session</string>
     <string name="session_action_delete">Delete session</string>
     <string name="session_action_open_details">Open details</string>

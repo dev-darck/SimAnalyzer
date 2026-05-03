@@ -35,6 +35,7 @@ import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosis
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapSummaryUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSessionOptionUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_diagnosis_driving
@@ -67,12 +68,15 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun SessionAnalysisStudioNavigatorPane(
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     sessionOptions: ImmutableList<SessionAnalysisSessionOptionUi>,
     selectedSessionId: Long?,
     laps: ImmutableList<SessionAnalysisLapSummaryUi>,
     selectedLapNumber: Int?,
+    referenceLap: SessionAnalysisLapSummaryUi?,
     referenceLapNumber: Int?,
     referenceLapIsCustom: Boolean,
+    hasExternalReference: Boolean,
     highlights: ImmutableList<SessionAnalysisHighlightUi>,
     layoutMode: SessionAnalysisPaneLayoutMode = SessionAnalysisPaneLayoutMode.Bounded,
     modifier: Modifier = Modifier,
@@ -82,9 +86,6 @@ internal fun SessionAnalysisStudioNavigatorPane(
 ) {
     val selectedLap = remember(laps, selectedLapNumber) {
         laps.firstOrNull { lap -> lap.lapNumber == selectedLapNumber }
-    }
-    val referenceLap = remember(laps, referenceLapNumber) {
-        laps.firstOrNull { lap -> lap.lapNumber == referenceLapNumber }
     }
     val bestLap = remember(laps) {
         laps
@@ -117,6 +118,7 @@ internal fun SessionAnalysisStudioNavigatorPane(
             SessionAnalysisNavigatorHeaderBand(header = header)
             SessionAnalysisNavigatorSectionDivider()
             SessionAnalysisNavigatorCompareShelf(
+                screenMode = screenMode,
                 selectedLap = selectedLap,
                 referenceLap = referenceLap,
                 bestLap = bestLap,
@@ -124,55 +126,57 @@ internal fun SessionAnalysisStudioNavigatorPane(
                 referenceLapIsCustom = referenceLapIsCustom,
                 onReferenceReset = { onReferenceLapSelected(null) },
             )
-            SessionAnalysisNavigatorSectionDivider()
-            SessionAnalysisNavigatorSectionHeading(
-                title = stringResource(Res.string.session_analysis_navigator_history_label),
-            )
-            sessionOptions
-                .sortedByDescending { option -> option.segmentId == selectedSessionId }
-                .forEachIndexed { index, option ->
-                    if (index > 0) {
-                        SessionAnalysisNavigatorRowDivider()
-                    }
-                    SessionAnalysisNavigatorSessionRow(
-                        title = option.primaryLabel,
-                        subtitle = option.supportingLabel,
-                        selected = option.segmentId == selectedSessionId,
-                        onClick = { onSessionSelected(option.segmentId) },
-                    )
-                }
-            SessionAnalysisNavigatorSectionDivider()
-            SessionAnalysisNavigatorSectionHeading(
-                title = stringResource(Res.string.session_analysis_navigator_my_laps_label),
-                subtitle = stringResource(Res.string.session_analysis_navigator_laps_hint),
-            )
-            SessionAnalysisNavigatorLapTableHeader()
-            SessionAnalysisNavigatorRowDivider()
-            laps.forEachIndexed { index, lap ->
-                SessionAnalysisLapRailRow(
-                    lap = lap,
-                    isSelected = lap.lapNumber == selectedLapNumber,
-                    isReference = lap.lapNumber == referenceLapNumber,
-                    referenceLapIsCustom = referenceLapIsCustom,
-                    onClick = { onLapSelected(lap.lapNumber) },
-                    onReferenceClick = { onReferenceLapSelected(lap.lapNumber) },
-                    onResetReferenceClick = { onReferenceLapSelected(null) },
-                )
-                if (index < laps.lastIndex) {
-                    SessionAnalysisNavigatorRowDivider()
-                }
-            }
-            if (focusQueue.isNotEmpty()) {
+            if (screenMode == SessionAnalysisScreenMode.Analysis) {
                 SessionAnalysisNavigatorSectionDivider()
                 SessionAnalysisNavigatorSectionHeading(
-                    title = stringResource(Res.string.session_analysis_navigator_focus_label),
+                    title = stringResource(Res.string.session_analysis_navigator_history_label),
                 )
-                SessionAnalysisNavigatorFocusTableHeader()
+                sessionOptions
+                    .sortedByDescending { option -> option.segmentId == selectedSessionId }
+                    .forEachIndexed { index, option ->
+                        if (index > 0) {
+                            SessionAnalysisNavigatorRowDivider()
+                        }
+                        SessionAnalysisNavigatorSessionRow(
+                            title = option.primaryLabel,
+                            subtitle = option.supportingLabel,
+                            selected = option.segmentId == selectedSessionId,
+                            onClick = { onSessionSelected(option.segmentId) },
+                        )
+                    }
+                SessionAnalysisNavigatorSectionDivider()
+                SessionAnalysisNavigatorSectionHeading(
+                    title = stringResource(Res.string.session_analysis_navigator_my_laps_label),
+                    subtitle = stringResource(Res.string.session_analysis_navigator_laps_hint),
+                )
+                SessionAnalysisNavigatorLapTableHeader()
                 SessionAnalysisNavigatorRowDivider()
-                focusQueue.forEachIndexed { index, highlight ->
-                    SessionAnalysisNavigatorFocusRow(highlight = highlight)
-                    if (index < focusQueue.lastIndex) {
+                laps.forEachIndexed { index, lap ->
+                    SessionAnalysisLapRailRow(
+                        lap = lap,
+                        isSelected = lap.lapNumber == selectedLapNumber,
+                        isReference = !hasExternalReference && lap.lapNumber == referenceLapNumber,
+                        referenceLapIsCustom = referenceLapIsCustom,
+                        onClick = { onLapSelected(lap.lapNumber) },
+                        onReferenceClick = { onReferenceLapSelected(lap.lapNumber) },
+                        onResetReferenceClick = { onReferenceLapSelected(null) },
+                    )
+                    if (index < laps.lastIndex) {
                         SessionAnalysisNavigatorRowDivider()
+                    }
+                }
+                if (focusQueue.isNotEmpty()) {
+                    SessionAnalysisNavigatorSectionDivider()
+                    SessionAnalysisNavigatorSectionHeading(
+                        title = stringResource(Res.string.session_analysis_navigator_focus_label),
+                    )
+                    SessionAnalysisNavigatorFocusTableHeader()
+                    SessionAnalysisNavigatorRowDivider()
+                    focusQueue.forEachIndexed { index, highlight ->
+                        SessionAnalysisNavigatorFocusRow(highlight = highlight)
+                        if (index < focusQueue.lastIndex) {
+                            SessionAnalysisNavigatorRowDivider()
+                        }
                     }
                 }
             }
@@ -228,6 +232,7 @@ private fun SessionAnalysisNavigatorHeaderBand(header: SessionAnalysisHeaderUi) 
 
 @Composable
 private fun SessionAnalysisNavigatorCompareShelf(
+    screenMode: SessionAnalysisScreenMode,
     selectedLap: SessionAnalysisLapSummaryUi?,
     referenceLap: SessionAnalysisLapSummaryUi?,
     bestLap: SessionAnalysisLapSummaryUi?,
@@ -258,48 +263,54 @@ private fun SessionAnalysisNavigatorCompareShelf(
                 label = stringResource(Res.string.session_analysis_navigator_info_reference),
                 accent = SimAnalyzerTheme.extended.amber,
                 lap = referenceLap,
-                footer = if (referenceLapIsCustom) {
+                footer = if (screenMode == SessionAnalysisScreenMode.Analysis && referenceLapIsCustom) {
                     stringResource(Res.string.session_analysis_navigator_action_use_best_as_ref)
                 } else {
                     referenceLap?.deltaToBestMs?.let(::formatDelta)
                         ?: stringResource(Res.string.session_analysis_no_selection_placeholder)
                 },
-                onFooterClick = if (referenceLapIsCustom) onReferenceReset else null,
+                onFooterClick = if (screenMode == SessionAnalysisScreenMode.Analysis && referenceLapIsCustom) {
+                    onReferenceReset
+                } else {
+                    null
+                },
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = stringResource(Res.string.session_analysis_navigator_info_best),
-                color = SimAnalyzerTheme.material.onSurfaceVariant,
-                style = SimAnalyzerTheme.typography.labelSmall,
-            )
-            Text(
-                text = when {
-                    bestLap != null && bestLap.durationMs != null -> {
-                        "${
-                            stringResource(
-                                Res.string.session_analysis_lap_label,
-                                bestLap.lapNumber,
-                            )
-                        } • ${formatLapTime(bestLap.durationMs)}"
-                    }
+        if (screenMode == SessionAnalysisScreenMode.Analysis) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.session_analysis_navigator_info_best),
+                    color = SimAnalyzerTheme.material.onSurfaceVariant,
+                    style = SimAnalyzerTheme.typography.labelSmall,
+                )
+                Text(
+                    text = when {
+                        bestLap != null && bestLap.durationMs != null -> {
+                            "${
+                                stringResource(
+                                    Res.string.session_analysis_lap_label,
+                                    bestLap.lapNumber,
+                                )
+                            } • ${formatLapTime(bestLap.durationMs)}"
+                        }
 
-                    bestLapLabel.isNotBlank() -> bestLapLabel
+                        bestLapLabel.isNotBlank() -> bestLapLabel
 
-                    else -> stringResource(Res.string.session_analysis_no_selection_placeholder)
-                },
-                color = SimAnalyzerTheme.material.onSurface,
-                style = SimAnalyzerTheme.typography.labelMedium.copy(
-                    fontFamily = SimAnalyzerTheme.fonts.mono,
-                ),
-                maxLines = 1,
-                softWrap = false,
-                overflow = TextOverflow.Ellipsis,
-            )
+                        else -> stringResource(Res.string.session_analysis_no_selection_placeholder)
+                    },
+                    color = SimAnalyzerTheme.material.onSurface,
+                    style = SimAnalyzerTheme.typography.labelMedium.copy(
+                        fontFamily = SimAnalyzerTheme.fonts.mono,
+                    ),
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
@@ -639,12 +650,15 @@ internal fun SessionAnalysisStudioNavigatorPanePreview() {
     SimAnalyzerTheme {
         SessionAnalysisStudioNavigatorPane(
             header = sessionAnalysisNavigatorPreviewHeader(),
+            screenMode = SessionAnalysisScreenMode.Analysis,
             sessionOptions = sessionAnalysisNavigatorPreviewSessions(),
             selectedSessionId = 12L,
             laps = sessionAnalysisNavigatorPreviewLaps(),
             selectedLapNumber = 7,
+            referenceLap = sessionAnalysisNavigatorPreviewLaps().first(),
             referenceLapNumber = 6,
             referenceLapIsCustom = true,
+            hasExternalReference = false,
             highlights = sessionAnalysisNavigatorPreviewHighlights(),
             modifier = Modifier
                 .width(360.dp)

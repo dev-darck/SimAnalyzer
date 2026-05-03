@@ -29,8 +29,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.project.analyzer.chooser.presentation.FileChooserLocationUi
 import com.project.analyzer.chooser.presentation.FileChooserIntent
+import com.project.analyzer.chooser.presentation.FileChooserLocationUi
 import com.project.analyzer.feature.screens.chooser.Res.Res
 import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_quick_access
 import com.project.analyzer.feature.screens.chooser.Res.chooser_sidebar_this_pc

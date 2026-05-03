@@ -5,7 +5,6 @@ package com.project.analyzer.crash.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.window.LocalWindowExceptionHandlerFactory
@@ -16,6 +15,8 @@ import com.project.analyzer.crash.domain.CreateCrashReportUseCase
 import com.project.analyzer.feature.crash.Res.Res
 import com.project.analyzer.feature.crash.Res.crash_dialog_handler_title
 import com.project.analyzer.feature.crash.Res.crash_dialog_title
+import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import org.jetbrains.compose.resources.stringResource
 import java.awt.Dimension
 import java.awt.Window
@@ -30,6 +31,7 @@ private val crashDialogShown = AtomicBoolean(false)
 @Composable
 fun CrashBoundary(
     createCrashReportUseCase: CreateCrashReportUseCase,
+    metroViewModelFactory: MetroViewModelFactory,
     appVersion: String? = "dev",
     content: @Composable () -> Unit,
 ) {
@@ -57,6 +59,7 @@ fun CrashBoundary(
                         owner = window,
                         crashReport = report,
                         dialogTitle = dialogTitle,
+                        metroViewModelFactory = metroViewModelFactory,
                     )
                 } else {
                     SwingUtilities.invokeLater {
@@ -64,6 +67,7 @@ fun CrashBoundary(
                             owner = window,
                             crashReport = report,
                             dialogTitle = dialogTitle,
+                            metroViewModelFactory = metroViewModelFactory,
                         )
                     }
                 }
@@ -74,7 +78,12 @@ fun CrashBoundary(
     }
 }
 
-private fun showCrashDialog(owner: Window, crashReport: CrashReport, dialogTitle: String) {
+private fun showCrashDialog(
+    owner: Window,
+    crashReport: CrashReport,
+    dialogTitle: String,
+    metroViewModelFactory: MetroViewModelFactory,
+) {
     val b = owner.graphicsConfiguration.bounds
 
     val desiredW = 980
@@ -105,10 +114,12 @@ private fun showCrashDialog(owner: Window, crashReport: CrashReport, dialogTitle
         preferredSize = Dimension(finalW, finalH)
 
         setContent {
-            CrashScreen(
-                crashReport = crashReport,
-                onExit = { exitProcess(1) },
-            )
+            CompositionLocalProvider(LocalMetroViewModelFactory provides metroViewModelFactory) {
+                CrashScreen(
+                    crashReport = crashReport,
+                    onExit = { exitProcess(1) },
+                )
+            }
         }
     }
 

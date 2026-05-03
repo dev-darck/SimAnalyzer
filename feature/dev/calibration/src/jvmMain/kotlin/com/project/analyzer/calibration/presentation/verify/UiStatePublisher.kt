@@ -112,7 +112,6 @@ internal class UiStatePublisher(
             val metrics = calculateGateMetrics(carPose.position, gate)
             buildGateDebugInfo(
                 name = keyToName(key),
-                gate = gate,
                 carForward = carPose.headingDir,
                 gateKey = key,
                 metrics = metrics,
@@ -128,7 +127,6 @@ internal class UiStatePublisher(
 
     private fun buildGateDebugInfo(
         name: String,
-        gate: Gate,
         carForward: Vec2,
         gateKey: String,
         metrics: GateDebugMetrics,

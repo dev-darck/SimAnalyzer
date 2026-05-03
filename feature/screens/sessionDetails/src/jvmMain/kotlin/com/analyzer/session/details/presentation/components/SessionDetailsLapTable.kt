@@ -1,19 +1,25 @@
+@file:OptIn(ExperimentalFoundationApi::class)
+
 package com.analyzer.session.details.presentation.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.analyzer.session.details.presentation.model.LapStatus
-import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
+import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
@@ -21,6 +27,7 @@ import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
 import com.project.analyzer.feature.screens.sessionDetails.Res.Res
+import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_table_compare
 import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_table_delta
 import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_table_empty
 import com.project.analyzer.feature.screens.sessionDetails.Res.session_details_table_incidents
@@ -42,6 +49,7 @@ import com.project.analyzer.ui.components.TableSortMapping
 import com.project.analyzer.ui.components.tableSortMappings
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -50,8 +58,10 @@ internal fun SessionDetailsLapTable(
     modifier: Modifier = Modifier,
     onPageChange: (Int) -> Unit = {},
     onSortChange: (String) -> Unit = {},
+    onCompareToggle: (Long, Int) -> Unit = { _, _ -> },
 ) {
     val dividerColor = SimAnalyzerTheme.material.outlineVariant.copy(alpha = 0.2f)
+    val compareHeader = stringResource(Res.string.session_details_table_compare)
     val lapHeader = stringResource(Res.string.session_details_table_lap)
     val totalTimeHeader = stringResource(Res.string.session_details_table_total_time)
     val s1Header = stringResource(Res.string.session_details_table_s1)
@@ -61,6 +71,7 @@ internal fun SessionDetailsLapTable(
     val deltaHeader = stringResource(Res.string.session_details_table_delta)
     val statusHeader = stringResource(Res.string.session_details_table_status)
     val headerColumns = remember(
+        compareHeader,
         lapHeader,
         totalTimeHeader,
         s1Header,
@@ -69,8 +80,10 @@ internal fun SessionDetailsLapTable(
         incidentsHeader,
         deltaHeader,
         statusHeader,
+        state.isCompareSelectionMode,
     ) {
         sessionDetailsHeaderColumns(
+            compareHeader = compareHeader,
             lapHeader = lapHeader,
             totalTimeHeader = totalTimeHeader,
             s1Header = s1Header,
@@ -79,6 +92,7 @@ internal fun SessionDetailsLapTable(
             incidentsHeader = incidentsHeader,
             deltaHeader = deltaHeader,
             statusHeader = statusHeader,
+            showCompareSelection = state.isCompareSelectionMode,
         )
     }
 
@@ -103,6 +117,8 @@ internal fun SessionDetailsLapTable(
                 SessionDetailsTableRow(
                     rowIndex = index,
                     lap = lap,
+                    showCompareSelection = state.isCompareSelectionMode,
+                    onCompareToggle = onCompareToggle,
                 )
                 if (index != state.visibleLaps.lastIndex) {
                     HorizontalDivider(color = dividerColor)
@@ -167,6 +183,7 @@ private enum class SessionDetailsSortColumn {
 }
 
 private fun sessionDetailsHeaderColumns(
+    compareHeader: String,
     lapHeader: String,
     totalTimeHeader: String,
     s1Header: String,
@@ -175,75 +192,97 @@ private fun sessionDetailsHeaderColumns(
     incidentsHeader: String,
     deltaHeader: String,
     statusHeader: String,
-): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> = persistentListOf(
-    SortableTableColumn(
-        column = TableColumn(
-            title = lapHeader,
-            weight = 0.08f,
-            align = TableColumnAlign.Center,
+    showCompareSelection: Boolean,
+): ImmutableList<SortableTableColumn<SessionDetailsSortColumn>> = buildList {
+    if (showCompareSelection) {
+        add(
+            SortableTableColumn<SessionDetailsSortColumn>(
+                column = TableColumn(
+                    title = compareHeader,
+                    weight = 0.08f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = null,
+            ),
+        )
+    }
+    addAll(
+        persistentListOf(
+            SortableTableColumn(
+                column = TableColumn(
+                    title = lapHeader,
+                    weight = 0.08f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.Lap,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = totalTimeHeader,
+                    weight = 0.18f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.TotalTime,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = s1Header,
+                    weight = 0.1f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.S1,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = s2Header,
+                    weight = 0.1f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.S2,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = s3Header,
+                    weight = 0.1f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.S3,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = incidentsHeader,
+                    weight = 0.12f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.Incidents,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = deltaHeader,
+                    weight = 0.18f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.Delta,
+            ),
+            SortableTableColumn(
+                column = TableColumn(
+                    title = statusHeader,
+                    weight = 0.12f,
+                    align = TableColumnAlign.Center,
+                ),
+                sortKey = SessionDetailsSortColumn.Status,
+            ),
         ),
-        sortKey = SessionDetailsSortColumn.Lap,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = totalTimeHeader,
-            weight = 0.18f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.TotalTime,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = s1Header,
-            weight = 0.1f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.S1,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = s2Header,
-            weight = 0.1f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.S2,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = s3Header,
-            weight = 0.1f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.S3,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = incidentsHeader,
-            weight = 0.12f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.Incidents,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = deltaHeader,
-            weight = 0.18f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.Delta,
-    ),
-    SortableTableColumn(
-        column = TableColumn(
-            title = statusHeader,
-            weight = 0.14f,
-            align = TableColumnAlign.Center,
-        ),
-        sortKey = SessionDetailsSortColumn.Status,
-    ),
-)
+    )
+}.toImmutableList()
 
 @Composable
-private fun SessionDetailsTableRow(rowIndex: Int, lap: SessionLapRowUi) {
+private fun SessionDetailsTableRow(
+    rowIndex: Int,
+    lap: SessionLapRowUi,
+    showCompareSelection: Boolean,
+    onCompareToggle: (Long, Int) -> Unit,
+) {
     val baseColor = if (rowIndex % 2 == 0) {
         SimAnalyzerTheme.material.surfaceVariant.copy(alpha = 0.18f)
     } else {
@@ -260,6 +299,23 @@ private fun SessionDetailsTableRow(rowIndex: Int, lap: SessionLapRowUi) {
         backgroundColor = rowColor,
         modifier = Modifier.height(56.dp),
     ) {
+        if (showCompareSelection) {
+            Box(
+                modifier = Modifier.weight(0.08f),
+                contentAlignment = Alignment.Center,
+            ) {
+                Checkbox(
+                    checked = lap.compareSelected,
+                    enabled = lap.compareAvailable,
+                    onCheckedChange = {
+                        onCompareToggle(lap.segmentId, lap.lapNumber)
+                    },
+                    modifier = Modifier.semantics {
+                        contentDescription = "compare-lap-${lap.segmentId}-${lap.lapNumber}"
+                    },
+                )
+            }
+        }
         TableCell(
             text = lap.lapLabel,
             weight = 0.08f,
@@ -324,7 +380,7 @@ private fun SessionDetailsTableRow(rowIndex: Int, lap: SessionLapRowUi) {
             color = deltaColor(delta = lap.delta, isPositive = lap.deltaIsPositive),
         )
         Box(
-            modifier = Modifier.weight(0.14f),
+            modifier = Modifier.weight(0.12f),
             contentAlignment = Alignment.Center,
         ) {
             StatusChip(status = lap.status)
@@ -358,8 +414,10 @@ private fun SessionDetailsLapTablePreview() {
                 ),
                 page = 1,
                 pageCount = 4,
+                isCompareSelectionMode = true,
                 visibleLaps = persistentListOf(
                     SessionLapRowUi(
+                        segmentId = 1L,
                         lapNumber = 1,
                         lapLabel = "1",
                         sessionTypeLabel = "Qualifying",
@@ -372,8 +430,12 @@ private fun SessionDetailsLapTablePreview() {
                         delta = "-0.000",
                         deltaIsPositive = false,
                         status = LapStatus.BestLap,
+                        compareAvailable = true,
+                        compareSelected = true,
+                        compareSelectionOrdinal = 1,
                     ),
                     SessionLapRowUi(
+                        segmentId = 1L,
                         lapNumber = 2,
                         lapLabel = "2",
                         sessionTypeLabel = "Qualifying",
@@ -386,10 +448,13 @@ private fun SessionDetailsLapTablePreview() {
                         delta = "+1.665",
                         deltaIsPositive = true,
                         status = LapStatus.Dirty,
+                        compareAvailable = true,
+                        compareSelected = false,
                     ),
                 ),
             ),
             onPageChange = {},
+            onCompareToggle = { _, _ -> },
             modifier = Modifier.fillMaxWidth(),
         )
     }

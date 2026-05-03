@@ -20,6 +20,7 @@ import com.analyzer.trackmap.presentation.model.TrackMapBuilderUiState
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewBoundsUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewPointUi
 import com.analyzer.trackmap.presentation.model.TrackMapPreviewUi
+import com.analyzer.trackmap.presentation.model.toUi
 import com.project.analyzer.telemetry.ac.api.model.calibration.ReferencePoint
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.modifier.TestTags
@@ -80,7 +81,7 @@ private fun sampleTrackMapBuilderState(): TrackMapBuilderUiState = TrackMapBuild
     gameLabel = "Assetto Corsa",
     trackId = "monza",
     trackName = "Monza",
-    referencePoint = ReferencePoint.FRONT_AXLE,
+    referencePoint = ReferencePoint.FRONT_AXLE.toUi(),
     pointCount = 60,
     totalDistanceMeters = 5793.4f,
     averageTrackWidthMeters = 11.4f,

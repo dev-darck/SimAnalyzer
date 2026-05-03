@@ -32,9 +32,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.analyzer.settings.presentation.RecordingWarningKind
-import com.analyzer.settings.presentation.StorageValidationUi
 import com.analyzer.settings.presentation.StorageSizeInfo
 import com.analyzer.settings.presentation.StorageSizeUnit
+import com.analyzer.settings.presentation.StorageValidationUi
 import com.analyzer.settings.presentation.TelemetryAcquisitionUiLimits
 import com.project.analyzer.feature.screens.settings.impl.Res.Res
 import com.project.analyzer.feature.screens.settings.impl.Res.telemetry_acquisition_title

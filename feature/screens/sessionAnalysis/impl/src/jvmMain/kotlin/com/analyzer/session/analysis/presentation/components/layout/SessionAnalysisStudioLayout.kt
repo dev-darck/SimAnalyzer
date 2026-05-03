@@ -47,6 +47,7 @@ import com.analyzer.session.analysis.presentation.components.layout.support.reso
 import com.analyzer.session.analysis.presentation.components.layout.support.resolveSessionAnalysisStudioLayoutMetrics
 import com.analyzer.session.analysis.presentation.components.navigator.SessionAnalysisStudioNavigatorPane
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisState
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisGraphState
 import com.analyzer.session.analysis.presentation.preview.sessionAnalysisPreviewState
@@ -69,6 +70,7 @@ internal fun SessionAnalysisStudioLayout(
     val studio = state.studio
     val graphState = studio?.graph ?: SessionAnalysisGraphState()
     val interactionState = rememberSessionAnalysisStudioInteractionState(state = state)
+    val screenMode = state.screenMode
 
     BoxWithConstraints(
         modifier = modifier
@@ -114,6 +116,7 @@ internal fun SessionAnalysisStudioLayout(
         ) {
             SessionAnalysisStudioHeader(
                 header = header,
+                screenMode = screenMode,
                 summary = state.summary,
                 sessionOptions = state.sessionOptions,
                 selectedSessionId = state.selectedSegmentId,
@@ -134,6 +137,7 @@ internal fun SessionAnalysisStudioLayout(
                     SessionAnalysisStudioWideWorkspace(
                         state = state,
                         header = header,
+                        screenMode = screenMode,
                         studio = studio,
                         graphState = graphState,
                         interactionState = interactionState,
@@ -152,6 +156,7 @@ internal fun SessionAnalysisStudioLayout(
                         state = state,
                         studio = studio,
                         header = header,
+                        screenMode = screenMode,
                         graphState = graphState,
                         interactionState = interactionState,
                         heroHeight = layoutMetrics.heroHeight,
@@ -177,6 +182,7 @@ private fun SessionAnalysisStudioWideWorkspace(
     state: SessionAnalysisState,
     studio: com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisStudioState?,
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     graphState: SessionAnalysisGraphState,
     interactionState: SessionAnalysisStudioInteractionState,
     layoutMetrics: SessionAnalysisStudioLayoutMetrics,
@@ -192,6 +198,7 @@ private fun SessionAnalysisStudioWideWorkspace(
     ) {
         SessionAnalysisWorkspaceHero(
             trackCanvasState = studio?.trackCanvas,
+            screenMode = screenMode,
             activePoint = interactionState.activePoint,
             activeSample = interactionState.activeSample,
             diagnosticSummary = state.diagnosticSummary,
@@ -217,6 +224,7 @@ private fun SessionAnalysisStudioWideWorkspace(
         SessionAnalysisStudioWideContent(
             state = state,
             header = header,
+            screenMode = screenMode,
             graphState = graphState,
             interactionState = interactionState,
             layoutMetrics = layoutMetrics,
@@ -234,6 +242,7 @@ private fun SessionAnalysisStudioWideWorkspace(
 private fun SessionAnalysisStudioWideContent(
     state: SessionAnalysisState,
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     graphState: SessionAnalysisGraphState,
     interactionState: SessionAnalysisStudioInteractionState,
     layoutMetrics: SessionAnalysisStudioLayoutMetrics,
@@ -252,12 +261,15 @@ private fun SessionAnalysisStudioWideContent(
         ) { paneModifier ->
             SessionAnalysisStudioNavigatorPane(
                 header = header,
+                screenMode = screenMode,
                 sessionOptions = state.sessionOptions,
                 selectedSessionId = state.selectedSegmentId,
                 laps = state.laps,
                 selectedLapNumber = state.selectedLapNumber,
+                referenceLap = state.referenceLapSummary,
                 referenceLapNumber = state.referenceLapNumber,
                 referenceLapIsCustom = state.referenceLapIsCustom,
+                hasExternalReference = state.hasExternalReference,
                 highlights = state.highlights,
                 layoutMode = SessionAnalysisPaneLayoutMode.Bounded,
                 modifier = paneModifier,
@@ -285,6 +297,7 @@ private fun SessionAnalysisStudioWideContent(
         ) { paneModifier ->
             SessionAnalysisWorkspaceInspectorPane(
                 header = header,
+                screenMode = screenMode,
                 summary = state.summary,
                 sectors = state.sectors,
                 lapCoach = state.lapCoach,
@@ -310,6 +323,7 @@ private fun SessionAnalysisStudioCompactWorkspace(
     state: SessionAnalysisState,
     studio: com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisStudioState?,
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     graphState: SessionAnalysisGraphState,
     interactionState: SessionAnalysisStudioInteractionState,
     heroHeight: Dp,
@@ -326,6 +340,7 @@ private fun SessionAnalysisStudioCompactWorkspace(
     ) {
         SessionAnalysisWorkspaceHero(
             trackCanvasState = studio?.trackCanvas,
+            screenMode = screenMode,
             activePoint = interactionState.activePoint,
             activeSample = interactionState.activeSample,
             diagnosticSummary = state.diagnosticSummary,
@@ -351,6 +366,7 @@ private fun SessionAnalysisStudioCompactWorkspace(
         SessionAnalysisStudioCompactContent(
             state = state,
             header = header,
+            screenMode = screenMode,
             graphState = graphState,
             interactionState = interactionState,
             listState = listState,
@@ -368,6 +384,7 @@ private fun SessionAnalysisStudioCompactWorkspace(
 private fun SessionAnalysisStudioCompactContent(
     state: SessionAnalysisState,
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     graphState: SessionAnalysisGraphState,
     interactionState: SessionAnalysisStudioInteractionState,
     listState: LazyListState,
@@ -400,6 +417,7 @@ private fun SessionAnalysisStudioCompactContent(
         item {
             SessionAnalysisWorkspaceInspectorPane(
                 header = header,
+                screenMode = screenMode,
                 summary = state.summary,
                 sectors = state.sectors,
                 lapCoach = state.lapCoach,
@@ -420,12 +438,15 @@ private fun SessionAnalysisStudioCompactContent(
         item {
             SessionAnalysisStudioNavigatorPane(
                 header = header,
+                screenMode = screenMode,
                 sessionOptions = state.sessionOptions,
                 selectedSessionId = state.selectedSegmentId,
                 laps = state.laps,
                 selectedLapNumber = state.selectedLapNumber,
+                referenceLap = state.referenceLapSummary,
                 referenceLapNumber = state.referenceLapNumber,
                 referenceLapIsCustom = state.referenceLapIsCustom,
+                hasExternalReference = state.hasExternalReference,
                 highlights = state.highlights,
                 layoutMode = SessionAnalysisPaneLayoutMode.Embedded,
                 modifier = Modifier.fillMaxWidth(),

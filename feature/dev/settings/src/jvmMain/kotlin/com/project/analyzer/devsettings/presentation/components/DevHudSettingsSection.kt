@@ -11,16 +11,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Text
 import com.project.analyzer.devsettings.presentation.DevHudPanelUi
 import com.project.analyzer.devsettings.presentation.DevHudState
 import com.project.analyzer.feature.dev.settings.Res.Res
@@ -39,7 +40,6 @@ import com.project.analyzer.feature.dev.settings.Res.dev_settings_hud_title
 import com.project.analyzer.theme.SimAnalyzerTheme
 import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
-import androidx.compose.foundation.rememberScrollbarAdapter
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

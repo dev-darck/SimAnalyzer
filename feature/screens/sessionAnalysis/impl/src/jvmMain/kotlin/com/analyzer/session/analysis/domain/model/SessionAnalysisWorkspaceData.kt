@@ -6,6 +6,7 @@ import com.project.analyzer.telemetry.analysis.api.model.track.SessionAnalysisTr
 
 internal data class SessionAnalysisWorkspaceData(
     val report: SessionAnalysisReport,
+    val referenceReport: SessionAnalysisReport? = null,
     val calibration: TrackCalibration? = null,
     val authoredTrackMap: SessionAnalysisTrackMap? = null,
     val sourceTrackMap: SessionAnalysisTrackMap? = null,

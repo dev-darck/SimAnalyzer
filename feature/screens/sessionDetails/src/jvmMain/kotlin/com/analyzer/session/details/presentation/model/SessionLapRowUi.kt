@@ -1,6 +1,7 @@
 package com.analyzer.session.details.presentation.model
 
 data class SessionLapRowUi(
+    val segmentId: Long,
     val lapNumber: Int,
     val lapLabel: String,
     val sessionTypeLabel: String,
@@ -13,4 +14,7 @@ data class SessionLapRowUi(
     val delta: String,
     val deltaIsPositive: Boolean,
     val status: LapStatus,
+    val compareAvailable: Boolean = false,
+    val compareSelected: Boolean = false,
+    val compareSelectionOrdinal: Int? = null,
 )

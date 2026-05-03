@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
+import kotlin.math.floor
 
 private enum class ResponsiveSize {
     Compact,
@@ -54,6 +55,8 @@ public fun ResponsiveScreen(
     mediumMaxWidth: Dp = 1250.dp,
     mediumColumns: Int = 2,
     expandedColumns: Int = 2,
+    mediumMinCellSize: Dp = 320.dp,
+    expandedMinCellSize: Dp = 380.dp,
     gridMode: ResponsiveGridMode = ResponsiveGridMode.Staggered,
     backgroundColor: Color = Color.Transparent,
     content: ResponsiveScope.() -> Unit,
@@ -101,8 +104,10 @@ public fun ResponsiveScreen(
 
             ResponsiveSize.Medium -> {
                 ResponsiveGrid(
+                    availableWidth = maxWidth,
                     columns = mediumColumns,
                     gridMode = gridMode,
+                    minCellSize = mediumMinCellSize,
                     effectivePadding = effectivePadding,
                     verticalSpacing = verticalSpacing,
                     horizontalSpacing = horizontalSpacing,
@@ -113,8 +118,10 @@ public fun ResponsiveScreen(
 
             ResponsiveSize.Expanded -> {
                 ResponsiveGrid(
+                    availableWidth = maxWidth,
                     columns = expandedColumns,
                     gridMode = gridMode,
+                    minCellSize = expandedMinCellSize,
                     effectivePadding = effectivePadding,
                     verticalSpacing = verticalSpacing,
                     horizontalSpacing = horizontalSpacing,
@@ -128,8 +135,10 @@ public fun ResponsiveScreen(
 
 @Composable
 private fun ResponsiveGrid(
+    availableWidth: Dp,
     columns: Int,
     gridMode: ResponsiveGridMode,
+    minCellSize: Dp,
     effectivePadding: PaddingValues,
     verticalSpacing: Dp,
     horizontalSpacing: Dp,
@@ -137,6 +146,13 @@ private fun ResponsiveGrid(
     content: ResponsiveScope.() -> Unit,
 ) {
     val safeColumns = columns.coerceAtLeast(1)
+    val resolvedColumns = resolveColumnCount(
+        availableWidth = availableWidth,
+        maxColumns = safeColumns,
+        minCellSize = minCellSize,
+        horizontalSpacing = horizontalSpacing,
+        effectivePadding = effectivePadding,
+    )
 
     when (gridMode) {
         ResponsiveGridMode.Staggered -> {
@@ -144,7 +160,7 @@ private fun ResponsiveGrid(
             LazyVerticalStaggeredGrid(
                 state = gridState,
                 modifier = scrollContainerModifier.fillMaxSize(),
-                columns = StaggeredGridCells.Fixed(safeColumns),
+                columns = StaggeredGridCells.Fixed(resolvedColumns),
                 horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
                 verticalItemSpacing = verticalSpacing,
                 contentPadding = effectivePadding,
@@ -159,7 +175,7 @@ private fun ResponsiveGrid(
                 LazyVerticalGrid(
                     state = gridState,
                     modifier = scrollContainerModifier.fillMaxSize(),
-                    columns = GridCells.Fixed(safeColumns),
+                    columns = GridCells.Fixed(resolvedColumns),
                     horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
                     verticalArrangement = Arrangement.spacedBy(verticalSpacing),
                     contentPadding = effectivePadding,
@@ -169,6 +185,26 @@ private fun ResponsiveGrid(
             }
         }
     }
+}
+
+private fun resolveColumnCount(
+    availableWidth: Dp,
+    maxColumns: Int,
+    minCellSize: Dp,
+    horizontalSpacing: Dp,
+    effectivePadding: PaddingValues,
+): Int {
+    if (maxColumns <= 1) return 1
+
+    val contentWidth = availableWidth -
+        effectivePadding.calculateLeftPadding(layoutDirection = androidx.compose.ui.unit.LayoutDirection.Ltr) -
+        effectivePadding.calculateRightPadding(layoutDirection = androidx.compose.ui.unit.LayoutDirection.Ltr)
+    val laneSize = minCellSize + horizontalSpacing
+    val fittedColumns = floor((contentWidth + horizontalSpacing) / laneSize)
+        .toInt()
+        .coerceAtLeast(1)
+
+    return fittedColumns.coerceAtMost(maxColumns)
 }
 
 @Composable

@@ -111,6 +111,7 @@ class SessionDetailDomainMapper(
             val lapSessionTypeLabel = lap.sessionType.toSessionTypeLabel()
 
             SessionLapDomainItem(
+                segmentId = lap.segmentId,
                 lapNumber = lap.lap,
                 lapLabel = lap.lap.toString(),
                 sessionTypeId = lapSessionTypeId,

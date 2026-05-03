@@ -1,5 +1,6 @@
 package com.analyzer.session.analysis.domain.usecase
 
+import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceRequest
 import com.analyzer.session.analysis.domain.repository.SessionAnalysisRepository
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibration
 import com.project.analyzer.telemetry.ac.api.model.calibration.TrackCalibrationSource
@@ -36,7 +37,9 @@ class SessionAnalysisUseCaseImplTest {
             ),
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 7L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 7L),
+        )
 
         assertNotNull(workspace)
         assertEquals(reportTrackMap, workspace.sourceTrackMap)
@@ -57,7 +60,9 @@ class SessionAnalysisUseCaseImplTest {
             calibration = genericCalibration,
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 11L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 11L),
+        )
 
         assertNotNull(workspace)
         assertEquals(genericCalibration, workspace.calibration)
@@ -92,7 +97,9 @@ class SessionAnalysisUseCaseImplTest {
             detectedCornerZones = importedCornerZones,
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 1L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 1L),
+        )
 
         assertNotNull(workspace)
         assertEquals(importedCornerZones, workspace.report.cornerZonesBySegmentId[1L])
@@ -113,7 +120,9 @@ class SessionAnalysisUseCaseImplTest {
             detectedCornerZones = importedCornerZones,
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 1L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 1L),
+        )
 
         assertNotNull(workspace)
         assertEquals(reportCornerZones, workspace.report.cornerZonesBySegmentId[1L])
@@ -133,7 +142,9 @@ class SessionAnalysisUseCaseImplTest {
             detectedCornerZones = importedCornerZones,
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 1L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 1L),
+        )
 
         assertNotNull(workspace)
         assertEquals(importedCornerZones, workspace.report.cornerZonesBySegmentId[1L])
@@ -148,7 +159,9 @@ class SessionAnalysisUseCaseImplTest {
             trackMapError = IllegalStateException("track map unavailable"),
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 42L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 42L),
+        )
 
         assertNotNull(workspace)
         assertNull(workspace.authoredTrackMap)
@@ -164,16 +177,39 @@ class SessionAnalysisUseCaseImplTest {
             calibrationError = IllegalStateException("calibration unavailable"),
         )
 
-        val workspace = buildUseCase(repository).loadWorkspaceShell(sessionId = 43L)
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(sessionId = 43L),
+        )
 
         assertNotNull(workspace)
         assertNull(workspace.calibration)
         assertTrue(repository.gameCalibrationRequested)
     }
 
+    @Test
+    fun `loadWorkspaceShell includes external reference report when requested`() = runBlocking {
+        val referenceReport = sessionReport(sessionId = 99L, trackMap = twoPointSessionTrackMap())
+        val repository = FakeSessionAnalysisRepository(
+            shellReport = sessionReport(sessionId = 42L, trackMap = twoPointSessionTrackMap()),
+            metadata = sessionMetadata(trackId = "spa"),
+            shellReports = mapOf(99L to referenceReport),
+        )
+
+        val workspace = buildUseCase(repository).loadWorkspaceShell(
+            request = SessionAnalysisWorkspaceRequest(
+                sessionId = 42L,
+                referenceSessionId = 99L,
+            ),
+        )
+
+        assertNotNull(workspace)
+        assertEquals(referenceReport, workspace.referenceReport)
+    }
+
     private class FakeSessionAnalysisRepository(
         private val shellReport: SessionAnalysisReport?,
         private val metadata: RecordedTelemetrySessionMetadata?,
+        private val shellReports: Map<Long, SessionAnalysisReport?> = emptyMap(),
         private val importedTrackMap: TrackMap? = null,
         private val gameCalibration: TrackCalibration? = null,
         private val calibration: TrackCalibration? = null,
@@ -189,7 +225,7 @@ class SessionAnalysisUseCaseImplTest {
             private set
 
         override suspend fun loadSessionShellReport(sessionId: Long, forceRefresh: Boolean): SessionAnalysisReport? =
-            shellReport
+            shellReports[sessionId] ?: shellReport
 
         override suspend fun enrichSessionReport(report: SessionAnalysisReport): SessionAnalysisReport = report
 
@@ -218,5 +254,4 @@ class SessionAnalysisUseCaseImplTest {
         }
     }
 }
-
 

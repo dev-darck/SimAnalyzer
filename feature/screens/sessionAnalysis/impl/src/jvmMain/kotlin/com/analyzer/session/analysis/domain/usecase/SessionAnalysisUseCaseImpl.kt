@@ -1,6 +1,7 @@
 package com.analyzer.session.analysis.domain.usecase
 
 import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceData
+import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceRequest
 import com.analyzer.session.analysis.domain.repository.SessionAnalysisRepository
 import com.analyzer.session.analysis.domain.trackmap.SessionAnalysisTrackMapMerger
 import com.analyzer.session.analysis.domain.trackmap.TrackMapSessionAnalysisMapper
@@ -37,73 +38,100 @@ internal class SessionAnalysisUseCaseImpl(
      * Fetches the shell report, metadata, calibration, and imported track assets in parallel, then
      * builds a workspace that preserves both telemetry geometry and presentation geometry.
      */
-    override suspend fun loadWorkspaceShell(sessionId: Long, forceRefresh: Boolean): SessionAnalysisWorkspaceData? =
+    override suspend fun loadWorkspaceShell(
+        request: SessionAnalysisWorkspaceRequest,
+        forceRefresh: Boolean,
+    ): SessionAnalysisWorkspaceData? = withContext(ioDispatcher) {
+        coroutineScope {
+            val sessionId = request.sessionId
+            val reportDeferred = async {
+                repository.loadSessionShellReport(
+                    sessionId = sessionId,
+                    forceRefresh = forceRefresh,
+                )
+            }
+            val metadataDeferred = async {
+                repository.loadSessionMetadata(
+                    sessionId = sessionId,
+                    forceRefresh = forceRefresh,
+                )
+            }
+            val referenceReportDeferred = async {
+                request.referenceSessionId
+                    ?.takeUnless { referenceSessionId -> referenceSessionId == sessionId }
+                    ?.let { referenceSessionId ->
+                        repository.loadSessionShellReport(
+                            sessionId = referenceSessionId,
+                            forceRefresh = forceRefresh,
+                        )
+                    }
+            }
+
+            val metadata = metadataDeferred.await()
+            val trackMapDeferred = async {
+                runCatching { loadTrackMap(metadata) }
+                    .onFailure { error ->
+                        logger.warn(error) { "Failed to load track map for session $sessionId" }
+                    }
+                    .getOrNull()
+            }
+            val calibrationDeferred = async {
+                runCatching { loadCalibration(metadata) }
+                    .onFailure { error ->
+                        logger.warn(error) { "Failed to load calibration for session $sessionId" }
+                    }
+                    .getOrNull()
+            }
+            val importedTrackMap = trackMapDeferred.await()
+            val importedCornerZonesDeferred = async {
+                importedTrackMap
+                    ?.let { trackMap ->
+                        runCatching {
+                            repository.detectCornerZones(
+                                trackMap,
+                            )
+                        }.getOrDefault(emptyList())
+                    }
+                    .orEmpty()
+            }
+            val report = reportDeferred.await() ?: return@coroutineScope null
+            val calibration = calibrationDeferred.await()
+            val reportTrackMap = report.trackMap
+            val resolvedReport = report.withPreferredCornerZones(
+                preferredCornerZones = importedCornerZonesDeferred.await(),
+            )
+
+            SessionAnalysisWorkspaceData(
+                report = resolvedReport,
+                referenceReport = referenceReportDeferred.await(),
+                calibration = calibration,
+                authoredTrackMap = importedTrackMap,
+                sourceTrackMap = reportTrackMap ?: importedTrackMap,
+                displayTrackMap = resolveDisplayTrackMap(
+                    reportTrackMap = reportTrackMap,
+                    importedTrackMap = importedTrackMap,
+                ),
+            )
+        }
+    }
+
+    override suspend fun enrichWorkspace(workspaceData: SessionAnalysisWorkspaceData): SessionAnalysisWorkspaceData =
         withContext(ioDispatcher) {
             coroutineScope {
                 val reportDeferred = async {
-                    repository.loadSessionShellReport(
-                        sessionId = sessionId,
-                        forceRefresh = forceRefresh,
-                    )
+                    repository.enrichSessionReport(workspaceData.report)
                 }
-                val metadataDeferred = async {
-                    repository.loadSessionMetadata(
-                        sessionId = sessionId,
-                        forceRefresh = forceRefresh,
-                    )
+                val referenceReportDeferred = async {
+                    workspaceData.referenceReport?.let { referenceReport ->
+                        repository.enrichSessionReport(referenceReport)
+                    }
                 }
-
-                val metadata = metadataDeferred.await()
-                val trackMapDeferred = async {
-                    runCatching { loadTrackMap(metadata) }
-                        .onFailure { error ->
-                            logger.warn(error) { "Failed to load track map for session $sessionId" }
-                        }
-                        .getOrNull()
-                }
-                val calibrationDeferred = async {
-                    runCatching { loadCalibration(metadata) }
-                        .onFailure { error ->
-                            logger.warn(error) { "Failed to load calibration for session $sessionId" }
-                        }
-                        .getOrNull()
-                }
-                val importedTrackMap = trackMapDeferred.await()
-                val importedCornerZonesDeferred = async {
-                    importedTrackMap
-                        ?.let { trackMap ->
-                            runCatching {
-                                repository.detectCornerZones(
-                                    trackMap,
-                                )
-                            }.getOrDefault(emptyList())
-                        }
-                        .orEmpty()
-                }
-                val report = reportDeferred.await() ?: return@coroutineScope null
-                val calibration = calibrationDeferred.await()
-                val reportTrackMap = report.trackMap
-                val resolvedReport = report.withPreferredCornerZones(
-                    preferredCornerZones = importedCornerZonesDeferred.await(),
-                )
-
-                SessionAnalysisWorkspaceData(
-                    report = resolvedReport,
-                    calibration = calibration,
-                    authoredTrackMap = importedTrackMap,
-                    sourceTrackMap = reportTrackMap ?: importedTrackMap,
-                    displayTrackMap = resolveDisplayTrackMap(
-                        reportTrackMap = reportTrackMap,
-                        importedTrackMap = importedTrackMap,
-                    ),
+                workspaceData.copy(
+                    report = reportDeferred.await(),
+                    referenceReport = referenceReportDeferred.await(),
                 )
             }
         }
-
-    override suspend fun enrichWorkspace(workspaceData: SessionAnalysisWorkspaceData): SessionAnalysisWorkspaceData =
-        workspaceData.copy(
-            report = repository.enrichSessionReport(workspaceData.report),
-        )
 
     /**
      * Builds the canvas track map from authored geometry when available while keeping raw telemetry

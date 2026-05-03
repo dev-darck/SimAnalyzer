@@ -9,11 +9,11 @@ import com.project.analyzer.calibration.domain.usecase.GateCaptureException
 import com.project.analyzer.calibration.domain.usecase.SaveTrackCalibrationUseCase
 import com.project.analyzer.calibration.domain.usecase.TrackCalibrationDraft
 import com.project.analyzer.calibration.domain.usecase.flipDirection
+import com.project.analyzer.calibration.presentation.formatDebugString
 import com.project.analyzer.calibration.presentation.model.CalibrationGateUi
+import com.project.analyzer.calibration.presentation.model.CalibrationReferencePointUi
 import com.project.analyzer.calibration.presentation.model.toDomain
 import com.project.analyzer.calibration.presentation.model.toUi
-import com.project.analyzer.calibration.presentation.formatDebugString
-import com.project.analyzer.calibration.presentation.model.CalibrationReferencePointUi
 import com.project.analyzer.calibration.presentation.overlay.OverlayPublisher
 import com.project.analyzer.calibration.presentation.overlay.state.CapturePoint
 import com.project.analyzer.calibration.presentation.setup.state.CalibrationState
@@ -206,10 +206,7 @@ internal class CalibrationViewModel(
         _state.value = resetState
     }
 
-    private fun capture(
-        label: String,
-        onCaptured: (CalibrationGateUi) -> Unit,
-    ) {
+    private fun capture(label: String, onCaptured: (CalibrationGateUi) -> Unit) {
         val s = _state.value
         viewModelScope.launch {
             _state.update {

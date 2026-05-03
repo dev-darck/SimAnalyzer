@@ -42,9 +42,11 @@ internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifi
         modifier = modifier,
         contentPadding = PaddingValues(horizontal = 16.dp),
         gridMode = ResponsiveGridMode.Grid,
+        mediumMinCellSize = 320.dp,
+        expandedMinCellSize = 360.dp,
         backgroundColor = SimAnalyzerTheme.material.background,
     ) {
-        item(key = "TelemetryBlock", isContentFull = true) {
+        item(key = "TelemetryBlock", isContentFull = true, contentType = "hero") {
             TelemetryBlock(
                 modifier = Modifier.height(230.dp),
                 speedKmh = state.speedKmh,
@@ -55,7 +57,7 @@ internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifi
             )
         }
 
-        item("TimingBoardBlock") {
+        item(key = "TimingBoardBlock", contentType = "card:tall") {
             TimingBoardBlock(
                 modifier = Modifier.height(LIVE_TALL_CARD_HEIGHT),
                 bestLapTime = state.bestLapTime,
@@ -69,7 +71,7 @@ internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifi
             )
         }
 
-        item("TelemetryInputsBlock") {
+        item(key = "TelemetryInputsBlock", contentType = "card:tall") {
             TelemetryInputsBlock(
                 modifier = Modifier.height(LIVE_TALL_CARD_HEIGHT),
                 clutch = state.clutch,
@@ -79,7 +81,7 @@ internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifi
             )
         }
 
-        item("FuelSectorsBlock") {
+        item(key = "FuelSectorsBlock", contentType = "card:compact") {
             FuelSectorsBlock(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,7 +93,7 @@ internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifi
             )
         }
 
-        item("ElectronicsBlock") {
+        item(key = "ElectronicsBlock", contentType = "card:compact") {
             ElectronicsBlock(
                 data = state.electronics,
                 modifier = Modifier
@@ -100,7 +102,7 @@ internal fun Screen(state: LiveScreenState = LiveScreenState(), modifier: Modifi
             )
         }
 
-        item(key = "WheelsBlock", isContentFull = true) {
+        item(key = "WheelsBlock", isContentFull = true, contentType = "detail") {
             WheelsBlock(
                 wheels = state.wheels,
                 modifier = Modifier.fillMaxWidth(),

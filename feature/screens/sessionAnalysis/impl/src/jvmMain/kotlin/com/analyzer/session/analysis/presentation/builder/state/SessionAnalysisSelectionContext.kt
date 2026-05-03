@@ -20,10 +20,13 @@ internal data class SessionAnalysisSelectionContext(
     val referenceSamples: List<SessionAnalysisSample>,
     val cornerZones: List<SessionAnalysisCornerZone>,
     val referenceLapIsCustom: Boolean,
+    val hasExternalReference: Boolean,
 )
 
 internal fun SessionAnalysisReport.resolveSelectionContext(
+    referenceReport: SessionAnalysisReport? = null,
     selectedSegmentId: Long?,
+    selectedReferenceSegmentId: Long?,
     selectedLapNumber: Int?,
     selectedReferenceLapNumber: Int?,
 ): SessionAnalysisSelectionContext {
@@ -44,12 +47,28 @@ internal fun SessionAnalysisReport.resolveSelectionContext(
         segmentLaps = segmentLaps,
         referenceLapNumber = autoReferenceLap?.lapNumber,
     )
-    val referenceLap = resolveReferenceLapSelection(
-        segmentLaps = segmentLaps,
-        segmentSamples = segmentSamples,
-        selectedReferenceLapNumber = selectedReferenceLapNumber,
-        selectedLapNumber = resolvedLapNumber,
-    )
+    val externalReference = referenceReport?.takeUnless { report -> report.sessionId == sessionId }
+    val referenceSegmentId = externalReference?.resolveSegment(selectedReferenceSegmentId)?.segmentId
+    val referenceSegmentLaps = externalReference?.laps?.filterLapsForSegment(referenceSegmentId).orEmpty()
+    val referenceSegmentSamples = externalReference?.samples?.filterForSelection(
+        segmentId = referenceSegmentId,
+        lapNumber = null,
+    ).orEmpty()
+    val referenceLap = if (externalReference != null) {
+        resolveReferenceLapSelection(
+            segmentLaps = referenceSegmentLaps,
+            segmentSamples = referenceSegmentSamples,
+            selectedReferenceLapNumber = selectedReferenceLapNumber,
+            selectedLapNumber = null,
+        )
+    } else {
+        resolveReferenceLapSelection(
+            segmentLaps = segmentLaps,
+            segmentSamples = segmentSamples,
+            selectedReferenceLapNumber = selectedReferenceLapNumber,
+            selectedLapNumber = resolvedLapNumber,
+        )
+    }
     val referenceLapNumber = referenceLap?.lapNumber
     return SessionAnalysisSelectionContext(
         segment = resolvedSegment,
@@ -64,12 +83,20 @@ internal fun SessionAnalysisReport.resolveSelectionContext(
             segmentId = resolvedSegmentId,
             lapNumber = resolvedLapNumber,
         ),
-        referenceSamples = samples.filterForSelection(
-            segmentId = resolvedSegmentId,
-            lapNumber = referenceLapNumber,
-        ),
+        referenceSamples = if (externalReference != null) {
+            externalReference.samples.filterForSelection(
+                segmentId = referenceSegmentId,
+                lapNumber = referenceLapNumber,
+            )
+        } else {
+            samples.filterForSelection(
+                segmentId = resolvedSegmentId,
+                lapNumber = referenceLapNumber,
+            )
+        },
         cornerZones = cornerZonesBySegmentId[resolvedSegmentId].orEmpty(),
         referenceLapIsCustom = selectedReferenceLapNumber != null &&
             referenceLapNumber == selectedReferenceLapNumber,
+        hasExternalReference = externalReference != null,
     )
 }

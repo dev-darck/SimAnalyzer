@@ -42,12 +42,35 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun SessionAnalysisScreen(sessionId: Long) {
+fun SessionAnalysisScreen(
+    sessionId: Long,
+    initialSegmentId: Long? = null,
+    initialLapNumber: Int? = null,
+    initialReferenceSessionId: Long? = null,
+    initialReferenceSegmentId: Long? = null,
+    initialReferenceLapNumber: Int? = null,
+) {
     val viewModel = metroViewModel<SessionAnalysisViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    LaunchedEffect(sessionId) {
-        viewModel.dispatch(SessionAnalysisBindSessionIntent(sessionId))
+    LaunchedEffect(
+        sessionId,
+        initialSegmentId,
+        initialLapNumber,
+        initialReferenceSessionId,
+        initialReferenceSegmentId,
+        initialReferenceLapNumber,
+    ) {
+        viewModel.dispatch(
+            SessionAnalysisBindSessionIntent(
+                sessionId = sessionId,
+                segmentId = initialSegmentId,
+                lapNumber = initialLapNumber,
+                referenceSessionId = initialReferenceSessionId,
+                referenceSegmentId = initialReferenceSegmentId,
+                referenceLapNumber = initialReferenceLapNumber,
+            ),
+        )
     }
 
     SessionAnalysisContent(

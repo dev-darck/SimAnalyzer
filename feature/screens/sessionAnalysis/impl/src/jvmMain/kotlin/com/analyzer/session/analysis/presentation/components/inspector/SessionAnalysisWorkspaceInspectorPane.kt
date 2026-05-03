@@ -48,6 +48,7 @@ import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSectorUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSummaryUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisInspectorState
@@ -68,6 +69,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun SessionAnalysisWorkspaceInspectorPane(
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     summary: SessionAnalysisSummaryUi?,
     sectors: ImmutableList<SessionAnalysisSectorUi>,
     lapCoach: SessionAnalysisLapCoachUi?,
@@ -85,6 +87,12 @@ internal fun SessionAnalysisWorkspaceInspectorPane(
     onTrackPositionSelected: (Float) -> Unit = {},
 ) {
     val resolvedInspectorState = inspectorState ?: SessionAnalysisInspectorState()
+    val visibleTabs = remember(screenMode) { screenMode.visibleInspectorTabs() }
+    val resolvedSelectedTab = if (selectedTab in visibleTabs) {
+        selectedTab
+    } else {
+        visibleTabs.first()
+    }
 
     SessionAnalysisStudioPanel(
         modifier = modifier,
@@ -110,11 +118,13 @@ internal fun SessionAnalysisWorkspaceInspectorPane(
                 activeSample = activeSample,
             )
             SessionAnalysisInspectorTabs(
-                selectedTab = selectedTab,
+                tabs = visibleTabs,
+                selectedTab = resolvedSelectedTab,
                 onTabSelected = onTabSelected,
             )
             SessionAnalysisInspectorContent(
                 header = header,
+                screenMode = screenMode,
                 summary = summary,
                 sectors = sectors,
                 lapCoach = lapCoach,
@@ -122,7 +132,7 @@ internal fun SessionAnalysisWorkspaceInspectorPane(
                 highlights = highlights,
                 activePoint = activePoint,
                 activeSample = activeSample,
-                selectedTab = selectedTab,
+                selectedTab = resolvedSelectedTab,
                 inspectorState = resolvedInspectorState,
                 onTrackPositionSelected = onTrackPositionSelected,
             )
@@ -165,6 +175,7 @@ private fun SessionAnalysisInspectorHeader(selectedLapNumber: Int?, referenceLap
 
 @Composable
 private fun SessionAnalysisInspectorTabs(
+    tabs: List<SessionAnalysisInspectorTab>,
     selectedTab: SessionAnalysisInspectorTab,
     onTabSelected: (SessionAnalysisInspectorTab) -> Unit,
 ) {
@@ -173,7 +184,7 @@ private fun SessionAnalysisInspectorTabs(
         horizontalArrangement = Arrangement.spacedBy(SessionAnalysisUiTokens.chipGap),
         verticalArrangement = Arrangement.spacedBy(SessionAnalysisUiTokens.chipGap),
     ) {
-        SessionAnalysisInspectorTab.entries.forEach { tab ->
+        tabs.forEach { tab ->
             SessionAnalysisStudioTile(
                 selected = tab == selectedTab,
                 contentPadding = PaddingValues(
@@ -205,6 +216,7 @@ private fun SessionAnalysisInspectorTabs(
 @Composable
 private fun SessionAnalysisInspectorContent(
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     summary: SessionAnalysisSummaryUi?,
     sectors: ImmutableList<SessionAnalysisSectorUi>,
     lapCoach: SessionAnalysisLapCoachUi?,
@@ -257,11 +269,13 @@ private fun SessionAnalysisInspectorContent(
         }
 
         SessionAnalysisInspectorTab.Setup -> {
-            SessionAnalysisSetupAdvice(
-                highlights = highlights,
-                summary = diagnosticSummary,
-                onTrackPositionSelected = onTrackPositionSelected,
-            )
+            if (screenMode == SessionAnalysisScreenMode.Analysis) {
+                SessionAnalysisSetupAdvice(
+                    highlights = highlights,
+                    summary = diagnosticSummary,
+                    onTrackPositionSelected = onTrackPositionSelected,
+                )
+            }
         }
 
         SessionAnalysisInspectorTab.Inputs -> {
@@ -288,6 +302,7 @@ internal fun SessionAnalysisWorkspaceInspectorPanePreview() {
     SimAnalyzerTheme {
         SessionAnalysisWorkspaceInspectorPane(
             header = sessionAnalysisNavigatorPreviewHeader(),
+            screenMode = SessionAnalysisScreenMode.Analysis,
             summary = sessionAnalysisInspectorPreviewSummary(),
             sectors = sessionAnalysisInspectorPreviewSectors(),
             lapCoach = sessionAnalysisInspectorPreviewCoach(),
@@ -302,4 +317,14 @@ internal fun SessionAnalysisWorkspaceInspectorPanePreview() {
             onTrackPositionSelected = {},
         )
     }
+}
+
+private fun SessionAnalysisScreenMode.visibleInspectorTabs(): List<SessionAnalysisInspectorTab> = when (this) {
+    SessionAnalysisScreenMode.Analysis -> SessionAnalysisInspectorTab.entries
+
+    SessionAnalysisScreenMode.Comparison -> listOf(
+        SessionAnalysisInspectorTab.Timing,
+        SessionAnalysisInspectorTab.Inputs,
+        SessionAnalysisInspectorTab.Tyres,
+    )
 }

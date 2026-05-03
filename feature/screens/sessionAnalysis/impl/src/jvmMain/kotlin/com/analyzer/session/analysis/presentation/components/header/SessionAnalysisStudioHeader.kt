@@ -24,6 +24,7 @@ import com.analyzer.session.analysis.presentation.SessionAnalysisUiTokens
 import com.analyzer.session.analysis.presentation.components.common.SessionAnalysisStudioPanel
 import com.analyzer.session.analysis.presentation.components.common.SessionAnalysisStudioTile
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHeaderUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSessionOptionUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSummaryUi
 import com.analyzer.session.analysis.presentation.preview.sessionAnalysisPreviewHeader
@@ -55,6 +56,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun SessionAnalysisStudioHeader(
     header: SessionAnalysisHeaderUi,
+    screenMode: SessionAnalysisScreenMode,
     summary: SessionAnalysisSummaryUi?,
     sessionOptions: ImmutableList<SessionAnalysisSessionOptionUi>,
     selectedSessionId: Long?,
@@ -75,6 +77,7 @@ internal fun SessionAnalysisStudioHeader(
 
     SessionAnalysisStudioPanel(
         modifier = modifier,
+        containerColor = SimAnalyzerTheme.material.surface,
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 18.dp, vertical = 14.dp),
     ) {
         Column(
@@ -114,7 +117,7 @@ internal fun SessionAnalysisStudioHeader(
                 }
             }
 
-            if (sessionOptions.size > 1) {
+            if (screenMode == SessionAnalysisScreenMode.Analysis && sessionOptions.size > 1) {
                 SessionAnalysisHeaderSessionSwitcher(
                     sessionOptions = sessionOptions,
                     selectedSessionId = selectedSessionId,
@@ -165,15 +168,17 @@ internal fun SessionAnalysisStudioHeader(
                         label = stringResource(Res.string.session_analysis_metric_delta),
                         value = resolvedSummary.lapDeltaLabel,
                     )
-                    SessionAnalysisHeaderPill(
-                        label = stringResource(Res.string.session_analysis_header_biggest_loss),
-                        value = resolvedSummary.biggestLossValueLabel,
-                        supporting = resolvedSummary.biggestLossLabel,
-                    )
-                    SessionAnalysisHeaderPill(
-                        label = stringResource(Res.string.session_analysis_top_speed),
-                        value = resolvedSummary.topSpeedLabel,
-                    )
+                    if (screenMode == SessionAnalysisScreenMode.Analysis) {
+                        SessionAnalysisHeaderPill(
+                            label = stringResource(Res.string.session_analysis_header_biggest_loss),
+                            value = resolvedSummary.biggestLossValueLabel,
+                            supporting = resolvedSummary.biggestLossLabel,
+                        )
+                        SessionAnalysisHeaderPill(
+                            label = stringResource(Res.string.session_analysis_top_speed),
+                            value = resolvedSummary.topSpeedLabel,
+                        )
+                    }
                 }
             }
         }
@@ -293,6 +298,7 @@ internal fun SessionAnalysisStudioHeaderPreview() {
     SimAnalyzerTheme {
         SessionAnalysisStudioHeader(
             header = sessionAnalysisPreviewHeader(),
+            screenMode = SessionAnalysisScreenMode.Analysis,
             summary = sessionAnalysisPreviewSummary(),
             sessionOptions = persistentListOf(
                 SessionAnalysisSessionOptionUi(

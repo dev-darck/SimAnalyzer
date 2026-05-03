@@ -3,10 +3,7 @@ package com.project.analyzer.chooser.presentation
 import com.project.analyzer.chooser.domain.model.File
 import com.project.analyzer.chooser.domain.model.TreeNode
 
-internal data class FileChooserLocationUi(
-    val label: String,
-    val path: String,
-)
+internal data class FileChooserLocationUi(val label: String, val path: String)
 
 internal data class FileChooserTreeNodeUi(
     val path: String,
