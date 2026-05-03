@@ -12,6 +12,7 @@ import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlight
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSectorUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisState
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTrackMapUi
@@ -35,17 +36,21 @@ import kotlinx.collections.immutable.toImmutableList
  * before the heavier analytics branches finish enriching the report.
  */
 internal suspend fun SessionAnalysisReport.toState(
+    referenceReport: SessionAnalysisReport? = null,
     calibration: TrackCalibration? = null,
     authoredTrackMap: SessionAnalysisTrackMap? = null,
     sourceTrackMap: SessionAnalysisTrackMap? = trackMap,
     displayTrackMap: SessionAnalysisTrackMap? = trackMap,
     selectedSegmentId: Long? = null,
     selectedLapNumber: Int? = null,
+    selectedReferenceSegmentId: Long? = null,
     selectedReferenceLapNumber: Int? = null,
     selectedFrameId: Long? = null,
 ): SessionAnalysisState {
     val selection = resolveSelectionContext(
+        referenceReport = referenceReport,
         selectedSegmentId = selectedSegmentId,
+        selectedReferenceSegmentId = selectedReferenceSegmentId,
         selectedLapNumber = selectedLapNumber,
         selectedReferenceLapNumber = selectedReferenceLapNumber,
     )
@@ -92,6 +97,7 @@ internal suspend fun SessionAnalysisReport.toState(
     return SessionAnalysisState(
         isLoading = false,
         error = null,
+        screenMode = resolveScreenMode(selection),
         header = buildStateHeader(selection),
         summary = buildSummary(
             laps = lapContext.lapsUi,
@@ -109,11 +115,13 @@ internal suspend fun SessionAnalysisReport.toState(
         diagnosticSummary = highlightContext.diagnosticSummary,
         highlights = highlightContext.resolvedHighlights,
         laps = lapContext.lapsUi,
+        referenceLapSummary = lapContext.referenceLapUi,
         studio = studioState,
         selectedSegmentId = selection.segmentId,
         selectedLapNumber = selection.selectedLapNumber,
         referenceLapNumber = selection.referenceLapNumber,
         referenceLapIsCustom = selection.referenceLapIsCustom,
+        hasExternalReference = selection.hasExternalReference,
         selectedFrameId = telemetryContext.selectedSample?.frameId,
     )
 }
@@ -191,7 +199,7 @@ private suspend fun SessionAnalysisReport.buildLapContext(
         highlights = highlightContext.mergedHighlights,
     ).toImmutableList()
     val selectedLapUi = lapsUi.firstOrNull { lap -> lap.lapNumber == selection.selectedLapNumber }
-    val referenceLapUi = lapsUi.firstOrNull { lap -> lap.lapNumber == selection.referenceLapNumber }
+    val referenceLapUi = selection.referenceLap?.toUi()
     val sectors = buildSectors(
         selectedSamples = selection.selectedSamples,
         referenceSamples = selection.referenceSamples,
@@ -256,15 +264,19 @@ private fun resolveSectorCalibrationTrackMap(
 }
 
 internal suspend fun SessionAnalysisReport.toShellState(
+    referenceReport: SessionAnalysisReport? = null,
     authoredTrackMap: SessionAnalysisTrackMap? = null,
     sourceTrackMap: SessionAnalysisTrackMap? = trackMap,
     displayTrackMap: SessionAnalysisTrackMap? = trackMap,
     selectedSegmentId: Long? = null,
     selectedLapNumber: Int? = null,
+    selectedReferenceSegmentId: Long? = null,
     selectedReferenceLapNumber: Int? = null,
 ): SessionAnalysisState {
     val selection = resolveSelectionContext(
+        referenceReport = referenceReport,
         selectedSegmentId = selectedSegmentId,
+        selectedReferenceSegmentId = selectedReferenceSegmentId,
         selectedLapNumber = selectedLapNumber,
         selectedReferenceLapNumber = selectedReferenceLapNumber,
     )
@@ -298,6 +310,7 @@ private suspend fun SessionAnalysisReport.buildShellState(
 ): SessionAnalysisState = SessionAnalysisState(
     isLoading = true,
     error = null,
+    screenMode = resolveScreenMode(selection),
     header = buildStateHeader(selection),
     sessionOptions = buildSessionOptions(),
     lapOptions = buildLapOptions(selection),
@@ -307,6 +320,8 @@ private suspend fun SessionAnalysisReport.buildShellState(
     selectedLapNumber = selection.selectedLapNumber,
     referenceLapNumber = selection.referenceLapNumber,
     referenceLapIsCustom = selection.referenceLapIsCustom,
+    referenceLapSummary = selection.referenceLap?.toUi(),
+    hasExternalReference = selection.hasExternalReference,
     studio = buildStudioState(
         SessionAnalysisStudioStateInput(
             trackMap = trackMapUi,
@@ -327,6 +342,13 @@ private suspend fun SessionAnalysisReport.buildShellState(
         ),
     ),
 )
+
+private fun resolveScreenMode(selection: SessionAnalysisSelectionContext): SessionAnalysisScreenMode =
+    if (selection.referenceLapIsCustom || selection.hasExternalReference) {
+        SessionAnalysisScreenMode.Comparison
+    } else {
+        SessionAnalysisScreenMode.Analysis
+    }
 
 private data class SessionAnalysisTelemetryContext(
     val visibleSamples: ImmutableList<SessionAnalysisSampleUi>,

@@ -8,14 +8,14 @@ import com.analyzer.session.analysis.presentation.model.SessionAnalysisCompariso
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSectorUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSummaryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisTyreUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTyreTemperatureBandUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisTyreUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisInspectorState
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisTyreAnalyticsUi
 import kotlinx.collections.immutable.ImmutableList

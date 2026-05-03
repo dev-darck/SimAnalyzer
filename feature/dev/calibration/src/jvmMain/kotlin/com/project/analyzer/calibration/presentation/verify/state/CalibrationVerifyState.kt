@@ -4,10 +4,7 @@ import com.project.analyzer.math.Vec2
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
-data class CalibrationTrackUi(
-    val trackId: String,
-    val trackName: String,
-)
+data class CalibrationTrackUi(val trackId: String, val trackName: String)
 
 data class GateDebugInfo(
     val name: String,

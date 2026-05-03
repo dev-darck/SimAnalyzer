@@ -17,9 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.analyzer.settings.presentation.LmuPluginInstallStepUi
 import com.analyzer.settings.presentation.LmuPluginDialogPhase
 import com.analyzer.settings.presentation.LmuPluginDialogState
+import com.analyzer.settings.presentation.LmuPluginInstallStepUi
 import com.project.analyzer.feature.screens.settings.impl.Res.*
 import com.project.analyzer.feature.screens.settings.impl.Res.Res
 import com.project.analyzer.theme.SimAnalyzerTheme

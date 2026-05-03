@@ -48,7 +48,12 @@ internal fun rememberSessionAnalysisStudioInteractionState(
     var focusMode by rememberSaveable { mutableStateOf(false) }
     var heroCollapsed by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(state.selectedSegmentId, state.selectedLapNumber, state.referenceLapNumber) {
+    LaunchedEffect(
+        state.selectedSegmentId,
+        state.selectedLapNumber,
+        state.referenceLapNumber,
+        state.screenMode,
+    ) {
         hoverFraction = null
         hoverFrameId = null
         lockedFraction = null

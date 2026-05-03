@@ -4,8 +4,8 @@ import com.analyzer.session.analysis.presentation.builder.diagnostic.buildDiagno
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import kotlin.math.abs
 
 /**

@@ -200,11 +200,7 @@ private fun SessionDetailsCompareSelectionDock(
 }
 
 @Composable
-private fun SessionDetailsCompareLead(
-    title: String,
-    statusLabel: String,
-    compareConfirmEnabled: Boolean,
-) {
+private fun SessionDetailsCompareLead(title: String, statusLabel: String, compareConfirmEnabled: Boolean) {
     val iconContainerColor = when {
         compareConfirmEnabled -> SimAnalyzerTheme.material.primaryContainer
         else -> SimAnalyzerTheme.material.secondaryContainer
@@ -301,7 +297,9 @@ private fun compareFabLabel(
     selectedCompareLaps: ImmutableList<SessionDetailCompareLapUi>,
 ): String = when {
     !isCompareSelectionMode -> stringResource(Res.string.session_details_action_compare)
+
     selectedCompareLaps.size >= 2 -> stringResource(Res.string.session_details_action_compare_ready)
+
     selectedCompareLaps.isNotEmpty() -> stringResource(
         Res.string.session_details_action_compare_progress,
         selectedCompareLaps.size,

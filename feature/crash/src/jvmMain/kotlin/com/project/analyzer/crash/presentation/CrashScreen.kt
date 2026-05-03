@@ -3,7 +3,6 @@
 package com.project.analyzer.crash.presentation
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,9 +54,9 @@ import com.project.analyzer.feature.crash.Res.crash_tab_full_report
 import com.project.analyzer.feature.crash.Res.crash_tab_overview
 import com.project.analyzer.feature.crash.Res.crash_tab_stacktrace
 import com.project.analyzer.theme.SimAnalyzerTheme
+import dev.zacsweers.metrox.viewmodel.metroViewModel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import dev.zacsweers.metrox.viewmodel.metroViewModel
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -189,8 +188,16 @@ internal fun CrashScreenContent(
             ) {
                 when (selectedTab) {
                     0 -> CrashOverviewPanel(report, onEvent)
-                    1 -> CrashCodePanel(text = report.fullText, title = stringResource(Res.string.crash_tab_full_report))
-                    2 -> CrashCodePanel(text = report.stacktrace, title = stringResource(Res.string.crash_tab_stacktrace))
+
+                    1 -> CrashCodePanel(
+                        text = report.fullText,
+                        title = stringResource(Res.string.crash_tab_full_report),
+                    )
+
+                    2 -> CrashCodePanel(
+                        text = report.stacktrace,
+                        title = stringResource(Res.string.crash_tab_stacktrace),
+                    )
                 }
             }
         }

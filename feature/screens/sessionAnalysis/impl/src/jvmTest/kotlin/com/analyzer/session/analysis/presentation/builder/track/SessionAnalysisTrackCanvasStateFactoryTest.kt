@@ -4,6 +4,7 @@ import com.analyzer.session.analysis.presentation.model.CornerScoreUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTrackMapUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisTrackPointUi
+import com.analyzer.session.analysis.presentation.model.toUi
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.telemetry.analysis.api.model.report.session.SessionAnalysisCornerZone
 import com.project.analyzer.telemetry.analysis.api.model.track.SessionAnalysisTrackMap
@@ -31,7 +32,7 @@ class SessionAnalysisTrackCanvasStateFactoryTest {
                     mainIssue = "Corner 2 costs time",
                     timeVsReferenceMs = 118,
                     recommendation = "Open the exit earlier.",
-                    source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                    source = SessionAnalysisDiagnosisSource.DrivingStyle.toUi(),
                 ),
             ),
         )
@@ -187,7 +188,7 @@ class SessionAnalysisTrackCanvasStateFactoryTest {
                     mainIssue = "One physical turn was detected multiple times.",
                     timeVsReferenceMs = 142,
                     recommendation = "Treat as one corner marker.",
-                    source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                    source = SessionAnalysisDiagnosisSource.DrivingStyle.toUi(),
                 ),
             ),
         )
@@ -294,7 +295,7 @@ class SessionAnalysisTrackCanvasStateFactoryTest {
                     mainIssue = "Telemetry-only corner should not create a map marker.",
                     timeVsReferenceMs = 91,
                     recommendation = "Keep physical turn count stable.",
-                    source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                    source = SessionAnalysisDiagnosisSource.DrivingStyle.toUi(),
                 ),
             ),
         )
@@ -333,5 +334,4 @@ class SessionAnalysisTrackCanvasStateFactoryTest {
         assertEquals(listOf(1, 2), state.cornerMarkers.map(CornerScoreUi::cornerNumber))
     }
 }
-
 

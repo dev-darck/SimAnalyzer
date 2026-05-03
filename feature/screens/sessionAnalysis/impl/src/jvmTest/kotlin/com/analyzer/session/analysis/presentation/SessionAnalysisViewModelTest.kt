@@ -3,9 +3,11 @@
 package com.analyzer.session.analysis.presentation
 
 import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceData
+import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceRequest
 import com.analyzer.session.analysis.domain.usecase.SessionAnalysisUseCase
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisBindSessionIntent
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisError
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisRefreshIntent
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSelectLapIntent
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSelectReferenceLapIntent
@@ -45,6 +47,7 @@ class SessionAnalysisViewModelTest {
 
             assertNotNull(viewModel.state.value.header)
             assertTrue(viewModel.state.value.isLoading)
+            assertEquals(SessionAnalysisScreenMode.Analysis, viewModel.state.value.screenMode)
             assertEquals(1, useCase.shellRequests.size)
             assertEquals(1, useCase.enrichRequests.size)
 
@@ -99,7 +102,13 @@ class SessionAnalysisViewModelTest {
             viewModel.dispatch(SessionAnalysisRefreshIntent)
             advanceUntilIdle()
 
-            assertEquals(listOf(77L to false, 77L to true), useCase.shellRequests)
+            assertEquals(
+                listOf(
+                    SessionAnalysisWorkspaceRequest(sessionId = 77L) to false,
+                    SessionAnalysisWorkspaceRequest(sessionId = 77L) to true,
+                ),
+                useCase.shellRequests,
+            )
         } finally {
             Dispatchers.resetMain()
         }
@@ -172,6 +181,79 @@ class SessionAnalysisViewModelTest {
 
             assertEquals(2, viewModel.state.value.referenceLapNumber)
             assertTrue(viewModel.state.value.referenceLapIsCustom)
+            assertEquals(SessionAnalysisScreenMode.Comparison, viewModel.state.value.screenMode)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `bindSession applies initial lap comparison selection`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        try {
+            val workspace = sessionAnalysisWorkspaceData()
+            val useCase = FakeSessionAnalysisUseCase(
+                shellWorkspace = workspace,
+                enrichedWorkspace = workspace,
+            )
+            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+
+            viewModel.dispatch(
+                SessionAnalysisBindSessionIntent(
+                    sessionId = 77L,
+                    segmentId = 101L,
+                    lapNumber = 2,
+                    referenceLapNumber = 1,
+                ),
+            )
+            advanceUntilIdle()
+
+            assertEquals(101L, viewModel.state.value.selectedSegmentId)
+            assertEquals(2, viewModel.state.value.selectedLapNumber)
+            assertEquals(1, viewModel.state.value.referenceLapNumber)
+            assertTrue(viewModel.state.value.referenceLapIsCustom)
+            assertEquals(SessionAnalysisScreenMode.Comparison, viewModel.state.value.screenMode)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `bindSession forwards external reference session selection`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        try {
+            val workspace = sessionAnalysisWorkspaceData()
+            val externalReferenceReport = sessionAnalysisWorkspaceData(sessionId = 88L).report
+            val useCase = FakeSessionAnalysisUseCase(
+                shellWorkspace = workspace.copy(referenceReport = externalReferenceReport),
+                enrichedWorkspace = workspace.copy(referenceReport = externalReferenceReport),
+            )
+            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+
+            viewModel.dispatch(
+                SessionAnalysisBindSessionIntent(
+                    sessionId = 77L,
+                    segmentId = 101L,
+                    lapNumber = 2,
+                    referenceSessionId = 88L,
+                    referenceSegmentId = 202L,
+                    referenceLapNumber = 1,
+                ),
+            )
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(
+                    SessionAnalysisWorkspaceRequest(
+                        sessionId = 77L,
+                        referenceSessionId = 88L,
+                    ) to false,
+                ),
+                useCase.shellRequests,
+            )
+            assertEquals(SessionAnalysisScreenMode.Comparison, viewModel.state.value.screenMode)
         } finally {
             Dispatchers.resetMain()
         }
@@ -260,14 +342,14 @@ private class FakeSessionAnalysisUseCase(
     var enrichError: Throwable? = null,
 ) : SessionAnalysisUseCase {
 
-    val shellRequests = mutableListOf<Pair<Long, Boolean>>()
+    val shellRequests = mutableListOf<Pair<SessionAnalysisWorkspaceRequest, Boolean>>()
     val enrichRequests = mutableListOf<SessionAnalysisWorkspaceData>()
 
     override suspend fun loadWorkspaceShell(
-        sessionId: Long,
+        request: SessionAnalysisWorkspaceRequest,
         forceRefresh: Boolean,
     ): SessionAnalysisWorkspaceData? {
-        shellRequests += sessionId to forceRefresh
+        shellRequests += request to forceRefresh
         shellError?.let { throw it }
         return shellWorkspace
     }

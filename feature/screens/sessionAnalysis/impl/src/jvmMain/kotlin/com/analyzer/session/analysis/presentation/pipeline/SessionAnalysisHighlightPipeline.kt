@@ -3,8 +3,8 @@ package com.analyzer.session.analysis.presentation.pipeline
 import com.analyzer.session.analysis.presentation.formatter.formatDelta
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightSeverityUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_biggest_loss_description
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_generated_highlight_biggest_loss_recommendation

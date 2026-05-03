@@ -108,9 +108,11 @@ private fun Screen(
     Box(modifier = Modifier.fillMaxSize()) {
         ResponsiveScreen(
             contentPadding = PaddingValues(horizontal = 16.dp),
+            mediumMinCellSize = 360.dp,
+            expandedMinCellSize = 420.dp,
             backgroundColor = SimAnalyzerTheme.material.background,
         ) {
-            item("AppearanceBlock") {
+            item(key = "AppearanceBlock", contentType = "settings:choice") {
                 AppearanceBlock(
                     selectedTheme = state.themeMode,
                     onThemeSelected = { mode ->
@@ -118,7 +120,7 @@ private fun Screen(
                     },
                 )
             }
-            item("CloseBehaviorBlock") {
+            item(key = "CloseBehaviorBlock", contentType = "settings:choice") {
                 CloseBehaviorBlock(
                     selectedBehavior = state.appCloseBehavior,
                     onBehaviorSelected = { behavior ->
@@ -126,7 +128,7 @@ private fun Screen(
                     },
                 )
             }
-            item("HudSetupBlock") {
+            item(key = "HudSetupBlock", contentType = "settings:setup") {
                 HudSetupBlock(
                     isHudEnabled = state.hudEnabled,
                     onHudEnabledChange = {
@@ -138,12 +140,12 @@ private fun Screen(
                 )
             }
             if (BuildConfig.IS_DEBUG) {
-                item("DevSettingsBlock") {
+                item(key = "DevSettingsBlock", contentType = "settings:link") {
                     DevSettingsBlock(
                         onOpen = { navigateTo(Route.SettingsRoot.DevSettings) },
                     )
                 }
-                item("TelemetryGameSelectionBlock") {
+                item(key = "TelemetryGameSelectionBlock", contentType = "settings:choice") {
                     TelemetryGameSelectionBlock(
                         selectionUi = state.gameSelectionUi,
                         onSelectionChange = { selection ->
@@ -152,7 +154,7 @@ private fun Screen(
                     )
                 }
             } else {
-                item("TelemetryGameSelectionBlock") {
+                item(key = "TelemetryGameSelectionBlock", contentType = "settings:choice") {
                     TelemetryGameSelectionBlock(
                         selectionUi = state.gameSelectionUi,
                         onSelectionChange = { selection ->
@@ -161,7 +163,7 @@ private fun Screen(
                     )
                 }
             }
-            item("TelemetryAcquisitionBlock") {
+            item(key = "TelemetryAcquisitionBlock", isContentFull = true, contentType = "settings:form") {
                 TelemetryAcquisitionBlock(
                     samplingRateHz = state.samplingRateHz,
                     storageLocation = state.storageLocation,

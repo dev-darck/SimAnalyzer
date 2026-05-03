@@ -63,7 +63,6 @@ internal fun SessionDetailsHeader(
         val sortDropdown = sortFilter.asDropdownFilter()
         val showDropdown = showFilter.asDropdownFilter()
         val sessionTypeDropdown = sessionTypeFilter.asDropdownFilter()
-        val analysisLabel = stringResource(Res.string.session_details_action_analysis)
 
         if (isCompactLayout) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -74,7 +73,6 @@ internal fun SessionDetailsHeader(
                     sortFilter = sortDropdown,
                     showFilter = showDropdown,
                     sessionTypeFilter = sessionTypeDropdown,
-                    analysisLabel = analysisLabel,
                     onSortSelect = onSortSelect,
                     onShowSelect = onShowSelect,
                     onSessionTypeSelect = onSessionTypeSelect,
@@ -97,7 +95,6 @@ internal fun SessionDetailsHeader(
                     sortFilter = sortDropdown,
                     showFilter = showDropdown,
                     sessionTypeFilter = sessionTypeDropdown,
-                    analysisLabel = analysisLabel,
                     onSortSelect = onSortSelect,
                     onShowSelect = onShowSelect,
                     onSessionTypeSelect = onSessionTypeSelect,
@@ -171,7 +168,6 @@ private fun SessionDetailsFiltersRow(
     sortFilter: DropdownFilterUi,
     showFilter: DropdownFilterUi,
     sessionTypeFilter: DropdownFilterUi,
-    analysisLabel: String,
     onSortSelect: (String) -> Unit,
     onShowSelect: (String) -> Unit,
     onSessionTypeSelect: (String) -> Unit,
@@ -201,7 +197,7 @@ private fun SessionDetailsFiltersRow(
                 style = FilterDropdownStyle.Inline,
             )
             Button(
-                text = analysisLabel,
+                text = stringResource(Res.string.session_details_action_analysis),
                 onClick = onAnalysisClick,
                 variant = SimAnalyzerButtonVariant.Outline,
                 size = SimAnalyzerButtonSize.Compact,
@@ -232,7 +228,7 @@ private fun SessionDetailsFiltersRow(
             style = FilterDropdownStyle.Inline,
         )
         Button(
-            text = analysisLabel,
+            text = stringResource(Res.string.session_details_action_analysis),
             onClick = onAnalysisClick,
             variant = SimAnalyzerButtonVariant.Outline,
             size = SimAnalyzerButtonSize.Compact,

@@ -57,6 +57,7 @@ enum class SessionLapDomainStatus {
 }
 
 data class SessionLapDomainItem(
+    val segmentId: Long,
     val lapNumber: Int,
     val lapLabel: String,
     val sessionTypeId: String,

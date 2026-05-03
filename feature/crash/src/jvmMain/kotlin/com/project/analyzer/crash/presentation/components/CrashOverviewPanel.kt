@@ -54,7 +54,7 @@ import com.project.analyzer.ui.scrollbar.AppScrollbarAdapter
 import com.project.analyzer.ui.scrollbar.AppVerticalScrollbar
 import org.jetbrains.compose.resources.stringResource
 
-private const val DefaultGitHubRepo = "dev-darck/SimAnalyzer"
+private const val DEFAULT_GITHUB_REPO = "dev-darck/SimAnalyzer"
 
 @Composable
 internal fun CrashOverviewPanel(report: CrashReport, onEvent: (CrashScreenUiEvent) -> Unit) {
@@ -176,7 +176,7 @@ private fun CrashActions(onEvent: (CrashScreenUiEvent) -> Unit) {
                 text = stringResource(Res.string.crash_action_report_github),
                 icon = Icons.Default.Share,
                 emphasized = true,
-                onClick = { onEvent(CrashScreenUiEvent.ReportOnGitHub(DefaultGitHubRepo)) },
+                onClick = { onEvent(CrashScreenUiEvent.ReportOnGitHub(DEFAULT_GITHUB_REPO)) },
             )
             CrashActionButton(
                 text = stringResource(Res.string.crash_action_copy_report),

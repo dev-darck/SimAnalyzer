@@ -30,12 +30,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.analyzer.trackmap.presentation.components.TrackMapCalibrationEditorSidebar
 import com.analyzer.trackmap.presentation.components.TrackMapCalibrationEditorWorkspace
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationCanvasUiState
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationEditorMode
-import com.analyzer.trackmap.presentation.model.TrackMapCalibrationMarkerPanelUiState
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationInspectorUiState
+import com.analyzer.trackmap.presentation.model.TrackMapCalibrationMarkerPanelUiState
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationSidebarUiState
 import com.analyzer.trackmap.presentation.model.TrackMapCalibrationWorkspaceUiState
-import com.analyzer.trackmap.presentation.model.TrackMapCalibrationCanvasUiState
 import com.analyzer.trackmap.presentation.model.TrackMapMarkerRowUi
 import com.analyzer.trackmap.presentation.model.toSidebarUiState
 import com.analyzer.trackmap.presentation.model.toWorkspaceUiState

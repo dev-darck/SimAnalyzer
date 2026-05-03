@@ -101,12 +101,7 @@ internal fun FileTree(
 }
 
 @Composable
-private fun TreeRow(
-    node: FileChooserTreeNodeUi,
-    isSelected: Boolean,
-    onToggle: () -> Unit,
-    onSelect: () -> Unit,
-) {
+private fun TreeRow(node: FileChooserTreeNodeUi, isSelected: Boolean, onToggle: () -> Unit, onSelect: () -> Unit) {
     val chevronAngle by animateFloatAsState(
         targetValue = if (node.expanded) 90f else 0f,
         animationSpec = tween(durationMillis = CHEVRON_ANIM_DURATION_MS),

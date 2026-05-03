@@ -1,5 +1,6 @@
 package com.project.analyzer.crash.di
 
+import androidx.lifecycle.ViewModel
 import com.project.analyzer.crash.domain.CreateCrashReportUseCase
 import com.project.analyzer.crash.domain.CreateCrashReportUseCaseImpl
 import com.project.analyzer.crash.domain.usecase.CopyReportUseCase
@@ -14,8 +15,10 @@ import com.project.analyzer.crash.presentation.CrashViewModel
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import dev.zacsweers.metrox.viewmodel.ViewModelKey
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -23,13 +26,14 @@ interface CrashModule {
     companion object {
 
         @Provides
-        @SingleIn(AppScope::class)
+        @IntoMap
+        @ViewModelKey(CrashViewModel::class)
         private fun provideCrashViewModel(
             copyReportUseCase: CopyReportUseCase,
             openFileUseCase: OpenFileUseCase,
             openLogsFolderUseCase: OpenLogsFolderUseCase,
             reportOnGitHubUseCase: ReportOnGitHubUseCase,
-        ): CrashViewModel = CrashViewModel(
+        ): ViewModel = CrashViewModel(
             copyReportUseCase = copyReportUseCase,
             openFileUseCase = openFileUseCase,
             openLogsFolderUseCase = openLogsFolderUseCase,

@@ -25,8 +25,8 @@ import com.analyzer.session.analysis.presentation.components.inspector.support.S
 import com.analyzer.session.analysis.presentation.components.inspector.support.fixInLabel
 import com.analyzer.session.analysis.presentation.components.inspector.support.setupSystem
 import com.analyzer.session.analysis.presentation.components.inspector.support.toSetupAdviceItem
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res

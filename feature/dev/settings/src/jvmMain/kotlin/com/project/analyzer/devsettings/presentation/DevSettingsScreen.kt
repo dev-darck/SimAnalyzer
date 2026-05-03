@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
@@ -31,7 +30,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.setup.CalibrationScreen
 import com.project.analyzer.calibration.presentation.verify.CalibrationVerifyScreen
 import com.project.analyzer.devsettings.presentation.components.DevHudSettingsScreen
-import com.project.analyzer.devsettings.presentation.components.DevSettingsSectionCard
 import com.project.analyzer.devsettings.presentation.components.TelemetryInspectorScreen
 import com.project.analyzer.feature.dev.settings.Res.Res
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_nav_calibration_subtitle
@@ -44,8 +42,8 @@ import com.project.analyzer.feature.dev.settings.Res.dev_settings_nav_track_map_
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_nav_track_map_title
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_nav_track_maps_subtitle
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_nav_track_maps_title
-import com.project.analyzer.feature.dev.settings.Res.dev_settings_title
 import com.project.analyzer.feature.dev.settings.Res.dev_settings_subtitle
+import com.project.analyzer.feature.dev.settings.Res.dev_settings_title
 import com.project.analyzer.navigation.api.LocalNavigator
 import com.project.analyzer.navigation.api.Route
 import com.project.analyzer.theme.SimAnalyzerTheme

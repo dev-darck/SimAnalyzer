@@ -13,15 +13,29 @@ import androidx.compose.ui.unit.Dp
 
 public interface ResponsiveScope {
 
-    public fun item(key: Any? = null, isContentFull: Boolean = false, content: @Composable (isLinear: Boolean) -> Unit)
+    public fun item(
+        key: Any? = null,
+        isContentFull: Boolean = false,
+        contentType: Any? = null,
+        content: @Composable (isLinear: Boolean) -> Unit,
+    )
 
     public fun spacer(height: Dp)
 }
 
 internal class ListScopeAdapter(private val scope: LazyListScope) : ResponsiveScope {
 
-    override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
-        if (key != null) scope.item(key = key) { content(true) } else scope.item { content(true) }
+    override fun item(
+        key: Any?,
+        isContentFull: Boolean,
+        contentType: Any?,
+        content: @Composable (isLinear: Boolean) -> Unit,
+    ) {
+        if (key != null) {
+            scope.item(key = key, contentType = contentType) { content(true) }
+        } else {
+            scope.item(contentType = contentType) { content(true) }
+        }
     }
 
     override fun spacer(height: Dp) {
@@ -31,13 +45,18 @@ internal class ListScopeAdapter(private val scope: LazyListScope) : ResponsiveSc
 
 internal class StaggeredGridScopeAdapter(private val scope: LazyStaggeredGridScope) : ResponsiveScope {
 
-    override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
+    override fun item(
+        key: Any?,
+        isContentFull: Boolean,
+        contentType: Any?,
+        content: @Composable (isLinear: Boolean) -> Unit,
+    ) {
         val span = if (isContentFull) StaggeredGridItemSpan.FullLine else StaggeredGridItemSpan.SingleLane
 
         if (key != null) {
-            scope.item(key = key, span = span) { content(isContentFull) }
+            scope.item(key = key, contentType = contentType, span = span) { content(isContentFull) }
         } else {
-            scope.item(span = span) { content(isContentFull) }
+            scope.item(contentType = contentType, span = span) { content(isContentFull) }
         }
     }
 
@@ -50,14 +69,21 @@ internal class StaggeredGridScopeAdapter(private val scope: LazyStaggeredGridSco
 
 internal class GridScopeAdapter(private val scope: LazyGridScope) : ResponsiveScope {
 
-    override fun item(key: Any?, isContentFull: Boolean, content: @Composable (isLinear: Boolean) -> Unit) {
+    override fun item(
+        key: Any?,
+        isContentFull: Boolean,
+        contentType: Any?,
+        content: @Composable (isLinear: Boolean) -> Unit,
+    ) {
         if (key != null) {
             scope.item(
                 key = key,
+                contentType = contentType,
                 span = { GridItemSpan(if (isContentFull) maxLineSpan else 1) },
             ) { content(isContentFull) }
         } else {
             scope.item(
+                contentType = contentType,
                 span = { GridItemSpan(if (isContentFull) maxLineSpan else 1) },
             ) { content(isContentFull) }
         }

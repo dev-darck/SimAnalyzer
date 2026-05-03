@@ -1,8 +1,8 @@
 package com.analyzer.session.details.presentation.components
 
 import androidx.compose.runtime.Composable
-import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
+import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.project.analyzer.feature.screens.sessionDetails.Res.Res
@@ -63,9 +63,15 @@ private fun sessionDetailFilterOptionLabel(
     option: SessionDetailFilterOptionUi,
 ): String = when {
     kind == SessionDetailFilterKind.Sort -> sessionDetailSortLabel(option.id)
+
     kind == SessionDetailFilterKind.Show -> sessionDetailShowLabel(option.id)
-    option.id == SessionDetailFilterIdsUi.SessionTypeAll -> stringResource(Res.string.session_details_filter_all_session_types)
+
+    option.id == SessionDetailFilterIdsUi.SessionTypeAll -> stringResource(
+        Res.string.session_details_filter_all_session_types,
+    )
+
     !option.label.isNullOrBlank() -> option.label
+
     else -> option.id
 }
 

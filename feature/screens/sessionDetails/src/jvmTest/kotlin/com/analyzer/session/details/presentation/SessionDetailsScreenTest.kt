@@ -8,11 +8,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
 import com.analyzer.session.details.presentation.model.LapStatus
+import com.analyzer.session.details.presentation.model.SessionDetailCompareLapUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
@@ -27,6 +29,7 @@ import com.project.analyzer.ui.modifier.trackRecompositions
 import com.project.analyzer.ui.modifier.uiTestTag
 import com.project.analyzer.ui.testing.assertRecompositionCountAtMost
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import org.junit.Test
 import kotlin.test.assertEquals
 
@@ -63,6 +66,40 @@ class SessionDetailsScreenTest {
         }
         onNodeWithTag(TestTags.SessionDetails.value).assertRecompositionCountAtMost(4)
     }
+
+    @Test
+    fun `session details enters compare selection mode from fab`() = runDesktopComposeUiTest {
+        val state = SessionDetailsStateHolder(value = sampleSessionDetailState())
+
+        setContent {
+            SimAnalyzerTheme {
+                SessionDetailsContent(
+                    state = state.value,
+                    modifier = Modifier.uiTestTag(TestTags.SessionDetails),
+                    onIntent = { intent ->
+                        when (intent) {
+                            SessionDetailIntent.StartCompareSelection -> {
+                                state.value = state.value.enableCompareSelectionMode()
+                            }
+
+                            SessionDetailIntent.CancelCompareSelection -> {
+                                state.value = sampleSessionDetailState()
+                            }
+
+                            else -> Unit
+                        }
+                    },
+                )
+            }
+        }
+
+        onNodeWithContentDescription("Compare Laps").performClick()
+        waitForIdle()
+
+        onNodeWithText("Select 2 Laps", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithContentDescription("Cancel lap compare", useUnmergedTree = true).assertIsDisplayed()
+        onNodeWithContentDescription("Open lap comparison", useUnmergedTree = true).assertIsDisplayed()
+    }
 }
 
 private class SessionDetailsStateHolder(value: SessionDetailState) {
@@ -97,6 +134,7 @@ private fun sampleSessionDetailState(): SessionDetailState = SessionDetailState(
     pageCount = 4,
     visibleLaps = persistentListOf(
         SessionLapRowUi(
+            segmentId = 1L,
             lapNumber = 1,
             lapLabel = "1",
             sessionTypeLabel = "Race",
@@ -111,6 +149,15 @@ private fun sampleSessionDetailState(): SessionDetailState = SessionDetailState(
             status = LapStatus.BestLap,
         ),
     ),
+)
+
+private fun SessionDetailState.enableCompareSelectionMode(): SessionDetailState = copy(
+    isCompareSelectionMode = true,
+    selectedCompareLaps = persistentListOf<SessionDetailCompareLapUi>(),
+    compareConfirmEnabled = false,
+    visibleLaps = visibleLaps.map { lap ->
+        lap.copy(compareAvailable = true)
+    }.toImmutableList(),
 )
 
 private fun detailFilter(

@@ -27,7 +27,14 @@ public sealed class Route(public val isRoot: Boolean, public val topLevel: Root)
         public data class SessionDetails(public val sessionId: Long) : SessionRoot(false)
 
         @Serializable
-        public data class SessionAnalysis(public val sessionId: Long) : SessionRoot(false)
+        public data class SessionAnalysis(
+            public val sessionId: Long,
+            public val segmentId: Long? = null,
+            public val lapNumber: Int? = null,
+            public val referenceSessionId: Long? = null,
+            public val referenceSegmentId: Long? = null,
+            public val referenceLapNumber: Int? = null,
+        ) : SessionRoot(false)
     }
 
     @Serializable

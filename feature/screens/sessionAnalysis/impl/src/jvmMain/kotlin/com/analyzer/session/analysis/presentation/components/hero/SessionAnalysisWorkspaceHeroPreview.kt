@@ -10,8 +10,9 @@ import com.analyzer.session.analysis.presentation.model.DiagnosticIssueUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosisSourceUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
-import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightCategoryUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.project.analyzer.theme.SimAnalyzerTheme
 import kotlinx.collections.immutable.persistentListOf
 
@@ -55,6 +56,7 @@ internal fun SessionAnalysisWorkspaceHeroPreview() {
     SimAnalyzerTheme {
         SessionAnalysisWorkspaceHero(
             trackCanvasState = null,
+            screenMode = SessionAnalysisScreenMode.Analysis,
             activePoint = activePoint,
             activeSample = activeSample,
             diagnosticSummary = SessionAnalysisDiagnosticSummaryUi(

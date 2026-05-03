@@ -1,6 +1,7 @@
 package com.analyzer.session.analysis.presentation.builder.diagnostic
 
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
+import com.analyzer.session.analysis.presentation.model.toUi
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
@@ -21,18 +22,18 @@ internal fun highlight(
     affectedLaps: ImmutableList<Int> = persistentListOf(2),
 ): SessionAnalysisHighlightUi = SessionAnalysisHighlightUi(
     id = id,
-    category = category,
+    category = category.toUi(),
     severity = if (priority >= 9) {
-        SessionAnalysisHighlightSeverity.Critical
+        SessionAnalysisHighlightSeverity.Critical.toUi()
     } else {
-        SessionAnalysisHighlightSeverity.Warning
+        SessionAnalysisHighlightSeverity.Warning.toUi()
     },
     lapNumber = 2,
     title = title,
     description = description,
     trackPosition = cornerNumber?.let { 0.1f * it },
     deltaMs = deltaMs,
-    diagnosisSource = diagnosisSource,
+    diagnosisSource = diagnosisSource.toUi(),
     recommendation = recommendation,
     cornerNumber = cornerNumber,
     score = score,

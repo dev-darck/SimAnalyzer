@@ -27,11 +27,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.project.analyzer.calibration.presentation.components.CalibrationSectionCard
@@ -111,7 +111,6 @@ private fun CalibrationVerifyContent(
     onFlipGate: (com.project.analyzer.calibration.presentation.verify.state.EditingGate) -> Unit,
     onRadiusChange: (Float) -> Unit,
 ) {
-
     ResponsiveScreen(
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
         verticalSpacing = 12.dp,

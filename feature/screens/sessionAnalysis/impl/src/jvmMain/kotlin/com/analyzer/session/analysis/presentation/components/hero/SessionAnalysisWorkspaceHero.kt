@@ -48,6 +48,7 @@ import com.analyzer.session.analysis.presentation.components.map.SessionAnalysis
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisComparisonPointUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisSampleUi
+import com.analyzer.session.analysis.presentation.model.SessionAnalysisScreenMode
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisTrackCanvasState
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.Res
 import com.project.analyzer.feature.screens.sessionAnalysis.impl.Res.session_analysis_hero_collapse
@@ -78,6 +79,7 @@ import kotlin.math.abs
 @Composable
 internal fun SessionAnalysisWorkspaceHero(
     trackCanvasState: SessionAnalysisTrackCanvasState?,
+    screenMode: SessionAnalysisScreenMode,
     activePoint: SessionAnalysisComparisonPointUi?,
     activeSample: SessionAnalysisSampleUi?,
     diagnosticSummary: SessionAnalysisDiagnosticSummaryUi?,
@@ -177,6 +179,7 @@ internal fun SessionAnalysisWorkspaceHero(
                 if (!collapsed) {
                     SessionAnalysisHeroSideRail(
                         trackCanvasState = trackCanvasState,
+                        screenMode = screenMode,
                         activePoint = activePoint,
                         activeSample = activeSample,
                         diagnosticSummary = diagnosticSummary,
@@ -273,6 +276,7 @@ private fun SessionAnalysisHeroTrackLegendOverlay(
 @Composable
 private fun SessionAnalysisHeroSideRail(
     trackCanvasState: SessionAnalysisTrackCanvasState?,
+    screenMode: SessionAnalysisScreenMode,
     activePoint: SessionAnalysisComparisonPointUi?,
     activeSample: SessionAnalysisSampleUi?,
     diagnosticSummary: SessionAnalysisDiagnosticSummaryUi?,
@@ -287,13 +291,15 @@ private fun SessionAnalysisHeroSideRail(
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        SessionAnalysisDiagnosticOverview(
-            summary = diagnosticSummary,
-            isLoading = diagnosticsLoading,
-            highlightsCount = highlightsCount,
-            turnCount = trackCanvasState?.cornerMarkers?.size,
-            modifier = Modifier.fillMaxWidth(),
-        )
+        if (screenMode == SessionAnalysisScreenMode.Analysis) {
+            SessionAnalysisDiagnosticOverview(
+                summary = diagnosticSummary,
+                isLoading = diagnosticsLoading,
+                highlightsCount = highlightsCount,
+                turnCount = trackCanvasState?.cornerMarkers?.size,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         SessionAnalysisHeroRailCard(modifier = Modifier.fillMaxWidth()) {
             SessionAnalysisHeroTelemetrySummary(

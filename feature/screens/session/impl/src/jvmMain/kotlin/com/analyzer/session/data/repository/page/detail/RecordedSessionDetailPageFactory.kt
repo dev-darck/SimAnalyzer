@@ -128,16 +128,26 @@ internal class RecordedSessionDetailPageFactory {
     private fun collectBundleLaps(
         bundle: SessionBundleLocation,
         analysisLoader: (SessionLocation) -> IndexAnalysis?,
-    ): List<LapSummary> = bundle.locations.flatMap { location ->
-        val analysis = location.analysis ?: analysisLoader(location)
-        if (shouldSkipPlaceholderLocation(bundle, location, analysis)) {
-            return@flatMap emptyList()
+    ): List<LapSummary> {
+        val segmentIdByLocationId = bundle.locations.segmentIdByLocationId()
+        return bundle.locations.flatMap { location ->
+            val analysis = location.analysis ?: analysisLoader(location)
+            if (shouldSkipPlaceholderLocation(bundle, location, analysis)) {
+                return@flatMap emptyList()
+            }
+            val sessionType = location.metadata.sessionType
+            val segmentId = segmentIdByLocationId[location.source.persistedSessionId]
+                ?: location.source.persistedSessionId
+            analysis
+                ?.laps
+                .orEmpty()
+                .map { lap ->
+                    lap.copy(
+                        sessionType = sessionType,
+                        segmentId = segmentId,
+                    )
+                }
         }
-        val sessionType = location.metadata.sessionType
-        analysis
-            ?.laps
-            .orEmpty()
-            .map { lap -> lap.copy(sessionType = sessionType) }
     }
 
     private fun buildSessionTypeOptions(laps: List<LapSummary>): List<RecordedSessionOption> = laps
@@ -289,6 +299,30 @@ internal class RecordedSessionDetailPageFactory {
     }
 
     private fun List<LapSummary>.firstLapNumber(): Int? = minByOrNull(LapSummary::lap)?.lap
+
+    private fun List<SessionLocation>.segmentIdByLocationId(): Map<Long, Long> {
+        if (isEmpty()) return emptyMap()
+        val groupedLocations = linkedMapOf<String, MutableList<SessionLocation>>()
+        sortedBy { location -> location.metadata.startedAtMs }
+            .forEach { location ->
+                val key = location.metadata.sessionType.normalizedSegmentKey()
+                    ?: "location:${location.source.persistedSessionId}"
+                groupedLocations.getOrPut(key) { mutableListOf() } += location
+            }
+        return buildMap {
+            groupedLocations.values.forEach { group ->
+                val segmentId = group.first().source.persistedSessionId
+                group.forEach { location ->
+                    put(location.source.persistedSessionId, segmentId)
+                }
+            }
+        }
+    }
+
+    private fun String?.normalizedSegmentKey(): String? = this
+        ?.trim()
+        ?.takeIf(String::isNotBlank)
+        ?.uppercase(Locale.US)
 
     private fun LapSummary.deltaMs(bestLapTimeMs: Int?): Int? {
         val totalTime = totalTimeMs ?: return null

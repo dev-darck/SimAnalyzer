@@ -5,6 +5,7 @@ import com.analyzer.session.analysis.presentation.model.SessionAnalysisCoachTone
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisDiagnosticSummaryUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisHighlightUi
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisLapCoachUi
+import com.analyzer.session.analysis.presentation.model.toUi
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisDiagnosisSource
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightCategory
 import com.project.analyzer.telemetry.analysis.api.model.highlight.SessionAnalysisHighlightSeverity
@@ -78,7 +79,7 @@ class SessionAnalysisInspectorNarrativeSupportTest {
         assertTrue(narratives[0].description.contains("150 ms"))
         assertEquals("Carry brake pressure closer to the apex.", narratives[0].recommendation)
         assertEquals("Turn 2: entry brake trace, release timing and minimum speed", narratives[0].lookAt)
-        assertEquals(SessionAnalysisDiagnosisSource.DrivingStyle, narratives[0].source)
+        assertEquals(SessionAnalysisDiagnosisSource.DrivingStyle.toUi(), narratives[0].source)
     }
 
     @Test
@@ -156,9 +157,9 @@ class SessionAnalysisInspectorNarrativeSupportTest {
                         description = "Brake release fades too early before the apex.",
                         recommendation = "Carry a small amount of brake closer to apex.",
                         priority = 10,
-                        source = SessionAnalysisDiagnosisSource.DrivingStyle,
+                        source = SessionAnalysisDiagnosisSource.DrivingStyle.toUi(),
                         potentialTimeGainMs = 210,
-                        category = SessionAnalysisHighlightCategory.TrailBrakingMissing,
+                        category = SessionAnalysisHighlightCategory.TrailBrakingMissing.toUi(),
                         cornerNumber = 7,
                     ),
                 ),
@@ -188,14 +189,14 @@ private fun lineHighlight(
     deltaMs: Int,
     cornerNumber: Int? = null,
 ): SessionAnalysisHighlightUi = SessionAnalysisHighlightUi(
-    category = category,
-    severity = SessionAnalysisHighlightSeverity.Warning,
+    category = category.toUi(),
+    severity = SessionAnalysisHighlightSeverity.Warning.toUi(),
     lapNumber = 4,
     title = title,
     description = title,
     trackPosition = 0.25f,
     deltaMs = deltaMs,
-    diagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle,
+    diagnosisSource = SessionAnalysisDiagnosisSource.DrivingStyle.toUi(),
     recommendation = recommendation,
     cornerNumber = cornerNumber,
     priority = priority,

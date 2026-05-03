@@ -28,10 +28,11 @@ internal fun buildUseCase(repository: SessionAnalysisRepository): SessionAnalysi
     )
 
 internal fun sessionReport(
+    sessionId: Long = 1L,
     trackMap: SessionAnalysisTrackMap?,
     cornerZonesBySegmentId: Map<Long, List<SessionAnalysisCornerZone>> = emptyMap(),
 ): SessionAnalysisReport = SessionAnalysisReport(
-    sessionId = 1L,
+    sessionId = sessionId,
     header = SessionAnalysisHeader(),
     vehicleClass = SessionAnalysisVehicleClass.Unknown,
     trackMap = trackMap,
@@ -154,5 +155,4 @@ internal fun cornerZones(count: Int): List<SessionAnalysisCornerZone> =
 
 private const val CornerZoneLayoutSlots: Int = 20
 private const val CornerZoneLayoutStep: Float = 0.045f
-
 

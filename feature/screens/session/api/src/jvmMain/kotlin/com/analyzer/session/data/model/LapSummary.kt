@@ -8,4 +8,5 @@ public data class LapSummary(
     val invalid: Boolean,
     val inPit: Boolean,
     val complete: Boolean,
+    val segmentId: Long = 0L,
 )

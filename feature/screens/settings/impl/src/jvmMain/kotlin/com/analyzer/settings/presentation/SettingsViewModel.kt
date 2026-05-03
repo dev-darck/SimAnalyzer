@@ -197,18 +197,20 @@ internal class SettingsViewModel(private val useCase: SettingsUseCase) :
                 )
             }
 
-            when (val result = useCase.installLmuPlugin(dialogState.details.toDomain()) { step ->
-                updateState {
-                    val currentDialog = lmuPluginDialog ?: return@updateState this
-                    copy(
-                        lmuPluginDialog = currentDialog.copy(
-                            phase = LmuPluginDialogPhase.Installing,
-                            progressStep = step.toUi(),
-                            detailMessage = null,
-                        ),
-                    )
-                }
-            }.toUiResult()) {
+            when (
+                val result = useCase.installLmuPlugin(dialogState.details.toDomain()) { step ->
+                    updateState {
+                        val currentDialog = lmuPluginDialog ?: return@updateState this
+                        copy(
+                            lmuPluginDialog = currentDialog.copy(
+                                phase = LmuPluginDialogPhase.Installing,
+                                progressStep = step.toUi(),
+                                detailMessage = null,
+                            ),
+                        )
+                    }
+                }.toUiResult()
+            ) {
                 is LmuPluginInstallUiResult.Success -> {
                     useCase.updateGameSelection(GameSelection.Manual(GameId.LMU))
                     updateState { copy(lmuPluginDialog = result.dialogState) }
