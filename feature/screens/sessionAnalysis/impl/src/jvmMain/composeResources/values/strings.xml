@@ -144,6 +144,9 @@
     <string name="session_analysis_session_latest">Latest</string>
     <string name="session_analysis_no_selection">--</string>
     <string name="session_analysis_action_open">Analysis</string>
+    <string name="session_analysis_action_share">Share Analysis</string>
+    <string name="session_analysis_action_more">More analysis actions</string>
+    <string name="session_analysis_action_more_close">Close analysis actions</string>
     <string name="session_analysis_lap_label">Lap %1$d</string>
     <string name="session_analysis_header_refresh">Refresh</string>
     <string name="session_analysis_header_meta">%1$s • %2$s</string>
@@ -470,4 +473,14 @@
     </string>
     <string name="session_analysis_coach_corner_prefix">Corner %1$d: %2$s</string>
     <string name="session_analysis_coach_this_section">this section</string>
+    <string name="session_analysis_share_preview">Share preview</string>
+    <string name="session_analysis_share_formats">Choose how to share this analysis</string>
+    <string name="session_analysis_share_export_name">Export filename</string>
+    <string name="session_analysis_share_copy">Copy Chat Summary</string>
+    <string name="session_analysis_share_copy_description">Copies clean plain text to the clipboard for Discord, Telegram or chat.</string>
+    <string name="session_analysis_share_export">Save Markdown Report</string>
+    <string name="session_analysis_share_export_description">Writes a readable .md report to the folder you choose.</string>
+    <string name="session_analysis_share_raw_files">Open Source Session Files</string>
+    <string name="session_analysis_share_raw_files_description">Only if you need the original recorded folder, not the share-ready summary.</string>
+    <string name="session_analysis_share_close">Close</string>
 </resources>

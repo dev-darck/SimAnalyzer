@@ -3,28 +3,6 @@ package com.analyzer.session.details.presentation.model
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
-enum class SessionDetailFilterKind {
-    Sort,
-    Show,
-    SessionType,
-}
-
-data class SessionDetailFilterOptionUi(val id: String, val label: String? = null)
-
-data class SessionDetailFilterUiModel(
-    val kind: SessionDetailFilterKind,
-    val selectedId: String,
-    val options: ImmutableList<SessionDetailFilterOptionUi> = persistentListOf(),
-)
-
-data class SessionDetailCompareLapUi(
-    val segmentId: Long,
-    val lapNumber: Int,
-    val lapLabel: String,
-    val sessionTypeLabel: String,
-    val totalTimeMs: Int?,
-)
-
 data class SessionDetailState(
     val isLoading: Boolean = true,
     val error: String? = null,
@@ -51,4 +29,6 @@ data class SessionDetailState(
     val isCompareSelectionMode: Boolean = false,
     val selectedCompareLaps: ImmutableList<SessionDetailCompareLapUi> = persistentListOf(),
     val compareConfirmEnabled: Boolean = false,
+    val compareSessionPicker: SessionDetailCompareSessionPickerUi = SessionDetailCompareSessionPickerUi(),
+    val shareDialog: SessionDetailShareDialogUi = SessionDetailShareDialogUi(),
 )

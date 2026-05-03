@@ -4,6 +4,8 @@ package com.analyzer.session.analysis.presentation
 
 import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceData
 import com.analyzer.session.analysis.domain.model.SessionAnalysisWorkspaceRequest
+import com.analyzer.session.analysis.domain.usecase.SessionAnalysisShareResults
+import com.analyzer.session.analysis.domain.usecase.SessionAnalysisShareResultsUseCase
 import com.analyzer.session.analysis.domain.usecase.SessionAnalysisUseCase
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisBindSessionIntent
 import com.analyzer.session.analysis.presentation.model.SessionAnalysisError
@@ -40,7 +42,7 @@ class SessionAnalysisViewModelTest {
                 enrichedWorkspace = shellWorkspace,
                 enrichGate = enrichGate,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -71,7 +73,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -95,7 +97,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -124,7 +126,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -147,7 +149,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -170,7 +172,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -197,7 +199,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(
                 SessionAnalysisBindSessionIntent(
@@ -230,7 +232,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace.copy(referenceReport = externalReferenceReport),
                 enrichedWorkspace = workspace.copy(referenceReport = externalReferenceReport),
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(
                 SessionAnalysisBindSessionIntent(
@@ -268,7 +270,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = null,
                 enrichedWorkspace = sessionAnalysisWorkspaceData(),
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -291,7 +293,7 @@ class SessionAnalysisViewModelTest {
                 shellWorkspace = workspace,
                 enrichedWorkspace = workspace,
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -319,7 +321,7 @@ class SessionAnalysisViewModelTest {
                 enrichedWorkspace = workspace,
                 enrichError = IllegalStateException("boom"),
             )
-            val viewModel = SessionAnalysisViewModel(useCase, dispatcher)
+            val viewModel = buildViewModel(useCase, dispatcher)
 
             viewModel.dispatch(SessionAnalysisBindSessionIntent(77L))
             advanceUntilIdle()
@@ -360,4 +362,28 @@ private class FakeSessionAnalysisUseCase(
         enrichError?.let { throw it }
         return enrichedWorkspace
     }
+}
+
+private fun buildViewModel(
+    useCase: SessionAnalysisUseCase,
+    dispatcher: kotlinx.coroutines.CoroutineDispatcher,
+): SessionAnalysisViewModel = SessionAnalysisViewModel(
+    useCase = useCase,
+    shareResultsUseCase = FakeSessionAnalysisShareResultsUseCase(),
+    defaultDispatcher = dispatcher,
+)
+
+private class FakeSessionAnalysisShareResultsUseCase : SessionAnalysisShareResultsUseCase {
+
+    override suspend fun copySummary(summaryText: String): SessionAnalysisShareResults =
+        SessionAnalysisShareResults.CopiedSummary
+
+    override suspend fun exportReport(
+        directoryPath: String,
+        reportFileName: String,
+        summaryText: String,
+    ): SessionAnalysisShareResults = SessionAnalysisShareResults.ExportedReport("$directoryPath/$reportFileName")
+
+    override suspend fun openSessionFiles(sessionId: Long): SessionAnalysisShareResults =
+        SessionAnalysisShareResults.OpenedSessionFiles
 }
