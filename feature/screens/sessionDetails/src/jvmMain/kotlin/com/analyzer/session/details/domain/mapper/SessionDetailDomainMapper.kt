@@ -74,7 +74,10 @@ class SessionDetailDomainMapper(
         val summary = details.summary
         val dateLabel = dateFormatter.format(Instant.ofEpochMilli(summary.startedAtMs).atZone(zoneId))
         val timeLabel = timeFormatter.format(Instant.ofEpochMilli(summary.startedAtMs).atZone(zoneId))
-        val trackLabel = summary.trackName.toDisplayTrackLabel(summary.trackId)
+        val trackLabel = summary.trackName.toDisplayTrackLabel(
+            trackId = summary.trackId,
+            layoutId = summary.layoutId,
+        )
         val carLabel = summary.carName.toDisplayCarLabel(summary.carModel)
         val airTemp = summary.airTempC.formatTemperatureLabel()
         val trackTemp = summary.trackTempC.formatTemperatureLabel()
@@ -86,6 +89,11 @@ class SessionDetailDomainMapper(
             trackTempLabel = trackTemp,
             carLabel = carLabel,
             trackLabel = trackLabel,
+            gameId = summary.gameId,
+            trackId = summary.trackId,
+            layoutId = summary.layoutId,
+            carModel = summary.carModel,
+            carId = summary.carId,
             savedCarId = thumbnail?.savedCarId,
             thumbnailPath = thumbnail?.texturePath,
         )
@@ -148,8 +156,13 @@ class SessionDetailDomainMapper(
         return SessionLapDomainStatus.Clean
     }
 
-    private fun String?.toDisplayTrackLabel(trackId: String?): String = this?.takeIf { it.isNotBlank() }
-        ?: TelemetryIdentityFormatter.formatTrackName(trackName = null, trackId = trackId)
+    private fun String?.toDisplayTrackLabel(trackId: String?, layoutId: String?): String =
+        this?.takeIf { it.isNotBlank() }
+        ?: TelemetryIdentityFormatter.formatTrackName(
+            trackName = null,
+            trackId = trackId,
+            layoutId = layoutId,
+        )
         ?: "Unknown"
 
     private fun String?.toDisplayCarLabel(carModel: String?): String = this?.takeIf { it.isNotBlank() }

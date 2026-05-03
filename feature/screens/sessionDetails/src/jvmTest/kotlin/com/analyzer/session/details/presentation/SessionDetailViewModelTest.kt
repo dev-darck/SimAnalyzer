@@ -10,9 +10,19 @@ import com.analyzer.session.details.domain.model.SessionDetailPageResult
 import com.analyzer.session.details.domain.model.SessionDetailQuery
 import com.analyzer.session.details.domain.model.SessionLapDomainItem
 import com.analyzer.session.details.domain.model.SessionLapDomainStatus
+import com.analyzer.session.details.domain.usecase.SessionDetailCompareCriteria
+import com.analyzer.session.details.domain.usecase.SessionDetailCompareSuggestion
+import com.analyzer.session.details.domain.usecase.SessionDetailCompareSuggestions
+import com.analyzer.session.details.domain.usecase.SessionDetailCompareSuggestionsUseCase
 import com.analyzer.session.details.domain.usecase.SessionDetailDataUseCase
+import com.analyzer.session.details.domain.usecase.SessionDetailImportCompareSessionResult
+import com.analyzer.session.details.domain.usecase.SessionDetailImportCompareSessionUseCase
+import com.analyzer.session.details.domain.usecase.SessionDetailShareResults
+import com.analyzer.session.details.domain.usecase.SessionDetailShareResultsUseCase
 import com.analyzer.session.details.presentation.model.SessionDetailIntent
+import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -30,7 +40,7 @@ class SessionDetailViewModelTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
         try {
-            val viewModel = SessionDetailViewModel(FakeSessionDetailDataUseCase())
+            val viewModel = buildViewModel()
 
             viewModel.dispatch(SessionDetailIntent.BindSession(sessionId = 42L))
             advanceUntilIdle()
@@ -63,7 +73,7 @@ class SessionDetailViewModelTest {
         val dispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(dispatcher)
         try {
-            val viewModel = SessionDetailViewModel(FakeSessionDetailDataUseCase())
+            val viewModel = buildViewModel()
 
             viewModel.dispatch(SessionDetailIntent.BindSession(sessionId = 42L))
             advanceUntilIdle()
@@ -92,7 +102,102 @@ class SessionDetailViewModelTest {
             Dispatchers.resetMain()
         }
     }
+
+    @Test
+    fun `compare session picker loads suggested sessions`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        try {
+            val compareSuggestionsUseCase = FakeSessionDetailCompareSuggestionsUseCase()
+            val viewModel = buildViewModel(compareSuggestionsUseCase = compareSuggestionsUseCase)
+
+            viewModel.dispatch(SessionDetailIntent.BindSession(sessionId = 42L))
+            advanceUntilIdle()
+            viewModel.dispatch(SessionDetailIntent.OpenCompareSessionPicker)
+            advanceUntilIdle()
+
+            val picker = viewModel.state.value.compareSessionPicker
+            assertTrue(picker.isVisible)
+            assertFalse(picker.isLoading)
+            assertEquals(1, picker.candidates.size)
+            assertEquals(77L, picker.candidates.single().sessionId)
+            assertEquals("Monza GP", compareSuggestionsUseCase.lastCriteria?.trackLabel)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `share dialog builds summary and copies it`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        try {
+            val shareResultsUseCase = FakeSessionDetailShareResultsUseCase()
+            val viewModel = buildViewModel(shareResultsUseCase = shareResultsUseCase)
+
+            viewModel.dispatch(SessionDetailIntent.BindSession(sessionId = 42L))
+            advanceUntilIdle()
+            viewModel.dispatch(SessionDetailIntent.OpenShareResults)
+            advanceUntilIdle()
+
+            val shareDialog = viewModel.state.value.shareDialog
+            assertTrue(shareDialog.isVisible)
+            assertTrue(shareDialog.summaryText.contains("Monza GP"))
+            assertTrue(shareDialog.reportFileName.endsWith(".md"))
+
+            val actionDeferred = async { viewModel.actions.first() }
+            viewModel.dispatch(SessionDetailIntent.CopyShareResults)
+            advanceUntilIdle()
+
+            assertEquals(shareDialog.summaryText, shareResultsUseCase.lastCopiedSummary)
+            assertEquals("Summary copied", actionDeferred.await().title)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `import compare session refreshes suggestions and highlights the added session`() = runTest {
+        val dispatcher = StandardTestDispatcher(testScheduler)
+        Dispatchers.setMain(dispatcher)
+        try {
+            val compareSuggestionsUseCase = FakeSessionDetailCompareSuggestionsUseCase()
+            val importCompareSessionUseCase = FakeSessionDetailImportCompareSessionUseCase()
+            val viewModel = buildViewModel(
+                compareSuggestionsUseCase = compareSuggestionsUseCase,
+                importCompareSessionUseCase = importCompareSessionUseCase,
+            )
+
+            viewModel.dispatch(SessionDetailIntent.BindSession(sessionId = 42L))
+            advanceUntilIdle()
+            viewModel.dispatch(SessionDetailIntent.OpenCompareSessionPicker)
+            advanceUntilIdle()
+
+            val actionDeferred = async { viewModel.actions.first() }
+            viewModel.dispatch(SessionDetailIntent.ImportCompareSession("C:/temp/session"))
+            advanceUntilIdle()
+
+            assertEquals("C:/temp/session", importCompareSessionUseCase.lastPath)
+            assertEquals(listOf(false, true), compareSuggestionsUseCase.forceRefreshRequests)
+            assertEquals("Compare session added", actionDeferred.await().title)
+            assertEquals("Just added", viewModel.state.value.compareSessionPicker.candidates.single().recommendationLabel)
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
 }
+
+private fun buildViewModel(
+    dataUseCase: SessionDetailDataUseCase = FakeSessionDetailDataUseCase(),
+    compareSuggestionsUseCase: SessionDetailCompareSuggestionsUseCase = FakeSessionDetailCompareSuggestionsUseCase(),
+    importCompareSessionUseCase: SessionDetailImportCompareSessionUseCase = FakeSessionDetailImportCompareSessionUseCase(),
+    shareResultsUseCase: SessionDetailShareResultsUseCase = FakeSessionDetailShareResultsUseCase(),
+): SessionDetailViewModel = SessionDetailViewModel(
+    dataUseCase = dataUseCase,
+    compareSuggestionsUseCase = compareSuggestionsUseCase,
+    importCompareSessionUseCase = importCompareSessionUseCase,
+    shareResultsUseCase = shareResultsUseCase,
+)
 
 private class FakeSessionDetailDataUseCase : SessionDetailDataUseCase {
 
@@ -105,8 +210,12 @@ private class FakeSessionDetailDataUseCase : SessionDetailDataUseCase {
         page = SessionDetailPage(
             header = SessionDetailDomainHeader(
                 carLabel = "BMW M4 GT3",
-                trackLabel = "Monza",
+                trackLabel = "Monza GP",
                 sessionTypeLabel = "Race",
+                gameId = "acc",
+                trackId = "monza",
+                layoutId = "gp",
+                carModel = "bmw_m4_gt3",
             ),
             stats = SessionDetailDomainStats(
                 bestLapLabel = "1:38.100",
@@ -125,6 +234,83 @@ private class FakeSessionDetailDataUseCase : SessionDetailDataUseCase {
             error = null,
         ),
     )
+}
+
+private class FakeSessionDetailCompareSuggestionsUseCase : SessionDetailCompareSuggestionsUseCase {
+
+    var lastCriteria: SessionDetailCompareCriteria? = null
+    val forceRefreshRequests = mutableListOf<Boolean>()
+
+    override suspend fun loadSuggestions(
+        criteria: SessionDetailCompareCriteria,
+        forceRefresh: Boolean,
+    ): SessionDetailCompareSuggestions {
+        lastCriteria = criteria
+        forceRefreshRequests += forceRefresh
+        return SessionDetailCompareSuggestions(
+            candidates = listOf(
+                SessionDetailCompareSuggestion(
+                    sessionId = 77L,
+                    carLabel = "BMW M4 GT3",
+                    sessionTypeLabel = "Race",
+                    dateLabel = "Mar 20, 2026",
+                    timeLabel = "20:40",
+                    bestLapLabel = "1:38.100",
+                    lapsLabel = "12",
+                    recommendationLabel = "Same car",
+                ),
+            ),
+        )
+    }
+}
+
+private class FakeSessionDetailImportCompareSessionUseCase : SessionDetailImportCompareSessionUseCase {
+
+    var lastCriteria: SessionDetailCompareCriteria? = null
+    var lastPath: String? = null
+    var result: SessionDetailImportCompareSessionResult =
+        SessionDetailImportCompareSessionResult.Imported(
+            sessionId = 77L,
+            destinationPath = "C:/recordings/77",
+        )
+
+    override suspend fun importSession(
+        criteria: SessionDetailCompareCriteria,
+        path: String,
+    ): SessionDetailImportCompareSessionResult {
+        lastCriteria = criteria
+        lastPath = path
+        return result
+    }
+}
+
+private class FakeSessionDetailShareResultsUseCase : SessionDetailShareResultsUseCase {
+
+    var lastCopiedSummary: String? = null
+    var lastExportDirectoryPath: String? = null
+    var lastReportFileName: String? = null
+    var lastOpenSessionId: Long? = null
+
+    override suspend fun copySummary(summaryText: String): SessionDetailShareResults {
+        lastCopiedSummary = summaryText
+        return SessionDetailShareResults.CopiedSummary
+    }
+
+    override suspend fun exportReport(
+        directoryPath: String,
+        reportFileName: String,
+        summaryText: String,
+    ): SessionDetailShareResults {
+        lastExportDirectoryPath = directoryPath
+        lastReportFileName = reportFileName
+        lastCopiedSummary = summaryText
+        return SessionDetailShareResults.ExportedReport("$directoryPath/$reportFileName")
+    }
+
+    override suspend fun openSessionFiles(sessionId: Long): SessionDetailShareResults {
+        lastOpenSessionId = sessionId
+        return SessionDetailShareResults.OpenedSessionFiles
+    }
 }
 
 private fun lap(

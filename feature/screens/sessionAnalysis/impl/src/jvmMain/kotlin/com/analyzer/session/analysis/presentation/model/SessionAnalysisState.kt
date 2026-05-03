@@ -1,6 +1,7 @@
 package com.analyzer.session.analysis.presentation.model
 
 import androidx.compose.runtime.Immutable
+import com.analyzer.session.analysis.presentation.model.share.SessionAnalysisShareDialogUi
 import com.analyzer.session.analysis.presentation.model.studio.SessionAnalysisStudioState
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -29,4 +30,5 @@ internal data class SessionAnalysisState(
     val referenceLapIsCustom: Boolean = false,
     val hasExternalReference: Boolean = false,
     val selectedFrameId: Long? = null,
+    val shareDialog: SessionAnalysisShareDialogUi = SessionAnalysisShareDialogUi(),
 )

@@ -37,6 +37,11 @@ data class SessionDetailDomainHeader(
     val trackTempLabel: String = "--°C",
     val carLabel: String = "",
     val trackLabel: String = "",
+    val gameId: String = "",
+    val trackId: String? = null,
+    val layoutId: String? = null,
+    val carModel: String? = null,
+    val carId: Int? = null,
     val savedCarId: String? = null,
     val thumbnailPath: String? = null,
 )

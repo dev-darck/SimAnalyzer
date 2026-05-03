@@ -3,6 +3,8 @@ package com.analyzer.session.analysis.di
 import androidx.lifecycle.ViewModel
 import com.analyzer.session.analysis.data.repository.SessionAnalysisRepositoryImpl
 import com.analyzer.session.analysis.domain.repository.SessionAnalysisRepository
+import com.analyzer.session.analysis.domain.usecase.SessionAnalysisShareResultsUseCase
+import com.analyzer.session.analysis.domain.usecase.SessionAnalysisShareResultsUseCaseImpl
 import com.analyzer.session.analysis.domain.usecase.SessionAnalysisUseCase
 import com.analyzer.session.analysis.domain.usecase.SessionAnalysisUseCaseImpl
 import com.analyzer.session.analysis.presentation.SessionAnalysisViewModel
@@ -28,6 +30,11 @@ interface SessionAnalysisBindings {
 
         @Provides
         private fun provideSessionAnalysisUseCase(impl: SessionAnalysisUseCaseImpl): SessionAnalysisUseCase = impl
+
+        @Provides
+        private fun provideSessionAnalysisShareResultsUseCase(
+            impl: SessionAnalysisShareResultsUseCaseImpl,
+        ): SessionAnalysisShareResultsUseCase = impl
 
         @Provides
         @IntoMap

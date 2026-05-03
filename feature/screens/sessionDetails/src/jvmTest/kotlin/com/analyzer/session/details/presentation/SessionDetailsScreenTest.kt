@@ -15,6 +15,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.runDesktopComposeUiTest
 import com.analyzer.session.details.presentation.model.LapStatus
 import com.analyzer.session.details.presentation.model.SessionDetailCompareLapUi
+import com.analyzer.session.details.presentation.model.SessionDetailCompareSessionCandidateUi
+import com.analyzer.session.details.presentation.model.SessionDetailCompareSessionPickerUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
@@ -93,12 +95,114 @@ class SessionDetailsScreenTest {
             }
         }
 
-        onNodeWithContentDescription("Compare Laps").performClick()
+        onNodeWithContentDescription("More session actions").performClick()
+        waitForIdle()
+        onNodeWithText("Compare Laps").performClick()
         waitForIdle()
 
         onNodeWithText("Select 2 Laps", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithContentDescription("Cancel lap compare", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithContentDescription("Open lap comparison", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test
+    fun `session details opens compare session picker from fab`() = runDesktopComposeUiTest {
+        val state = SessionDetailsStateHolder(value = sampleSessionDetailState())
+
+        setContent {
+            SimAnalyzerTheme {
+                SessionDetailsContent(
+                    state = state.value,
+                    modifier = Modifier.uiTestTag(TestTags.SessionDetails),
+                    onIntent = { intent ->
+                        when (intent) {
+                            SessionDetailIntent.OpenCompareSessionPicker -> {
+                                state.value = state.value.copy(
+                                    compareSessionPicker = SessionDetailCompareSessionPickerUi(
+                                        isVisible = true,
+                                        title = "Compare on Monza GP",
+                                        supportingText = "Only ACC sessions from the same track layout are suggested.",
+                                        candidates = persistentListOf(
+                                            SessionDetailCompareSessionCandidateUi(
+                                                sessionId = 77L,
+                                                carLabel = "BMW M4 GT3",
+                                                sessionTypeLabel = "Race",
+                                                dateLabel = "Mar 20, 2026",
+                                                timeLabel = "20:40",
+                                                bestLapLabel = "1:38.100",
+                                                lapsLabel = "12",
+                                                recommendationLabel = "Same car",
+                                            ),
+                                        ),
+                                    ),
+                                )
+                            }
+
+                            SessionDetailIntent.DismissCompareSessionPicker -> {
+                                state.value = state.value.copy(
+                                    compareSessionPicker = SessionDetailCompareSessionPickerUi(),
+                                )
+                            }
+
+                            else -> Unit
+                        }
+                    },
+                )
+            }
+        }
+
+        onNodeWithContentDescription("More session actions").performClick()
+        waitForIdle()
+        onNodeWithText("Add Compare Session").performClick()
+        waitForIdle()
+
+        onNodeWithText("Compare on Monza GP").assertIsDisplayed()
+        onNodeWithText("Same car").assertIsDisplayed()
+        onNodeWithText("Best 1:38.100 • 12 laps").assertIsDisplayed()
+    }
+
+    @Test
+    fun `session details opens share dialog from fab`() = runDesktopComposeUiTest {
+        val state = SessionDetailsStateHolder(value = sampleSessionDetailState())
+
+        setContent {
+            SimAnalyzerTheme {
+                SessionDetailsContent(
+                    state = state.value,
+                    modifier = Modifier.uiTestTag(TestTags.SessionDetails),
+                    onIntent = { intent ->
+                        when (intent) {
+                            SessionDetailIntent.OpenShareResults -> {
+                                state.value = state.value.copy(
+                                    shareDialog = state.value.shareDialog.copy(
+                                        isVisible = true,
+                                        title = "Share Monza GP session",
+                                        supportingText = "Copy the summary or export a Markdown report.",
+                                        summaryText = "Sim Analyzer Session Summary\n\nTrack: Monza GP",
+                                        reportFileName = "simanalyzer_monza_gp_race.md",
+                                    ),
+                                )
+                            }
+
+                            SessionDetailIntent.DismissShareResults -> {
+                                state.value = state.value.copy(shareDialog = state.value.shareDialog.copy(isVisible = false))
+                            }
+
+                            else -> Unit
+                        }
+                    },
+                )
+            }
+        }
+
+        onNodeWithContentDescription("More session actions").performClick()
+        waitForIdle()
+        onNodeWithText("Share Results").performClick()
+        waitForIdle()
+
+        onNodeWithText("Share Monza GP session").assertIsDisplayed()
+        onNodeWithText("Copy Chat Summary").assertIsDisplayed()
+        onNodeWithText("Save Markdown Report").assertIsDisplayed()
     }
 }
 
@@ -147,6 +251,21 @@ private fun sampleSessionDetailState(): SessionDetailState = SessionDetailState(
             delta = "-0.000",
             deltaIsPositive = false,
             status = LapStatus.BestLap,
+        ),
+        SessionLapRowUi(
+            segmentId = 1L,
+            lapNumber = 2,
+            lapLabel = "2",
+            sessionTypeLabel = "Race",
+            totalTimeMs = 106890,
+            totalTime = "1:46.890",
+            s1 = "35.800",
+            s2 = "35.200",
+            s3 = "35.890",
+            incidents = "0",
+            delta = "+1.212",
+            deltaIsPositive = true,
+            status = LapStatus.Clean,
         ),
     ),
 )

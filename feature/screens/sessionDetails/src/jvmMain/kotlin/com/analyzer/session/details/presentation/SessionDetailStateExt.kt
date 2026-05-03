@@ -5,12 +5,14 @@ import com.analyzer.session.details.domain.model.SessionLapDomainItem
 import com.analyzer.session.details.domain.model.SessionLapDomainStatus
 import com.analyzer.session.details.presentation.model.LapStatus
 import com.analyzer.session.details.presentation.model.SessionDetailCompareLapUi
+import com.analyzer.session.details.presentation.model.SessionDetailCompareSessionPickerUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterIdsUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterKind
 import com.analyzer.session.details.presentation.model.SessionDetailFilterOptionUi
 import com.analyzer.session.details.presentation.model.SessionDetailFilterUiModel
 import com.analyzer.session.details.presentation.model.SessionDetailHeaderUi
 import com.analyzer.session.details.presentation.model.SessionDetailQueryUi
+import com.analyzer.session.details.presentation.model.SessionDetailShareDialogUi
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.SessionDetailStatsUi
 import com.analyzer.session.details.presentation.model.SessionLapRowUi
@@ -49,6 +51,8 @@ internal fun SessionDetailPage.toSessionDetailState(
     isLoading: Boolean = false,
     isCompareSelectionMode: Boolean = false,
     selectedCompareLaps: ImmutableList<SessionDetailCompareLapUi> = persistentListOf(),
+    compareSessionPicker: SessionDetailCompareSessionPickerUi = SessionDetailCompareSessionPickerUi(),
+    shareDialog: SessionDetailShareDialogUi = SessionDetailShareDialogUi(),
 ): SessionDetailState = SessionDetailState(
     isLoading = isLoading,
     error = error,
@@ -93,6 +97,8 @@ internal fun SessionDetailPage.toSessionDetailState(
     isCompareSelectionMode = isCompareSelectionMode,
     selectedCompareLaps = selectedCompareLaps,
     compareConfirmEnabled = selectedCompareLaps.size == 2,
+    compareSessionPicker = compareSessionPicker,
+    shareDialog = shareDialog,
 )
 
 private fun SessionDetailPage.sessionDetailSessionTypeOptions(): ImmutableList<SessionDetailFilterOptionUi> =

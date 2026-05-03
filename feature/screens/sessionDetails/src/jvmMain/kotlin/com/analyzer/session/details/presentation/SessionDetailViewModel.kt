@@ -1,63 +1,151 @@
 package com.analyzer.session.details.presentation
 
 import com.analyzer.session.details.domain.model.SessionDetailPageResult
+import com.analyzer.session.details.domain.usecase.SessionDetailCompareCriteria
+import com.analyzer.session.details.domain.usecase.SessionDetailCompareSuggestionsUseCase
 import com.analyzer.session.details.domain.usecase.SessionDetailDataUseCase
-import com.analyzer.session.details.presentation.model.SessionDetailCompareLapUi
+import com.analyzer.session.details.domain.usecase.SessionDetailImportCompareSessionUseCase
+import com.analyzer.session.details.domain.usecase.SessionDetailShareResultsUseCase
+import com.analyzer.session.details.presentation.model.SessionDetailAction
+import com.analyzer.session.details.presentation.model.SessionDetailCompareSessionPickerUi
 import com.analyzer.session.details.presentation.model.SessionDetailIntent
 import com.analyzer.session.details.presentation.model.SessionDetailQueryUi
+import com.analyzer.session.details.presentation.model.SessionDetailShareDialogUi
 import com.analyzer.session.details.presentation.model.SessionDetailState
 import com.analyzer.session.details.presentation.model.toDomain
 import com.analyzer.session.details.presentation.model.toUi
 import com.project.analyzer.leak.api.LeakAwareMviViewModel
 import dev.zacsweers.metro.Inject
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 @Inject
-internal class SessionDetailViewModel(private val dataUseCase: SessionDetailDataUseCase) :
-    LeakAwareMviViewModel<SessionDetailIntent, SessionDetailState>(SessionDetailState()) {
+internal class SessionDetailViewModel(
+    private val dataUseCase: SessionDetailDataUseCase,
+    private val compareSuggestionsUseCase: SessionDetailCompareSuggestionsUseCase,
+    private val importCompareSessionUseCase: SessionDetailImportCompareSessionUseCase,
+    private val shareResultsUseCase: SessionDetailShareResultsUseCase,
+) : LeakAwareMviViewModel<SessionDetailIntent, SessionDetailState>(SessionDetailState()) {
 
     private var query = SessionDetailQueryUi()
     private var currentSessionId: Long? = null
     private var loadedSessionId: Long? = null
     private var currentPageResult: SessionDetailPageResult? = null
-    private var isCompareSelectionMode = false
-    private var selectedCompareLaps: PersistentList<SessionDetailCompareLapUi> = persistentListOf()
+    private var compareSelection = SessionDetailCompareSelection()
+    private var compareSessionPicker = SessionDetailCompareSessionPickerUi()
+    private var currentCompareCriteria: SessionDetailCompareCriteria? = null
+    private var highlightedCompareSessionId: Long? = null
+    private var shareDialog = SessionDetailShareDialogUi()
+    private val _actions = MutableSharedFlow<SessionDetailAction>(extraBufferCapacity = 1)
+
+    val actions = _actions.asSharedFlow()
 
     override suspend fun handleIntent(intent: SessionDetailIntent) {
-        when (intent) {
-            is SessionDetailIntent.BindSession -> bindSession(intent.sessionId)
+        if (handleSessionIntent(intent)) return
+        if (handleQueryIntent(intent)) return
+        if (handleCompareIntent(intent)) return
+        handleShareIntent(intent)
+    }
 
-            SessionDetailIntent.Refresh -> reload(forceRefresh = true)
+    private suspend fun handleSessionIntent(intent: SessionDetailIntent): Boolean = when (intent) {
+        is SessionDetailIntent.BindSession -> {
+            bindSession(intent.sessionId)
+            true
+        }
 
-            is SessionDetailIntent.ChangeSort -> updateQuery { copy(sortId = intent.optionId, page = 1) }
+        else -> false
+    }
 
-            is SessionDetailIntent.ChangeFilter -> updateQuery { copy(showId = intent.optionId, page = 1) }
+    private suspend fun handleQueryIntent(intent: SessionDetailIntent): Boolean = when (intent) {
+        SessionDetailIntent.Refresh -> {
+            reload(forceRefresh = true)
+            true
+        }
 
-            is SessionDetailIntent.ChangeSessionTypeFilter -> updateQuery {
+        is SessionDetailIntent.ChangeSort -> {
+            updateQuery { copy(sortId = intent.optionId, page = 1) }
+            true
+        }
+
+        is SessionDetailIntent.ChangeFilter -> {
+            updateQuery { copy(showId = intent.optionId, page = 1) }
+            true
+        }
+
+        is SessionDetailIntent.ChangeSessionTypeFilter -> {
+            updateQuery {
                 copy(
                     sessionTypeId = intent.optionId,
                     page = 1,
                 )
             }
+            true
+        }
 
-            is SessionDetailIntent.ChangePage -> updateQuery { copy(page = intent.page) }
+        is SessionDetailIntent.ChangePage -> {
+            updateQuery { copy(page = intent.page) }
+            true
+        }
 
-            SessionDetailIntent.StartCompareSelection -> startCompareSelection()
+        else -> false
+    }
 
-            SessionDetailIntent.CancelCompareSelection -> cancelCompareSelection()
+    private suspend fun handleCompareIntent(intent: SessionDetailIntent): Boolean = when (intent) {
+        SessionDetailIntent.StartCompareSelection -> {
+            startCompareSelection()
+            true
+        }
 
-            is SessionDetailIntent.ToggleCompareLap -> toggleCompareLap(
+        SessionDetailIntent.CancelCompareSelection -> {
+            cancelCompareSelection()
+            true
+        }
+
+        SessionDetailIntent.OpenCompareSessionPicker -> {
+            openCompareSessionPicker()
+            true
+        }
+
+        SessionDetailIntent.DismissCompareSessionPicker -> {
+            dismissCompareSessionPicker()
+            true
+        }
+
+        is SessionDetailIntent.ImportCompareSession -> {
+            importCompareSession(intent.path)
+            true
+        }
+
+        is SessionDetailIntent.ToggleCompareLap -> {
+            toggleCompareLap(
                 segmentId = intent.segmentId,
                 lapNumber = intent.lapNumber,
             )
+            true
+        }
+
+        else -> false
+    }
+
+    private suspend fun handleShareIntent(intent: SessionDetailIntent) {
+        when (intent) {
+            SessionDetailIntent.OpenShareResults -> openShareResultsDialog()
+            SessionDetailIntent.DismissShareResults -> dismissShareResultsDialog()
+            SessionDetailIntent.CopyShareResults -> copyShareResults()
+
+            is SessionDetailIntent.ExportShareResultsToDirectory -> {
+                exportShareResultsToDirectory(intent.directoryPath)
+            }
+
+            SessionDetailIntent.OpenShareSessionFiles -> openShareSessionFiles()
+            else -> Unit
         }
     }
 
     private suspend fun bindSession(sessionId: Long) {
         if (currentSessionId == sessionId && loadedSessionId == sessionId) return
         currentSessionId = sessionId
-        resetCompareSelection()
+        resetTransientUi()
         load(sessionId = sessionId)
     }
 
@@ -108,58 +196,160 @@ internal class SessionDetailViewModel(private val dataUseCase: SessionDetailData
         setState(
             result.page.toSessionDetailState(
                 query = query,
-                isCompareSelectionMode = isCompareSelectionMode,
-                selectedCompareLaps = selectedCompareLaps,
+                isCompareSelectionMode = compareSelection.isSelectionMode,
+                selectedCompareLaps = compareSelection.selectedLaps,
+                compareSessionPicker = compareSessionPicker,
+                shareDialog = shareDialog,
             ),
         )
     }
 
     private fun startCompareSelection() {
-        if (isCompareSelectionMode) return
-        isCompareSelectionMode = true
+        val nextSelection = compareSelection.start()
+        if (nextSelection == compareSelection) return
+        compareSelection = nextSelection
         renderCurrentPage()
     }
 
     private fun cancelCompareSelection() {
-        if (!isCompareSelectionMode && selectedCompareLaps.isEmpty()) return
-        resetCompareSelection()
+        val nextSelection = compareSelection.cancel()
+        if (nextSelection == compareSelection) return
+        compareSelection = nextSelection
+        renderCurrentPage()
+    }
+
+    private suspend fun openCompareSessionPicker() {
+        val sessionId = currentSessionId ?: return
+        val criteria = currentPageResult?.page?.header?.toCompareCriteria(sessionId)
+        if (criteria == null) {
+            currentCompareCriteria = null
+            highlightedCompareSessionId = null
+            compareSessionPicker = missingCompareSessionPickerUi()
+            renderCurrentPage()
+            return
+        }
+
+        currentCompareCriteria = criteria
+        highlightedCompareSessionId = null
+        loadCompareSessionPicker(criteria = criteria)
+    }
+
+    private fun dismissCompareSessionPicker() {
+        if (!compareSessionPicker.isVisible) return
+        currentCompareCriteria = null
+        highlightedCompareSessionId = null
+        compareSessionPicker = SessionDetailCompareSessionPickerUi()
+        renderCurrentPage()
+    }
+
+    private suspend fun importCompareSession(path: String) {
+        val sessionId = currentSessionId ?: return
+        val criteria = currentCompareCriteria
+            ?: currentPageResult?.page?.header?.toCompareCriteria(sessionId)
+            ?: return
+        currentCompareCriteria = criteria
+        compareSessionPicker = compareSessionPicker.copy(
+            isVisible = true,
+            isImporting = true,
+            statusMessage = null,
+        )
+        renderCurrentPage()
+
+        val feedback = importCompareSessionUseCase
+            .importSession(criteria = criteria, path = path)
+            .toCompareImportFeedback()
+        highlightedCompareSessionId = feedback.highlightedSessionId
+        if (feedback.shouldReloadSuggestions) {
+            emitAction(feedback.action)
+            loadCompareSessionPicker(
+                criteria = criteria,
+                forceRefresh = true,
+                statusMessage = feedback.statusMessage,
+            )
+            return
+        }
+        compareSessionPicker = compareSessionPicker.copy(isImporting = false)
+        renderCurrentPage()
+        emitAction(feedback.action)
+    }
+
+    private fun openShareResultsDialog() {
+        val sessionId = currentSessionId ?: return
+        val page = currentPageResult?.page ?: return
+        shareDialog = page.toShareDialogUi(sessionId = sessionId)
+        renderCurrentPage()
+    }
+
+    private fun dismissShareResultsDialog() {
+        if (!shareDialog.isVisible) return
+        shareDialog = SessionDetailShareDialogUi()
         renderCurrentPage()
     }
 
     private fun toggleCompareLap(segmentId: Long, lapNumber: Int) {
-        if (!isCompareSelectionMode) return
-        val lap = state.value.visibleLaps.firstOrNull { row ->
-            row.segmentId == segmentId && row.lapNumber == lapNumber
-        } ?: return
-        val existingIndex = selectedCompareLaps.indexOfFirst { selected ->
-            selected.segmentId == segmentId && selected.lapNumber == lapNumber
-        }
-        selectedCompareLaps = when {
-            existingIndex >= 0 -> selectedCompareLaps.removeAt(existingIndex)
-
-            selectedCompareLaps.size >= 2 -> selectedCompareLaps
-
-            selectedCompareLaps.isNotEmpty() && selectedCompareLaps.first().segmentId != segmentId -> {
-                selectedCompareLaps
-            }
-
-            else -> {
-                selectedCompareLaps.add(
-                    SessionDetailCompareLapUi(
-                        segmentId = lap.segmentId,
-                        lapNumber = lap.lapNumber,
-                        lapLabel = lap.lapLabel,
-                        sessionTypeLabel = lap.sessionTypeLabel,
-                        totalTimeMs = lap.totalTimeMs,
-                    ),
-                )
-            }
-        }
+        val nextSelection = compareSelection.toggle(
+            visibleLaps = state.value.visibleLaps,
+            segmentId = segmentId,
+            lapNumber = lapNumber,
+        )
+        if (nextSelection == compareSelection) return
+        compareSelection = nextSelection
         renderCurrentPage()
     }
 
+    private suspend fun copyShareResults() {
+        val summaryText = shareDialog.summaryText.takeIf(String::isNotBlank) ?: return
+        emitAction(shareResultsUseCase.copySummary(summaryText).toCopySummaryAction())
+    }
+
+    private suspend fun exportShareResultsToDirectory(directoryPath: String) {
+        val reportFileName = shareDialog.reportFileName.takeIf(String::isNotBlank) ?: return
+        val summaryText = shareDialog.summaryText.takeIf(String::isNotBlank) ?: return
+        emitAction(
+            shareResultsUseCase
+                .exportReport(directoryPath, reportFileName, summaryText)
+                .toExportReportAction(),
+        )
+    }
+
+    private suspend fun openShareSessionFiles() {
+        val sessionId = currentSessionId ?: return
+        emitAction(shareResultsUseCase.openSessionFiles(sessionId).toOpenSessionFilesAction())
+    }
+
     private fun resetCompareSelection() {
-        isCompareSelectionMode = false
-        selectedCompareLaps = persistentListOf()
+        compareSelection = SessionDetailCompareSelection()
+    }
+
+    private fun resetTransientUi() {
+        resetCompareSelection()
+        compareSessionPicker = SessionDetailCompareSessionPickerUi()
+        currentCompareCriteria = null
+        highlightedCompareSessionId = null
+        shareDialog = SessionDetailShareDialogUi()
+    }
+
+    private suspend fun loadCompareSessionPicker(
+        criteria: SessionDetailCompareCriteria,
+        forceRefresh: Boolean = false,
+        statusMessage: String? = null,
+    ) {
+        compareSessionPicker = criteria.toLoadingCompareSessionPickerUi(statusMessage)
+        renderCurrentPage()
+
+        val suggestions = compareSuggestionsUseCase.loadSuggestions(
+            criteria = criteria,
+            forceRefresh = forceRefresh,
+        )
+        compareSessionPicker = criteria.toReadyCompareSessionPickerUi(
+            suggestions = suggestions,
+            highlightedSessionId = highlightedCompareSessionId,
+            statusMessage = statusMessage,
+        )
+        renderCurrentPage()
+    }
+
+    private suspend fun emitAction(action: SessionDetailAction?) {
+        if (action != null) _actions.emit(action)
     }
 }
