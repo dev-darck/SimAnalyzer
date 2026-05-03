@@ -82,7 +82,7 @@ internal class FileTelemetrySessionStore(
         if (session.metadata.sessionId != update.sessionId) return
         if (normalizeGameId(session.metadata.gameId) != normalizeGameId(update.gameId)) return
 
-        session.metadata = session.metadata.copy(
+        val updatedMetadata = session.metadata.copy(
             sessionType = update.sessionType ?: session.metadata.sessionType,
             carModel = update.carModel ?: session.metadata.carModel,
             carName = update.carName ?: session.metadata.carName,
@@ -94,8 +94,11 @@ internal class FileTelemetrySessionStore(
             trackTempC = update.trackTempC ?: session.metadata.trackTempC,
             dataSource = update.dataSource ?: session.metadata.dataSource,
         )
+        if (updatedMetadata == session.metadata) return
 
-        persistMetadata(session)
+        session.metadata = updatedMetadata
+        session.markMetadataDirty()
+
         sessionIo.writeEvent(
             session = session,
             event = SessionEvent(
@@ -143,6 +146,7 @@ internal class FileTelemetrySessionStore(
             payloadType = resolvedType,
             payloadSize = resolvedSize,
         )
+        session.markMetadataDirty()
     }
 
     internal fun writeHeader(session: ActiveSession, storagePayloadType: String, storagePayloadSize: Int) {
@@ -166,7 +170,14 @@ internal class FileTelemetrySessionStore(
     }
 
     internal fun persistMetadata(session: ActiveSession) {
-        sessionIo.persistMetadata(session)
+        if (sessionIo.persistMetadata(session)) {
+            session.markMetadataPersisted()
+        }
+    }
+
+    internal fun persistMetadataIfDue(session: ActiveSession, nowNs: Long) {
+        if (!session.shouldPersistMetadata(nowNs)) return
+        persistMetadata(session)
     }
 
     internal fun flushSessionOutputs(session: ActiveSession) {

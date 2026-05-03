@@ -42,10 +42,11 @@ internal class FileTelemetrySessionIo(private val json: Json) {
         val eventsWriter: BufferedWriter
 
         try {
-            dataOut = DataOutputStream(BufferedOutputStream(FileOutputStream(framesFile)))
-            indexOut = DataOutputStream(BufferedOutputStream(FileOutputStream(indexFile)))
+            dataOut = DataOutputStream(BufferedOutputStream(FileOutputStream(framesFile), BINARY_IO_BUFFER_SIZE))
+            indexOut = DataOutputStream(BufferedOutputStream(FileOutputStream(indexFile), BINARY_IO_BUFFER_SIZE))
             eventsWriter = BufferedWriter(
                 OutputStreamWriter(FileOutputStream(eventsFile), Charsets.UTF_8),
+                EVENTS_IO_BUFFER_SIZE,
             )
         } catch (error: IOException) {
             logger.warn(error) { "failed to create writers for session $sessionId" }
@@ -89,6 +90,7 @@ internal class FileTelemetrySessionIo(private val json: Json) {
             frameStoragePayloadSize = storagePayloadSize,
         )
         session.headerWritten = true
+        session.markMetadataDirty()
     }
 
     fun writeIndexRecord(
@@ -124,14 +126,13 @@ internal class FileTelemetrySessionIo(private val json: Json) {
             with(session.eventsWriter) {
                 append(json.encodeToString(event))
                 newLine()
-                flush()
             }
         }.onFailure { error ->
             logger.warn(error) { "failed to write event for session ${session.metadata.sessionId}" }
         }
     }
 
-    fun persistMetadata(session: ActiveSession) {
+    fun persistMetadata(session: ActiveSession): Boolean {
         session.metadata = session.metadata.copy(
             frameCount = session.frameCount,
             receivedFrames = session.receivedFrames,
@@ -140,22 +141,21 @@ internal class FileTelemetrySessionIo(private val json: Json) {
             firstTimestampNs = session.firstFrameTimestampNs,
             lastTimestampNs = session.lastFrameTimestampNs,
         )
-        writeMetadataFile(session.metaFile, session.metadata)
+        return writeMetadataFile(session.metaFile, session.metadata)
     }
 
-    fun writeMetadataFile(metaFile: File, metadata: RecordedTelemetrySessionMetadata) {
-        runCatching {
-            val encoded = json.encodeToString(RecordedTelemetrySessionMetadata.serializer(), metadata)
-            val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
-            tmp.writeText(encoded)
-            if (!tmp.renameTo(metaFile)) {
-                metaFile.writeText(encoded)
-                tmp.delete()
-            }
-        }.onFailure { error ->
-            logger.warn(error) { "failed to write metadata for session ${metadata.sessionId}" }
+    fun writeMetadataFile(metaFile: File, metadata: RecordedTelemetrySessionMetadata): Boolean = runCatching {
+        val encoded = json.encodeToString(RecordedTelemetrySessionMetadata.serializer(), metadata)
+        val tmp = File(metaFile.parentFile, metaFile.name + ".tmp")
+        tmp.writeText(encoded, Charsets.UTF_8)
+        if (!tmp.renameTo(metaFile)) {
+            metaFile.writeText(encoded, Charsets.UTF_8)
+            tmp.delete()
         }
-    }
+        true
+    }.onFailure { error ->
+        logger.warn(error) { "failed to write metadata for session ${metadata.sessionId}" }
+    }.getOrDefault(false)
 
     fun flushSessionOutputs(session: ActiveSession) {
         session.dataOut.flush()
@@ -171,5 +171,11 @@ internal class FileTelemetrySessionIo(private val json: Json) {
 
     private fun closeQuietly(closeable: Closeable?) {
         runCatching { closeable?.close() }
+    }
+
+    private companion object Constants {
+
+        const val BINARY_IO_BUFFER_SIZE = 64 * 1024
+        const val EVENTS_IO_BUFFER_SIZE = 16 * 1024
     }
 }

@@ -33,6 +33,7 @@ internal const val META_FILE_NAME = TELEMETRY_SESSION_META_FILE_NAME
 internal const val EVENTS_FILE_NAME = "events.jsonl"
 internal const val COMPRESSION_GZIP = TELEMETRY_SESSION_COMPRESSION_GZIP
 internal val FLUSH_INTERVAL_NS = 1.seconds.inWholeNanoseconds
+internal val METADATA_PERSIST_INTERVAL_NS = 5.seconds.inWholeNanoseconds
 internal const val DEFAULT_QUEUE_CAPACITY = 512
 
 internal const val EVENT_STARTED = "start"

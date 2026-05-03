@@ -44,11 +44,12 @@ internal class FrameEncodeAndPersistStage(
                 index = payload.index,
             )
 
-            if (session.shouldFlush(System.nanoTime())) {
+            val nowNs = System.nanoTime()
+            if (session.shouldFlushOutputs(nowNs)) {
                 store.flushSessionOutputs(session)
-                store.persistMetadata(session)
                 store.logSessionStats(session)
             }
+            store.persistMetadataIfDue(session, nowNs)
             adapters.forEach { it.onFrameWritten(session, payload) }
             return false
         } catch (error: IOException) {

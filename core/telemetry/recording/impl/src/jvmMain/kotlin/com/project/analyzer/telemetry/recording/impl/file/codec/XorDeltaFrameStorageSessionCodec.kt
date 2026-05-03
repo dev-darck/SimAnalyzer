@@ -41,7 +41,7 @@ internal class XorDeltaFrameStorageSessionCodec(private val keyFrameInterval: In
             framesSinceKeyFrame += 1
         }
 
-        previousSemanticPayload = semanticPayload.copyOf()
+        previousSemanticPayload = semanticPayload
         lastSemanticPayloadType = semanticPayloadType
 
         return EncodedFramePayload(

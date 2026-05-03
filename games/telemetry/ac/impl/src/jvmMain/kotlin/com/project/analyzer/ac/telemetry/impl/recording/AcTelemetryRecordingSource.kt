@@ -40,10 +40,7 @@ class AcTelemetryRecordingSource(
 
     private val settingsDispatcher: CoroutineDispatcher =
         ioDispatcher.limitedParallelism(1, "AcTelemetryRecordingSource")
-    private val emitDispatcher: CoroutineDispatcher =
-        ioDispatcher.limitedParallelism(1, "AcTelemetryRecordingEmitter")
     private val settingsScope = CoroutineScope(SupervisorJob() + settingsDispatcher)
-    private val emitScope = CoroutineScope(SupervisorJob() + emitDispatcher)
     private val gate = TelemetrySamplingGate(TelemetryAcquisitionDefaults.DEFAULT_SAMPLING_RATE_HZ)
     private var lastSamplingRateHz: Int = -1
 
@@ -51,17 +48,10 @@ class AcTelemetryRecordingSource(
     private var recordingEnabled: Boolean = true
 
     private val sampleBuffer = TelemetryRecordingSampleBuffer(
-        scope = emitScope,
         bufferCapacity = SAMPLE_BUFFER_CAPACITY,
-        onQueueDrop = { sample ->
+        onDrop = { sample ->
             logger.atWarn(RATE_LIMITED) {
-                message = "[recording] dropped AC encoded sample queue due to backpressure " +
-                    "(sessionId=${sample.sessionId})"
-            }
-        },
-        onSinkDrop = { sample ->
-            logger.atWarn(RATE_LIMITED) {
-                message = "[recording] dropped AC encoded sample due to sink backpressure " +
+                message = "[recording] dropped AC encoded sample due to recording buffer backpressure " +
                     "(sessionId=${sample.sessionId})"
             }
         },
@@ -124,7 +114,6 @@ class AcTelemetryRecordingSource(
     override fun close() {
         sampleBuffer.close()
         settingsScope.cancel()
-        emitScope.cancel()
 
         LeakCanaryRuntime.watch(this, "AcTelemetryRecordingSource")
     }
@@ -143,19 +132,15 @@ class AcTelemetryRecordingSource(
         if (!lastStatsLogNs.compareAndSet(last, now)) return
 
         val encoded = encodedCount.get()
-        val queued = sampleBuffer.queuedCount
-        val queueDropped = sampleBuffer.queueDropCount
-        val sinkEmitted = sampleBuffer.sinkEmitCount
-        val sinkDropped = sampleBuffer.sinkDropCount
-        val backlogApprox = sampleBuffer.relayBacklogApproxCount
-        if (encoded == 0L && queued == 0L && queueDropped == 0L && sinkDropped == 0L) return
+        val accepted = sampleBuffer.acceptedCount
+        val dropped = sampleBuffer.dropCount
+        if (encoded == 0L && accepted == 0L && dropped == 0L) return
 
         val avgEncodeUs = if (encoded > 0L) (encodeTotalNs.get() / encoded) / 1_000.0 else 0.0
         val maxEncodeUs = encodeMaxNs.get() / 1_000.0
         logger.atDebug {
-            message = "[recording] AC emitter stats encodedTotal=$encoded queuedTotal=$queued " +
-                "queueDropTotal=$queueDropped sinkEmitTotal=$sinkEmitted sinkDropTotal=$sinkDropped " +
-                "backlogApprox=$backlogApprox " +
+            message = "[recording] AC emitter stats encodedTotal=$encoded acceptedTotal=$accepted " +
+                "dropTotal=$dropped " +
                 "encodeUs(avg=${"%.1f".format(avgEncodeUs)}, max=${"%.1f".format(maxEncodeUs)})"
         }
     }

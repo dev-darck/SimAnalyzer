@@ -16,26 +16,24 @@ internal class FileTelemetrySessionCloser(private val sessionIo: FileTelemetrySe
         logCloseSummary(session, endReason)
 
         val closedSuccessfully = runCatching {
+            val endedAtMs = System.currentTimeMillis()
             session.metadata = session.metadata.copy(
-                endedAtMs = System.currentTimeMillis(),
-                frameCount = session.frameCount,
-                receivedFrames = session.receivedFrames,
-                droppedFrames = session.droppedFrames,
-                skippedFrames = session.skippedFrames,
-                firstTimestampNs = session.firstFrameTimestampNs,
-                lastTimestampNs = session.lastFrameTimestampNs,
+                endedAtMs = endedAtMs,
             )
+            session.markMetadataDirty()
 
             sessionIo.writeEvent(
                 session = session,
                 event = SessionEvent(
                     type = EVENT_ENDED,
-                    atMs = System.currentTimeMillis(),
+                    atMs = endedAtMs,
                     sessionId = session.metadata.sessionId,
                     reason = endReason,
                 ),
             )
-            sessionIo.writeMetadataFile(session.metaFile, session.metadata)
+            if (sessionIo.persistMetadata(session)) {
+                session.markMetadataPersisted()
+            }
             sessionIo.flushSessionOutputs(session)
             sessionIo.closeSessionOutputs(session)
         }.onFailure { error ->

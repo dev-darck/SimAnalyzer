@@ -2,6 +2,7 @@ package com.project.analyzer.telemetry.recording.impl.file.model
 
 import com.project.analyzer.telemetry.recording.api.session.RecordedTelemetrySessionMetadata
 import com.project.analyzer.telemetry.recording.impl.file.FLUSH_INTERVAL_NS
+import com.project.analyzer.telemetry.recording.impl.file.METADATA_PERSIST_INTERVAL_NS
 import com.project.analyzer.telemetry.recording.impl.file.codec.FrameStorageSessionCodec
 import java.io.BufferedWriter
 import java.io.DataOutputStream
@@ -37,12 +38,14 @@ internal class ActiveSession(
     var outOfOrderFrames: Long = 0
     var payloadSizeMismatchLogged: Boolean = false
     var isClosed: Boolean = false
+    private var metadataDirty: Boolean = true
 
     private var lastSampledTimestampNs: Long = 0L
     private var lastWrittenFrameId: Long? = null
     private var lastWrittenDataSourceId: Int? = null
 
-    val flushLimiter = NsRateLimiter(FLUSH_INTERVAL_NS)
+    private val outputFlushLimiter = NsRateLimiter(FLUSH_INTERVAL_NS)
+    private val metadataPersistLimiter = NsRateLimiter(METADATA_PERSIST_INTERVAL_NS)
 
     fun shouldSample(timestampNs: Long): Boolean {
         if (sampleIntervalNs <= 0L) return true
@@ -60,6 +63,7 @@ internal class ActiveSession(
 
     fun markReceived(timestampNs: Long) {
         receivedFrames += 1
+        metadataDirty = true
         if (firstReceivedTimestampNs == null) {
             firstReceivedTimestampNs = timestampNs
         }
@@ -71,25 +75,30 @@ internal class ActiveSession(
 
     fun markDropped() {
         droppedFrames += 1
+        metadataDirty = true
     }
 
     fun markDuplicate() {
         duplicateFrames += 1
         droppedFrames += 1
+        metadataDirty = true
     }
 
     fun markOutOfOrder() {
         outOfOrderFrames += 1
         droppedFrames += 1
+        metadataDirty = true
     }
 
     fun markSkipped() {
         skippedFrames += 1
+        metadataDirty = true
     }
 
     fun markWritten(timestampNs: Long, frameId: Long, dataSourceId: Int, bytesWritten: Long) {
         frameCount += 1
         framesBytesWritten += bytesWritten
+        metadataDirty = true
         if (firstFrameTimestampNs == null) {
             firstFrameTimestampNs = timestampNs
         }
@@ -108,7 +117,17 @@ internal class ActiveSession(
         return FrameClass.Accepted
     }
 
-    fun shouldFlush(nowNs: Long): Boolean = flushLimiter.shouldLog(nowNs)
+    fun markMetadataDirty() {
+        metadataDirty = true
+    }
+
+    fun markMetadataPersisted() {
+        metadataDirty = false
+    }
+
+    fun shouldFlushOutputs(nowNs: Long): Boolean = outputFlushLimiter.shouldLog(nowNs)
+
+    fun shouldPersistMetadata(nowNs: Long): Boolean = metadataDirty && metadataPersistLimiter.shouldLog(nowNs)
 
     fun recordingDurationSec(): Double {
         val first = firstFrameTimestampNs ?: return 0.0
